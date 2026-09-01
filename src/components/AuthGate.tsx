@@ -121,12 +121,22 @@ function Entrar() {
 
           <button
             type="submit"
-            disabled={carregando}
-            className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
+            disabled={carregando || espera > 0}
+            className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-60"
           >
             <LogIn size={28} strokeWidth={2.2} />
-            {modo === "entrar" ? "Entrar" : "Criar conta"}
+            {espera > 0
+              ? `Aguarde ${espera}s`
+              : modo === "entrar"
+                ? "Entrar"
+                : "Criar conta"}
           </button>
+          {espera > 0 && (
+            <p className="text-center text-base text-muted-foreground">
+              Muitas tentativas seguidas. Tente de novo em {espera} segundos.
+            </p>
+          )}
+
         </form>
 
         <button
