@@ -171,7 +171,7 @@ export function rodarAuditor(
     // A2 — hotel termina antes do voo de volta
     const saidas = tks.filter((t) => t.partida_utc >= (primeiro?.chegada_utc ?? ""));
     const voltaFinal = saidas[saidas.length - 1] ?? ultimo;
-    const maxCheckout = hos.reduce((m, l) => (l.checkout > m.checkout ? l : m), hos[0]);
+    const maxCheckout = [...hos].sort((x, y) => (x.checkout < y.checkout ? 1 : -1))[0];
     if (voltaFinal && maxCheckout && maxCheckout.checkout < voltaFinal.partida_utc) {
       const diff = chaveDia(maxCheckout.checkout) !== chaveDia(voltaFinal.partida_utc, voltaFinal.partida_tz);
       if (diff) {
@@ -222,8 +222,8 @@ export function rodarAuditor(
   // A5 — dois hotéis na mesma noite
   for (let i = 0; i < hos.length; i++) {
     for (let j = i + 1; j < hos.length; j++) {
-      const a = hos[i];
-      const b = hos[j];
+      const a = hos[i]!;
+      const b = hos[j]!;
       if (a.checkin < b.checkout && b.checkin < a.checkout) {
         achados.push({
           regra_id: "A5",

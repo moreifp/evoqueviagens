@@ -82,27 +82,27 @@ export function nomeFusoCurto(tz: string) {
 export function dataBRCurta(data: string) {
   const [a, m, d] = data.split("-").map(Number);
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
-    new Date(Date.UTC(a, (m ?? 1) - 1, d ?? 1)),
+    new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, d ?? 1)),
   );
 }
 
 export function mesAno(data: string) {
   const [a, m] = data.split("-").map(Number);
   return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
-    new Date(Date.UTC(a, (m ?? 1) - 1, 1)),
+    new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, 1)),
   );
 }
 
 export function diasAte(data: string) {
   const hoje = new Date();
   const [a, m, d] = data.split("-").map(Number);
-  const alvo = Date.UTC(a, (m ?? 1) - 1, d ?? 1);
+  const alvo = Date.UTC(a ?? 1970, (m ?? 1) - 1, d ?? 1);
   const base = Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
   return Math.round((alvo - base) / 86400000);
 }
 
 export function somaDias(dia: string, n: number) {
   const [a, m, d] = dia.split("-").map(Number);
-  const t = new Date(Date.UTC(a, (m ?? 1) - 1, (d ?? 1) + n));
+  const t = new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, (d ?? 1) + n));
   return t.toISOString().slice(0, 10);
 }
