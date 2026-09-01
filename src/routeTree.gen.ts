@@ -10,33 +10,181 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
+import { Route as TripIdRouteImport } from './routes/trip.$id'
+import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
+import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
+import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
+import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
+import { Route as TripIdBilhetesIndexRouteImport } from './routes/trip.$id.bilhetes.index'
+import { Route as TripIdBilhetesNovoRouteImport } from './routes/trip.$id.bilhetes.novo'
+import { Route as TripIdDespesasIndexRouteImport } from './routes/trip.$id.despesas.index'
+import { Route as TripIdDespesasNovaRouteImport } from './routes/trip.$id.despesas.nova'
+import { Route as TripIdHospedagemIndexRouteImport } from './routes/trip.$id.hospedagem.index'
+import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hospedagem.nova'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NovaViagemRoute = NovaViagemRouteImport.update({
+  id: '/nova-viagem',
+  path: '/nova-viagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripIdRoute = TripIdRouteImport.update({
+  id: '/trip/$id',
+  path: '/trip/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripIdIndexRoute = TripIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdPessoasRoute = TripIdPessoasRouteImport.update({
+  id: '/pessoas',
+  path: '/pessoas',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdRestaurantesRoute = TripIdRestaurantesRouteImport.update({
+  id: '/restaurantes',
+  path: '/restaurantes',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
+  id: '/revisao',
+  path: '/revisao',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdBilhetesIndexRoute = TripIdBilhetesIndexRouteImport.update({
+  id: '/bilhetes/',
+  path: '/bilhetes/',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdBilhetesNovoRoute = TripIdBilhetesNovoRouteImport.update({
+  id: '/bilhetes/novo',
+  path: '/bilhetes/novo',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdDespesasIndexRoute = TripIdDespesasIndexRouteImport.update({
+  id: '/despesas/',
+  path: '/despesas/',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdDespesasNovaRoute = TripIdDespesasNovaRouteImport.update({
+  id: '/despesas/nova',
+  path: '/despesas/nova',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdHospedagemIndexRoute = TripIdHospedagemIndexRouteImport.update({
+  id: '/hospedagem/',
+  path: '/hospedagem/',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdHospedagemNovaRoute = TripIdHospedagemNovaRouteImport.update({
+  id: '/hospedagem/nova',
+  path: '/hospedagem/nova',
+  getParentRoute: () => TripIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/nova-viagem': typeof NovaViagemRoute
+  '/trip/$id': typeof TripIdRouteWithChildren
+  '/trip/$id/pessoas': typeof TripIdPessoasRoute
+  '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/trip/$id/': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
+  '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
+  '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
+  '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/nova-viagem': typeof NovaViagemRoute
+  '/trip/$id/pessoas': typeof TripIdPessoasRoute
+  '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/trip/$id': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
+  '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/trip/$id/bilhetes': typeof TripIdBilhetesIndexRoute
+  '/trip/$id/despesas': typeof TripIdDespesasIndexRoute
+  '/trip/$id/hospedagem': typeof TripIdHospedagemIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/nova-viagem': typeof NovaViagemRoute
+  '/trip/$id': typeof TripIdRouteWithChildren
+  '/trip/$id/pessoas': typeof TripIdPessoasRoute
+  '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/trip/$id/': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
+  '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
+  '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
+  '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/nova-viagem'
+    | '/trip/$id'
+    | '/trip/$id/pessoas'
+    | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
+    | '/trip/$id/'
+    | '/trip/$id/bilhetes/novo'
+    | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
+    | '/trip/$id/bilhetes/'
+    | '/trip/$id/despesas/'
+    | '/trip/$id/hospedagem/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/nova-viagem'
+    | '/trip/$id/pessoas'
+    | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
+    | '/trip/$id'
+    | '/trip/$id/bilhetes/novo'
+    | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
+    | '/trip/$id/bilhetes'
+    | '/trip/$id/despesas'
+    | '/trip/$id/hospedagem'
+  id:
+    | '__root__'
+    | '/'
+    | '/nova-viagem'
+    | '/trip/$id'
+    | '/trip/$id/pessoas'
+    | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
+    | '/trip/$id/'
+    | '/trip/$id/bilhetes/novo'
+    | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
+    | '/trip/$id/bilhetes/'
+    | '/trip/$id/despesas/'
+    | '/trip/$id/hospedagem/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NovaViagemRoute: typeof NovaViagemRoute
+  TripIdRoute: typeof TripIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +196,126 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nova-viagem': {
+      id: '/nova-viagem'
+      path: '/nova-viagem'
+      fullPath: '/nova-viagem'
+      preLoaderRoute: typeof NovaViagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trip/$id': {
+      id: '/trip/$id'
+      path: '/trip/$id'
+      fullPath: '/trip/$id'
+      preLoaderRoute: typeof TripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trip/$id/': {
+      id: '/trip/$id/'
+      path: '/'
+      fullPath: '/trip/$id/'
+      preLoaderRoute: typeof TripIdIndexRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/pessoas': {
+      id: '/trip/$id/pessoas'
+      path: '/pessoas'
+      fullPath: '/trip/$id/pessoas'
+      preLoaderRoute: typeof TripIdPessoasRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/restaurantes': {
+      id: '/trip/$id/restaurantes'
+      path: '/restaurantes'
+      fullPath: '/trip/$id/restaurantes'
+      preLoaderRoute: typeof TripIdRestaurantesRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/revisao': {
+      id: '/trip/$id/revisao'
+      path: '/revisao'
+      fullPath: '/trip/$id/revisao'
+      preLoaderRoute: typeof TripIdRevisaoRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/bilhetes/': {
+      id: '/trip/$id/bilhetes/'
+      path: '/bilhetes'
+      fullPath: '/trip/$id/bilhetes/'
+      preLoaderRoute: typeof TripIdBilhetesIndexRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/bilhetes/novo': {
+      id: '/trip/$id/bilhetes/novo'
+      path: '/bilhetes/novo'
+      fullPath: '/trip/$id/bilhetes/novo'
+      preLoaderRoute: typeof TripIdBilhetesNovoRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/despesas/': {
+      id: '/trip/$id/despesas/'
+      path: '/despesas'
+      fullPath: '/trip/$id/despesas/'
+      preLoaderRoute: typeof TripIdDespesasIndexRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/despesas/nova': {
+      id: '/trip/$id/despesas/nova'
+      path: '/despesas/nova'
+      fullPath: '/trip/$id/despesas/nova'
+      preLoaderRoute: typeof TripIdDespesasNovaRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/hospedagem/': {
+      id: '/trip/$id/hospedagem/'
+      path: '/hospedagem'
+      fullPath: '/trip/$id/hospedagem/'
+      preLoaderRoute: typeof TripIdHospedagemIndexRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/hospedagem/nova': {
+      id: '/trip/$id/hospedagem/nova'
+      path: '/hospedagem/nova'
+      fullPath: '/trip/$id/hospedagem/nova'
+      preLoaderRoute: typeof TripIdHospedagemNovaRouteImport
+      parentRoute: typeof TripIdRoute
+    }
   }
 }
 
+interface TripIdRouteChildren {
+  TripIdPessoasRoute: typeof TripIdPessoasRoute
+  TripIdRestaurantesRoute: typeof TripIdRestaurantesRoute
+  TripIdRevisaoRoute: typeof TripIdRevisaoRoute
+  TripIdIndexRoute: typeof TripIdIndexRoute
+  TripIdBilhetesNovoRoute: typeof TripIdBilhetesNovoRoute
+  TripIdDespesasNovaRoute: typeof TripIdDespesasNovaRoute
+  TripIdHospedagemNovaRoute: typeof TripIdHospedagemNovaRoute
+  TripIdBilhetesIndexRoute: typeof TripIdBilhetesIndexRoute
+  TripIdDespesasIndexRoute: typeof TripIdDespesasIndexRoute
+  TripIdHospedagemIndexRoute: typeof TripIdHospedagemIndexRoute
+}
+
+const TripIdRouteChildren: TripIdRouteChildren = {
+  TripIdPessoasRoute: TripIdPessoasRoute,
+  TripIdRestaurantesRoute: TripIdRestaurantesRoute,
+  TripIdRevisaoRoute: TripIdRevisaoRoute,
+  TripIdIndexRoute: TripIdIndexRoute,
+  TripIdBilhetesNovoRoute: TripIdBilhetesNovoRoute,
+  TripIdDespesasNovaRoute: TripIdDespesasNovaRoute,
+  TripIdHospedagemNovaRoute: TripIdHospedagemNovaRoute,
+  TripIdBilhetesIndexRoute: TripIdBilhetesIndexRoute,
+  TripIdDespesasIndexRoute: TripIdDespesasIndexRoute,
+  TripIdHospedagemIndexRoute: TripIdHospedagemIndexRoute,
+}
+
+const TripIdRouteWithChildren =
+  TripIdRoute._addFileChildren(TripIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NovaViagemRoute: NovaViagemRoute,
+  TripIdRoute: TripIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
