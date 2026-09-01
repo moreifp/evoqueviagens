@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Topo } from "@/components/Chrome";
@@ -15,16 +15,11 @@ export const Route = createFileRoute("/trip/$id/despesas/")({
       { property: "og:description", content: "Gastos da viagem por dia, na moeda da viagem." },
     ],
   }),
-  component: DespesasLayout,
+  component: Lista,
   errorComponent: ({ error }) => <div role="alert" className="p-6 text-lg">{error.message}</div>,
   notFoundComponent: () => <div className="p-6 text-lg">Sem despesas.</div>,
 });
 
-function DespesasLayout() {
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  if (path.endsWith("/despesas/nova")) return <Outlet />;
-  return <Lista />;
-}
 
 function Lista() {
   const { id } = Route.useParams();
