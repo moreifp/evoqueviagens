@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { insertRow, lodgingsQuery, ticketsQuery, tripQuery } from "@/lib/data";
 import { MOEDAS } from "@/lib/format";
-import { Campo, inputCls } from "./nova-viagem";
+import { Campo, inputCls } from "@/components/Form";
 import { rodarAuditor } from "@/lib/audit";
 import { avisarNovoAchado } from "@/lib/auditoria";
 

@@ -6,7 +6,7 @@ import { Check, Plus, UserRound } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { insertRow, membersQuery, peopleQuery } from "@/lib/data";
 import { supabase } from "@/integrations/supabase/client";
-import { inputCls } from "./nova-viagem";
+import { inputCls } from "@/components/Form";
 
 export const Route = createFileRoute("/trip/$id/pessoas")({
   head: () => ({
