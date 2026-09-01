@@ -24,14 +24,42 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function traduzErro(msg: string): { texto: string; espera?: number } {
+  const m = msg.toLowerCase();
+  const seg = /after (\d+) seconds?/.exec(m);
+  if (seg || m.includes("rate limit") || m.includes("too many")) {
+    const s = seg?.[1] ? parseInt(seg[1], 10) : 60;
+    return { texto: "Aguarde um minuto antes de tentar de novo.", espera: s };
+  }
+  if (m.includes("invalid login credentials")) return { texto: "E-mail ou senha incorretos." };
+  if (m.includes("email not confirmed")) return { texto: "Este e-mail ainda não foi liberado. Tente entrar de novo." };
+  if (m.includes("user already registered") || m.includes("already been registered"))
+    return { texto: "Já existe uma conta com este e-mail. Toque em “Já tenho conta”." };
+  if (m.includes("password should be at least"))
+    return { texto: "A senha precisa ter pelo menos 6 caracteres." };
+  if (m.includes("invalid email") || m.includes("unable to validate email"))
+    return { texto: "Digite um e-mail válido." };
+  if (m.includes("network") || m.includes("failed to fetch"))
+    return { texto: "Sem conexão. Verifique a internet e tente de novo." };
+  return { texto: "Não deu certo agora. Tente de novo em instantes." };
+}
+
 function Entrar() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
   const [carregando, setCarregando] = useState(false);
+  const [espera, setEspera] = useState(0);
+
+  useEffect(() => {
+    if (espera <= 0) return;
+    const t = setTimeout(() => setEspera((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [espera]);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
+    if (espera > 0 || carregando) return;
     setCarregando(true);
     const fn =
       modo === "entrar"
@@ -41,10 +69,20 @@ function Entrar() {
             password: senha,
             options: { emailRedirectTo: window.location.origin },
           });
-    const { error } = await fn;
+    const { data, error } = await fn;
     setCarregando(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      const { texto, espera: s } = traduzErro(error.message);
+      if (s) setEspera(s);
+      toast.error(texto);
+      return;
+    }
+    if (!data.session) {
+      toast.error("Conta criada. Entre com seu e-mail e senha.");
+      setModo("entrar");
+    }
   }
+
 
   return (
     <div className="min-h-screen bg-background px-5 pt-16 pb-10">
