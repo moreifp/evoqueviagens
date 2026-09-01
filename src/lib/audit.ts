@@ -179,7 +179,7 @@ export function rodarAuditor(
         achados.push({
           regra_id: "A2",
           severidade: "resolver",
-          mensagem: `O hotel termina dia ${dataBRCurta(chaveDia(maxCheckout.checkout))} e seu bilhete de saída é dia ${dataBRCurta(chaveDia(voltaFinal.partida_utc, voltaFinal.partida_tz))}.`,
+          mensagem: `O hotel termina dia ${dataBRCurta(chaveDia(maxCheckout.checkout))} e seu bilhete de saída é dia ${dataBRCurta(chaveDia(voltaFinal.partida_utc, voltaFinal.partida_tz))}`,
           itens_envolvidos: [maxCheckout.id, voltaFinal.id],
           itens: [refHotel(maxCheckout), refBilhete(voltaFinal)],
           hash_dos_dados: hash("A2", maxCheckout.id, maxCheckout.checkout, voltaFinal.id, voltaFinal.partida_utc),
@@ -194,7 +194,7 @@ export function rodarAuditor(
       achados.push({
         regra_id: "A3",
         severidade: "resolver",
-        mensagem: `Você chega dia ${dataBRCurta(chaveDia(primeiro.chegada_utc, primeiro.chegada_tz))} e o hotel só começa dia ${dataBRCurta(chaveDia(minCheckin.checkin))}.`,
+        mensagem: `Você chega dia ${dataBRCurta(chaveDia(primeiro.chegada_utc, primeiro.chegada_tz))} e o hotel só começa dia ${dataBRCurta(chaveDia(minCheckin.checkin))}`,
         itens_envolvidos: [primeiro.id, minCheckin.id],
         itens: [refBilhete(primeiro), refHotel(minCheckin)],
         hash_dos_dados: hash("A3", primeiro.id, primeiro.chegada_utc, minCheckin.id, minCheckin.checkin),
@@ -211,7 +211,7 @@ export function rodarAuditor(
       achados.push({
         regra_id: "A4",
         severidade: "conferir",
-        mensagem: `${l.nome} vai de ${dataBRCurta(ci)} a ${dataBRCurta(co)} e a viagem vai de ${dataBRCurta(trip.data_inicio)} a ${dataBRCurta(trip.data_fim)}.`,
+        mensagem: `${l.nome} vai de ${dataBRCurta(ci)} a ${dataBRCurta(co)} e a viagem vai de ${dataBRCurta(trip.data_inicio)} a ${dataBRCurta(trip.data_fim)}`,
         itens_envolvidos: [l.id, trip.id],
         itens: [refHotel(l), refViagem],
         hash_dos_dados: hash("A4", l.id, l.checkin, l.checkout, trip.data_inicio, trip.data_fim),
