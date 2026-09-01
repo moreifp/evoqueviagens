@@ -68,12 +68,13 @@ function rotaBilhete(t: TicketLite) {
 }
 
 function refBilhete(t: TicketLite): ItemRef {
+  const via = [t.companhia, t.numero].filter(Boolean).join(" ");
   return {
     id: t.id,
     tipo: "bilhete",
     titulo: rotaBilhete(t),
     linha1: `${dataBRCurta(chaveDia(t.partida_utc, t.partida_tz))} · ${horaSimples(t.partida_utc, t.partida_tz)}`,
-    linha2: [t.companhia, t.numero].filter(Boolean).join(" ") || undefined,
+    ...(via ? { linha2: via } : {}),
   };
 }
 

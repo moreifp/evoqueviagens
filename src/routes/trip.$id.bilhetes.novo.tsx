@@ -50,12 +50,12 @@ function localParaUtc(valor: string, tz: string) {
   });
   const p = Object.fromEntries(fmt.formatToParts(base).map((x) => [x.type, x.value]));
   const comoTz = Date.UTC(
-    Number(p.year),
-    Number(p.month) - 1,
-    Number(p.day),
-    Number(p.hour) % 24,
-    Number(p.minute),
-    Number(p.second),
+    Number(p["year"]),
+    Number(p["month"]) - 1,
+    Number(p["day"]),
+    Number(p["hour"]) % 24,
+    Number(p["minute"]),
+    Number(p["second"]),
   );
   const offset = comoTz - base.getTime();
   return new Date(base.getTime() - offset).toISOString();
