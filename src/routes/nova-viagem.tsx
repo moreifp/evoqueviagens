@@ -7,6 +7,7 @@ import { Topo } from "@/components/Chrome";
 import { insertRow } from "@/lib/data";
 import { MOEDAS } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
+import { Campo, inputCls } from "@/components/Form";
 
 export const Route = createFileRoute("/nova-viagem")({
   head: () => ({
