@@ -15,10 +15,13 @@ import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
+import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
 import { Route as TripIdBilhetesIndexRouteImport } from './routes/trip.$id.bilhetes.index'
+import { Route as TripIdBilhetesNovoRouteImport } from './routes/trip.$id.bilhetes.novo'
 import { Route as TripIdDespesasIndexRouteImport } from './routes/trip.$id.despesas.index'
 import { Route as TripIdDespesasNovaRouteImport } from './routes/trip.$id.despesas.nova'
 import { Route as TripIdHospedagemIndexRouteImport } from './routes/trip.$id.hospedagem.index'
+import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hospedagem.nova'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,9 +53,19 @@ const TripIdRestaurantesRoute = TripIdRestaurantesRouteImport.update({
   path: '/restaurantes',
   getParentRoute: () => TripIdRoute,
 } as any)
+const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
+  id: '/revisao',
+  path: '/revisao',
+  getParentRoute: () => TripIdRoute,
+} as any)
 const TripIdBilhetesIndexRoute = TripIdBilhetesIndexRouteImport.update({
   id: '/bilhetes/',
   path: '/bilhetes/',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdBilhetesNovoRoute = TripIdBilhetesNovoRouteImport.update({
+  id: '/bilhetes/novo',
+  path: '/bilhetes/novo',
   getParentRoute: () => TripIdRoute,
 } as any)
 const TripIdDespesasIndexRoute = TripIdDespesasIndexRouteImport.update({
@@ -70,6 +83,11 @@ const TripIdHospedagemIndexRoute = TripIdHospedagemIndexRouteImport.update({
   path: '/hospedagem/',
   getParentRoute: () => TripIdRoute,
 } as any)
+const TripIdHospedagemNovaRoute = TripIdHospedagemNovaRouteImport.update({
+  id: '/hospedagem/nova',
+  path: '/hospedagem/nova',
+  getParentRoute: () => TripIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -77,8 +95,11 @@ export interface FileRoutesByFullPath {
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -88,8 +109,11 @@ export interface FileRoutesByTo {
   '/nova-viagem': typeof NovaViagemRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/trip/$id': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/bilhetes': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem': typeof TripIdHospedagemIndexRoute
@@ -101,8 +125,11 @@ export interface FileRoutesById {
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
+  '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
+  '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -115,8 +142,11 @@ export interface FileRouteTypes {
     | '/trip/$id'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
     | '/trip/$id/'
+    | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -126,8 +156,11 @@ export interface FileRouteTypes {
     | '/nova-viagem'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
     | '/trip/$id'
+    | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
     | '/trip/$id/bilhetes'
     | '/trip/$id/despesas'
     | '/trip/$id/hospedagem'
@@ -138,8 +171,11 @@ export interface FileRouteTypes {
     | '/trip/$id'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
+    | '/trip/$id/revisao'
     | '/trip/$id/'
+    | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
+    | '/trip/$id/hospedagem/nova'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -195,11 +231,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdRestaurantesRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/trip/$id/revisao': {
+      id: '/trip/$id/revisao'
+      path: '/revisao'
+      fullPath: '/trip/$id/revisao'
+      preLoaderRoute: typeof TripIdRevisaoRouteImport
+      parentRoute: typeof TripIdRoute
+    }
     '/trip/$id/bilhetes/': {
       id: '/trip/$id/bilhetes/'
       path: '/bilhetes'
       fullPath: '/trip/$id/bilhetes/'
       preLoaderRoute: typeof TripIdBilhetesIndexRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/bilhetes/novo': {
+      id: '/trip/$id/bilhetes/novo'
+      path: '/bilhetes/novo'
+      fullPath: '/trip/$id/bilhetes/novo'
+      preLoaderRoute: typeof TripIdBilhetesNovoRouteImport
       parentRoute: typeof TripIdRoute
     }
     '/trip/$id/despesas/': {
@@ -223,14 +273,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdHospedagemIndexRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/trip/$id/hospedagem/nova': {
+      id: '/trip/$id/hospedagem/nova'
+      path: '/hospedagem/nova'
+      fullPath: '/trip/$id/hospedagem/nova'
+      preLoaderRoute: typeof TripIdHospedagemNovaRouteImport
+      parentRoute: typeof TripIdRoute
+    }
   }
 }
 
 interface TripIdRouteChildren {
   TripIdPessoasRoute: typeof TripIdPessoasRoute
   TripIdRestaurantesRoute: typeof TripIdRestaurantesRoute
+  TripIdRevisaoRoute: typeof TripIdRevisaoRoute
   TripIdIndexRoute: typeof TripIdIndexRoute
+  TripIdBilhetesNovoRoute: typeof TripIdBilhetesNovoRoute
   TripIdDespesasNovaRoute: typeof TripIdDespesasNovaRoute
+  TripIdHospedagemNovaRoute: typeof TripIdHospedagemNovaRoute
   TripIdBilhetesIndexRoute: typeof TripIdBilhetesIndexRoute
   TripIdDespesasIndexRoute: typeof TripIdDespesasIndexRoute
   TripIdHospedagemIndexRoute: typeof TripIdHospedagemIndexRoute
@@ -239,8 +299,11 @@ interface TripIdRouteChildren {
 const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdPessoasRoute: TripIdPessoasRoute,
   TripIdRestaurantesRoute: TripIdRestaurantesRoute,
+  TripIdRevisaoRoute: TripIdRevisaoRoute,
   TripIdIndexRoute: TripIdIndexRoute,
+  TripIdBilhetesNovoRoute: TripIdBilhetesNovoRoute,
   TripIdDespesasNovaRoute: TripIdDespesasNovaRoute,
+  TripIdHospedagemNovaRoute: TripIdHospedagemNovaRoute,
   TripIdBilhetesIndexRoute: TripIdBilhetesIndexRoute,
   TripIdDespesasIndexRoute: TripIdDespesasIndexRoute,
   TripIdHospedagemIndexRoute: TripIdHospedagemIndexRoute,
