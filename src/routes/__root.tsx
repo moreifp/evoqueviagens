@@ -124,7 +124,7 @@ function RootComponent() {
       ]);
       if (cancelado) return;
       persistQueryClient({
-        queryClient,
+        queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
         persister: createSyncStoragePersister({ storage: window.localStorage }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
         buster: "evoque-v1",
