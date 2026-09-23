@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790199142413,
+      "tag": "0000_module1_cadastro_pessoal",
+      "breakpoints": true
+    }
+  ]
+}
