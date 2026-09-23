@@ -4,12 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
+import { AbasApp, AvisoConexao } from "@/components/Chrome";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -119,20 +121,35 @@ function RootComponent() {
     if (typeof window === "undefined") return;
     let cancelado = false;
     (async () => {
-      const [{ persistQueryClient }, { createSyncStoragePersister }] = await Promise.all([
+      const [{ persistQueryClient }, { createAsyncStoragePersister }, idb] = await Promise.all([
         import("@tanstack/react-query-persist-client"),
-        import("@tanstack/query-sync-storage-persister"),
+        import("@tanstack/query-async-storage-persister"),
+        import("idb-keyval"),
       ]);
       if (cancelado) return;
       persistQueryClient({
         queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
-        persister: createSyncStoragePersister({ storage: window.localStorage }),
+        persister: createAsyncStoragePersister({
+          storage: { getItem: (k) => idb.get(k), setItem: (k, v) => idb.set(k, v), removeItem: (k) => idb.del(k) },
+          key: "evoque-cache",
+        }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
-        buster: "evoque-v1",
+        buster: "evoque-v2",
       });
     })();
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then(() => navigator.serviceWorker.ready)
+        .then((reg) => {
+          // Guarda no aparelho tudo que esta tela já carregou (scripts, estilos, fontes).
+          const urls = performance
+            .getEntriesByType("resource")
+            .map((e) => e.name)
+            .filter((u) => u.startsWith(location.origin) || u.includes("fonts.g"));
+          reg.active?.postMessage({ tipo: "guardar", urls: [...urls, location.href] });
+        })
+        .catch(() => {});
     }
     return () => {
       cancelado = true;
@@ -141,10 +158,21 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthGate>
-        <Outlet />
-      </AuthGate>
+      <Conteudo />
+      <AvisoConexao />
       <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
+  );
+}
+
+function Conteudo() {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  if (path.startsWith("/c/")) return <Outlet />;
+  const mostraAbas = !path.startsWith("/trip/");
+  return (
+    <AuthGate>
+      <Outlet />
+      {mostraAbas && <AbasApp />}
+    </AuthGate>
   );
 }

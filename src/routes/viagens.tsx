@@ -5,7 +5,7 @@ import { tripsQuery } from "@/lib/data";
 import { dataBRCurta, diasAte, mesAno } from "@/lib/format";
 import { Avatar } from "@/components/Chrome";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/viagens")({
   head: () => ({
     meta: [
       { title: "Evoque Viagens — suas viagens em um lugar só" },
@@ -43,7 +43,7 @@ function MinhasViagens() {
   const outras = ativas.filter((v) => v.id !== atual?.id);
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-52">
       <header className="flex items-center gap-2 px-4 py-3">
         <h1 className="flex-1 text-3xl">Minhas viagens</h1>
         <Avatar />
@@ -100,7 +100,7 @@ function MinhasViagens() {
         )}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-[76px] border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <Link
           to="/nova-viagem"
           className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"

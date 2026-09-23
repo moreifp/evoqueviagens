@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User } from "lucide-react";
+import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User, Users, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
+import { useConexao } from "@/lib/outbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 
@@ -47,7 +48,14 @@ export function Avatar() {
         <span className="text-xs font-semibold">Perfil</span>
       </button>
       {aberto && (
-        <div className="shadow-medium absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-border bg-card p-2">
+        <div className="shadow-medium absolute right-0 top-full z-30 mt-1 w-64 rounded-xl border border-border bg-card p-2">
+          <Link
+            to="/perfil"
+            onClick={() => setAberto(false)}
+            className="tap flex w-full items-center rounded-lg px-4 text-left text-lg font-semibold text-foreground"
+          >
+            Administradores
+          </Link>
           <button
             onClick={async () => {
               await supabase.auth.signOut();
@@ -106,5 +114,52 @@ export function BotaoFlutuante({ tripId }: { tripId: string }) {
       <Plus size={30} strokeWidth={2.2} />
       <span className="text-xs font-bold">Gasto</span>
     </Link>
+  );
+}
+
+const ABAS_APP = [
+  { to: "/", rotulo: "Pessoas", Icone: Users, exact: true },
+  { to: "/viagens", rotulo: "Viagens", Icone: Plane, exact: false },
+  { to: "/restaurantes", rotulo: "Restaurantes", Icone: Utensils, exact: false },
+  { to: "/despesas", rotulo: "Despesas", Icone: Wallet, exact: false },
+] as const;
+
+export function AbasApp() {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <nav
+      aria-label="Seções do app"
+      className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+    >
+      {ABAS_APP.map(({ to, rotulo, Icone, exact }) => {
+        const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to);
+        return (
+          <Link
+            key={to}
+            to={to}
+            className={`tap flex flex-col items-center justify-center gap-1 py-2 ${
+              ativo ? "text-accent" : "text-muted-foreground"
+            }`}
+          >
+            <Icone size={26} strokeWidth={2.2} />
+            <span className="text-sm font-bold">{rotulo}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function AvisoConexao() {
+  const { online, pendentes } = useConexao();
+  if (online && pendentes === 0) return null;
+  return (
+    <div
+      role="status"
+      className="fixed left-1/2 top-2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-medium"
+    >
+      <WifiOff size={18} strokeWidth={2.2} />
+      {online ? `Enviando ${pendentes} ${pendentes === 1 ? "alteração" : "alterações"}…` : "Sem internet · salvo no aparelho"}
+    </div>
   );
 }
