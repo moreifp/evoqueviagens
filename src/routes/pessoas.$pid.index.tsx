@@ -150,7 +150,7 @@ function FichaPessoa() {
   const vistos = f.docs.filter((d) => (TIPOS_VISTO as readonly string[]).includes(d.tipo));
   const extras = f.docs.filter((d) => d.tipo !== "passaporte" && !(TIPOS_VISTO as readonly string[]).includes(d.tipo));
 
-  function CartaoDoc({ d }: { d: (typeof f.docs)[number] }) {
+  function CartaoDoc({ d }: { d: Ficha["docs"][number] }) {
     const nome = NOME_DOC[d.tipo] ?? d.tipo;
     const a = alertaDoc(d);
     const secao = d.tipo === "passaporte" ? "passaporte" : (TIPOS_VISTO as readonly string[]).includes(d.tipo) ? "vistos" : "extras";
@@ -284,8 +284,8 @@ function FichaPessoa() {
               onSalvar={(v) => {
                 const valores = {
                   person_id: pid,
-                  assento: v.assento,
-                  quarto: v.quarto,
+                  assento: v.assento ?? null,
+                  quarto: v.quarto ?? null,
                   bebe_alcool: v.bebe_alcool == null ? null : v.bebe_alcool === "true",
                   restricoes: (v.restricoes ?? "").split(",").map((x) => x.trim()).filter(Boolean),
                 };
