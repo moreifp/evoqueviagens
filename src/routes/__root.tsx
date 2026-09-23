@@ -168,7 +168,7 @@ function RootComponent() {
 function Conteudo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   if (path.startsWith("/c/")) return <Outlet />;
-  const mostraAbas = !path.startsWith("/trip/");
+  const mostraAbas = !path.startsWith("/trip/") && !path.startsWith("/pessoas/") && path !== "/nova-viagem";
   return (
     <AuthGate>
       <Outlet />

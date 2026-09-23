@@ -9,8 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
+import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
@@ -23,14 +23,14 @@ import { Route as TripIdDespesasNovaRouteImport } from './routes/trip.$id.despes
 import { Route as TripIdHospedagemIndexRouteImport } from './routes/trip.$id.hospedagem.index'
 import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hospedagem.nova'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const NovaViagemRoute = NovaViagemRouteImport.update({
   id: '/nova-viagem',
   path: '/nova-viagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ViagensRoute = ViagensRouteImport.update({
+  id: '/viagens',
+  path: '/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TripIdRoute = TripIdRouteImport.update({
@@ -90,8 +90,8 @@ const TripIdHospedagemNovaRoute = TripIdHospedagemNovaRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/viagens': typeof ViagensRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
@@ -105,8 +105,8 @@ export interface FileRoutesByFullPath {
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/viagens': typeof ViagensRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -120,8 +120,8 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/viagens': typeof ViagensRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
@@ -137,8 +137,8 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/nova-viagem'
+    | '/viagens'
     | '/trip/$id'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
@@ -152,8 +152,8 @@ export interface FileRouteTypes {
     | '/trip/$id/hospedagem/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/nova-viagem'
+    | '/viagens'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -166,8 +166,8 @@ export interface FileRouteTypes {
     | '/trip/$id/hospedagem'
   id:
     | '__root__'
-    | '/'
     | '/nova-viagem'
+    | '/viagens'
     | '/trip/$id'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
@@ -182,25 +182,25 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   NovaViagemRoute: typeof NovaViagemRoute
+  ViagensRoute: typeof ViagensRoute
   TripIdRoute: typeof TripIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/nova-viagem': {
       id: '/nova-viagem'
       path: '/nova-viagem'
       fullPath: '/nova-viagem'
       preLoaderRoute: typeof NovaViagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/viagens': {
+      id: '/viagens'
+      path: '/viagens'
+      fullPath: '/viagens'
+      preLoaderRoute: typeof ViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trip/$id': {
@@ -313,8 +313,8 @@ const TripIdRouteWithChildren =
   TripIdRoute._addFileChildren(TripIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   NovaViagemRoute: NovaViagemRoute,
+  ViagensRoute: ViagensRoute,
   TripIdRoute: TripIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

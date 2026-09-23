@@ -100,7 +100,7 @@ function MinhasViagens() {
         )}
       </main>
 
-      <div className="fixed inset-x-0 bottom-[76px] border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] border-t border-border bg-background px-4 py-3">
         <Link
           to="/nova-viagem"
           className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
