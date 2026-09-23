@@ -199,10 +199,10 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
 
   const idx = passos.indexOf(tela);
 
-  async function gravar(dados: Omit<Parameters<typeof salvar>[0]["data"], "token" | "secao" | "passo">, depois: "proximo" | "pausa") {
+  async function gravar(dados: Record<string, unknown>, depois: "proximo" | "pausa") {
     setOcupado(true);
     try {
-      const r = await salvar({ data: { token, secao: tela as Secao, passo: idx + 1, ...dados } });
+      const r = await salvar({ data: { token, secao: tela as Secao, passo: idx + 1, ...(dados as object) } } as never);
       setC(r.cadastro);
       if (depois === "pausa") {
         toast.success(t("salvo"), { duration: 8000 });
