@@ -48,7 +48,7 @@ function VisaoGeral() {
 
   return (
     <>
-      <Topo titulo={trip.nome} voltarPara="/" />
+      <Topo titulo={trip.nome} voltarPara="/viagens" />
       <main className="space-y-4 px-4 pt-3">
         {usarBilhete && proximoBilhete ? (
           <CardProximo

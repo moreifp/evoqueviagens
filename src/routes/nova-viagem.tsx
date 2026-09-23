@@ -56,7 +56,7 @@ function NovaViagem() {
 
   return (
     <div className="min-h-screen bg-background pb-10">
-      <Topo titulo="Nova viagem" voltarPara="/" />
+      <Topo titulo="Nova viagem" voltarPara="/viagens" />
       <form onSubmit={salvar} className="space-y-5 px-4 pt-4">
         <Campo rotulo="Nome">
           <input required value={nome} onChange={(e) => setNome(e.target.value)} className={inputCls} />

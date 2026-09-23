@@ -10,8 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DespesasRouteImport } from './routes/despesas'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as RestaurantesRouteImport } from './routes/restaurantes'
+import { Route as ViagensRouteImport } from './routes/viagens'
+import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as PessoasConvidarRouteImport } from './routes/pessoas.convidar'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
+import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
+import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
@@ -28,14 +36,54 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DespesasRoute = DespesasRouteImport.update({
+  id: '/despesas',
+  path: '/despesas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NovaViagemRoute = NovaViagemRouteImport.update({
   id: '/nova-viagem',
   path: '/nova-viagem',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestaurantesRoute = RestaurantesRouteImport.update({
+  id: '/restaurantes',
+  path: '/restaurantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ViagensRoute = ViagensRouteImport.update({
+  id: '/viagens',
+  path: '/viagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CTokenRoute = CTokenRouteImport.update({
+  id: '/c/$token',
+  path: '/c/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PessoasConvidarRoute = PessoasConvidarRouteImport.update({
+  id: '/pessoas/convidar',
+  path: '/pessoas/convidar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TripIdRoute = TripIdRouteImport.update({
   id: '/trip/$id',
   path: '/trip/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PessoasPidIndexRoute = PessoasPidIndexRouteImport.update({
+  id: '/pessoas/$pid/',
+  path: '/pessoas/$pid/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PessoasPidConferirRoute = PessoasPidConferirRouteImport.update({
+  id: '/pessoas/$pid/conferir',
+  path: '/pessoas/$pid/conferir',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TripIdIndexRoute = TripIdIndexRouteImport.update({
@@ -91,11 +139,19 @@ const TripIdHospedagemNovaRoute = TripIdHospedagemNovaRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
+  '/viagens': typeof ViagensRoute
+  '/c/$token': typeof CTokenRoute
+  '/pessoas/convidar': typeof PessoasConvidarRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
@@ -106,10 +162,18 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
+  '/viagens': typeof ViagensRoute
+  '/c/$token': typeof CTokenRoute
+  '/pessoas/convidar': typeof PessoasConvidarRoute
+  '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
@@ -121,11 +185,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
+  '/viagens': typeof ViagensRoute
+  '/c/$token': typeof CTokenRoute
+  '/pessoas/convidar': typeof PessoasConvidarRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
+  '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
@@ -138,11 +210,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
+    | '/viagens'
+    | '/c/$token'
+    | '/pessoas/convidar'
     | '/trip/$id'
+    | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
+    | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
@@ -153,10 +233,18 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
+    | '/viagens'
+    | '/c/$token'
+    | '/pessoas/convidar'
+    | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
+    | '/pessoas/$pid'
     | '/trip/$id'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
@@ -167,11 +255,19 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
+    | '/viagens'
+    | '/c/$token'
+    | '/pessoas/convidar'
     | '/trip/$id'
+    | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
+    | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
@@ -183,8 +279,16 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DespesasRoute: typeof DespesasRoute
   NovaViagemRoute: typeof NovaViagemRoute
+  PerfilRoute: typeof PerfilRoute
+  RestaurantesRoute: typeof RestaurantesRoute
+  ViagensRoute: typeof ViagensRoute
+  CTokenRoute: typeof CTokenRoute
+  PessoasConvidarRoute: typeof PessoasConvidarRoute
   TripIdRoute: typeof TripIdRouteWithChildren
+  PessoasPidConferirRoute: typeof PessoasPidConferirRoute
+  PessoasPidIndexRoute: typeof PessoasPidIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -196,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/despesas': {
+      id: '/despesas'
+      path: '/despesas'
+      fullPath: '/despesas'
+      preLoaderRoute: typeof DespesasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova-viagem': {
       id: '/nova-viagem'
       path: '/nova-viagem'
@@ -203,11 +314,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NovaViagemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restaurantes': {
+      id: '/restaurantes'
+      path: '/restaurantes'
+      fullPath: '/restaurantes'
+      preLoaderRoute: typeof RestaurantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/viagens': {
+      id: '/viagens'
+      path: '/viagens'
+      fullPath: '/viagens'
+      preLoaderRoute: typeof ViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$token': {
+      id: '/c/$token'
+      path: '/c/$token'
+      fullPath: '/c/$token'
+      preLoaderRoute: typeof CTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/convidar': {
+      id: '/pessoas/convidar'
+      path: '/pessoas/convidar'
+      fullPath: '/pessoas/convidar'
+      preLoaderRoute: typeof PessoasConvidarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trip/$id': {
       id: '/trip/$id'
       path: '/trip/$id'
       fullPath: '/trip/$id'
       preLoaderRoute: typeof TripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/': {
+      id: '/pessoas/$pid/'
+      path: '/pessoas/$pid'
+      fullPath: '/pessoas/$pid/'
+      preLoaderRoute: typeof PessoasPidIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/conferir': {
+      id: '/pessoas/$pid/conferir'
+      path: '/pessoas/$pid/conferir'
+      fullPath: '/pessoas/$pid/conferir'
+      preLoaderRoute: typeof PessoasPidConferirRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trip/$id/': {
@@ -314,8 +474,16 @@ const TripIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DespesasRoute: DespesasRoute,
   NovaViagemRoute: NovaViagemRoute,
+  PerfilRoute: PerfilRoute,
+  RestaurantesRoute: RestaurantesRoute,
+  ViagensRoute: ViagensRoute,
+  CTokenRoute: CTokenRoute,
+  PessoasConvidarRoute: PessoasConvidarRoute,
   TripIdRoute: TripIdRouteWithChildren,
+  PessoasPidConferirRoute: PessoasPidConferirRoute,
+  PessoasPidIndexRoute: PessoasPidIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

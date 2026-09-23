@@ -3,6 +3,8 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Plane, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { cadastrarAdmin } from "@/lib/cadastro.functions";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -50,6 +52,7 @@ function Entrar() {
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
   const [carregando, setCarregando] = useState(false);
   const [espera, setEspera] = useState(0);
+  const criarAdmin = useServerFn(cadastrarAdmin);
 
   useEffect(() => {
     if (espera <= 0) return;
@@ -61,15 +64,25 @@ function Entrar() {
     e.preventDefault();
     if (espera > 0 || carregando) return;
     setCarregando(true);
-    const fn =
-      modo === "entrar"
-        ? supabase.auth.signInWithPassword({ email, password: senha })
-        : supabase.auth.signUp({
-            email,
-            password: senha,
-            options: { emailRedirectTo: window.location.origin },
-          });
-    const { data, error } = await fn;
+    if (modo === "criar") {
+      try {
+        const r = await criarAdmin({ data: { email, senha } });
+        if (!r.ok) {
+          setCarregando(false);
+          if (r.erro === "NAO_ADMIN") toast.error("Este e-mail não está na lista de administradores.");
+          else if (r.erro === "JA_EXISTE") {
+            toast.error("Essa conta já existe — toque em Entrar.");
+            setModo("entrar");
+          } else toast.error("Não deu certo agora. Tente de novo em instantes.");
+          return;
+        }
+      } catch {
+        setCarregando(false);
+        toast.error("Não deu certo agora. Tente de novo em instantes.");
+        return;
+      }
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     setCarregando(false);
     if (error) {
       const { texto, espera: s } = traduzErro(error.message);
@@ -77,10 +90,7 @@ function Entrar() {
       toast.error(texto);
       return;
     }
-    if (!data.session) {
-      toast.error("Conta criada. Entre com seu e-mail e senha.");
-      setModo("entrar");
-    }
+    if (!data.session) toast.error("Não deu certo agora. Tente de novo em instantes.");
   }
 
 
@@ -129,7 +139,7 @@ function Entrar() {
               ? `Aguarde ${espera}s`
               : modo === "entrar"
                 ? "Entrar"
-                : "Criar conta"}
+                : "Criar minha senha"}
           </button>
           {espera > 0 && (
             <p className="text-center text-base text-muted-foreground">
@@ -143,7 +153,7 @@ function Entrar() {
           onClick={() => setModo(modo === "entrar" ? "criar" : "entrar")}
           className="tap mt-4 w-full rounded-xl text-base font-semibold text-accent underline"
         >
-          {modo === "entrar" ? "Criar conta" : "Já tenho conta"}
+          {modo === "entrar" ? "Primeiro acesso (administrador)" : "Já tenho senha"}
         </button>
       </div>
     </div>

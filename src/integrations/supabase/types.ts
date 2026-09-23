@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_admin: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          email: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          email: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      cadastro_link: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          deleted_at: string | null
+          expira_em: string
+          id: string
+          person_id: string
+          revogado_em: string | null
+          token_hash: string
+          ultimo_acesso_em: string | null
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          expira_em?: string
+          id?: string
+          person_id: string
+          revogado_em?: string | null
+          token_hash: string
+          ultimo_acesso_em?: string | null
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          expira_em?: string
+          id?: string
+          person_id?: string
+          revogado_em?: string | null
+          token_hash?: string
+          ultimo_acesso_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cadastro_link_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consistency_finding: {
         Row: {
           created_at: string
@@ -194,31 +256,37 @@ export type Database = {
       }
       loyalty_account: {
         Row: {
+          categoria: string | null
           created_at: string
           deleted_at: string | null
           id: string
           numero: string | null
-          owner_id: string
+          owner_id: string | null
           person_id: string
           programa: string
+          tipo: string
         }
         Insert: {
+          categoria?: string | null
           created_at?: string
           deleted_at?: string | null
           id?: string
           numero?: string | null
-          owner_id: string
+          owner_id?: string | null
           person_id: string
           programa: string
+          tipo?: string
         }
         Update: {
+          categoria?: string | null
           created_at?: string
           deleted_at?: string | null
           id?: string
           numero?: string | null
-          owner_id?: string
+          owner_id?: string | null
           person_id?: string
           programa?: string
+          tipo?: string
         }
         Relationships: [
           {
@@ -232,39 +300,222 @@ export type Database = {
       }
       person: {
         Row: {
+          apelido: string | null
+          atualizado_em: string
+          consentimento_em: string | null
+          cpf: string | null
           created_at: string
           data_nascimento: string | null
           deleted_at: string | null
+          email: string | null
+          emergencia_nome: string | null
+          emergencia_parentesco: string | null
+          emergencia_telefone: string | null
+          endereco: string | null
+          foto_url: string | null
           id: string
+          idioma: string
+          modo: string | null
           nacionalidades: string[]
           nome: string
           nome_como_no_documento: string | null
-          owner_id: string
+          owner_id: string | null
+          passo_atual: number
+          sexo: string | null
+          status: string
+          telefone: string | null
           user_id: string | null
         }
         Insert: {
+          apelido?: string | null
+          atualizado_em?: string
+          consentimento_em?: string | null
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           deleted_at?: string | null
+          email?: string | null
+          emergencia_nome?: string | null
+          emergencia_parentesco?: string | null
+          emergencia_telefone?: string | null
+          endereco?: string | null
+          foto_url?: string | null
           id?: string
+          idioma?: string
+          modo?: string | null
           nacionalidades?: string[]
           nome: string
           nome_como_no_documento?: string | null
-          owner_id: string
+          owner_id?: string | null
+          passo_atual?: number
+          sexo?: string | null
+          status?: string
+          telefone?: string | null
           user_id?: string | null
         }
         Update: {
+          apelido?: string | null
+          atualizado_em?: string
+          consentimento_em?: string | null
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           deleted_at?: string | null
+          email?: string | null
+          emergencia_nome?: string | null
+          emergencia_parentesco?: string | null
+          emergencia_telefone?: string | null
+          endereco?: string | null
+          foto_url?: string | null
           id?: string
+          idioma?: string
+          modo?: string | null
           nacionalidades?: string[]
           nome?: string
           nome_como_no_documento?: string | null
-          owner_id?: string
+          owner_id?: string | null
+          passo_atual?: number
+          sexo?: string | null
+          status?: string
+          telefone?: string | null
           user_id?: string | null
         }
         Relationships: []
+      }
+      person_change: {
+        Row: {
+          arquivo_antigo: string | null
+          arquivo_novo: string | null
+          campo: string
+          criado_em: string
+          deleted_at: string | null
+          id: string
+          person_id: string
+          secao: string
+          status: string
+          valor_antigo: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          arquivo_antigo?: string | null
+          arquivo_novo?: string | null
+          campo: string
+          criado_em?: string
+          deleted_at?: string | null
+          id?: string
+          person_id: string
+          secao: string
+          status?: string
+          valor_antigo?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          arquivo_antigo?: string | null
+          arquivo_novo?: string | null
+          campo?: string
+          criado_em?: string
+          deleted_at?: string | null
+          id?: string
+          person_id?: string
+          secao?: string
+          status?: string
+          valor_antigo?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_change_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_preferences: {
+        Row: {
+          assento: string | null
+          bebe_alcool: boolean | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          person_id: string
+          quarto: string | null
+          restricoes: string[]
+        }
+        Insert: {
+          assento?: string | null
+          bebe_alcool?: boolean | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id: string
+          quarto?: string | null
+          restricoes?: string[]
+        }
+        Update: {
+          assento?: string | null
+          bebe_alcool?: boolean | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id?: string
+          quarto?: string | null
+          restricoes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_preferences_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: true
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_section_review: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          person_id: string
+          recado: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          secao: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id: string
+          recado?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          secao: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id?: string
+          recado?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          secao?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_section_review_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ticket: {
         Row: {
@@ -343,37 +594,52 @@ export type Database = {
       traveler_document: {
         Row: {
           anexo_url: string | null
+          arquivo_path: string | null
           created_at: string
           deleted_at: string | null
+          detalhe: string | null
+          emissao: string | null
           id: string
+          nome_no_documento: string | null
           numero: string | null
-          owner_id: string
+          owner_id: string | null
           pais_emissor: string | null
           person_id: string
+          sexo: string | null
           tipo: string
           validade: string | null
         }
         Insert: {
           anexo_url?: string | null
+          arquivo_path?: string | null
           created_at?: string
           deleted_at?: string | null
+          detalhe?: string | null
+          emissao?: string | null
           id?: string
+          nome_no_documento?: string | null
           numero?: string | null
-          owner_id: string
+          owner_id?: string | null
           pais_emissor?: string | null
           person_id: string
+          sexo?: string | null
           tipo: string
           validade?: string | null
         }
         Update: {
           anexo_url?: string | null
+          arquivo_path?: string | null
           created_at?: string
           deleted_at?: string | null
+          detalhe?: string | null
+          emissao?: string | null
           id?: string
+          nome_no_documento?: string | null
           numero?: string | null
-          owner_id?: string
+          owner_id?: string | null
           pais_emissor?: string | null
           person_id?: string
+          sexo?: string | null
           tipo?: string
           validade?: string | null
         }
