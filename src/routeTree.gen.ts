@@ -9,7 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as DespesasRouteImport } from './routes/despesas'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as RestaurantesRouteImport } from './routes/restaurantes'
 import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
@@ -23,9 +27,29 @@ import { Route as TripIdDespesasNovaRouteImport } from './routes/trip.$id.despes
 import { Route as TripIdHospedagemIndexRouteImport } from './routes/trip.$id.hospedagem.index'
 import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hospedagem.nova'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DespesasRoute = DespesasRouteImport.update({
+  id: '/despesas',
+  path: '/despesas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NovaViagemRoute = NovaViagemRouteImport.update({
   id: '/nova-viagem',
   path: '/nova-viagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestaurantesRoute = RestaurantesRouteImport.update({
+  id: '/restaurantes',
+  path: '/restaurantes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ViagensRoute = ViagensRouteImport.update({
@@ -90,7 +114,11 @@ const TripIdHospedagemNovaRoute = TripIdHospedagemNovaRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
@@ -105,7 +133,11 @@ export interface FileRoutesByFullPath {
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
@@ -120,7 +152,11 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
+  '/perfil': typeof PerfilRoute
+  '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
@@ -137,7 +173,11 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
     | '/viagens'
     | '/trip/$id'
     | '/trip/$id/pessoas'
@@ -152,7 +192,11 @@ export interface FileRouteTypes {
     | '/trip/$id/hospedagem/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
     | '/viagens'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
@@ -166,7 +210,11 @@ export interface FileRouteTypes {
     | '/trip/$id/hospedagem'
   id:
     | '__root__'
+    | '/'
+    | '/despesas'
     | '/nova-viagem'
+    | '/perfil'
+    | '/restaurantes'
     | '/viagens'
     | '/trip/$id'
     | '/trip/$id/pessoas'
@@ -182,18 +230,50 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  DespesasRoute: typeof DespesasRoute
   NovaViagemRoute: typeof NovaViagemRoute
+  PerfilRoute: typeof PerfilRoute
+  RestaurantesRoute: typeof RestaurantesRoute
   ViagensRoute: typeof ViagensRoute
   TripIdRoute: typeof TripIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/despesas': {
+      id: '/despesas'
+      path: '/despesas'
+      fullPath: '/despesas'
+      preLoaderRoute: typeof DespesasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova-viagem': {
       id: '/nova-viagem'
       path: '/nova-viagem'
       fullPath: '/nova-viagem'
       preLoaderRoute: typeof NovaViagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restaurantes': {
+      id: '/restaurantes'
+      path: '/restaurantes'
+      fullPath: '/restaurantes'
+      preLoaderRoute: typeof RestaurantesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/viagens': {
@@ -313,7 +393,11 @@ const TripIdRouteWithChildren =
   TripIdRoute._addFileChildren(TripIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  DespesasRoute: DespesasRoute,
   NovaViagemRoute: NovaViagemRoute,
+  PerfilRoute: PerfilRoute,
+  RestaurantesRoute: RestaurantesRoute,
   ViagensRoute: ViagensRoute,
   TripIdRoute: TripIdRouteWithChildren,
 }

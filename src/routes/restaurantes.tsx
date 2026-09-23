@@ -14,7 +14,7 @@ export const Route = createFileRoute("/restaurantes")({
   component: () => <EmBreve titulo="Restaurantes" Icone={Utensils} />,
 });
 
-export function EmBreve({ titulo, Icone }: { titulo: string; Icone: typeof Utensils }) {
+function EmBreve({ titulo, Icone }: { titulo: string; Icone: typeof Utensils }) {
   return (
     <div className="min-h-screen bg-background pb-32">
       <header className="flex items-center gap-2 px-4 py-3">
