@@ -418,6 +418,15 @@ export const enviarCadastro = createServerFn({ method: "POST" })
   });
 
 /** Cria a conta de login só para e-mails da lista de admins. */
+export const verificarAdmin = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ email: z.string().email().max(200) }).parse(d))
+  .handler(async ({ data }) => {
+    const db = await adminClient();
+    const email = data.email.trim().toLowerCase();
+    const { data: adm } = await db.from("app_admin").select("email").ilike("email", email).maybeSingle();
+    return { ok: !!adm };
+  });
+
 export const cadastrarAdmin = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ email: z.string().email().max(200), senha: z.string().min(6).max(100) }).parse(d))
   .handler(async ({ data }) => {
