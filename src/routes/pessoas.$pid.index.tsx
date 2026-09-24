@@ -378,12 +378,13 @@ function FichaPessoa() {
           )}
         </Cartao>
 
-        {passaportes.length === 0 && (
+        {passaportes.length === 0 && editando !== "novo:passaporte" && (
           <Cartao titulo="Passaporte">
             <p className="text-base text-muted-foreground">Ainda não enviado.</p>
           </Cartao>
         )}
         {passaportes.map((d) => cartaoDoc(d))}
+        {novoPassaporte()}
         {vistos.map((d) => cartaoDoc(d))}
 
         {f.contas.map((c) => (
@@ -402,6 +403,7 @@ function FichaPessoa() {
                   patch((x) => ({ ...x, contas: x.contas.map((y) => (y.id === c.id ? { ...y, ...v } : y)) }));
                   setEditando(null);
                   salvarOp({ tipo: "update", tabela: "loyalty_account", id: c.id, valores: v });
+                  atualizou("fidelidade");
                 }}
               />
             ) : (
@@ -437,6 +439,7 @@ function FichaPessoa() {
                 patch((x) => ({ ...x, prefs: valores }));
                 setEditando(null);
                 salvarOp({ tipo: "upsert", tabela: "person_preferences", valores, onConflict: "person_id" });
+                atualizou("preferencias");
               }}
             />
           ) : (
@@ -451,7 +454,7 @@ function FichaPessoa() {
 
         <Cartao titulo="Emergência" onEditar={() => setEditando("emerg")}>
           {editando === "emerg" ? (
-            <Editor campos={CAMPOS_EMERG} valores={p} onCancelar={() => setEditando(null)} onSalvar={salvarPessoa} />
+            <Editor campos={CAMPOS_EMERG} valores={p} onCancelar={() => setEditando(null)} onSalvar={(v) => salvarPessoa(v, "emergencia")} />
           ) : (
             <>
               <Dado rotulo="Nome" valor={p.emergencia_nome} />
