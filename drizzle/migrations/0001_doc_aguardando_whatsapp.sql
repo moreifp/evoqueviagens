@@ -1,0 +1,1 @@
+ALTER TABLE public.traveler_document ADD COLUMN IF NOT EXISTS aguardando_em timestamptz;

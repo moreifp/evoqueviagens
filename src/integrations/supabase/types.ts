@@ -593,6 +593,7 @@ export type Database = {
       }
       traveler_document: {
         Row: {
+          aguardando_em: string | null
           anexo_url: string | null
           arquivo_path: string | null
           created_at: string
@@ -610,6 +611,7 @@ export type Database = {
           validade: string | null
         }
         Insert: {
+          aguardando_em?: string | null
           anexo_url?: string | null
           arquivo_path?: string | null
           created_at?: string
@@ -627,6 +629,7 @@ export type Database = {
           validade?: string | null
         }
         Update: {
+          aguardando_em?: string | null
           anexo_url?: string | null
           arquivo_path?: string | null
           created_at?: string
