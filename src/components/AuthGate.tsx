@@ -11,13 +11,36 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [pronto, setPronto] = useState(false);
 
+  const confereAdmin = useServerFn(verificarAdmin);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setPronto(true);
+    let vivo = true;
+    async function aplicar(s: Session | null) {
+      if (s && s.user.app_metadata?.provider === "google") {
+        try {
+          const v = s.user.email ? await confereAdmin({ data: { email: s.user.email } }) : { ok: false };
+          if (!v.ok) {
+            await supabase.auth.signOut();
+            toast.error("Este e-mail não está na lista de administradores.");
+            s = null;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (vivo) {
+        setSession(s);
+        setPronto(true);
+      }
+    }
+    supabase.auth.getSession().then(({ data }) => aplicar(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setTimeout(() => aplicar(s), 0);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      vivo = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   if (!pronto) {
