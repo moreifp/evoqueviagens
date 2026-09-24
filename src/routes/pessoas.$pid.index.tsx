@@ -739,6 +739,7 @@ function FichaPessoa() {
               </div>
             </div>
           )}
+          </div>
         </Cartao>
 
         <div className="pt-6">
