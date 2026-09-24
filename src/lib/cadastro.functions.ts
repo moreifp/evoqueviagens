@@ -12,14 +12,31 @@ const PERSON_COLS =
 const DOC_COLS = "id, tipo, numero, pais_emissor, validade, emissao, nome_no_documento, sexo, detalhe, arquivo_path";
 
 async function carregar(db: Admin, pid: string): Promise<CadastroDTO> {
-  const [p, d, c, pr, r] = await Promise.all([
-    db.from("person").select(PERSON_COLS).eq("id", pid).single(),
-    db.from("traveler_document").select(DOC_COLS).eq("person_id", pid).is("deleted_at", null),
-    db.from("loyalty_account").select("id, programa, numero, tipo, categoria").eq("person_id", pid).is("deleted_at", null),
-    db.from("person_preferences").select("assento, quarto, bebe_alcool, restricoes, refeicao_voo").eq("person_id", pid).maybeSingle(),
-    db.from("person_section_review").select("secao, status, recado").eq("person_id", pid).is("deleted_at", null),
-  ]);
-  if (p.error) throw new Error("LINK_INVALIDO");
+  async function consultar() {
+    return Promise.all([
+      db.from("person").select(PERSON_COLS).eq("id", pid).single(),
+      db.from("traveler_document").select(DOC_COLS).eq("person_id", pid).is("deleted_at", null),
+      db.from("loyalty_account").select("id, programa, numero, tipo, categoria").eq("person_id", pid).is("deleted_at", null),
+      db.from("person_preferences").select("assento, quarto, bebe_alcool, restricoes, refeicao_voo").eq("person_id", pid).maybeSingle(),
+      db.from("person_section_review").select("secao, status, recado").eq("person_id", pid).is("deleted_at", null),
+    ]);
+  }
+  let [p, d, c, pr, r] = await consultar();
+  const falhou = () => p.error || d.error || c.error || pr.error || r.error;
+  // Uma falha momentânea na leitura não transforma um token já validado em inválido.
+  // Repete a leitura uma vez e preserva um erro próprio para diagnóstico.
+  if (falhou()) [p, d, c, pr, r] = await consultar();
+  if (falhou() || !p.data) {
+    console.error("CADASTRO_CARREGAR_FALHOU", {
+      personId: pid,
+      person: p.error?.message,
+      docs: d.error?.message,
+      contas: c.error?.message,
+      prefs: pr.error?.message,
+      revisoes: r.error?.message,
+    });
+    throw new Error("FALHA_CARREGAR");
+  }
   const paths = [p.data.foto_url, ...(d.data ?? []).map((x: { arquivo_path: string | null }) => x.arquivo_path)].filter(
     (x): x is string => !!x,
   );
