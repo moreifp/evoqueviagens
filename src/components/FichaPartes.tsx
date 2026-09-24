@@ -231,7 +231,7 @@ export function Editor({
           )}
           {leitura && (
             <p className={`rounded-xl p-3 text-base font-bold ${leitura === "ok" ? "bg-ok/10 text-ok" : leitura === "falhou" ? "bg-warn/10 text-warn" : "bg-muted text-foreground"}`}>
-              {leitura === "lendo" ? "Lendo o passaporte…" : leitura === "ok" ? "Lemos o passaporte · confira os campos e toque Salvar" : "Não deu para ler · preencha à mão"}
+              {leitura === "lendo" ? "Lendo a foto…" : leitura === "ok" ? "Lemos a foto · confira os campos e toque Salvar" : "Não deu para ler · preencha à mão"}
             </p>
           )}
           <div className="flex gap-2">
