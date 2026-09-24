@@ -133,6 +133,16 @@ function Entrar() {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={entrarGoogle}
+          disabled={carregando}
+          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+        >
+          <Chrome size={28} strokeWidth={2.2} />
+          Entrar com Google
+        </button>
+
         <form onSubmit={enviar} className="space-y-4">
           <label className="block">
             <span className="text-base font-semibold">E-mail</span>
