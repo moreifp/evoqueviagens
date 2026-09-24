@@ -1,4 +1,4 @@
-const CACHE = "evoque-v3";
+const CACHE = "evoque-v4";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

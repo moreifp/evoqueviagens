@@ -154,6 +154,7 @@ export function Editor({
   foto,
   fotoInicial,
   lerFoto,
+  orientacaoFoto,
 }: {
   campos: CampoEd[];
   valores: Record<string, unknown>;
@@ -162,6 +163,7 @@ export function Editor({
   foto?: { path: string | null };
   fotoInicial?: File;
   lerFoto?: (f: File) => Promise<Record<string, string> | null>;
+  orientacaoFoto?: string;
 }) {
   const [inicial] = useState<Record<string, string>>(() =>
     Object.fromEntries(campos.map((c) => [c.chave, paraTexto(valores[c.chave])])),
@@ -218,6 +220,9 @@ export function Editor({
       {foto && (
         <div className="space-y-2">
           <span className="text-base font-bold text-foreground">Foto</span>
+          {orientacaoFoto && (
+            <p className="rounded-xl border border-border bg-muted p-3 text-base text-foreground">{orientacaoFoto}</p>
+          )}
           {mostraFoto ? (
             mostraFoto === "pdf" || /\.pdf(\?|$)/i.test(mostraFoto) ? (
               <Miniatura src="pdf" className="h-24 w-full rounded-xl" />

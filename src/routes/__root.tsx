@@ -139,6 +139,13 @@ function RootComponent() {
       });
     })();
     if ("serviceWorker" in navigator) {
+      let recarregou = false;
+      const atualizarPagina = () => {
+        if (recarregou) return;
+        recarregou = true;
+        window.location.reload();
+      };
+      navigator.serviceWorker.addEventListener("controllerchange", atualizarPagina);
       navigator.serviceWorker
         .register("/sw.js")
         .then(() => navigator.serviceWorker.ready)
@@ -156,6 +163,7 @@ function RootComponent() {
     }
     return () => {
       cancelado = true;
+      navigator.serviceWorker?.removeEventListener("controllerchange", atualizarPagina);
     };
   }, [queryClient]);
 
