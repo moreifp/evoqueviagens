@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { adminClient, validarToken, type Admin } from "./cadastro.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { extrairLinhas, lerMrz } from "./mrz";
 import type { CadastroDTO, Secao } from "./cadastro-tipos";
 
@@ -65,15 +66,50 @@ export const iniciarCadastro = createServerFn({ method: "POST" })
   });
 
 export const urlUpload = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ token: tokenSchema }).parse(d))
+  .inputValidator((d) => z.object({ token: tokenSchema, ext: z.enum(["jpg", "pdf", "heic"]).optional() }).parse(d))
   .handler(async ({ data }) => {
     const db = await adminClient();
     const pid = await validarToken(db, data.token);
-    const path = `${pid}/${crypto.randomUUID()}.jpg`;
+    const path = `${pid}/${crypto.randomUUID()}.${data.ext ?? "jpg"}`;
     const { data: u, error } = await db.storage.from("documentos").createSignedUploadUrl(path);
     if (error || !u) throw new Error("Falha ao preparar envio");
     return { path, token: u.token };
   });
+
+async function lerMrzDaImagem(imagem: string) {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) return { ok: false as const };
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "This is a passport data page. Transcribe ONLY the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<'. Output the two lines separated by a newline and nothing else. If you cannot read them, output NONE.",
+              },
+              { type: "image_url", image_url: { url: imagem } },
+            ],
+          },
+        ],
+      }),
+    });
+    if (!r.ok) return { ok: false as const };
+    const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
+    const linhas = extrairLinhas(j.choices?.[0]?.message?.content ?? "");
+    if (!linhas) return { ok: false as const };
+    const res = lerMrz(linhas[0], linhas[1]);
+    if (!res) return { ok: false as const };
+    return { ok: true as const, mrz: res };
+  } catch {
+    return { ok: false as const };
+  }
+}
 
 export const lerPassaporte = createServerFn({ method: "POST" })
   .inputValidator((d) =>
@@ -82,39 +118,18 @@ export const lerPassaporte = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await adminClient();
     await validarToken(db, data.token);
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) return { ok: false as const };
-    try {
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: "This is a passport data page. Transcribe ONLY the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<'. Output the two lines separated by a newline and nothing else. If you cannot read them, output NONE.",
-                },
-                { type: "image_url", image_url: { url: data.imagem } },
-              ],
-            },
-          ],
-        }),
-      });
-      if (!r.ok) return { ok: false as const };
-      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-      const texto = j.choices?.[0]?.message?.content ?? "";
-      const linhas = extrairLinhas(texto);
-      if (!linhas) return { ok: false as const };
-      const res = lerMrz(linhas[0], linhas[1]);
-      if (!res) return { ok: false as const };
-      return { ok: true as const, mrz: res };
-    } catch {
-      return { ok: false as const };
-    }
+    return lerMrzDaImagem(data.imagem);
+  });
+
+/** Mesma leitura, para o administrador na ficha. */
+export const lerPassaporteAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const email = String((context.claims as { email?: string }).email ?? "").toLowerCase();
+    const { data: adm } = await context.supabase.from("app_admin").select("email").ilike("email", email).maybeSingle();
+    if (!adm) throw new Error("NAO_ADMIN");
+    return lerMrzDaImagem(data.imagem);
   });
 
 const docSchema = z.object({
