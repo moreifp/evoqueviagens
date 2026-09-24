@@ -202,14 +202,35 @@ export const salvarPasso = createServerFn({ method: "POST" })
         .eq("person_id", pid)
         .in("tipo", data.tiposDaSecao)
         .is("deleted_at", null);
-      const idsMantidos = new Set(data.docs.map((d) => d.id).filter(Boolean));
+      // Idempotência: um documento sem id (ex.: nova tentativa depois de uma resposta perdida)
+      // é casado com o que já existe — passaporte pelo número, demais tipos únicos pelo tipo.
+      const norm = (s: unknown) => String(s ?? "").replace(/\s/g, "").toUpperCase();
+      const usados = new Set<string>();
+      const resolvidos = data.docs.map((d) => {
+        if (d.id && (atuais ?? []).some((a: { id: string }) => a.id === d.id)) {
+          usados.add(d.id);
+          return d;
+        }
+        const cand = (atuais ?? []).find((a: { id: string; tipo: string; numero: string | null }) => {
+          if (usados.has(a.id) || a.tipo !== d.tipo) return false;
+          if (d.tipo === "passaporte") return !!d.numero && norm(a.numero) === norm(d.numero);
+          if (d.tipo === "outro_visto") return false;
+          return true;
+        });
+        if (cand) {
+          usados.add(cand.id);
+          return { ...d, id: cand.id };
+        }
+        return { ...d, id: undefined };
+      });
+      const idsMantidos = new Set(resolvidos.map((d) => d.id).filter(Boolean));
       for (const a of atuais ?? []) {
         if (!idsMantidos.has(a.id)) {
           await db.from("traveler_document").update({ deleted_at: new Date().toISOString() }).eq("id", a.id);
           mudancas.push({ campo: `traveler_document:${a.id}:deleted_at`, antigo: null, novo: "removido" });
         }
       }
-      for (const d of data.docs) {
+      for (const d of resolvidos) {
         const { id, ...vals } = d;
         const limpo = Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, v === "" ? null : v]));
         const atual = id ? (atuais ?? []).find((a: { id: string }) => a.id === id) : null;
@@ -311,7 +332,21 @@ export const salvarPasso = createServerFn({ method: "POST" })
     if (pessoa.status === "convidado") upd.status = "em_andamento";
     await db.from("person").update(upd).eq("id", pid);
 
-    return { ok: true, cadastro: await carregar(db, pid) };
+    // Tudo já foi gravado: uma falha ao recarregar não pode virar "erro" no aparelho.
+    try {
+      return { ok: true, cadastro: await carregar(db, pid) };
+    } catch (e) {
+      console.error("[salvarPasso] recarregar falhou", secao, e);
+      return { ok: true, cadastro: null };
+    }
+  });
+
+/** Aparelho do participante relata um erro para aparecer nos registros do servidor. */
+export const relatarErro = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ onde: z.string().max(60), msg: z.string().max(1000), ua: z.string().max(300) }).parse(d))
+  .handler(async ({ data }) => {
+    console.error("[cliente]", data.onde, data.msg, data.ua);
+    return { ok: true };
   });
 
 export const enviarCadastro = createServerFn({ method: "POST" })

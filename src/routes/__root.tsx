@@ -146,7 +146,9 @@ function RootComponent() {
           const urls = performance
             .getEntriesByType("resource")
             .map((e) => e.name)
-            .filter((u) => u.startsWith(location.origin) || u.includes("fonts.g"));
+            .filter((u) => u.startsWith(location.origin) || u.includes("fonts.g"))
+            .filter((u) => !/\/(_serverFn|api|c)\/|\/~/.test(new URL(u).pathname + "/"));
+          if (location.pathname.startsWith("/c/")) return;
           reg.active?.postMessage({ tipo: "guardar", urls: [...urls, location.href] });
         })
         .catch(() => {});

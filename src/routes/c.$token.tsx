@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { abrirCadastro, iniciarCadastro, lerPassaporte, salvarPasso, enviarCadastro, urlUpload } from "@/lib/cadastro.functions";
+import { abrirCadastro, iniciarCadastro, lerPassaporte, salvarPasso, enviarCadastro, urlUpload, relatarErro } from "@/lib/cadastro.functions";
 import {
   NOME_DOC, NOME_DOC_EN, NOME_SECAO, PROGRAMAS, TIPOS_EXTRA, TIPOS_VISTO, passosDoModo,
   type CadastroDTO, type ContaDTO, type DocDTO, type Secao,
@@ -94,6 +94,10 @@ const T = {
   salvo: { pt: "Salvo. Pode fechar e voltar pelo mesmo link.", en: "Saved. You can close and come back with the same link." },
   falta: { pt: "Falta preencher", en: "Please fill in" },
   erro: { pt: "Não deu certo agora. Tente de novo.", en: "Something went wrong. Please try again." },
+  naoSalvo: {
+    pt: "Não conseguimos confirmar que salvou (conexão falhou). Toque em Continuar de novo — nada fica duplicado.",
+    en: "We couldn't confirm it was saved (connection failed). Tap Continue again — nothing gets duplicated.",
+  },
   correcao: { pt: "Pedido de correção", en: "Correction requested" },
   endereco: { pt: "Endereço", en: "Address" },
   apolice: { pt: "Apólice e telefone", en: "Policy number and phone" },
@@ -144,10 +148,7 @@ function CadastroParticipante() {
   }
   if (!c) return <div className="min-h-screen bg-background" />;
   return (
-    <>
-      <Fluxo token={token} inicial={c} secaoInicial={secaoInicial as Secao | undefined} />
-      <Toaster position="top-center" richColors />
-    </>
+    <Fluxo token={token} inicial={c} secaoInicial={secaoInicial as Secao | undefined} />
   );
 }
 
@@ -167,6 +168,8 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
   const salvar = useServerFn(salvarPasso);
   const enviar = useServerFn(enviarCadastro);
   const iniciar = useServerFn(iniciarCadastro);
+  const abrir = useServerFn(abrirCadastro);
+  const relatar_ = useServerFn(relatarErro);
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => window.scrollTo(0, 0), [tela]);
@@ -199,11 +202,42 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
 
   const idx = passos.indexOf(tela);
 
+  async function relatar(onde: string, e: unknown) {
+    const msg = e instanceof Error ? `${e.name}: ${e.message}\n${e.stack ?? ""}` : String(e);
+    console.error("[cadastro]", onde, e);
+    try {
+      await relatar_({ data: { onde, msg: msg.slice(0, 1000), ua: navigator.userAgent.slice(0, 300) } });
+    } catch {
+      /* sem rede */
+    }
+  }
+
   async function gravar(dados: Record<string, unknown>, depois: "proximo" | "pausa") {
     setOcupado(true);
+    const secao = tela as Secao;
+    let novo: CadastroDTO | null = null;
     try {
-      const r = await salvar({ data: { token, secao: tela as Secao, passo: idx + 1, ...(dados as object) } } as never);
-      setC(r.cadastro);
+      const r = await salvar({ data: { token, secao, passo: idx + 1, ...(dados as object) } } as never);
+      novo = (r as { cadastro: CadastroDTO | null }).cadastro;
+    } catch (e) {
+      void relatar(`salvar:${secao}`, e);
+      // A gravação pode ter chegado ao servidor mesmo sem resposta: confere antes de avisar.
+      try {
+        const a = await abrir({ data: { token } });
+        if (a.ok && a.cadastro.revisoes.some((rv) => rv.secao === secao) && a.cadastro.person.passo_atual >= idx + 1) {
+          novo = a.cadastro;
+        }
+      } catch (e2) {
+        void relatar(`conferir:${secao}`, e2);
+      }
+      if (!novo) {
+        toast.error(t("naoSalvo"), { duration: 8000 });
+        setOcupado(false);
+        return;
+      }
+    }
+    try {
+      if (novo) setC(novo);
       if (depois === "pausa") {
         toast.success(t("salvo"), { duration: 8000 });
         return;
@@ -218,8 +252,9 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
         if (e.cadastro) setC(e.cadastro);
         setTela("enviado");
       }
-    } catch {
-      toast.error(t("erro"));
+    } catch (e) {
+      void relatar(`depois:${secao}`, e);
+      toast.error(t("naoSalvo"), { duration: 8000 });
     } finally {
       setOcupado(false);
     }
