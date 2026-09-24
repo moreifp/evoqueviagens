@@ -9,11 +9,11 @@ import { Topo } from "@/components/Chrome";
 import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
 import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } from "@/components/FichaPartes";
 import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
-import { AGUARDANDO, alertaDoc, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
+import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, prepararArquivo } from "@/lib/imagem";
-import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, TIPOS_VISTO } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp } from "@/lib/links";
+import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
+import { abrirWhatsApp, linkDaPessoa, urlDoLink } from "@/lib/links";
 import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
@@ -48,8 +48,8 @@ function camposDoDoc(tipo: string): CampoEd[] {
   ];
   if (tipo === "passaporte") base.push({ chave: "sexo", rotulo: "Sexo", opcoes: SEXO });
   base.push(
-    { chave: "detalhe", rotulo: (TIPOS_VISTO as readonly string[]).includes(tipo) ? "Tipo de visto (ex.: B1/B2)" : "Detalhe" },
-    { chave: "emissao", rotulo: "Emissão", tipo: "date" },
+    { chave: "detalhe", rotulo: (TIPOS_VISTO as readonly string[]).includes(tipo) ? "Tipo de visto (ex.: B1/B2)" : tipo === "outra_vacina" ? "Nome da vacina" : "Detalhe" },
+    { chave: "emissao", rotulo: tipo === "vacina" || tipo === "outra_vacina" ? "Data da vacina" : "Emissão", tipo: "date" },
     { chave: "validade", rotulo: "Validade", tipo: "date" },
   );
   return base;
@@ -64,6 +64,7 @@ const CAMPOS_PREF: CampoEd[] = [
   { chave: "quarto", rotulo: "Quarto", opcoes: [["casal", "Casal"], ["duas_camas", "2 camas"], ["tanto_faz", "Tanto faz"]] },
   { chave: "bebe_alcool", rotulo: "Bebe álcool?", opcoes: [["true", "Sim"], ["false", "Não"]] },
   { chave: "restricoes", rotulo: "Comida (separe por vírgula)" },
+  { chave: "refeicao_voo", rotulo: "Refeição especial no voo", opcoes: REFEICOES.map((r) => [r.v, r.pt] as [string, string]) },
 ];
 const NOME_ASSENTO: Record<string, string> = { janela: "Janela", corredor: "Corredor", tanto_faz: "Tanto faz" };
 const NOME_QUARTO: Record<string, string> = { casal: "Casal", duas_camas: "2 camas", tanto_faz: "Tanto faz" };
@@ -198,7 +199,27 @@ function FichaPessoa() {
     if (m.sexo) v.sexo = m.sexo;
     if (m.validade) v.validade = m.validade;
     if (m.nascimento) v.data_nascimento = m.nascimento;
+    if (r.emissao) v.emissao = r.emissao;
     return v;
+  }
+
+  const faltando = demaisFaltando(f);
+
+  /** Pede os demais dados pelo WhatsApp; aqui vai o link pessoal, abrindo direto em "Demais dados". */
+  async function pedirDemais() {
+    if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
+    try {
+      const token = await linkDaPessoa(pid);
+      const link = urlDoLink(token, "demais");
+      const nome = p.apelido || p.nome.split(" ")[0];
+      const txt =
+        p.idioma === "en"
+          ? `Hi ${nome}! When you have a minute, could you fill in the rest of your travel profile (other documents, vaccines, in-flight meal…)? It's optional and quick. ${link}`
+          : `Oi, ${nome}! Quando puder, completa os demais dados do seu cadastro de viagem (outros documentos, vacinas, refeição no voo…)? É opcional e rapidinho. ${link}`;
+      abrirWhatsApp(p.telefone, txt);
+    } catch {
+      toast.error("Não deu para gerar o link agora.");
+    }
   }
 
   const passaportes = f.docs.filter((d) => d.tipo === "passaporte");
@@ -280,7 +301,8 @@ function FichaPessoa() {
             {d.nome_no_documento && <Dado rotulo="Nome" valor={d.nome_no_documento} />}
             <Dado rotulo="Número" valor={<NumeroOculto numero={d.numero} />} />
             {d.pais_emissor && <Dado rotulo="País" valor={d.pais_emissor} />}
-            {d.detalhe && <Dado rotulo="Detalhe" valor={d.detalhe} />}
+            {d.detalhe && <Dado rotulo={d.tipo === "outra_vacina" ? "Vacina" : "Detalhe"} valor={d.detalhe} />}
+            {d.emissao && <Dado rotulo={d.tipo === "vacina" || d.tipo === "outra_vacina" ? "Data da vacina" : "Emissão"} valor={dataBR(d.emissao)} />}
             <Dado rotulo="Validade" valor={dataBR(d.validade)} />
             {a && (
               <div className={`mt-2 flex items-center gap-2 rounded-xl p-3 ${a.nivel === "danger" ? "bg-danger/10 text-danger" : "bg-warn/10 text-warn"}`}>
@@ -464,6 +486,7 @@ function FichaPessoa() {
                   bebe_alcool: "bebe_alcool" in v ? (v.bebe_alcool == null ? null : v.bebe_alcool === "true") : at?.bebe_alcool ?? null,
                   restricoes:
                     "restricoes" in v ? (v.restricoes ?? "").split(",").map((x) => x.trim()).filter(Boolean) : at?.restricoes ?? [],
+                  refeicao_voo: "refeicao_voo" in v ? v.refeicao_voo : at?.refeicao_voo ?? null,
                 };
                 patch((x) => ({ ...x, prefs: valores }));
                 setEditando(null);
@@ -477,6 +500,7 @@ function FichaPessoa() {
               <Dado rotulo="Quarto" valor={NOME_QUARTO[f.prefs?.quarto ?? ""]} />
               <Dado rotulo="Bebe álcool" valor={f.prefs?.bebe_alcool == null ? null : f.prefs.bebe_alcool ? "Sim" : "Não"} />
               <Dado rotulo="Comida" valor={f.prefs?.restricoes.join(", ")} />
+              <Dado rotulo="Refeição no voo" valor={nomeRefeicao(f.prefs?.refeicao_voo)} />
             </>
           )}
         </Cartao>
@@ -494,6 +518,50 @@ function FichaPessoa() {
         </Cartao>
 
         {extras.map((d) => cartaoDoc(d))}
+
+        <Cartao titulo="Demais dados" onEditar={() => setEditando("demais")}>
+          {editando === "demais" ? (
+            <Editor
+              campos={[
+                { chave: "visto_negado", rotulo: "Algum visto negado ou em processo?", opcoes: [["true", "Sim"], ["false", "Não"]] },
+                { chave: "visto_negado_detalhe", rotulo: "Detalhe do visto negado / em processo" },
+              ]}
+              valores={{ visto_negado: p.visto_negado == null ? "" : String(p.visto_negado), visto_negado_detalhe: p.visto_negado_detalhe }}
+              onCancelar={() => setEditando(null)}
+              onSalvar={(v) => {
+                const out: Record<string, string | null> = { ...v };
+                if ("visto_negado" in v) (out as Record<string, unknown>).visto_negado = v.visto_negado == null ? null : v.visto_negado === "true";
+                salvarPessoa(out, "vistos");
+              }}
+            />
+          ) : (
+            <>
+              <Dado
+                rotulo="Visto negado ou em processo"
+                valor={p.visto_negado == null ? null : p.visto_negado ? `Sim${p.visto_negado_detalhe ? ` · ${p.visto_negado_detalhe}` : ""}` : "Não"}
+              />
+              {faltando.length > 0 ? (
+                <>
+                  <p className="mt-2 text-base font-bold text-foreground">Ainda vazios:</p>
+                  <ul className="mt-1 flex flex-wrap gap-2">
+                    {faltando.map((x) => (
+                      <li key={x} className="rounded-full bg-muted px-3 py-1 text-base text-foreground">{x}</li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={pedirDemais}
+                    className="tap mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-primary text-lg font-bold text-foreground"
+                  >
+                    <Send size={24} strokeWidth={2.2} />
+                    Pedir pelo WhatsApp
+                  </button>
+                </>
+              ) : (
+                <p className="mt-2 text-base text-muted-foreground">Tudo preenchido.</p>
+              )}
+            </>
+          )}
+        </Cartao>
 
         <div className="pt-6">
           {!confirmar ? (
