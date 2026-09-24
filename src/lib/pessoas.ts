@@ -21,6 +21,8 @@ export type PessoaRow = {
   emergencia_nome: string | null;
   emergencia_parentesco: string | null;
   emergencia_telefone: string | null;
+  visto_negado: boolean | null;
+  visto_negado_detalhe: string | null;
   status: string;
   passo_atual: number;
   modo: "rapido" | "completo" | null;
@@ -45,7 +47,7 @@ export type DocRow = {
 };
 export const AGUARDANDO = "Aguardando resposta no WhatsApp";
 export type ContaRow = { id: string; person_id: string; programa: string; numero: string | null; tipo: string; categoria: string | null };
-export type PrefRow = { person_id: string; assento: string | null; quarto: string | null; bebe_alcool: boolean | null; restricoes: string[] };
+export type PrefRow = { person_id: string; assento: string | null; quarto: string | null; bebe_alcool: boolean | null; restricoes: string[]; refeicao_voo: string | null };
 export type RevisaoRow = { id: string; person_id: string; secao: Secao; status: string; recado: string | null };
 export type MudancaRow = {
   id: string;
@@ -179,4 +181,20 @@ export function mascarar(n: string | null) {
 export async function urlAssinada(path: string): Promise<string | null> {
   const { data } = await supabase.storage.from("documentos").createSignedUrl(path, 60);
   return data?.signedUrl ?? null;
+}
+
+/** Itens de "Demais dados" ainda vazios (para a ficha do admin). */
+export function demaisFaltando(f: Ficha): string[] {
+  const tem = (t: string) => f.docs.some((d) => d.tipo === t);
+  const falta: string[] = [];
+  if (!tem("rg")) falta.push("RG");
+  if (!tem("cnh")) falta.push("CNH");
+  if (!tem("pid")) falta.push("Permissão Internacional (PID)");
+  if (!tem("vacina")) falta.push("Vacina febre amarela");
+  if (!tem("seguro")) falta.push("Seguro-viagem");
+  if (!tem("global_entry")) falta.push("Global Entry / TSA");
+  if (!f.pessoa.endereco) falta.push("Endereço");
+  if (!f.prefs?.refeicao_voo) falta.push("Refeição especial no voo");
+  if (f.pessoa.visto_negado == null) falta.push("Visto negado ou em processo?");
+  return falta;
 }

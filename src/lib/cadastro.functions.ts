@@ -8,7 +8,7 @@ import type { CadastroDTO, Secao } from "./cadastro-tipos";
 const tokenSchema = z.string().min(20).max(100);
 
 const PERSON_COLS =
-  "id, nome, apelido, cpf, telefone, email, foto_url, sexo, data_nascimento, nacionalidades, nome_como_no_documento, endereco, emergencia_nome, emergencia_parentesco, emergencia_telefone, status, passo_atual, modo, idioma, consentimento_em";
+  "id, nome, apelido, cpf, telefone, email, foto_url, sexo, data_nascimento, nacionalidades, nome_como_no_documento, endereco, emergencia_nome, emergencia_parentesco, emergencia_telefone, visto_negado, visto_negado_detalhe, status, passo_atual, modo, idioma, consentimento_em";
 const DOC_COLS = "id, tipo, numero, pais_emissor, validade, emissao, nome_no_documento, sexo, detalhe, arquivo_path";
 
 async function carregar(db: Admin, pid: string): Promise<CadastroDTO> {
@@ -16,7 +16,7 @@ async function carregar(db: Admin, pid: string): Promise<CadastroDTO> {
     db.from("person").select(PERSON_COLS).eq("id", pid).single(),
     db.from("traveler_document").select(DOC_COLS).eq("person_id", pid).is("deleted_at", null),
     db.from("loyalty_account").select("id, programa, numero, tipo, categoria").eq("person_id", pid).is("deleted_at", null),
-    db.from("person_preferences").select("assento, quarto, bebe_alcool, restricoes").eq("person_id", pid).maybeSingle(),
+    db.from("person_preferences").select("assento, quarto, bebe_alcool, restricoes, refeicao_voo").eq("person_id", pid).maybeSingle(),
     db.from("person_section_review").select("secao, status, recado").eq("person_id", pid).is("deleted_at", null),
   ]);
   if (p.error) throw new Error("LINK_INVALIDO");
@@ -76,6 +76,23 @@ export const urlUpload = createServerFn({ method: "POST" })
     return { path, token: u.token };
   });
 
+/** Data de emissão lida da zona visual; só aceita se for coerente (nunca adivinha). */
+function dataEmissao(texto: string, nasc: string | null, validade: string | null): string | null {
+  const m = /ISSUE:\s*(\d{4})-(\d{2})-(\d{2})/i.exec(texto);
+  if (!m) return null;
+  const iso = `${m[1]}-${m[2]}-${m[3]}`;
+  const d = new Date(`${iso}T12:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== iso) return null;
+  if (d.getTime() > Date.now()) return null;
+  if (nasc && iso <= nasc) return null;
+  if (validade) {
+    if (iso >= validade) return null;
+    const anos = (new Date(`${validade}T12:00:00Z`).getTime() - d.getTime()) / (365.25 * 86400000);
+    if (anos > 11) return null;
+  }
+  return iso;
+}
+
 async function lerMrzDaImagem(imagem: string) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) return { ok: false as const };
@@ -91,7 +108,7 @@ async function lerMrzDaImagem(imagem: string) {
             content: [
               {
                 type: "text",
-                text: "This is a passport data page. Transcribe ONLY the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<'. Output the two lines separated by a newline and nothing else. If you cannot read them, output NONE.",
+                text: "This is a passport data page. 1) Transcribe the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<', one per line. If you cannot read them, output NONE instead. 2) Then add one last line 'ISSUE: YYYY-MM-DD' with the DATE OF ISSUE printed in the visual zone (labels such as 'Data de emissão', 'Date of issue', 'Data di rilascio', 'Date de délivrance', 'Fecha de expedición'). Only if it is clearly legible; never guess, never use the expiry or birth date. If not clearly legible, output 'ISSUE: NONE'. Output nothing else.",
               },
               { type: "image_url", image_url: { url: imagem } },
             ],
@@ -105,7 +122,7 @@ async function lerMrzDaImagem(imagem: string) {
     if (!linhas) return { ok: false as const };
     const res = lerMrz(linhas[0], linhas[1]);
     if (!res) return { ok: false as const };
-    return { ok: true as const, mrz: res };
+    return { ok: true as const, mrz: res, emissao: dataEmissao(j.choices?.[0]?.message?.content ?? "", res.nascimento, res.validade) };
   } catch {
     return { ok: false as const };
   }
@@ -163,6 +180,7 @@ const salvarSchema = z.object({
       quarto: z.string().nullish(),
       bebe_alcool: z.boolean().nullish(),
       restricoes: z.array(z.string().max(40)).max(10),
+      refeicao_voo: z.string().max(80).nullish(),
     })
     .optional(),
 });
@@ -170,6 +188,7 @@ const salvarSchema = z.object({
 const CAMPOS_PERSON = new Set([
   "apelido", "cpf", "telefone", "email", "foto_url", "sexo", "data_nascimento", "nacionalidades",
   "nome_como_no_documento", "endereco", "emergencia_nome", "emergencia_parentesco", "emergencia_telefone",
+  "visto_negado", "visto_negado_detalhe",
 ]);
 
 type Mudanca = { campo: string; antigo: unknown; novo: unknown; arquivo?: boolean };
@@ -226,10 +245,11 @@ export const salvarPasso = createServerFn({ method: "POST" })
           usados.add(d.id);
           return d;
         }
-        const cand = (atuais ?? []).find((a: { id: string; tipo: string; numero: string | null }) => {
+        const cand = (atuais ?? []).find((a: { id: string; tipo: string; numero: string | null; detalhe: string | null }) => {
           if (usados.has(a.id) || a.tipo !== d.tipo) return false;
           if (d.tipo === "passaporte") return !!d.numero && norm(a.numero) === norm(d.numero);
           if (d.tipo === "outro_visto") return false;
+          if (d.tipo === "outra_vacina") return !!d.detalhe && norm(a.detalhe) === norm(d.detalhe);
           return true;
         });
         if (cand) {
@@ -313,7 +333,7 @@ export const salvarPasso = createServerFn({ method: "POST" })
 
     if (data.prefs) {
       const { data: atual } = await db.from("person_preferences").select("*").eq("person_id", pid).maybeSingle();
-      for (const k of ["assento", "quarto", "bebe_alcool", "restricoes"] as const) {
+      for (const k of ["assento", "quarto", "bebe_alcool", "restricoes", "refeicao_voo"] as const) {
         if (str(atual?.[k]) !== str(data.prefs[k])) {
           mudancas.push({ campo: `person_preferences:${pid}:${k}`, antigo: atual?.[k] ?? null, novo: data.prefs[k] });
         }
