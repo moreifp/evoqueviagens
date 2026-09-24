@@ -62,13 +62,14 @@ export async function validarToken(db: Admin, token: string): Promise<string> {
   if (!data) throw new Error("LINK_INVALIDO");
   if (data.revogado_em || data.deleted_at) throw new Error("LINK_REVOGADO");
   if (new Date(data.expira_em).getTime() < Date.now()) throw new Error("LINK_EXPIRADO");
+  const personId = data.person_id as string;
   async function buscarPessoa() {
-    return db.from("person").select("id, deleted_at").eq("id", data.person_id).maybeSingle();
+    return db.from("person").select("id, deleted_at").eq("id", personId).maybeSingle();
   }
   let { data: p, error: pessoaErro } = await buscarPessoa();
   if (pessoaErro) ({ data: p, error: pessoaErro } = await buscarPessoa());
   if (pessoaErro) throw new Error("FALHA_CARREGAR");
   if (!p || p.deleted_at) throw new Error("LINK_INVALIDO");
   await db.from("cadastro_link").update({ ultimo_acesso_em: new Date().toISOString() }).eq("id", data.id);
-  return data.person_id as string;
+  return personId;
 }
