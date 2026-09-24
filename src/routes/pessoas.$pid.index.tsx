@@ -319,6 +319,16 @@ function FichaPessoa() {
     );
   }
 
+  async function apagarPessoa() {
+    if (!navigator.onLine) return toast.error("Para apagar as fotos é preciso internet.");
+    const { data: arquivos } = await supabase.storage.from("documentos").list(pid, { limit: 1000 });
+    if (arquivos?.length) await supabase.storage.from("documentos").remove(arquivos.map((a) => `${pid}/${a.name}`));
+    await mutar({ tipo: "update", tabela: "person", id: pid, valores: { deleted_at: new Date().toISOString(), foto_url: null } });
+    await qc.invalidateQueries({ queryKey: ["pessoas"] });
+    toast.success(`${p.nome} apagado`);
+    navigate({ to: "/" });
+  }
+
   function novoPassaporte() {
     return editando === "novo:passaporte" ? (
       <Cartao titulo="Novo passaporte">
