@@ -147,25 +147,35 @@ function CadastroParticipante() {
   const [c, setC] = useState<CadastroDTO | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [contato, setContato] = useState<string | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
+    let ativa = true;
+    setErro(null);
     abrir({ data: { token } })
       .then((r) => {
+        if (!ativa) return;
         if (r.ok) setC(r.cadastro);
         else {
           setErro(r.erro);
           setContato(r.contato ?? null);
         }
       })
-      .catch(() => setErro("REDE"));
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+      .catch(() => {
+        if (ativa) setErro("REDE");
+      });
+    return () => {
+      ativa = false;
+    };
+  }, [token, tentativa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erro) {
     const vencido = erro === "LINK_EXPIRADO" || erro === "LINK_REVOGADO";
+    const temporario = erro === "REDE" || erro === "FALHA_CARREGAR";
     const txt = vencido
       ? "Este link venceu. Peça um novo ao Fausto. · This link has expired — ask Fausto for a new one."
-      : erro === "REDE"
-        ? "Sem conexão. Tente de novo. · No connection."
+      : temporario
+        ? "Não conseguimos carregar sua ficha agora. Tente novamente. · We couldn't load your profile. Please try again."
         : "Este link não vale mais. Peça um novo ao Fausto. · This link is no longer valid.";
     const msg = encodeURIComponent("Oi! Meu link do cadastro de viagem venceu. Pode me mandar um novo?");
     const dig = (contato ?? "").replace(/\D/g, "");
@@ -173,7 +183,15 @@ function CadastroParticipante() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center">
         <p className="text-xl font-semibold text-foreground">{txt}</p>
-        {erro !== "REDE" && (
+        {temporario ? (
+          <button
+            type="button"
+            onClick={() => setTentativa((n) => n + 1)}
+            className="tap flex items-center justify-center rounded-2xl bg-primary px-6 text-lg font-bold text-primary-foreground"
+          >
+            Tentar novamente
+          </button>
+        ) : (
           <a href={wa} target="_blank" rel="noopener" className="tap flex items-center justify-center rounded-2xl bg-primary px-6 text-lg font-bold text-primary-foreground">
             Pedir pelo WhatsApp
           </a>
