@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { AlertTriangle, Camera, Check, ClipboardCheck, MessageCircle, Plus, Send, Trash2, X } from "lucide-react";
+import { AlertTriangle, Camera, Check, ClipboardCheck, Copy, MessageCircle, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
@@ -13,7 +13,7 @@ import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situac
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
 import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, SALAS_VIP, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, urlDoLink } from "@/lib/links";
+import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, mensagemConvite, urlDoLink } from "@/lib/links";
 import { lerPassaporteAdmin, lerDocumentoAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
