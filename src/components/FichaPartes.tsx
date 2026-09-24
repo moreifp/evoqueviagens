@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Camera, Eye, EyeOff, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Camera, Eye, EyeOff, FileText, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
+import { DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 import { toast } from "sonner";
 import { inputCls } from "@/components/Form";
 import { mascarar, urlAssinada } from "@/lib/pessoas";
@@ -69,21 +70,24 @@ export function NumeroOculto({ numero }: { numero: string | null }) {
 export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; rotulo?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   if (!path) return null;
+  const pdf = /\.pdf$/i.test(path);
   return (
     <div className="mt-2">
-      {url ? (
+      {url && !pdf ? (
         <img src={url} alt="Foto do documento" className="w-full rounded-xl border border-border" onError={() => setUrl(null)} />
       ) : (
         <button
           onClick={async () => {
             if (!navigator.onLine) return toast.error("A foto só abre com internet.");
             const u = await urlAssinada(path);
-            if (u) setUrl(u);
+            if (!u) return;
+            if (pdf) window.open(u, "_blank", "noopener");
+            else setUrl(u);
           }}
           className="tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
         >
-          <ImageIcon size={24} strokeWidth={2.2} />
-          {rotulo}
+          {pdf ? <FileText size={24} strokeWidth={2.2} /> : <ImageIcon size={24} strokeWidth={2.2} />}
+          {pdf ? "Abrir PDF" : rotulo}
         </button>
       )}
     </div>
@@ -103,6 +107,7 @@ function paraTexto(x: unknown): string {
  * Formulário pré-preenchido com os valores atuais.
  * onSalvar recebe SÓ os campos que mudaram (campos não tocados nunca viram vazio).
  * Se `foto` for passado, mostra a foto atual com Trocar/Remover; a foto só muda se o admin pedir.
+ * `lerFoto`: ao escolher foto nova, tenta ler (passaporte) e PRÉ-PREENCHE os campos — nada é salvo sem "Salvar".
  */
 export function Editor({
   campos,
@@ -110,12 +115,16 @@ export function Editor({
   onSalvar,
   onCancelar,
   foto,
+  fotoInicial,
+  lerFoto,
 }: {
   campos: CampoEd[];
   valores: Record<string, unknown>;
   onSalvar: (v: Record<string, string | null>, novaFoto?: File | null) => void;
   onCancelar: () => void;
   foto?: { path: string | null };
+  fotoInicial?: File;
+  lerFoto?: (f: File) => Promise<Record<string, string> | null>;
 }) {
   const [inicial] = useState<Record<string, string>>(() =>
     Object.fromEntries(campos.map((c) => [c.chave, paraTexto(valores[c.chave])])),
@@ -124,6 +133,7 @@ export function Editor({
   // undefined = não mexeu; File = trocou; null = removeu
   const [novaFoto, setNovaFoto] = useState<File | null | undefined>(undefined);
   const [previa, setPrevia] = useState<string | null>(null);
+  const [leitura, setLeitura] = useState<"lendo" | "ok" | "falhou" | null>(null);
 
   useEffect(() => {
     let vivo = true;
@@ -132,6 +142,26 @@ export function Editor({
       vivo = false;
     };
   }, [foto?.path]);
+
+  async function escolher(f: File) {
+    setNovaFoto(f);
+    if (!lerFoto) return;
+    setLeitura("lendo");
+    try {
+      const r = await lerFoto(f);
+      if (r && Object.keys(r).length) {
+        setV((atual) => ({ ...atual, ...r }));
+        setLeitura("ok");
+      } else setLeitura("falhou");
+    } catch {
+      setLeitura("falhou");
+    }
+  }
+
+  useEffect(() => {
+    if (fotoInicial) escolher(fotoInicial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function salvar() {
     const mudou: Record<string, string | null> = {};
@@ -143,7 +173,8 @@ export function Editor({
     onSalvar(mudou, novaFoto);
   }
 
-  const mostraFoto = novaFoto === null ? null : novaFoto ? URL.createObjectURL(novaFoto) : previa;
+  const urlNova = useMemo(() => (novaFoto ? previaDe(novaFoto) : null), [novaFoto]);
+  const mostraFoto = novaFoto === null ? null : novaFoto ? urlNova : previa;
 
   return (
     <div className="space-y-3">
@@ -151,27 +182,33 @@ export function Editor({
         <div className="space-y-2">
           <span className="text-base font-bold text-foreground">Foto</span>
           {mostraFoto ? (
-            <img src={mostraFoto} alt="Foto do documento" className="w-full rounded-xl border border-border" />
+            mostraFoto === "pdf" || /\.pdf(\?|$)/i.test(mostraFoto) ? (
+              <Miniatura src="pdf" className="h-24 w-full rounded-xl" />
+            ) : (
+              <img src={mostraFoto} alt="Foto do documento" className="w-full rounded-xl border border-border" />
+            )
           ) : (
             <p className="text-base text-muted-foreground">
               {novaFoto === null ? "Foto será removida ao salvar." : foto.path ? "Foto guardada (abre com internet)." : "Sem foto."}
             </p>
           )}
+          {leitura && (
+            <p className={`rounded-xl p-3 text-base font-bold ${leitura === "ok" ? "bg-ok/10 text-ok" : leitura === "falhou" ? "bg-warn/10 text-warn" : "bg-muted text-foreground"}`}>
+              {leitura === "lendo" ? "Lendo o passaporte…" : leitura === "ok" ? "Lemos o passaporte · confira os campos e toque Salvar" : "Não deu para ler · preencha à mão"}
+            </p>
+          )}
           <div className="flex gap-2">
-            <label className="tap flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-border text-base font-bold text-foreground">
-              <Camera size={24} strokeWidth={2.2} />
-              {foto.path || novaFoto ? "Trocar foto" : "Pôr foto"}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setNovaFoto(f);
-                }}
-              />
-            </label>
+            <ZonaArquivo
+              colar
+              onArquivo={escolher}
+              className="tap flex w-full flex-1 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border py-2 text-base font-bold text-foreground"
+            >
+              <span className="flex items-center gap-2">
+                <Camera size={24} strokeWidth={2.2} />
+                {foto.path || novaFoto ? "Trocar foto" : "Pôr foto"}
+              </span>
+              <DicaArrastar />
+            </ZonaArquivo>
             {(foto.path || novaFoto) && novaFoto !== null && (
               <button
                 type="button"
@@ -185,7 +222,10 @@ export function Editor({
             {novaFoto !== undefined && (
               <button
                 type="button"
-                onClick={() => setNovaFoto(undefined)}
+                onClick={() => {
+                  setNovaFoto(undefined);
+                  setLeitura(null);
+                }}
                 className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-border text-base font-bold text-foreground"
               >
                 <X size={24} strokeWidth={2.2} />
