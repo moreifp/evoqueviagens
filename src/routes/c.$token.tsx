@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import {
   User, BookOpen, Stamp, Award, SlidersHorizontal, Phone, Camera, Check, CheckCircle2, RotateCcw, Plus,
-  IdCard, Car, Syringe, ShieldPlus, Plane, Home, PauseCircle, X,
+  IdCard, Car, Syringe, ShieldPlus, Plane, Home, PauseCircle, X, ChevronRight,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +94,7 @@ const T = {
   salvo: { pt: "Salvo. Pode fechar e voltar pelo mesmo link.", en: "Saved. You can close and come back with the same link." },
   falta: { pt: "Falta preencher", en: "Please fill in" },
   erro: { pt: "Não deu certo agora. Tente de novo.", en: "Something went wrong. Please try again." },
+  voltar: { pt: "Voltar", en: "Back" },
   naoSalvo: {
     pt: "Não conseguimos confirmar que salvou (conexão falhou). Toque em Continuar de novo — nada fica duplicado.",
     en: "We couldn't confirm it was saved (connection failed). Tap Continue again — nothing gets duplicated.",

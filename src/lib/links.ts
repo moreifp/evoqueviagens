@@ -79,12 +79,12 @@ export function abrirWhatsApp(telefone: string | null, texto: string) {
 
 export function mensagemConvite(idioma: "pt" | "en", nome: string, link: string) {
   return idioma === "en"
-    ? `Hi ${nome}! Could you fill in your travel profile? It takes 5 minutes, just once. ${link}`
-    : `Oi, ${nome}! Preenche seu cadastro de viagem? Leva 5 minutos, é uma vez só. ${link}`;
+    ? `Hi ${nome}! Could you fill in your travel profile? It's essential for organizing our trips. It takes 5 minutes and you only do it once. Have your passport at hand. ${link}`
+    : `Oi, ${nome}! Preenche seu cadastro de viagem? Ele é extremamente necessário para a organização das nossas viagens. Leva 5 minutos e será só uma vez. Tenha em mãos seu passaporte. ${link}`;
 }
 
 export function mensagemLembrete(idioma: "pt" | "en", nome: string, link: string) {
   return idioma === "en"
-    ? `Hi ${nome}! Just a reminder to finish your travel profile. Same link: ${link}`
-    : `Oi, ${nome}! Só lembrando de terminar seu cadastro de viagem. É o mesmo link: ${link}`;
+    ? `Hi ${nome}! Just a reminder to finish your travel profile — it's essential for organizing our trips. It takes 5 minutes; have your passport at hand. Same link: ${link}`
+    : `Oi, ${nome}! Só lembrando de terminar seu cadastro de viagem — ele é extremamente necessário para a organização das nossas viagens. Leva 5 minutos; tenha em mãos seu passaporte. É o mesmo link: ${link}`;
 }
