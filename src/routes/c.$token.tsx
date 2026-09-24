@@ -158,7 +158,8 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
   const t = (k: Chave) => T[k][L];
   const passos = passosDoModo(c.person.modo);
   const iniciou = !!c.person.consentimento_em && !!c.person.modo;
-  const [tela, setTela] = useState<"boas" | "enviado" | Secao>(() => {
+  const [revisando, setRevisando] = useState(false);
+  const [tela, setTela] = useState<"boas" | "enviado" | "lista" | Secao>(() => {
     if (!iniciou) return "boas";
     if (secaoInicial && passos.includes(secaoInicial)) return secaoInicial;
     if (c.person.status === "enviado" || c.person.status === "aprovado") return "enviado";
@@ -196,8 +197,39 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
     );
   }
 
+  if (tela === "lista") {
+    return (
+      <div className="min-h-screen bg-background px-4 pb-10 pt-8">
+        <div className="mx-auto max-w-md space-y-4">
+          <h1 className="text-3xl">{t("corrigirAlgo")}</h1>
+          {passos.map((s) => {
+            const I = ICONE[s];
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setRevisando(true);
+                  setTela(s);
+                }}
+                className="tap flex min-h-[64px] w-full items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 text-left text-xl font-bold text-foreground"
+              >
+                {I && <I size={28} strokeWidth={2.2} className="text-accent" />}
+                <span className="flex-1">{NOME_SECAO[s][L]}</span>
+                <ChevronRight size={26} strokeWidth={2.2} />
+              </button>
+            );
+          })}
+          <button type="button" onClick={() => setTela("enviado")} className="tap w-full rounded-2xl border-2 border-primary text-xl font-bold text-foreground">
+            {t("voltar")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (tela === "enviado") {
-    return <Enviado c={c} t={t} L={L} onCorrigir={() => setTela("voce")} />;
+    return <Enviado c={c} t={t} L={L} onCorrigir={() => setTela("lista")} />;
   }
 
   const idx = passos.indexOf(tela);
@@ -242,7 +274,10 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
         toast.success(t("salvo"), { duration: 8000 });
         return;
       }
-      if (idx + 1 < passos.length) setTela(passos[idx + 1]!);
+      if (revisando) {
+        setRevisando(false);
+        setTela("enviado");
+      } else if (idx + 1 < passos.length) setTela(passos[idx + 1]!);
       else {
         const e = await enviar({ data: { token } });
         if (!e.ok) {
