@@ -10,10 +10,11 @@ import { toast, Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { abrirCadastro, iniciarCadastro, lerPassaporte, salvarPasso, enviarCadastro, urlUpload, relatarErro } from "@/lib/cadastro.functions";
 import {
-  NOME_DOC, NOME_DOC_EN, NOME_SECAO, PROGRAMAS, TIPOS_EXTRA, TIPOS_VISTO, passosDoModo,
+  NOME_DOC, NOME_DOC_EN, NOME_SECAO, PROGRAMAS, REFEICOES, TIPOS_EXTRA, TIPOS_SECAO_EXTRAS, TIPOS_VISTO, passosDoModo,
   type CadastroDTO, type ContaDTO, type DocDTO, type Secao,
 } from "@/lib/cadastro-tipos";
 import { blobParaDataUrl, prepararArquivo, type Ext } from "@/lib/imagem";
+import { CampoData } from "@/components/FichaPartes";
 import { ACEITA_FOTO, DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 
 export const Route = createFileRoute("/c/$token")({
@@ -104,6 +105,23 @@ const T = {
   endereco: { pt: "Endereço", en: "Address" },
   apolice: { pt: "Apólice e telefone", en: "Policy number and phone" },
   viajante: { pt: "Nº de viajante", en: "Traveler number" },
+  rapidoDepois: { pt: "Dá para completar depois.", en: "You can complete the rest later." },
+  demais: { pt: "Demais dados (opcional)", en: "More details (optional)" },
+  demaisTitulo: { pt: "Demais dados", en: "More details" },
+  vacinas: { pt: "Vacinas", en: "Vaccines" },
+  febre: { pt: "Febre amarela", en: "Yellow fever" },
+  certificado: { pt: "Tem o certificado internacional (CIVP)?", en: "Do you have the international certificate (ICVP)?" },
+  dataVacina: { pt: "Data da vacina", en: "Vaccination date" },
+  fotoCert: { pt: "Foto do certificado", en: "Certificate photo" },
+  outraVacina: { pt: "Outra vacina", en: "Other vaccine" },
+  nomeVacina: { pt: "Nome da vacina", en: "Vaccine name" },
+  negado: { pt: "Algum visto negado ou em processo?", en: "Any visa denied or in process?" },
+  negadoDet: { pt: "Qual e quando?", en: "Which one and when?" },
+  refeicao: { pt: "Refeição especial no voo", en: "Special in-flight meal" },
+  qualRefeicao: { pt: "Qual?", en: "Which one?" },
+  programas: { pt: "Milhas e hotéis", en: "Miles and hotels" },
+  salaVip: { pt: "Sala VIP", en: "Airport lounge" },
+  foto_: { pt: "Foto", en: "Photo" },
 } as const;
 type Chave = keyof typeof T;
 
@@ -150,11 +168,20 @@ function CadastroParticipante() {
   }
   if (!c) return <div className="min-h-screen bg-background" />;
   return (
-    <Fluxo token={token} inicial={c} secaoInicial={secaoInicial as Secao | undefined} />
+    <Fluxo token={token} inicial={c} secaoInicial={secaoInicial} />
   );
 }
 
-function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: CadastroDTO; secaoInicial?: Secao }) {
+/** Passos de "Demais dados": só o que ainda falta (Outros documentos sempre, com as vacinas). */
+function filaDemais(c: CadastroDTO): Secao[] {
+  const f: Secao[] = ["extras"];
+  if (c.person.visto_negado == null) f.push("vistos");
+  if (!c.contas.some((x) => x.tipo === "sala_vip")) f.push("fidelidade");
+  if (!c.prefs?.refeicao_voo) f.push("preferencias");
+  return f;
+}
+
+function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: CadastroDTO; secaoInicial?: string }) {
   const [c, setC] = useState(inicial);
   const L: L = c.person.idioma;
   const t = (k: Chave) => T[k][L];
@@ -163,7 +190,7 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
   const [revisando, setRevisando] = useState(false);
   const [tela, setTela] = useState<"boas" | "enviado" | "lista" | Secao>(() => {
     if (!iniciou) return "boas";
-    if (secaoInicial && passos.includes(secaoInicial)) return secaoInicial;
+    if (secaoInicial && passos.includes(secaoInicial as Secao)) return secaoInicial as Secao;
     if (c.person.status === "enviado" || c.person.status === "aprovado") return "enviado";
     return passos[Math.min(c.person.passo_atual, passos.length - 1)] ?? "voce";
   });
@@ -174,8 +201,35 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
   const abrir = useServerFn(abrirCadastro);
   const relatar_ = useServerFn(relatarErro);
   const [ocupado, setOcupado] = useState(false);
+  // "Demais dados": fila dos passos que faltam; ao terminar volta ao "Pronto".
+  const [fila, setFila] = useState<Secao[] | null>(null);
+  const [filaTotal, setFilaTotal] = useState(0);
 
   useEffect(() => window.scrollTo(0, 0), [tela]);
+
+  async function abrirDemais(base: CadastroDTO = c) {
+    setOcupado(true);
+    try {
+      if (base.person.modo !== "completo") {
+        await iniciar({ data: { token, modo: "completo" } });
+        base = { ...base, person: { ...base.person, modo: "completo" } };
+        setC(base);
+      }
+      const q = filaDemais(base);
+      setFilaTotal(q.length);
+      setFila(q.slice(1));
+      setRevisando(false);
+      setTela(q[0]!);
+    } catch {
+      toast.error(t("erro"));
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  useEffect(() => {
+    if (secaoInicial === "demais" && iniciou) void abrirDemais();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (tela === "boas") {
     return (
@@ -231,7 +285,7 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
   }
 
   if (tela === "enviado") {
-    return <Enviado c={c} t={t} L={L} onCorrigir={() => setTela("lista")} />;
+    return <Enviado c={c} t={t} L={L} ocupado={ocupado} onCorrigir={() => setTela("lista")} onDemais={() => abrirDemais()} />;
   }
 
   const idx = passos.indexOf(tela);
@@ -276,7 +330,15 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
         toast.success(t("salvo"), { duration: 8000 });
         return;
       }
-      if (revisando) {
+      if (fila) {
+        if (fila.length) {
+          setTela(fila[0]!);
+          setFila(fila.slice(1));
+        } else {
+          setFila(null);
+          setTela("enviado");
+        }
+      } else if (revisando) {
         setRevisando(false);
         setTela("enviado");
       } else if (idx + 1 < passos.length) setTela(passos[idx + 1]!);
@@ -297,14 +359,15 @@ function Fluxo({ token, inicial, secaoInicial }: { token: string; inicial: Cadas
     }
   }
 
-  const props = { c, t, L, token, ocupado, gravar, idx, total: passos.length };
+  const emFila = !!fila;
+  const props = { c, t, L, token, ocupado, gravar, idx, total: passos.length, emFila };
   const recado = c.revisoes.find((r) => r.secao === tela && r.status === "correcao")?.recado;
 
   return (
     <div className="min-h-screen bg-background pb-40">
-      <Cabecalho idx={idx} total={passos.length} t={t} onPausa={() => document.dispatchEvent(new Event("evoque-pausa"))} />
+      <Cabecalho idx={emFila ? filaTotal - fila!.length - 1 : idx} total={emFila ? filaTotal : passos.length} t={t} onPausa={() => document.dispatchEvent(new Event("evoque-pausa"))} />
       <main className="mx-auto max-w-md space-y-5 px-4 pt-2">
-        <h1 className="text-3xl">{NOME_SECAO[tela][L]}</h1>
+        <h1 className="text-3xl">{emFila && tela === "extras" ? t("demaisTitulo") : NOME_SECAO[tela][L]}</h1>
         {recado && (
           <div className="rounded-xl bg-warn/10 p-3 text-base font-semibold text-warn">
             {t("correcao")}: {recado}
@@ -331,6 +394,7 @@ type PassoProps = {
   idx: number;
   total: number;
   gravar: (dados: Record<string, unknown>, depois: "proximo" | "pausa") => Promise<void>;
+  emFila?: boolean;
 };
 
 function Cabecalho({ idx, total, t, onPausa }: { idx: number; total: number; t: (k: Chave) => string; onPausa: () => void }) {
@@ -496,6 +560,7 @@ function BoasVindas({ c, t, onEscolher, ocupado }: { c: CadastroDTO; t: (k: Chav
             >
               <span className="text-xl font-bold">{t(m)}</span>
               <span className="text-base">{t(m === "rapido" ? "rapidoSub" : "completoSub")}</span>
+              {m === "rapido" && <span className="text-base font-semibold">{t("rapidoDepois")}</span>}
             </button>
           ))}
         </div>
@@ -590,6 +655,7 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
           numero: m.numero,
           validade: m.validade,
           sexo: m.sexo,
+          ...(r.emissao ? { emissao: r.emissao } : {}),
         });
         if (m.nascimento) setNasc(m.nascimento);
       } else set(i, { lido: "falhou" });
@@ -645,11 +711,14 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
             </Campo>
           </div>
           <Campo rotulo={t("validade")}>
-            <input type="date" className={inp} value={d.validade ?? ""} onChange={(e) => set(i, { validade: e.target.value })} />
+            <CampoData en={L === "en"} className={inp} value={d.validade ?? ""} onChange={(x) => set(i, { validade: x })} />
+          </Campo>
+          <Campo rotulo={L === "en" ? "Date of issue" : "Data de emissão"}>
+            <CampoData en={L === "en"} className={inp} value={d.emissao ?? ""} onChange={(x) => set(i, { emissao: x })} />
           </Campo>
           {i === 0 && (
             <Campo rotulo={t("nascimento")}>
-              <input type="date" className={inp} value={nasc} onChange={(e) => setNasc(e.target.value)} />
+              <CampoData en={L === "en"} className={inp} value={nasc} onChange={setNasc} />
             </Campo>
           )}
           <div>
@@ -798,7 +867,7 @@ function PassoVistos({ c, t, L, token, ocupado, gravar }: PassoProps) {
             <input aria-label={t("tipoVisto")} placeholder={t("tipoVisto")} className={inp} value={d.detalhe ?? ""} onChange={(e) => upd(d.tipo, { detalhe: e.target.value })} />
           )}
           <Campo rotulo={t("validade")}>
-            <input type="date" className={inp} value={d.validade ?? ""} onChange={(e) => upd(d.tipo, { validade: e.target.value })} />
+            <CampoData en={L === "en"} className={inp} value={d.validade ?? ""} onChange={(x) => upd(d.tipo, { validade: x })} />
           </Campo>
         </div>
       ))}
