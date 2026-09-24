@@ -7,6 +7,36 @@ export async function sha256Hex(texto: string) {
     .join("");
 }
 
+async function chave() {
+  const segredo = process.env["LINK_TOKEN_KEY"];
+  if (!segredo) throw new Error("SEM_CHAVE");
+  const raw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(segredo));
+  return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+}
+const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
+const deB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+/** Token cifrado (AES-GCM) com segredo do servidor: "iv.cifra" em base64. */
+export async function cifrar(texto: string) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const c = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await chave(), new TextEncoder().encode(texto));
+  return `${b64(iv)}.${b64(new Uint8Array(c))}`;
+}
+export async function decifrar(s: string) {
+  const [iv, c] = s.split(".");
+  const p = await crypto.subtle.decrypt({ name: "AES-GCM", iv: deB64(iv!) }, await chave(), deB64(c!));
+  return new TextDecoder().decode(p);
+}
+
+/** WhatsApp do admin que mandou o link (para o aviso de link vencido). */
+export async function contatoDoLink(db: Admin, token: string): Promise<string | null> {
+  if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return null;
+  const { data } = await db.from("cadastro_link").select("criado_por").eq("token_hash", await sha256Hex(token)).maybeSingle();
+  if (!data?.criado_por) return null;
+  const { data: a } = await db.from("app_admin").select("telefone").ilike("email", data.criado_por).maybeSingle();
+  return (a?.telefone as string | null) ?? null;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Admin = SupabaseClient<any>;
 

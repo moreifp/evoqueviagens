@@ -146,23 +146,38 @@ function CadastroParticipante() {
   const abrir = useServerFn(abrirCadastro);
   const [c, setC] = useState<CadastroDTO | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [contato, setContato] = useState<string | null>(null);
 
   useEffect(() => {
     abrir({ data: { token } })
-      .then((r) => (r.ok ? setC(r.cadastro) : setErro(r.erro)))
+      .then((r) => {
+        if (r.ok) setC(r.cadastro);
+        else {
+          setErro(r.erro);
+          setContato(r.contato ?? null);
+        }
+      })
       .catch(() => setErro("REDE"));
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erro) {
-    const txt =
-      erro === "LINK_EXPIRADO"
-        ? "Este link venceu. Peça um novo para quem te mandou. · This link has expired."
-        : erro === "REDE"
-          ? "Sem conexão. Tente de novo. · No connection."
-          : "Este link não vale mais. Peça um novo para quem te mandou. · This link is no longer valid.";
+    const vencido = erro === "LINK_EXPIRADO" || erro === "LINK_REVOGADO";
+    const txt = vencido
+      ? "Este link venceu. Peça um novo ao Fausto. · This link has expired — ask Fausto for a new one."
+      : erro === "REDE"
+        ? "Sem conexão. Tente de novo. · No connection."
+        : "Este link não vale mais. Peça um novo ao Fausto. · This link is no longer valid.";
+    const msg = encodeURIComponent("Oi! Meu link do cadastro de viagem venceu. Pode me mandar um novo?");
+    const dig = (contato ?? "").replace(/\D/g, "");
+    const wa = dig ? `https://wa.me/${dig.length <= 11 ? `55${dig}` : dig}?text=${msg}` : `https://wa.me/?text=${msg}`;
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center">
         <p className="text-xl font-semibold text-foreground">{txt}</p>
+        {erro !== "REDE" && (
+          <a href={wa} target="_blank" rel="noopener" className="tap flex items-center justify-center rounded-2xl bg-primary px-6 text-lg font-bold text-primary-foreground">
+            Pedir pelo WhatsApp
+          </a>
+        )}
       </div>
     );
   }

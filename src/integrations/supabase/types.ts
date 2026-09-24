@@ -19,16 +19,19 @@ export type Database = {
           added_by: string | null
           created_at: string
           email: string
+          telefone: string | null
         }
         Insert: {
           added_by?: string | null
           created_at?: string
           email: string
+          telefone?: string | null
         }
         Update: {
           added_by?: string | null
           created_at?: string
           email?: string
+          telefone?: string | null
         }
         Relationships: []
       }
@@ -41,6 +44,7 @@ export type Database = {
           id: string
           person_id: string
           revogado_em: string | null
+          token_cifrado: string | null
           token_hash: string
           ultimo_acesso_em: string | null
         }
@@ -52,6 +56,7 @@ export type Database = {
           id?: string
           person_id: string
           revogado_em?: string | null
+          token_cifrado?: string | null
           token_hash: string
           ultimo_acesso_em?: string | null
         }
@@ -63,6 +68,7 @@ export type Database = {
           id?: string
           person_id?: string
           revogado_em?: string | null
+          token_cifrado?: string | null
           token_hash?: string
           ultimo_acesso_em?: string | null
         }

@@ -184,17 +184,20 @@ export async function urlAssinada(path: string): Promise<string | null> {
 }
 
 /** Itens de "Demais dados" ainda vazios (para a ficha do admin). */
-export function demaisFaltando(f: Ficha): string[] {
+export type Faltando = { chave: string; rotulo: string };
+export function demaisFaltando(f: Ficha): Faltando[] {
   const tem = (t: string) => f.docs.some((d) => d.tipo === t);
-  const falta: string[] = [];
-  if (!tem("rg")) falta.push("RG");
-  if (!tem("cnh")) falta.push("CNH");
-  if (!tem("pid")) falta.push("Permissão Internacional (PID)");
-  if (!tem("vacina")) falta.push("Vacina febre amarela");
-  if (!tem("seguro")) falta.push("Seguro-viagem");
-  if (!tem("global_entry")) falta.push("Global Entry / TSA");
-  if (!f.pessoa.endereco) falta.push("Endereço");
-  if (!f.prefs?.refeicao_voo) falta.push("Refeição especial no voo");
-  if (f.pessoa.visto_negado == null) falta.push("Visto negado ou em processo?");
+  const falta: Faltando[] = [];
+  const doc = (t: string, r: string) => !tem(t) && falta.push({ chave: `doc:${t}`, rotulo: r });
+  doc("rg", "RG");
+  doc("cnh", "CNH");
+  doc("pid", "Permissão Internacional (PID)");
+  doc("vacina", "Vacina febre amarela");
+  doc("seguro", "Seguro-viagem");
+  doc("global_entry", "Global Entry / TSA");
+  if (!f.pessoa.endereco) falta.push({ chave: "endereco", rotulo: "Endereço" });
+  if (!f.contas.some((c) => (c as { tipo?: string }).tipo === "sala_vip")) falta.push({ chave: "salavip", rotulo: "Sala VIP" });
+  if (!f.prefs?.refeicao_voo) falta.push({ chave: "refeicao", rotulo: "Refeição especial no voo" });
+  if (f.pessoa.visto_negado == null) falta.push({ chave: "visto_negado", rotulo: "Visto negado ou em processo?" });
   return falta;
 }
