@@ -670,6 +670,41 @@ function FichaPessoa() {
         {editando?.startsWith("vazio:") && editorVazio(editando.slice(6))}
 
         <Cartao titulo="Link pessoal">
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
+                  try {
+                    const token = await linkDaPessoa(pid);
+                    await navigator.clipboard.writeText(urlDoLink(token));
+                    toast.success("Link copiado.");
+                  } catch {
+                    toast.error("Não deu para copiar o link agora.");
+                  }
+                }}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-foreground"
+              >
+                <Copy size={24} strokeWidth={2.2} />
+                Copiar link
+              </button>
+              <button
+                onClick={async () => {
+                  if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
+                  try {
+                    const token = await linkDaPessoa(pid);
+                    const nome = p.apelido || p.nome.split(" ")[0];
+                    abrirWhatsApp(p.telefone, mensagemConvite(p.idioma, nome, urlDoLink(token)));
+                  } catch {
+                    toast.error("Não deu para gerar o link agora.");
+                  }
+                }}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-primary text-lg font-bold text-foreground"
+              >
+                <Send size={24} strokeWidth={2.2} />
+                WhatsApp
+              </button>
+            </div>
           {!confirmarLink ? (
             <button
               onClick={() => setConfirmarLink(true)}
