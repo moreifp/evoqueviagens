@@ -37,9 +37,39 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const [atualizando, setAtualizando] = useState(false);
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // Erro de tela logo após uma publicação quase sempre é versão velha guardada no
+    // aparelho (arquivos do app trocados no servidor). Recarrega uma vez, limpando
+    // o service worker, para buscar a versão nova — em vez de só mostrar o erro.
+    try {
+      const marca = Number(sessionStorage.getItem("evoque-recarregou") ?? 0);
+      if (Date.now() - marca > 60_000) {
+        sessionStorage.setItem("evoque-recarregou", String(Date.now()));
+        setAtualizando(true);
+        void (async () => {
+          try {
+            const regs = await navigator.serviceWorker?.getRegistrations();
+            await Promise.all((regs ?? []).map((r) => r.update()));
+          } catch {
+            /* segue mesmo assim */
+          }
+          window.location.reload();
+        })();
+      }
+    } catch {
+      /* sem storage: só mostra o erro */
+    }
   }, [error]);
+
+  if (atualizando) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <p className="text-lg font-bold text-foreground">Atualizando o app…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
