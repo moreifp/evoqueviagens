@@ -9,6 +9,7 @@ import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
 import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } from "@/components/FichaPartes";
 import { alertaDoc, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
+import { comprimir } from "@/lib/imagem";
 import { NOME_DOC, TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { abrirWhatsApp, linkDaPessoa, urlDoLink } from "@/lib/links";
 
@@ -35,14 +36,21 @@ const CAMPOS_VOCE: CampoEd[] = [
   { chave: "email", rotulo: "E-mail", tipo: "email" },
   { chave: "endereco", rotulo: "Endereço" },
 ];
-const CAMPOS_DOC: CampoEd[] = [
-  { chave: "nome_no_documento", rotulo: "Nome no documento" },
-  { chave: "numero", rotulo: "Número" },
-  { chave: "pais_emissor", rotulo: "País / nacionalidade" },
-  { chave: "detalhe", rotulo: "Detalhe (ex.: B1/B2)" },
-  { chave: "emissao", rotulo: "Emissão", tipo: "date" },
-  { chave: "validade", rotulo: "Validade", tipo: "date" },
-];
+const SEXO: [string, string][] = [["M", "M"], ["F", "F"], ["X", "X"]];
+function camposDoDoc(tipo: string): CampoEd[] {
+  const base: CampoEd[] = [
+    { chave: "nome_no_documento", rotulo: "Nome no documento" },
+    { chave: "numero", rotulo: "Número" },
+    { chave: "pais_emissor", rotulo: "País / nacionalidade" },
+  ];
+  if (tipo === "passaporte") base.push({ chave: "sexo", rotulo: "Sexo", opcoes: SEXO });
+  base.push(
+    { chave: "detalhe", rotulo: (TIPOS_VISTO as readonly string[]).includes(tipo) ? "Tipo de visto (ex.: B1/B2)" : "Detalhe" },
+    { chave: "emissao", rotulo: "Emissão", tipo: "date" },
+    { chave: "validade", rotulo: "Validade", tipo: "date" },
+  );
+  return base;
+}
 const CAMPOS_EMERG: CampoEd[] = [
   { chave: "emergencia_nome", rotulo: "Nome" },
   { chave: "emergencia_parentesco", rotulo: "Parentesco" },
@@ -85,6 +93,7 @@ function FichaPessoa() {
   }
 
   function salvarPessoa(v: Record<string, string | null>) {
+    if (Object.keys(v).length === 0) return setEditando(null);
     patch((x) => ({ ...x, pessoa: { ...x.pessoa, ...v } }));
     setEditando(null);
     salvarOp({ tipo: "update", tabela: "person", id: pid, valores: v });
@@ -150,22 +159,38 @@ function FichaPessoa() {
   const vistos = f.docs.filter((d) => (TIPOS_VISTO as readonly string[]).includes(d.tipo));
   const extras = f.docs.filter((d) => d.tipo !== "passaporte" && !(TIPOS_VISTO as readonly string[]).includes(d.tipo));
 
-  function CartaoDoc({ d }: { d: Ficha["docs"][number] }) {
+  function cartaoDoc(d: Ficha["docs"][number]) {
     const nome = NOME_DOC[d.tipo] ?? d.tipo;
     const a = alertaDoc(d);
     const secao = d.tipo === "passaporte" ? "passaporte" : (TIPOS_VISTO as readonly string[]).includes(d.tipo) ? "vistos" : "extras";
     const chave = `doc:${d.id}`;
     return (
-      <Cartao titulo={nome} onEditar={() => setEditando(chave)} onApagar={() => apagarDoc(d.id, nome)}>
+      <Cartao key={d.id} titulo={nome} onEditar={() => setEditando(chave)} onApagar={() => apagarDoc(d.id, nome)}>
         {editando === chave ? (
           <Editor
-            campos={CAMPOS_DOC}
+            campos={camposDoDoc(d.tipo)}
             valores={d}
+            foto={{ path: d.arquivo_path }}
             onCancelar={() => setEditando(null)}
-            onSalvar={(v) => {
-              patch((x) => ({ ...x, docs: x.docs.map((y) => (y.id === d.id ? { ...y, ...v } : y)) }));
+            onSalvar={async (v, novaFoto) => {
+              const valores: Record<string, string | null> = { ...v };
+              if (novaFoto !== undefined) {
+                if (!navigator.onLine) {
+                  toast.error("Trocar a foto só com internet. O resto foi salvo.");
+                } else if (novaFoto === null) {
+                  valores.arquivo_path = null;
+                  if (d.arquivo_path) await supabase.storage.from("documentos").remove([d.arquivo_path]);
+                } else {
+                  const path = `${pid}/${d.tipo}-${crypto.randomUUID()}.jpg`;
+                  const { error } = await supabase.storage.from("documentos").upload(path, await comprimir(novaFoto), { contentType: "image/jpeg" });
+                  if (error) toast.error("A foto nova não subiu. O resto foi salvo.");
+                  else valores.arquivo_path = path;
+                }
+              }
               setEditando(null);
-              salvarOp({ tipo: "update", tabela: "traveler_document", id: d.id, valores: v });
+              if (Object.keys(valores).length === 0) return;
+              patch((x) => ({ ...x, docs: x.docs.map((y) => (y.id === d.id ? { ...y, ...valores } : y)) }));
+              salvarOp({ tipo: "update", tabela: "traveler_document", id: d.id, valores });
             }}
           />
         ) : (
@@ -239,12 +264,8 @@ function FichaPessoa() {
             <p className="text-base text-muted-foreground">Ainda não enviado.</p>
           </Cartao>
         )}
-        {passaportes.map((d) => (
-          <CartaoDoc key={d.id} d={d} />
-        ))}
-        {vistos.map((d) => (
-          <CartaoDoc key={d.id} d={d} />
-        ))}
+        {passaportes.map((d) => cartaoDoc(d))}
+        {vistos.map((d) => cartaoDoc(d))}
 
         {f.contas.map((c) => (
           <Cartao key={c.id} titulo={c.programa} onEditar={() => setEditando(`conta:${c.id}`)} onApagar={() => apagarConta(c.id, c.programa)}>
@@ -257,6 +278,8 @@ function FichaPessoa() {
                 valores={c}
                 onCancelar={() => setEditando(null)}
                 onSalvar={(v) => {
+                  setEditando(null);
+                  if (Object.keys(v).length === 0) return;
                   patch((x) => ({ ...x, contas: x.contas.map((y) => (y.id === c.id ? { ...y, ...v } : y)) }));
                   setEditando(null);
                   salvarOp({ tipo: "update", tabela: "loyalty_account", id: c.id, valores: v });
@@ -282,12 +305,15 @@ function FichaPessoa() {
               }}
               onCancelar={() => setEditando(null)}
               onSalvar={(v) => {
+                if (Object.keys(v).length === 0) return setEditando(null);
+                const at = f.prefs;
                 const valores = {
                   person_id: pid,
-                  assento: v.assento ?? null,
-                  quarto: v.quarto ?? null,
-                  bebe_alcool: v.bebe_alcool == null ? null : v.bebe_alcool === "true",
-                  restricoes: (v.restricoes ?? "").split(",").map((x) => x.trim()).filter(Boolean),
+                  assento: "assento" in v ? v.assento : at?.assento ?? null,
+                  quarto: "quarto" in v ? v.quarto : at?.quarto ?? null,
+                  bebe_alcool: "bebe_alcool" in v ? (v.bebe_alcool == null ? null : v.bebe_alcool === "true") : at?.bebe_alcool ?? null,
+                  restricoes:
+                    "restricoes" in v ? (v.restricoes ?? "").split(",").map((x) => x.trim()).filter(Boolean) : at?.restricoes ?? [],
                 };
                 patch((x) => ({ ...x, prefs: valores }));
                 setEditando(null);
@@ -316,9 +342,7 @@ function FichaPessoa() {
           )}
         </Cartao>
 
-        {extras.map((d) => (
-          <CartaoDoc key={d.id} d={d} />
-        ))}
+        {extras.map((d) => cartaoDoc(d))}
 
         <div className="pt-6">
           {!confirmar ? (

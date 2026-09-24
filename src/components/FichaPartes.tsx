@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Eye, EyeOff, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Camera, Eye, EyeOff, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { inputCls } from "@/components/Form";
 import { mascarar, urlAssinada } from "@/lib/pessoas";
@@ -92,22 +92,109 @@ export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; ro
 
 export type CampoEd = { chave: string; rotulo: string; tipo?: "text" | "date" | "tel" | "email"; opcoes?: [string, string][] };
 
+function paraTexto(x: unknown): string {
+  if (x == null) return "";
+  const s = String(x);
+  // datas vindas como timestamp: o campo de data só aceita AAAA-MM-DD
+  return /^\d{4}-\d{2}-\d{2}T/.test(s) ? s.slice(0, 10) : s;
+}
+
+/**
+ * Formulário pré-preenchido com os valores atuais.
+ * onSalvar recebe SÓ os campos que mudaram (campos não tocados nunca viram vazio).
+ * Se `foto` for passado, mostra a foto atual com Trocar/Remover; a foto só muda se o admin pedir.
+ */
 export function Editor({
   campos,
   valores,
   onSalvar,
   onCancelar,
+  foto,
 }: {
   campos: CampoEd[];
   valores: Record<string, unknown>;
-  onSalvar: (v: Record<string, string | null>) => void;
+  onSalvar: (v: Record<string, string | null>, novaFoto?: File | null) => void;
   onCancelar: () => void;
+  foto?: { path: string | null };
 }) {
-  const [v, setV] = useState<Record<string, string>>(
-    Object.fromEntries(campos.map((c) => [c.chave, valores[c.chave] == null ? "" : String(valores[c.chave])])),
+  const [inicial] = useState<Record<string, string>>(() =>
+    Object.fromEntries(campos.map((c) => [c.chave, paraTexto(valores[c.chave])])),
   );
+  const [v, setV] = useState<Record<string, string>>(inicial);
+  // undefined = não mexeu; File = trocou; null = removeu
+  const [novaFoto, setNovaFoto] = useState<File | null | undefined>(undefined);
+  const [previa, setPrevia] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    if (foto?.path && navigator.onLine) urlAssinada(foto.path).then((u) => vivo && u && setPrevia(u));
+    return () => {
+      vivo = false;
+    };
+  }, [foto?.path]);
+
+  function salvar() {
+    const mudou: Record<string, string | null> = {};
+    for (const c of campos) {
+      const a = (inicial[c.chave] ?? "").trim();
+      const n = (v[c.chave] ?? "").trim();
+      if (a !== n) mudou[c.chave] = n === "" ? null : n;
+    }
+    onSalvar(mudou, novaFoto);
+  }
+
+  const mostraFoto = novaFoto === null ? null : novaFoto ? URL.createObjectURL(novaFoto) : previa;
+
   return (
     <div className="space-y-3">
+      {foto && (
+        <div className="space-y-2">
+          <span className="text-base font-bold text-foreground">Foto</span>
+          {mostraFoto ? (
+            <img src={mostraFoto} alt="Foto do documento" className="w-full rounded-xl border border-border" />
+          ) : (
+            <p className="text-base text-muted-foreground">
+              {novaFoto === null ? "Foto será removida ao salvar." : foto.path ? "Foto guardada (abre com internet)." : "Sem foto."}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <label className="tap flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-border text-base font-bold text-foreground">
+              <Camera size={24} strokeWidth={2.2} />
+              {foto.path || novaFoto ? "Trocar foto" : "Pôr foto"}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setNovaFoto(f);
+                }}
+              />
+            </label>
+            {(foto.path || novaFoto) && novaFoto !== null && (
+              <button
+                type="button"
+                onClick={() => setNovaFoto(null)}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-destructive text-base font-bold text-destructive"
+              >
+                <Trash2 size={24} strokeWidth={2.2} />
+                Remover foto
+              </button>
+            )}
+            {novaFoto !== undefined && (
+              <button
+                type="button"
+                onClick={() => setNovaFoto(undefined)}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-border text-base font-bold text-foreground"
+              >
+                <X size={24} strokeWidth={2.2} />
+                Manter a antiga
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {campos.map((c) => (
         <label key={c.chave} className="block">
           <span className="text-base font-bold text-foreground">{c.rotulo}</span>
@@ -130,7 +217,7 @@ export function Editor({
           ) : (
             <input
               type={c.tipo ?? "text"}
-              value={v[c.chave]}
+              value={v[c.chave] ?? ""}
               onChange={(e) => setV({ ...v, [c.chave]: e.target.value })}
               className={`${inputCls} mt-2`}
             />
@@ -139,6 +226,7 @@ export function Editor({
       ))}
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={onCancelar}
           className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-foreground"
         >
@@ -146,7 +234,8 @@ export function Editor({
           Cancelar
         </button>
         <button
-          onClick={() => onSalvar(Object.fromEntries(Object.entries(v).map(([k, x]) => [k, x.trim() === "" ? null : x.trim()])))}
+          type="button"
+          onClick={salvar}
           className="tap flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-bold text-primary-foreground"
         >
           <Check size={24} strokeWidth={2.2} />
