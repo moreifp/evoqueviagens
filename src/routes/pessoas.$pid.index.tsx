@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { AlertTriangle, Camera, Check, ClipboardCheck, MessageCircle, Plus, Send, Trash2 } from "lucide-react";
+import { AlertTriangle, Camera, Check, ClipboardCheck, MessageCircle, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
@@ -12,8 +12,8 @@ import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
 import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, prepararArquivo } from "@/lib/imagem";
-import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp, linkDaPessoa, urlDoLink } from "@/lib/links";
+import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, SALAS_VIP, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
+import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, urlDoLink } from "@/lib/links";
 import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
@@ -77,6 +77,7 @@ function FichaPessoa() {
   const { data: lista } = useQuery(pessoasQuery());
   const [editando, setEditando] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState(false);
+  const [confirmarLink, setConfirmarLink] = useState(false);
   const [fotoPendente, setFotoPendente] = useState<{ chave: string; file: File } | null>(null);
   const lerAdmin = useServerFn(lerPassaporteAdmin);
 
@@ -351,6 +352,82 @@ function FichaPessoa() {
     navigate({ to: "/" });
   }
 
+  /** Formulário para preencher um item de "Ainda vazios" direto na ficha. */
+  function editorVazio(chave: string) {
+    const fechar = () => setEditando(null);
+    const rotulo = faltando.find((x) => x.chave === chave)?.rotulo ?? "";
+    let corpo: React.ReactNode = null;
+    if (chave.startsWith("doc:")) {
+      const tipo = chave.slice(4);
+      corpo = (
+        <Editor campos={camposDoDoc(tipo)} valores={{}} foto={{ path: null }} onCancelar={fechar} onSalvar={(v, novaFoto) => salvarDoc(null, tipo, v, novaFoto)} />
+      );
+    } else if (chave === "endereco") {
+      corpo = <Editor campos={[{ chave: "endereco", rotulo: "Endereço" }]} valores={p} onCancelar={fechar} onSalvar={(v) => salvarPessoa(v, "extras")} />;
+    } else if (chave === "refeicao") {
+      corpo = (
+        <Editor
+          campos={[CAMPOS_PREF[4]!]}
+          valores={{}}
+          onCancelar={fechar}
+          onSalvar={(v) => {
+            if (!v.refeicao_voo) return fechar();
+            const at = f!.prefs;
+            const valores = {
+              person_id: pid,
+              assento: at?.assento ?? null,
+              quarto: at?.quarto ?? null,
+              bebe_alcool: at?.bebe_alcool ?? null,
+              restricoes: at?.restricoes ?? [],
+              refeicao_voo: v.refeicao_voo,
+            };
+            patch((x) => ({ ...x, prefs: valores }));
+            fechar();
+            salvarOp({ tipo: "upsert", tabela: "person_preferences", valores, onConflict: "person_id" });
+            atualizou("preferencias");
+          }}
+        />
+      );
+    } else if (chave === "visto_negado") {
+      corpo = (
+        <Editor
+          campos={[
+            { chave: "visto_negado", rotulo: "Algum visto negado ou em processo?", opcoes: [["true", "Sim"], ["false", "Não"]] },
+            { chave: "visto_negado_detalhe", rotulo: "Detalhe" },
+          ]}
+          valores={{}}
+          onCancelar={fechar}
+          onSalvar={(v) => {
+            const out: Record<string, unknown> = { ...v };
+            if ("visto_negado" in v) out.visto_negado = v.visto_negado == null ? null : v.visto_negado === "true";
+            salvarPessoa(out as Record<string, string | null>, "vistos");
+          }}
+        />
+      );
+    } else if (chave === "salavip") {
+      corpo = (
+        <Editor
+          campos={[
+            { chave: "programa", rotulo: "Qual?", opcoes: SALAS_VIP.map((s) => [s, s] as [string, string]) },
+            { chave: "numero", rotulo: "Número (se tiver)" },
+          ]}
+          valores={{}}
+          onCancelar={fechar}
+          onSalvar={(v) => {
+            fechar();
+            if (!v.programa) return;
+            const id = crypto.randomUUID();
+            const nova = { id, person_id: pid, programa: v.programa, numero: v.numero ?? null, tipo: "sala_vip", categoria: null };
+            patch((x) => ({ ...x, contas: [...x.contas, nova as (typeof x.contas)[number]] }));
+            salvarOp({ tipo: "insert", tabela: "loyalty_account", valores: nova });
+            atualizou("fidelidade");
+          }}
+        />
+      );
+    }
+    return <Cartao titulo={rotulo}>{corpo}</Cartao>;
+  }
+
   function novoPassaporte() {
     return editando === "novo:passaporte" ? (
       <Cartao titulo="Novo passaporte">
@@ -542,10 +619,19 @@ function FichaPessoa() {
               />
               {faltando.length > 0 ? (
                 <>
-                  <p className="mt-2 text-base font-bold text-foreground">Ainda vazios:</p>
+                  <p className="mt-2 text-base font-bold text-foreground">Ainda vazios · toque para preencher:</p>
                   <ul className="mt-1 flex flex-wrap gap-2">
                     {faltando.map((x) => (
-                      <li key={x} className="rounded-full bg-muted px-3 py-1 text-base text-foreground">{x}</li>
+                      <li key={x.chave}>
+                        <button
+                          onClick={() => setEditando(`vazio:${x.chave}`)}
+                          aria-pressed={editando === `vazio:${x.chave}`}
+                          className="tap flex items-center gap-1 rounded-full border-2 border-border bg-muted px-4 text-base font-bold text-foreground"
+                        >
+                          <Plus size={20} strokeWidth={2.2} />
+                          {x.rotulo}
+                        </button>
+                      </li>
                     ))}
                   </ul>
                   <button
@@ -560,6 +646,45 @@ function FichaPessoa() {
                 <p className="mt-2 text-base text-muted-foreground">Tudo preenchido.</p>
               )}
             </>
+          )}
+        </Cartao>
+
+        {editando?.startsWith("vazio:") && editorVazio(editando.slice(6))}
+
+        <Cartao titulo="Link pessoal">
+          {!confirmarLink ? (
+            <button
+              onClick={() => setConfirmarLink(true)}
+              className="tap flex w-full items-center justify-center gap-2 rounded-xl border-2 border-destructive text-lg font-bold text-destructive"
+            >
+              <X size={24} strokeWidth={2.2} />
+              Cancelar link
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-lg font-bold text-foreground">Cancelar o link de {p.apelido || p.nome}? O link que já está no WhatsApp para de funcionar.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmarLink(false)} className="tap flex-1 rounded-xl border-2 border-border text-lg font-bold text-foreground">
+                  Voltar
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!navigator.onLine) return toast.error("Para cancelar o link é preciso internet.");
+                    try {
+                      await cancelarLinkDaPessoa(pid);
+                      toast.success("Link cancelado. O próximo envio cria um link novo.");
+                      qc.invalidateQueries({ queryKey: ["pessoas"] });
+                    } catch {
+                      toast.error("Não deu para cancelar agora.");
+                    }
+                    setConfirmarLink(false);
+                  }}
+                  className="tap flex-1 rounded-xl bg-destructive text-lg font-bold text-destructive-foreground"
+                >
+                  Sim, cancelar
+                </button>
+              </div>
+            </div>
           )}
         </Cartao>
 
