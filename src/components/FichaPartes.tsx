@@ -114,7 +114,7 @@ export function CampoData({
       />
       {vazio && (
         <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-lg text-muted-foreground">
-          {en ? "Empty · tap to choose" : "Vazio · toque para escolher"}
+          {en ? "Empty" : "Vazio"}
         </span>
       )}
       {!vazio && (
