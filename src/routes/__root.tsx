@@ -151,12 +151,6 @@ function RootComponent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelado = false;
-    let recarregou = false;
-    const atualizarPagina = () => {
-      if (recarregou) return;
-      recarregou = true;
-      window.location.reload();
-    };
     (async () => {
       const [{ persistQueryClient }, { createAsyncStoragePersister }, idb] = await Promise.all([
         import("@tanstack/react-query-persist-client"),
@@ -174,26 +168,16 @@ function RootComponent() {
         buster: "evoque-v2",
       });
     })();
+    // Desativa o cache antigo que podia misturar duas versões do app.
+    // O arquivo /sw.js também se autodesativa para alcançar visitantes antigos.
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.addEventListener("controllerchange", atualizarPagina);
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(() => navigator.serviceWorker.ready)
-        .then((reg) => {
-          // Guarda no aparelho tudo que esta tela já carregou (scripts, estilos, fontes).
-          const urls = performance
-            .getEntriesByType("resource")
-            .map((e) => e.name)
-            .filter((u) => u.startsWith(location.origin) || u.includes("fonts.g"))
-            .filter((u) => !/\/(_serverFn|api|c)\/|\/~/.test(new URL(u).pathname + "/"));
-          if (location.pathname.startsWith("/c/")) return;
-          reg.active?.postMessage({ tipo: "guardar", urls: [...urls, location.href] });
-        })
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => Promise.all(regs.filter((reg) => reg.active?.scriptURL.endsWith("/sw.js")).map((reg) => reg.unregister())))
         .catch(() => {});
     }
     return () => {
       cancelado = true;
-      navigator.serviceWorker?.removeEventListener("controllerchange", atualizarPagina);
     };
   }, [queryClient]);
 
