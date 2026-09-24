@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, LogIn } from "lucide-react";
+import { Plane, LogIn, Chrome } from "lucide-react";
+import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { cadastrarAdmin } from "@/lib/cadastro.functions";
+import { cadastrarAdmin, verificarAdmin } from "@/lib/cadastro.functions";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -53,6 +54,33 @@ function Entrar() {
   const [carregando, setCarregando] = useState(false);
   const [espera, setEspera] = useState(0);
   const criarAdmin = useServerFn(cadastrarAdmin);
+  const confereAdmin = useServerFn(verificarAdmin);
+
+  async function entrarGoogle() {
+    if (carregando) return;
+    setCarregando(true);
+    try {
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (r.error || r.redirected) {
+        setCarregando(false);
+        if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
+        return;
+      }
+      const { data } = await supabase.auth.getUser();
+      const email = data.user?.email;
+      const v = email ? await confereAdmin({ data: { email } }) : { ok: false };
+      if (!v.ok) {
+        await supabase.auth.signOut();
+        setCarregando(false);
+        toast.error("Este e-mail não está na lista de administradores.");
+        return;
+      }
+      setCarregando(false);
+    } catch {
+      setCarregando(false);
+      toast.error("Não deu certo agora. Tente de novo em instantes.");
+    }
+  }
 
   useEffect(() => {
     if (espera <= 0) return;
@@ -104,6 +132,16 @@ function Entrar() {
             <p className="text-base opacity-90">Viagens</p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={entrarGoogle}
+          disabled={carregando}
+          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+        >
+          <Chrome size={28} strokeWidth={2.2} />
+          Entrar com Google
+        </button>
 
         <form onSubmit={enviar} className="space-y-4">
           <label className="block">
