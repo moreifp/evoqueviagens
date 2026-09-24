@@ -745,27 +745,121 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
   );
 }
 
-// ---------------- Outros documentos ----------------
-function PassoExtras({ c, t, L, token, ocupado, gravar }: PassoProps) {
-  const [docs, setDocs] = useState<Record<string, DocDTO & { previa?: string | null }>>(() =>
+// ---------------- Outros documentos (e "Demais dados") ----------------
+type DocLocal = DocDTO & { previa?: string | null };
+const SIMPLES = TIPOS_EXTRA.filter((x) => x !== "vacina");
+
+function PassoExtras({ c, t, L, token, ocupado, gravar, emFila }: PassoProps) {
+  const [docs, setDocs] = useState<Record<string, DocLocal>>(() =>
     Object.fromEntries(
       c.docs.filter((d) => (TIPOS_EXTRA as readonly string[]).includes(d.tipo)).map((d) => [d.tipo, { ...d, previa: d.arquivo_path ? c.fotos[d.arquivo_path] ?? null : null }]),
     ),
   );
+  const [outras, setOutras] = useState<DocLocal[]>(() =>
+    c.docs.filter((d) => d.tipo === "outra_vacina").map((d) => ({ ...d, previa: d.arquivo_path ? c.fotos[d.arquivo_path] ?? null : null })),
+  );
   const [endereco, setEndereco] = useState(c.person.endereco ?? "");
+  // Em "Demais dados" só aparece o que ainda está vazio (o que já tem continua salvo).
+  const [preenchidos] = useState(() => new Set(emFila ? c.docs.map((d) => d.tipo) : []));
+  const [endPreenchido] = useState(() => !!emFila && !!c.person.endereco);
   const upload = useUpload(token);
   const nomes = L === "en" ? NOME_DOC_EN : NOME_DOC;
   const dados = () => ({
-    tiposDaSecao: [...TIPOS_EXTRA],
-    docs: Object.values(docs).map(({ previa: _p, ...d }) => d),
+    tiposDaSecao: [...TIPOS_SECAO_EXTRAS],
+    docs: [
+      ...Object.values(docs).map(({ previa: _p, ...d }) => d),
+      ...outras.filter((o) => o.detalhe?.trim() || o.arquivo_path).map(({ previa: _p, ...d }) => ({ ...d, tipo: "outra_vacina" })),
+    ],
     person: { endereco: endereco || null },
   });
   usePausa(() => gravar(dados(), "pausa"));
-  const upd = (tipo: string, v: Partial<DocDTO & { previa?: string | null }>) => setDocs((d) => ({ ...d, [tipo]: { tipo, ...d[tipo], ...v } }));
+  const upd = (tipo: string, v: Partial<DocLocal>) => setDocs((d) => ({ ...d, [tipo]: { tipo, ...d[tipo], ...v } }));
+  const updOutra = (i: number, v: Partial<DocLocal>) => setOutras((ls) => ls.map((x, j) => (j === i ? { ...x, ...v } : x)));
+  async function subir(f: File, onPath: (p: string) => void) {
+    try {
+      const r = await upload(f);
+      onPath(r.path);
+    } catch {
+      toast.error(t("erro"));
+    }
+  }
+  const febre = docs.vacina;
 
   return (
     <>
-      {TIPOS_EXTRA.map((tipo) => {
+      {!preenchidos.has("vacina") && (
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-3">
+          <div className="flex items-center gap-3">
+            <Syringe size={28} strokeWidth={2.2} className="text-accent" />
+            <span className="flex-1 text-lg font-bold text-foreground">
+              {t("vacinas")} · {t("febre")}
+            </span>
+          </div>
+          <p className="text-base font-bold text-foreground">{t("certificado")}</p>
+          <Segmentos
+            valor={febre ? "s" : null}
+            opcoes={[["s", t("sim")], ["n", t("nao")]]}
+            onChange={(x) =>
+              x === "s"
+                ? upd("vacina", {})
+                : setDocs((d) => {
+                    const n = { ...d };
+                    delete n.vacina;
+                    return n;
+                  })
+            }
+          />
+          {febre && (
+            <>
+              <BotaoFoto
+                rotulo={t("fotoCert")}
+                previa={febre.previa}
+                onFoto={(f) => {
+                  upd("vacina", { previa: previaDe(f) });
+                  void subir(f, (p) => upd("vacina", { arquivo_path: p }));
+                }}
+              />
+              <Campo rotulo={t("dataVacina")}>
+                <CampoData en={L === "en"} className={inp} value={febre.emissao ?? ""} onChange={(x) => upd("vacina", { emissao: x })} />
+              </Campo>
+            </>
+          )}
+        </div>
+      )}
+      {outras.map((o, i) => (
+        <div key={o.id ?? `n${i}`} className="space-y-3 rounded-2xl border border-border bg-card p-3">
+          <div className="flex items-center gap-3">
+            <Syringe size={28} strokeWidth={2.2} className="text-accent" />
+            <span className="flex-1 text-lg font-bold text-foreground">{t("outraVacina")}</span>
+            <button onClick={() => setOutras(outras.filter((_, j) => j !== i))} className="tap flex items-center gap-1 text-base font-bold text-muted-foreground">
+              <X size={22} strokeWidth={2.2} /> {t("tirar")}
+            </button>
+          </div>
+          <Campo rotulo={t("nomeVacina")}>
+            <input className={inp} value={o.detalhe ?? ""} onChange={(e) => updOutra(i, { detalhe: e.target.value })} />
+          </Campo>
+          <Campo rotulo={t("dataVacina")}>
+            <CampoData en={L === "en"} className={inp} value={o.emissao ?? ""} onChange={(x) => updOutra(i, { emissao: x })} />
+          </Campo>
+          <BotaoFoto
+            rotulo={t("foto_")}
+            previa={o.previa}
+            onFoto={(f) => {
+              updOutra(i, { previa: previaDe(f) });
+              void subir(f, (p) => updOutra(i, { arquivo_path: p }));
+            }}
+          />
+        </div>
+      ))}
+      <button
+        onClick={() => setOutras([...outras, { tipo: "outra_vacina" }])}
+        className="tap flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-lg font-bold text-foreground"
+      >
+        <Plus size={24} strokeWidth={2.2} />
+        {t("outraVacina")}
+      </button>
+
+      {SIMPLES.filter((tipo) => !preenchidos.has(tipo)).map((tipo) => {
         const I = ICONE_EXTRA[tipo] ?? IdCard;
         const d = docs[tipo];
         const numRot = tipo === "seguro" ? t("apolice") : tipo === "global_entry" ? t("viajante") : t("numero");
@@ -775,23 +869,18 @@ function PassoExtras({ c, t, L, token, ocupado, gravar }: PassoProps) {
               <I size={28} strokeWidth={2.2} className="text-accent" />
               <span className="flex-1 text-lg font-bold text-foreground">{nomes[tipo]}</span>
               <BotaoFoto
-                rotulo={d?.arquivo_path ? "✓" : L === "en" ? "Photo" : "Foto"}
+                rotulo={d?.arquivo_path ? "✓" : t("foto_")}
                 previa={d?.previa}
-                onFoto={async (f) => {
+                onFoto={(f) => {
                   upd(tipo, { previa: previaDe(f) });
-                  try {
-                    const r = await upload(f);
-                    upd(tipo, { arquivo_path: r.path });
-                  } catch {
-                    toast.error(t("erro"));
-                  }
+                  void subir(f, (p) => upd(tipo, { arquivo_path: p }));
                 }}
               />
             </div>
             {d && (
               <div className="grid grid-cols-2 gap-2">
                 <input aria-label={numRot} placeholder={numRot} className={inp} value={d.numero ?? ""} onChange={(e) => upd(tipo, { numero: e.target.value })} />
-                <input aria-label={t("validade")} type="date" className={inp} value={d.validade ?? ""} onChange={(e) => upd(tipo, { validade: e.target.value })} />
+                <CampoData ariaLabel={t("validade")} en={L === "en"} className={inp} value={d.validade ?? ""} onChange={(x) => upd(tipo, { validade: x })} />
               </div>
             )}
             {!d && (
@@ -802,20 +891,22 @@ function PassoExtras({ c, t, L, token, ocupado, gravar }: PassoProps) {
           </div>
         );
       })}
-      <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
-        <div className="flex items-center gap-3">
-          <Home size={28} strokeWidth={2.2} className="text-accent" />
-          <span className="text-lg font-bold text-foreground">{t("endereco")}</span>
+      {!endPreenchido && (
+        <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+          <div className="flex items-center gap-3">
+            <Home size={28} strokeWidth={2.2} className="text-accent" />
+            <span className="text-lg font-bold text-foreground">{t("endereco")}</span>
+          </div>
+          <input aria-label={t("endereco")} className={inp} value={endereco} onChange={(e) => setEndereco(e.target.value)} />
         </div>
-        <input aria-label={t("endereco")} className={inp} value={endereco} onChange={(e) => setEndereco(e.target.value)} />
-      </div>
+      )}
       <Rodape ocupado={ocupado} secundario={t("pular")} onSecundario={() => gravar({ pulou: true }, "proximo")} principal={t("continuar")} onPrincipal={() => gravar(dados(), "proximo")} />
     </>
   );
 }
 
 // ---------------- Vistos ----------------
-function PassoVistos({ c, t, L, token, ocupado, gravar }: PassoProps) {
+function PassoVistos({ c, t, L, token, ocupado, gravar, emFila }: PassoProps) {
   const [sel, setSel] = useState<Record<string, DocDTO & { previa?: string | null }>>(() =>
     Object.fromEntries(
       c.docs.filter((d) => (TIPOS_VISTO as readonly string[]).includes(d.tipo)).map((d) => [d.tipo, { ...d, previa: d.arquivo_path ? c.fotos[d.arquivo_path] ?? null : null }]),
@@ -823,7 +914,10 @@ function PassoVistos({ c, t, L, token, ocupado, gravar }: PassoProps) {
   );
   const upload = useUpload(token);
   const nomes = L === "en" ? NOME_DOC_EN : NOME_DOC;
-  const dados = () => ({ tiposDaSecao: [...TIPOS_VISTO], docs: Object.values(sel).map(({ previa: _p, ...d }) => d) });
+  const [negado, setNegado] = useState<boolean | null>(c.person.visto_negado);
+  const [negadoDet, setNegadoDet] = useState(c.person.visto_negado_detalhe ?? "");
+  const pessoaNeg = () => ({ visto_negado: negado, visto_negado_detalhe: negado ? negadoDet || null : null });
+  const dados = () => ({ tiposDaSecao: [...TIPOS_VISTO], docs: Object.values(sel).map(({ previa: _p, ...d }) => d), person: pessoaNeg() });
   usePausa(() => gravar(dados(), "pausa"));
   const upd = (tipo: string, v: Partial<DocDTO & { previa?: string | null }>) => setSel((s) => ({ ...s, [tipo]: { ...s[tipo]!, ...v } }));
   return (
@@ -871,10 +965,19 @@ function PassoVistos({ c, t, L, token, ocupado, gravar }: PassoProps) {
           </Campo>
         </div>
       ))}
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+        <p className="text-base font-bold text-foreground">{t("negado")}</p>
+        <Segmentos valor={negado == null ? null : negado ? "s" : "n"} opcoes={[["s", t("sim")], ["n", t("nao")]]} onChange={(x) => setNegado(x === "s")} />
+        {negado && (
+          <Campo rotulo={t("negadoDet")}>
+            <input className={inp} value={negadoDet} onChange={(e) => setNegadoDet(e.target.value)} />
+          </Campo>
+        )}
+      </div>
       <Rodape
         ocupado={ocupado}
-        secundario={t("naoTenho")}
-        onSecundario={() => gravar({ tiposDaSecao: [...TIPOS_VISTO], docs: [] }, "proximo")}
+        secundario={emFila ? t("pular") : t("naoTenho")}
+        onSecundario={() => (emFila ? gravar({ pulou: true }, "proximo") : gravar({ tiposDaSecao: [...TIPOS_VISTO], docs: [], person: pessoaNeg() }, "proximo"))}
         principal={t("continuar")}
         onPrincipal={() => gravar(dados(), "proximo")}
       />
@@ -892,13 +995,18 @@ function PassoFidelidade({ c, t, ocupado, gravar }: PassoProps) {
   usePausa(() => gravar(dados(), "pausa"));
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
-        {PROGRAMAS.map((p) => (
-          <Chip key={p.nome} ativo={tem(p.nome)} onClick={() => toggle(p.nome, p.tipo)}>
-            {p.nome}
-          </Chip>
-        ))}
-      </div>
+      {([false, true] as const).map((vip) => (
+        <div key={String(vip)}>
+          <p className="mb-2 text-base font-bold text-foreground">{vip ? t("salaVip") : t("programas")}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {PROGRAMAS.filter((p) => (p.tipo === "sala_vip") === vip).map((p) => (
+              <Chip key={p.nome} ativo={tem(p.nome)} onClick={() => toggle(p.nome, p.tipo)}>
+                {p.nome}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      ))}
       <div className="flex gap-2">
         <input aria-label={t("qualPrograma")} placeholder={`+ ${t("outro")}: ${t("qualPrograma")}`} className={inp} value={outro} onChange={(e) => setOutro(e.target.value)} />
         <button
@@ -930,7 +1038,10 @@ function PassoPreferencias({ c, t, L, ocupado, gravar }: PassoProps) {
     quarto: c.prefs?.quarto ?? null,
     bebe_alcool: c.prefs?.bebe_alcool ?? null,
     restricoes: c.prefs?.restricoes ?? [],
+    refeicao_voo: c.prefs?.refeicao_voo ?? null,
   });
+  const naLista = (x: string | null) => !x || REFEICOES.some((r) => r.v === x);
+  const refSel = v.refeicao_voo == null ? null : naLista(v.refeicao_voo) ? v.refeicao_voo : "outra";
   const dados = () => ({ prefs: v });
   usePausa(() => gravar(dados(), "pausa"));
   return (
@@ -970,6 +1081,27 @@ function PassoPreferencias({ c, t, L, ocupado, gravar }: PassoProps) {
             </Chip>
           ))}
         </div>
+      </div>
+      <div>
+        <p className="text-base font-bold text-foreground">{t("refeicao")}</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {REFEICOES.map((r) => (
+            <Chip key={r.v} ativo={refSel === r.v} onClick={() => setV({ ...v, refeicao_voo: r.v })}>
+              {r[L]}
+            </Chip>
+          ))}
+        </div>
+        {refSel === "outra" && (
+          <div className="mt-2">
+            <Campo rotulo={t("qualRefeicao")}>
+              <input
+                className={inp}
+                value={v.refeicao_voo === "outra" ? "" : v.refeicao_voo ?? ""}
+                onChange={(e) => setV({ ...v, refeicao_voo: e.target.value.trim() ? e.target.value : "outra" })}
+              />
+            </Campo>
+          </div>
+        )}
       </div>
       <Rodape ocupado={ocupado} secundario={t("pular")} onSecundario={() => gravar({ pulou: true }, "proximo")} principal={t("continuar")} onPrincipal={() => gravar(dados(), "proximo")} />
     </>
@@ -1013,7 +1145,9 @@ function PassoEmergencia({ c, t, L, ocupado, gravar, idx, total }: PassoProps) {
 }
 
 // ---------------- Enviado ----------------
-function Enviado({ c, t, L, onCorrigir }: { c: CadastroDTO; t: (k: Chave) => string; L: L; onCorrigir: () => void }) {
+function Enviado({
+  c, t, L, onCorrigir, onDemais, ocupado,
+}: { c: CadastroDTO; t: (k: Chave) => string; L: L; onCorrigir: () => void; onDemais: () => void; ocupado: boolean }) {
   const passos = passosDoModo(c.person.modo).filter((s) => s !== "extras");
   const tem = (s: Secao) => {
     switch (s) {
@@ -1045,6 +1179,9 @@ function Enviado({ c, t, L, onCorrigir }: { c: CadastroDTO; t: (k: Chave) => str
         </ul>
         <button onClick={onCorrigir} className="tap w-full rounded-2xl border-2 border-primary text-xl font-bold text-foreground">
           {t("corrigirAlgo")}
+        </button>
+        <button disabled={ocupado} onClick={onDemais} className="tap w-full rounded-2xl border-2 border-accent bg-accent/5 text-xl font-bold text-foreground disabled:opacity-60">
+          {ocupado ? "…" : t("demais")}
         </button>
       </div>
     </div>
