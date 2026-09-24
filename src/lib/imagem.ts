@@ -41,8 +41,8 @@ export async function melhorarDocumentoParaOcr(arquivo: Blob): Promise<Blob> {
   const pixels = ctx.getImageData(0, 0, c.width, c.height);
   const hist = new Uint32Array(256);
   for (let i = 0; i < pixels.data.length; i += 4) {
-    const y = Math.round(0.2126 * pixels.data[i] + 0.7152 * pixels.data[i + 1] + 0.0722 * pixels.data[i + 2]);
-    hist[y] += 1;
+    const y = Math.round(0.2126 * (pixels.data[i] ?? 0) + 0.7152 * (pixels.data[i + 1] ?? 0) + 0.0722 * (pixels.data[i + 2] ?? 0));
+    hist[y] = (hist[y] ?? 0) + 1;
   }
   const total = c.width * c.height;
   const limiteBaixo = total * 0.02;
@@ -51,18 +51,18 @@ export async function melhorarDocumentoParaOcr(arquivo: Blob): Promise<Blob> {
   let baixo = 0;
   let alto = 255;
   for (let i = 0; i < 256; i += 1) {
-    soma += hist[i];
+    soma += hist[i] ?? 0;
     if (soma >= limiteBaixo) { baixo = i; break; }
   }
   soma = 0;
   for (let i = 0; i < 256; i += 1) {
-    soma += hist[i];
+    soma += hist[i] ?? 0;
     if (soma >= limiteAlto) { alto = i; break; }
   }
   const faixa = Math.max(48, alto - baixo);
   for (let i = 0; i < pixels.data.length; i += 4) {
     for (let canal = 0; canal < 3; canal += 1) {
-      const ajustado = ((pixels.data[i + canal] - baixo) * 255) / faixa;
+      const ajustado = (((pixels.data[i + canal] ?? 0) - baixo) * 255) / faixa;
       pixels.data[i + canal] = Math.max(0, Math.min(255, ajustado));
     }
   }
