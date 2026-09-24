@@ -5,7 +5,7 @@ import { Plane, LogIn, Chrome } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { cadastrarAdmin } from "@/lib/cadastro.functions";
+import { cadastrarAdmin, verificarAdmin } from "@/lib/cadastro.functions";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
