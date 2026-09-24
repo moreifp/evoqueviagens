@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { adminClient, validarToken, type Admin } from "./cadastro.server";
+import { adminClient, contatoDoLink, validarToken, type Admin } from "./cadastro.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { extrairLinhas, lerMrz } from "./mrz";
 import type { CadastroDTO, Secao } from "./cadastro-tipos";
@@ -46,7 +46,9 @@ export const abrirCadastro = createServerFn({ method: "POST" })
       const pid = await validarToken(db, data.token);
       return { ok: true as const, cadastro: await carregar(db, pid) };
     } catch (e) {
-      return { ok: false as const, erro: (e as Error).message };
+      const erro = (e as Error).message;
+      const contato = erro === "LINK_REVOGADO" || erro === "LINK_EXPIRADO" ? await contatoDoLink(db, data.token).catch(() => null) : null;
+      return { ok: false as const, erro, contato };
     }
   });
 
