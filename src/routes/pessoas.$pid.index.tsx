@@ -11,7 +11,7 @@ import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } fro
 import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
 import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
-import { blobParaDataUrl, prepararArquivo } from "@/lib/imagem";
+import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
 import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, SALAS_VIP, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
 import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, urlDoLink } from "@/lib/links";
 import { lerPassaporteAdmin, lerDocumentoAdmin } from "@/lib/cadastro.functions";
@@ -211,7 +211,8 @@ function FichaPessoa() {
       if (!navigator.onLine) return null;
       const { blob, ext } = await prepararArquivo(arquivo);
       if (ext === "pdf") return null;
-      const r = await lerDocAdmin({ data: { imagem: await blobParaDataUrl(blob), tipo } });
+      const imagemOcr = tipo === "rg" ? await melhorarDocumentoParaOcr(blob) : blob;
+      const r = await lerDocAdmin({ data: { imagem: await blobParaDataUrl(imagemOcr), tipo } });
       if (!r.ok) return null;
       const chaves = new Set(camposDoDoc(tipo).map((c) => c.chave));
       const v: Record<string, string> = {};
@@ -306,6 +307,7 @@ function FichaPessoa() {
             foto={{ path: d.arquivo_path }}
             fotoInicial={fotoPendente?.chave === chave ? fotoPendente.file : undefined}
             lerFoto={pass ? lerFotoPassaporte : lerFotoDoc(d.tipo)}
+            orientacaoFoto={d.tipo === "rg" ? "Fotografe o RG inteiro, reto, sem reflexos e com os quatro cantos visíveis." : undefined}
             onCancelar={() => {
               setEditando(null);
               setFotoPendente(null);
@@ -376,7 +378,7 @@ function FichaPessoa() {
     if (chave.startsWith("doc:")) {
       const tipo = chave.slice(4);
       corpo = (
-        <Editor campos={camposDoDoc(tipo)} valores={{}} foto={{ path: null }} lerFoto={lerFotoDoc(tipo)} onCancelar={fechar} onSalvar={(v, novaFoto) => salvarDoc(null, tipo, v, novaFoto)} />
+        <Editor campos={camposDoDoc(tipo)} valores={{}} foto={{ path: null }} lerFoto={lerFotoDoc(tipo)} orientacaoFoto={tipo === "rg" ? "Fotografe o RG inteiro, reto, sem reflexos e com os quatro cantos visíveis." : undefined} onCancelar={fechar} onSalvar={(v, novaFoto) => salvarDoc(null, tipo, v, novaFoto)} />
       );
     } else if (chave === "endereco") {
       corpo = <Editor campos={[{ chave: "endereco", rotulo: "Endereço" }]} valores={p} onCancelar={fechar} onSalvar={(v) => salvarPessoa(v, "extras")} />;

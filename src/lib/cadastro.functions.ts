@@ -28,11 +28,23 @@ async function carregar(db: Admin, pid: string): Promise<CadastroDTO> {
     const { data: s } = await db.storage.from("documentos").createSignedUrls(paths, 600);
     for (const it of s ?? []) if (it.path && it.signedUrl) fotos[it.path] = it.signedUrl;
   }
+  const pessoa = {
+    ...p.data,
+    nacionalidades: Array.isArray(p.data.nacionalidades) ? p.data.nacionalidades : [],
+    passo_atual: Number.isFinite(p.data.passo_atual) ? p.data.passo_atual : 0,
+    idioma: p.data.idioma === "en" ? "en" : "pt",
+  };
+  const prefs = pr.data
+    ? {
+        ...pr.data,
+        restricoes: Array.isArray(pr.data.restricoes) ? pr.data.restricoes : [],
+      }
+    : null;
   return {
-    person: p.data,
+    person: pessoa,
     docs: d.data ?? [],
     contas: c.data ?? [],
-    prefs: pr.data ?? null,
+    prefs,
     revisoes: r.data ?? [],
     fotos,
   } as CadastroDTO;
