@@ -205,6 +205,17 @@ export const salvarPasso = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await adminClient();
     const pid = await validarToken(db, data.token);
+    // Só aceita arquivos da pasta da própria pessoa (impede apontar para fotos de outra ficha).
+    const checar = (v: unknown): void => {
+      if (Array.isArray(v)) return v.forEach(checar);
+      if (v && typeof v === "object")
+        for (const [k, x] of Object.entries(v)) {
+          if ((k === "arquivo_path" || k === "foto_url") && typeof x === "string" && x && !x.startsWith(`${pid}/`))
+            throw new Error("ARQUIVO_INVALIDO");
+          checar(x);
+        }
+    };
+    checar(data);
     const secao = data.secao as Secao;
     const { data: rev } = await db
       .from("person_section_review")
