@@ -325,6 +325,8 @@ export type Database = {
           status: string
           telefone: string | null
           user_id: string | null
+          visto_negado: boolean | null
+          visto_negado_detalhe: string | null
         }
         Insert: {
           apelido?: string | null
@@ -352,6 +354,8 @@ export type Database = {
           status?: string
           telefone?: string | null
           user_id?: string | null
+          visto_negado?: boolean | null
+          visto_negado_detalhe?: string | null
         }
         Update: {
           apelido?: string | null
@@ -379,6 +383,8 @@ export type Database = {
           status?: string
           telefone?: string | null
           user_id?: string | null
+          visto_negado?: boolean | null
+          visto_negado_detalhe?: string | null
         }
         Relationships: []
       }
@@ -441,6 +447,7 @@ export type Database = {
           id: string
           person_id: string
           quarto: string | null
+          refeicao_voo: string | null
           restricoes: string[]
         }
         Insert: {
@@ -451,6 +458,7 @@ export type Database = {
           id?: string
           person_id: string
           quarto?: string | null
+          refeicao_voo?: string | null
           restricoes?: string[]
         }
         Update: {
@@ -461,6 +469,7 @@ export type Database = {
           id?: string
           person_id?: string
           quarto?: string | null
+          refeicao_voo?: string | null
           restricoes?: string[]
         }
         Relationships: [

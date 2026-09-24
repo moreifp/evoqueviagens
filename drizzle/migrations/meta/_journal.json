@@ -15,6 +15,13 @@
       "when": 1790282699683,
       "tag": "0001_doc_aguardando_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790283738257,
+      "tag": "0002_demais_dados",
+      "breakpoints": true
     }
   ]
 }

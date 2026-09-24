@@ -94,6 +94,43 @@ export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; ro
   );
 }
 
+/**
+ * Campo de data que mostra VAZIO quando não há data.
+ * (O iPhone desenha a data de hoje num campo de data vazio; aqui o texto fica escondido e
+ * aparece "Vazio · toque para escolher".) Tem botão para limpar.
+ */
+export function CampoData({
+  value, onChange, className, ariaLabel, en,
+}: { value: string; onChange: (v: string) => void; className: string; ariaLabel?: string; en?: boolean }) {
+  const vazio = !value;
+  return (
+    <div className="relative">
+      <input
+        type="date"
+        aria-label={ariaLabel}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`${className} pr-16 ${vazio ? "text-transparent [-webkit-text-fill-color:transparent] [&::-webkit-date-and-time-value]:text-transparent" : ""}`}
+      />
+      {vazio && (
+        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-lg text-muted-foreground">
+          {en ? "Empty" : "Vazio"}
+        </span>
+      )}
+      {!vazio && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label={en ? "Clear date" : "Limpar data"}
+          className="absolute right-1 top-1/2 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground"
+        >
+          <X size={22} strokeWidth={2.2} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export type CampoEd = { chave: string; rotulo: string; tipo?: "text" | "date" | "tel" | "email"; opcoes?: [string, string][] };
 
 function paraTexto(x: unknown): string {
@@ -253,6 +290,10 @@ export function Editor({
                   {r}
                 </button>
               ))}
+            </div>
+          ) : c.tipo === "date" ? (
+            <div className="mt-2">
+              <CampoData ariaLabel={c.rotulo} value={v[c.chave] ?? ""} onChange={(x) => setV({ ...v, [c.chave]: x })} className={inputCls} />
             </div>
           ) : (
             <input
