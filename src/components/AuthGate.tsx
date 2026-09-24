@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, LogIn } from "lucide-react";
+import { Plane, LogIn, Chrome } from "lucide-react";
+import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { cadastrarAdmin } from "@/lib/cadastro.functions";
