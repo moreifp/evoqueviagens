@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { AlertTriangle, Camera, Check, ClipboardCheck, MessageCircle, Plus, Send, Trash2, X } from "lucide-react";
+import { AlertTriangle, Camera, Check, ClipboardCheck, Copy, MessageCircle, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
@@ -13,7 +13,7 @@ import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situac
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
 import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, SALAS_VIP, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, urlDoLink } from "@/lib/links";
+import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, mensagemConvite, urlDoLink } from "@/lib/links";
 import { lerPassaporteAdmin, lerDocumentoAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
@@ -670,6 +670,41 @@ function FichaPessoa() {
         {editando?.startsWith("vazio:") && editorVazio(editando.slice(6))}
 
         <Cartao titulo="Link pessoal">
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
+                  try {
+                    const token = await linkDaPessoa(pid);
+                    await navigator.clipboard.writeText(urlDoLink(token));
+                    toast.success("Link copiado.");
+                  } catch {
+                    toast.error("Não deu para copiar o link agora.");
+                  }
+                }}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-foreground"
+              >
+                <Copy size={24} strokeWidth={2.2} />
+                Copiar link
+              </button>
+              <button
+                onClick={async () => {
+                  if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
+                  try {
+                    const token = await linkDaPessoa(pid);
+                    const nome = p.apelido || p.nome.split(" ")[0]!;
+                    abrirWhatsApp(p.telefone, mensagemConvite(p.idioma, nome, urlDoLink(token)));
+                  } catch {
+                    toast.error("Não deu para gerar o link agora.");
+                  }
+                }}
+                className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-primary text-lg font-bold text-foreground"
+              >
+                <Send size={24} strokeWidth={2.2} />
+                WhatsApp
+              </button>
+            </div>
           {!confirmarLink ? (
             <button
               onClick={() => setConfirmarLink(true)}
@@ -704,6 +739,7 @@ function FichaPessoa() {
               </div>
             </div>
           )}
+          </div>
         </Cartao>
 
         <div className="pt-6">
