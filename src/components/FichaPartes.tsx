@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, Eye, EyeOff, FileText, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
+import { Camera, Eye, EyeOff, FileText, Image as ImageIcon, Loader2, Pencil, RefreshCw, Trash2, Check, X } from "lucide-react";
 import { DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 import { toast } from "sonner";
 import { inputCls } from "@/components/Form";
@@ -173,6 +173,7 @@ export function Editor({
   const [novaFoto, setNovaFoto] = useState<File | null | undefined>(undefined);
   const [previa, setPrevia] = useState<string | null>(null);
   const [leitura, setLeitura] = useState<"lendo" | "ok" | "falhou" | null>(null);
+  const [ultimaFoto, setUltimaFoto] = useState<File | null>(null);
 
   useEffect(() => {
     let vivo = true;
@@ -184,6 +185,13 @@ export function Editor({
 
   async function escolher(f: File) {
     setNovaFoto(f);
+    if (!lerFoto) return;
+    setUltimaFoto(f);
+    await ler(f);
+  }
+
+  /** Tenta ler a foto e pré-preencher os campos; guarda a foto para "Tentar de novo". */
+  async function ler(f: File) {
     if (!lerFoto) return;
     setLeitura("lendo");
     try {
@@ -234,10 +242,32 @@ export function Editor({
               {novaFoto === null ? "Foto será removida ao salvar." : foto.path ? "Foto guardada (abre com internet)." : "Sem foto."}
             </p>
           )}
-          {leitura && (
-            <p className={`rounded-xl p-3 text-base font-bold ${leitura === "ok" ? "bg-ok/10 text-ok" : leitura === "falhou" ? "bg-warn/10 text-warn" : "bg-muted text-foreground"}`}>
-              {leitura === "lendo" ? "Lendo a foto…" : leitura === "ok" ? "Lemos a foto · confira os campos e toque Salvar" : "Não deu para ler · preencha à mão"}
+          {leitura === "lendo" && (
+            <p className="flex items-center gap-2 rounded-xl bg-muted p-3 text-base font-bold text-foreground" role="status">
+              <Loader2 size={24} strokeWidth={2.2} className="animate-spin" aria-hidden />
+              Lendo a foto… pode levar alguns segundos.
             </p>
+          )}
+          {leitura === "ok" && (
+            <p className="flex items-center gap-2 rounded-xl bg-ok/10 p-3 text-base font-bold text-ok" role="status">
+              <Check size={24} strokeWidth={2.2} aria-hidden />
+              Lemos a foto · confira os campos e toque Salvar
+            </p>
+          )}
+          {leitura === "falhou" && (
+            <div className="space-y-2 rounded-xl bg-warn/10 p-3" role="alert">
+              <p className="text-base font-bold text-warn">Não deu para ler a foto. Você pode preencher à mão ou tentar de novo.</p>
+              {ultimaFoto && (
+                <button
+                  type="button"
+                  onClick={() => ler(ultimaFoto)}
+                  className="tap flex w-full items-center justify-center gap-2 rounded-xl border-2 border-warn text-base font-bold text-warn"
+                >
+                  <RefreshCw size={24} strokeWidth={2.2} aria-hidden />
+                  Tentar ler de novo
+                </button>
+              )}
+            </div>
           )}
           <div className="flex gap-2">
             <ZonaArquivo
