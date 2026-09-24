@@ -148,13 +148,14 @@ function CadastroParticipante() {
   const [erro, setErro] = useState<string | null>(null);
   const [contato, setContato] = useState<string | null>(null);
   const [tentativa, setTentativa] = useState(0);
+  const chamada = useRef(0);
 
   useEffect(() => {
-    let ativa = true;
+    const atual = ++chamada.current;
     setErro(null);
     abrir({ data: { token } })
       .then((r) => {
-        if (!ativa) return;
+        if (atual !== chamada.current) return;
         if (r.ok) setC(r.cadastro);
         else {
           setErro(r.erro);
@@ -162,11 +163,8 @@ function CadastroParticipante() {
         }
       })
       .catch(() => {
-        if (ativa) setErro("REDE");
+        if (atual === chamada.current) setErro("REDE");
       });
-    return () => {
-      ativa = false;
-    };
   }, [token, tentativa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erro) {

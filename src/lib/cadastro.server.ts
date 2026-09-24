@@ -49,15 +49,25 @@ export async function adminClient(): Promise<Admin> {
 export async function validarToken(db: Admin, token: string): Promise<string> {
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) throw new Error("LINK_INVALIDO");
   const hash = await sha256Hex(token);
-  const { data, error } = await db
-    .from("cadastro_link")
-    .select("id, person_id, expira_em, revogado_em, deleted_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-  if (error || !data) throw new Error("LINK_INVALIDO");
+  async function buscarLink() {
+    return db
+      .from("cadastro_link")
+      .select("id, person_id, expira_em, revogado_em, deleted_at")
+      .eq("token_hash", hash)
+      .maybeSingle();
+  }
+  let { data, error } = await buscarLink();
+  if (error) ({ data, error } = await buscarLink());
+  if (error) throw new Error("FALHA_CARREGAR");
+  if (!data) throw new Error("LINK_INVALIDO");
   if (data.revogado_em || data.deleted_at) throw new Error("LINK_REVOGADO");
   if (new Date(data.expira_em).getTime() < Date.now()) throw new Error("LINK_EXPIRADO");
-  const { data: p } = await db.from("person").select("id, deleted_at").eq("id", data.person_id).maybeSingle();
+  async function buscarPessoa() {
+    return db.from("person").select("id, deleted_at").eq("id", data.person_id).maybeSingle();
+  }
+  let { data: p, error: pessoaErro } = await buscarPessoa();
+  if (pessoaErro) ({ data: p, error: pessoaErro } = await buscarPessoa());
+  if (pessoaErro) throw new Error("FALHA_CARREGAR");
   if (!p || p.deleted_at) throw new Error("LINK_INVALIDO");
   await db.from("cadastro_link").update({ ultimo_acesso_em: new Date().toISOString() }).eq("id", data.id);
   return data.person_id as string;
