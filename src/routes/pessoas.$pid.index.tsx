@@ -1,17 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { AlertTriangle, ClipboardCheck, Send, Trash2 } from "lucide-react";
+import { AlertTriangle, Camera, Check, ClipboardCheck, MessageCircle, Plus, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
 import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
 import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } from "@/components/FichaPartes";
-import { alertaDoc, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
+import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
+import { AGUARDANDO, alertaDoc, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
-import { comprimir } from "@/lib/imagem";
-import { NOME_DOC, TIPOS_VISTO } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp, linkDaPessoa, urlDoLink } from "@/lib/links";
+import { blobParaDataUrl, prepararArquivo } from "@/lib/imagem";
+import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, TIPOS_VISTO } from "@/lib/cadastro-tipos";
+import { abrirWhatsApp } from "@/lib/links";
+import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
   head: () => ({
@@ -350,7 +353,7 @@ function FichaPessoa() {
             {s && <LinhaStatus nivel={s.nivel} texto={s.texto} />}
           </div>
         </div>
-        {s?.aprovar && (
+        {s?.aprovar && s.texto !== AGUARDANDO && (
           <Link
             to="/pessoas/$pid/conferir"
             params={{ pid }}
@@ -360,10 +363,26 @@ function FichaPessoa() {
             Conferir
           </Link>
         )}
+        {f.revisoes
+          .filter((r) => r.status === "correcao")
+          .map((r) => (
+            <div key={r.secao} className="flex items-center gap-2 rounded-2xl border-2 border-warn bg-warn/10 p-3 text-warn">
+              <MessageCircle size={26} strokeWidth={2.2} className="shrink-0" />
+              <span className="flex-1 text-base font-bold">
+                {NOME_SECAO[r.secao].pt} · {AGUARDANDO}
+                {r.recado && <span className="block font-normal">Pedido: {r.recado}</span>}
+                <span className="block font-normal">Atualize o item abaixo quando chegar.</span>
+              </span>
+              <button onClick={() => atualizou(r.secao)} className="tap flex shrink-0 flex-col items-center justify-center rounded-xl border-2 border-current px-2">
+                <Check size={22} strokeWidth={2.2} />
+                <span className="text-sm font-bold">Resolvido</span>
+              </button>
+            </div>
+          ))}
 
         <Cartao titulo="Você" onEditar={() => setEditando("voce")}>
           {editando === "voce" ? (
-            <Editor campos={CAMPOS_VOCE} valores={p} onCancelar={() => setEditando(null)} onSalvar={salvarPessoa} />
+            <Editor campos={CAMPOS_VOCE} valores={p} onCancelar={() => setEditando(null)} onSalvar={(v) => salvarPessoa(v, "voce")} />
           ) : (
             <>
               <Dado rotulo="Nome no passaporte" valor={p.nome_como_no_documento} />

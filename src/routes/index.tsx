@@ -5,7 +5,7 @@ import { UserPlus, BellRing } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/Chrome";
 import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
-import { fichaQuery, pessoasQuery, situacao } from "@/lib/pessoas";
+import { AGUARDANDO, fichaQuery, pessoasQuery, situacao } from "@/lib/pessoas";
 import { abrirWhatsApp, linkDaPessoa, mensagemLembrete, urlDoLink } from "@/lib/links";
 
 export const Route = createFileRoute("/")({
@@ -105,7 +105,7 @@ function Pessoas() {
         {visiveis.map(({ p, s }) => (
           <div key={p.id} className="shadow-soft flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
             <Link
-              to={s.aprovar ? "/pessoas/$pid/conferir" : "/pessoas/$pid"}
+              to={s.aprovar && s.texto !== AGUARDANDO ? "/pessoas/$pid/conferir" : "/pessoas/$pid"}
               params={{ pid: p.id }}
               className="flex min-h-[64px] flex-1 items-center gap-3"
             >
