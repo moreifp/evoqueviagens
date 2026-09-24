@@ -14,7 +14,7 @@ import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, prepararArquivo } from "@/lib/imagem";
 import { NOME_DOC, NOME_DOC_EN, NOME_SECAO, REFEICOES, SALAS_VIP, TIPOS_VISTO, nomeRefeicao } from "@/lib/cadastro-tipos";
 import { abrirWhatsApp, cancelarLinkDaPessoa, linkDaPessoa, urlDoLink } from "@/lib/links";
-import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
+import { lerPassaporteAdmin, lerDocumentoAdmin } from "@/lib/cadastro.functions";
 
 export const Route = createFileRoute("/pessoas/$pid/")({
   head: () => ({
@@ -80,6 +80,7 @@ function FichaPessoa() {
   const [confirmarLink, setConfirmarLink] = useState(false);
   const [fotoPendente, setFotoPendente] = useState<{ chave: string; file: File } | null>(null);
   const lerAdmin = useServerFn(lerPassaporteAdmin);
+  const lerDocAdmin = useServerFn(lerDocumentoAdmin);
 
   if (isLoading) return <p className="p-6 text-lg">Carregando…</p>;
   if (!f) return <p className="p-6 text-lg">Ficha não guardada neste aparelho.</p>;
@@ -204,6 +205,21 @@ function FichaPessoa() {
     return v;
   }
 
+  /** Lê RG, CNH, vistos etc. e devolve só os campos que o formulário daquele tipo tem. */
+  function lerFotoDoc(tipo: string) {
+    return async (arquivo: File): Promise<Record<string, string> | null> => {
+      if (!navigator.onLine) return null;
+      const { blob, ext } = await prepararArquivo(arquivo);
+      if (ext === "pdf") return null;
+      const r = await lerDocAdmin({ data: { imagem: await blobParaDataUrl(blob), tipo } });
+      if (!r.ok) return null;
+      const chaves = new Set(camposDoDoc(tipo).map((c) => c.chave));
+      const v: Record<string, string> = {};
+      for (const [k, x] of Object.entries(r.campos)) if (x && chaves.has(k)) v[k] = x;
+      return v;
+    };
+  }
+
   const faltando = demaisFaltando(f);
 
   /** Pede os demais dados pelo WhatsApp; aqui vai o link pessoal, abrindo direto em "Demais dados". */
@@ -289,7 +305,7 @@ function FichaPessoa() {
             valores={pass ? { ...d, data_nascimento: p.data_nascimento } : d}
             foto={{ path: d.arquivo_path }}
             fotoInicial={fotoPendente?.chave === chave ? fotoPendente.file : undefined}
-            lerFoto={pass ? lerFotoPassaporte : undefined}
+            lerFoto={pass ? lerFotoPassaporte : lerFotoDoc(d.tipo)}
             onCancelar={() => {
               setEditando(null);
               setFotoPendente(null);
@@ -360,7 +376,7 @@ function FichaPessoa() {
     if (chave.startsWith("doc:")) {
       const tipo = chave.slice(4);
       corpo = (
-        <Editor campos={camposDoDoc(tipo)} valores={{}} foto={{ path: null }} onCancelar={fechar} onSalvar={(v, novaFoto) => salvarDoc(null, tipo, v, novaFoto)} />
+        <Editor campos={camposDoDoc(tipo)} valores={{}} foto={{ path: null }} lerFoto={lerFotoDoc(tipo)} onCancelar={fechar} onSalvar={(v, novaFoto) => salvarDoc(null, tipo, v, novaFoto)} />
       );
     } else if (chave === "endereco") {
       corpo = <Editor campos={[{ chave: "endereco", rotulo: "Endereço" }]} valores={p} onCancelar={fechar} onSalvar={(v) => salvarPessoa(v, "extras")} />;
