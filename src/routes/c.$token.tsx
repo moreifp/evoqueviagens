@@ -169,7 +169,7 @@ function CadastroParticipante() {
         : "Este link não vale mais. Peça um novo ao Fausto. · This link is no longer valid.";
     const msg = encodeURIComponent("Oi! Meu link do cadastro de viagem venceu. Pode me mandar um novo?");
     const dig = (contato ?? "").replace(/\D/g, "");
-    const wa = dig ? `https://wa.me/${dig.length <= 11 ? `55${dig}` : dig}?text=${msg}` : `https://wa.me/?text=${msg}`;
+    const wa = dig ? `https://api.whatsapp.com/send?phone=${dig.length <= 11 ? `55${dig}` : dig}&text=${msg}` : `https://api.whatsapp.com/send?text=${msg}`;
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center">
         <p className="text-xl font-semibold text-foreground">{txt}</p>
