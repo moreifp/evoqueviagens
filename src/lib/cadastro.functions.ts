@@ -151,6 +151,79 @@ export const lerPassaporteAdmin = createServerFn({ method: "POST" })
     return lerMrzDaImagem(data.imagem);
   });
 
+const NOMES_TIPO: Record<string, string> = {
+  rg: "Brazilian ID card (RG / Carteira de Identidade, possibly the new CIN)",
+  cnh: "Brazilian driver's license (CNH)",
+  pid: "International Driving Permit (PID)",
+  vacina: "International Certificate of Vaccination (yellow fever)",
+  outra_vacina: "vaccination certificate",
+  seguro: "travel insurance policy",
+  global_entry: "Global Entry / TSA card",
+};
+
+function dataOk(v: unknown): string | null {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const d = new Date(`${v}T12:00:00Z`);
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? null : v;
+}
+
+/** Lê documentos que não são passaporte (RG, CNH, vistos, vacina…). Só devolve o que estiver legível. */
+export const lerDocumentoAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000), tipo: z.string().max(30) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const email = String((context.claims as { email?: string }).email ?? "").toLowerCase();
+    const { data: adm } = await context.supabase.from("app_admin").select("email").ilike("email", email).maybeSingle();
+    if (!adm) throw new Error("NAO_ADMIN");
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) return { ok: false as const };
+    const qual = NOMES_TIPO[data.tipo] ?? `travel document of type "${data.tipo}" (e.g. a visa)`;
+    try {
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `This image is a ${qual}. Return ONLY a JSON object with these keys, using null for anything not clearly legible (never guess): "nome" (full name as printed), "numero" (main document number: for RG the "Registro Geral"/RG number, for CNH the "Nº Registro", for visas the visa/control number, for insurance the policy number), "pais" (issuing country, ISO 3-letter code if possible), "emissao" (date of issue / vaccination date, YYYY-MM-DD), "validade" (expiry date, YYYY-MM-DD), "nascimento" (date of birth, YYYY-MM-DD), "sexo" ("M","F" or null), "detalhe" (visa category like "B1/B2", vaccine name, insurer name, or CNH category; else null). Brazilian dates are DD/MM/YYYY — convert carefully.`,
+                },
+                { type: "image_url", image_url: { url: data.imagem } },
+              ],
+            },
+          ],
+        }),
+      });
+      if (!r.ok) return { ok: false as const };
+      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
+      const txt = j.choices?.[0]?.message?.content ?? "";
+      const m = /\{[\s\S]*\}/.exec(txt);
+      if (!m) return { ok: false as const };
+      const o = JSON.parse(m[0]) as Record<string, unknown>;
+      const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().slice(0, 200) : null);
+      return {
+        ok: true as const,
+        campos: {
+          nome_no_documento: t(o.nome),
+          numero: t(o.numero),
+          pais_emissor: t(o.pais),
+          emissao: dataOk(o.emissao),
+          validade: dataOk(o.validade),
+          data_nascimento: dataOk(o.nascimento),
+          sexo: o.sexo === "M" || o.sexo === "F" ? o.sexo : null,
+          detalhe: t(o.detalhe),
+        },
+      };
+    } catch {
+      return { ok: false as const };
+    }
+  });
+
 const docSchema = z.object({
   id: z.string().uuid().optional(),
   tipo: z.string().max(30),
