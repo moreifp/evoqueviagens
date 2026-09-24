@@ -27,8 +27,8 @@ export function telefoneWa(t: string) {
 
 export function abrirWhatsApp(telefone: string | null, texto: string) {
   const url = telefone
-    ? `https://wa.me/${telefoneWa(telefone)}?text=${encodeURIComponent(texto)}`
-    : `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    ? `https://api.whatsapp.com/send?phone=${telefoneWa(telefone)}&text=${encodeURIComponent(texto)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
   window.open(url, "_blank", "noopener");
 }
 
