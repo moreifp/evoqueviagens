@@ -73,6 +73,8 @@ function FichaPessoa() {
   const { data: lista } = useQuery(pessoasQuery());
   const [editando, setEditando] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState(false);
+  const [fotoPendente, setFotoPendente] = useState<{ chave: string; file: File } | null>(null);
+  const lerAdmin = useServerFn(lerPassaporteAdmin);
 
   if (isLoading) return <p className="p-6 text-lg">Carregando…</p>;
   if (!f) return <p className="p-6 text-lg">Ficha não guardada neste aparelho.</p>;
@@ -92,11 +94,12 @@ function FichaPessoa() {
     }
   }
 
-  function salvarPessoa(v: Record<string, string | null>) {
+  function salvarPessoa(v: Record<string, string | null>, secao?: string) {
     if (Object.keys(v).length === 0) return setEditando(null);
     patch((x) => ({ ...x, pessoa: { ...x.pessoa, ...v } }));
     setEditando(null);
     salvarOp({ tipo: "update", tabela: "person", id: pid, valores: v });
+    if (secao) atualizou(secao);
   }
 
   function apagarDoc(id: string, nome: string) {
