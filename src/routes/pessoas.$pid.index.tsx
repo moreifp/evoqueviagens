@@ -336,7 +336,7 @@ function FichaPessoa() {
                 )}
               </div>
             )}
-            <VerFoto path={d.arquivo_path} />
+            <VerFoto key={d.arquivo_path ?? "sem"} path={d.arquivo_path} />
             <div className="mt-2">
               <ZonaArquivo
                 onArquivo={(file) => {
@@ -441,7 +441,7 @@ function FichaPessoa() {
         />
       );
     }
-    return <Cartao titulo={rotulo}>{corpo}</Cartao>;
+    return <Cartao key={chave} titulo={rotulo}><div key={chave}>{corpo}</div></Cartao>;
   }
 
   function novoPassaporte() {
