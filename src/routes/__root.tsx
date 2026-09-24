@@ -121,6 +121,12 @@ function RootComponent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelado = false;
+    let recarregou = false;
+    const atualizarPagina = () => {
+      if (recarregou) return;
+      recarregou = true;
+      window.location.reload();
+    };
     (async () => {
       const [{ persistQueryClient }, { createAsyncStoragePersister }, idb] = await Promise.all([
         import("@tanstack/react-query-persist-client"),
@@ -139,12 +145,6 @@ function RootComponent() {
       });
     })();
     if ("serviceWorker" in navigator) {
-      let recarregou = false;
-      const atualizarPagina = () => {
-        if (recarregou) return;
-        recarregou = true;
-        window.location.reload();
-      };
       navigator.serviceWorker.addEventListener("controllerchange", atualizarPagina);
       navigator.serviceWorker
         .register("/sw.js")
