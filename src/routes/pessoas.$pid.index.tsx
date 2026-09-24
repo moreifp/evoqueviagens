@@ -693,7 +693,7 @@ function FichaPessoa() {
                   if (!navigator.onLine) return toast.error("Para gerar o link é preciso internet.");
                   try {
                     const token = await linkDaPessoa(pid);
-                    const nome = p.apelido || p.nome.split(" ")[0];
+                    const nome = p.apelido || p.nome.split(" ")[0]!;
                     abrirWhatsApp(p.telefone, mensagemConvite(p.idioma, nome, urlDoLink(token)));
                   } catch {
                     toast.error("Não deu para gerar o link agora.");
