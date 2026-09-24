@@ -94,7 +94,10 @@ const T = {
   salvo: { pt: "Salvo. Pode fechar e voltar pelo mesmo link.", en: "Saved. You can close and come back with the same link." },
   falta: { pt: "Falta preencher", en: "Please fill in" },
   erro: { pt: "Não deu certo agora. Tente de novo.", en: "Something went wrong. Please try again." },
-  naoSalvo: { pt: "Não foi salvo — sem conexão. Toque em Continuar de novo.", en: "Not saved — no connection. Tap Continue again." },
+  naoSalvo: {
+    pt: "Não conseguimos confirmar que salvou (conexão falhou). Toque em Continuar de novo — nada fica duplicado.",
+    en: "We couldn't confirm it was saved (connection failed). Tap Continue again — nothing gets duplicated.",
+  },
   correcao: { pt: "Pedido de correção", en: "Correction requested" },
   endereco: { pt: "Endereço", en: "Address" },
   apolice: { pt: "Apólice e telefone", en: "Policy number and phone" },
@@ -145,10 +148,7 @@ function CadastroParticipante() {
   }
   if (!c) return <div className="min-h-screen bg-background" />;
   return (
-    <>
-      <Fluxo token={token} inicial={c} secaoInicial={secaoInicial as Secao | undefined} />
-      <Toaster position="top-center" richColors />
-    </>
+    <Fluxo token={token} inicial={c} secaoInicial={secaoInicial as Secao | undefined} />
   );
 }
 
