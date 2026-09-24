@@ -1,4 +1,4 @@
-const CACHE = "evoque-v2";
+const CACHE = "evoque-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -23,7 +23,7 @@ self.addEventListener("message", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((c) =>
       Promise.all(
-        d.urls.map((u) =>
+        d.urls.filter((u) => { try { return !ignorar(new URL(u)); } catch { return false; } }).map((u) =>
           fetch(u, { credentials: "same-origin" })
             .then((r) => (r.ok || r.type === "opaque" ? c.put(u, r) : null))
             .catch(() => null),
