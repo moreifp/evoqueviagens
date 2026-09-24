@@ -13,7 +13,8 @@ import {
   NOME_DOC, NOME_DOC_EN, NOME_SECAO, PROGRAMAS, TIPOS_EXTRA, TIPOS_VISTO, passosDoModo,
   type CadastroDTO, type ContaDTO, type DocDTO, type Secao,
 } from "@/lib/cadastro-tipos";
-import { blobParaDataUrl, comprimir } from "@/lib/imagem";
+import { blobParaDataUrl, prepararArquivo, type Ext } from "@/lib/imagem";
+import { ACEITA_FOTO, DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 
 export const Route = createFileRoute("/c/$token")({
   validateSearch: (s) => z.object({ secao: z.string().optional() }).parse(s),
@@ -424,39 +425,32 @@ function Segmentos<T extends string>({ valor, opcoes, onChange }: { valor: T | n
 
 function useUpload(token: string) {
   const pedir = useServerFn(urlUpload);
-  return async (arquivo: File, max = 1600): Promise<{ path: string; blob: Blob }> => {
-    const blob = await comprimir(arquivo, max);
-    const u = await pedir({ data: { token } });
-    const { error } = await supabase.storage.from("documentos").uploadToSignedUrl(u.path, u.token, blob, { contentType: "image/jpeg" });
+  return async (arquivo: File, max = 1600): Promise<{ path: string; blob: Blob; ext: Ext }> => {
+    const { blob, ext, contentType } = await prepararArquivo(arquivo, max);
+    const u = await pedir({ data: { token, ext } });
+    const { error } = await supabase.storage.from("documentos").uploadToSignedUrl(u.path, u.token, blob, { contentType });
     if (error) throw error;
-    return { path: u.path, blob };
+    return { path: u.path, blob, ext };
   };
 }
 
 function BotaoFoto({
-  rotulo, onFoto, grande, previa,
-}: { rotulo: string; onFoto: (f: File) => void; grande?: boolean; previa?: string | null }) {
-  const ref = useRef<HTMLInputElement>(null);
+  rotulo, onFoto, grande, previa, en,
+}: { rotulo: string; onFoto: (f: File) => void; grande?: boolean; previa?: string | null; en?: boolean }) {
   return (
-    <>
-      <input ref={ref} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
-        const f = e.target.files?.[0];
-        if (f) onFoto(f);
-        e.target.value = "";
-      }} />
-      <button
-        type="button"
-        onClick={() => ref.current?.click()}
-        className={
-          grande
-            ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
-            : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
-        }
-      >
-        {previa && !grande ? <img src={previa} alt="" className="h-10 w-10 rounded object-cover" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
-        {rotulo}
-      </button>
-    </>
+    <ZonaArquivo
+      colar={grande}
+      onArquivo={onFoto}
+      className={
+        grande
+          ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
+          : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
+      }
+    >
+      {previa && !grande ? <Miniatura src={previa} className="h-10 w-10 rounded" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
+      {rotulo}
+      {grande && <DicaArrastar en={en} />}
+    </ZonaArquivo>
   );
 }
 
@@ -522,11 +516,10 @@ function PassoVoce({ c, t, token, ocupado, gravar }: PassoProps) {
   return (
     <>
       <div className="flex flex-col items-center gap-2">
-        <label className="relative flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-dashed border-accent bg-accent/5">
-          {previa ? <img src={previa} alt="" className="h-full w-full object-cover" /> : <Camera size={40} strokeWidth={2.2} className="text-accent" />}
-          <input type="file" accept="image/*" capture="user" className="hidden" onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
+        <ZonaArquivo
+          aceita={ACEITA_FOTO}
+          ariaLabel={t("foto")}
+          onArquivo={async (f) => {
             setPrevia(URL.createObjectURL(f));
             try {
               const r = await upload(f, 800);
@@ -534,8 +527,11 @@ function PassoVoce({ c, t, token, ocupado, gravar }: PassoProps) {
             } catch {
               toast.error(t("erro"));
             }
-          }} />
-        </label>
+          }}
+          className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-dashed border-accent bg-accent/5"
+        >
+          {previa ? <img src={previa} alt="" className="h-full w-full object-cover" /> : <Camera size={40} strokeWidth={2.2} className="text-accent" />}
+        </ZonaArquivo>
         <span className="text-base font-bold text-foreground">{t("foto")}</span>
       </div>
       <Campo rotulo={t("apelido")}>
@@ -579,10 +575,11 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
   const set = (i: number, v: Partial<PassLocal>) => setLista((ls) => ls.map((x, j) => (j === i ? { ...x, ...v } : x)));
 
   async function foto(i: number, f: File) {
-    set(i, { previa: URL.createObjectURL(f), lido: "lendo" });
+    set(i, { previa: previaDe(f), lido: "lendo" });
     try {
-      const { path, blob } = await upload(f);
+      const { path, blob, ext } = await upload(f);
       set(i, { arquivo_path: path });
+      if (ext === "pdf") return set(i, { lido: "falhou" });
       const r = await ler({ data: { token, imagem: await blobParaDataUrl(blob) } });
       if (r.ok) {
         const m = r.mrz;
@@ -623,22 +620,17 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
             </div>
           )}
           {!d.previa ? (
-            <BotaoFoto grande rotulo={t("fotoPass")} onFoto={(f) => foto(i, f)} />
+            <BotaoFoto grande en={L === "en"} rotulo={t("fotoPass")} onFoto={(f) => foto(i, f)} />
           ) : (
             <div className={`flex items-center gap-3 rounded-2xl p-3 ${d.lido === "ok" ? "bg-ok/10 text-ok" : d.lido === "falhou" ? "bg-warn/10 text-warn" : "bg-muted text-foreground"}`}>
-              <img src={d.previa} alt="" className="h-16 w-16 rounded-lg object-cover" />
+              <Miniatura src={d.previa} className="h-16 w-16 rounded-lg" />
               <span className="flex-1 text-base font-bold">
                 {d.lido === "lendo" ? t("lendo") : d.lido === "ok" ? t("lemos") : d.lido === "falhou" ? t("naoLemos") : NOME_SECAO.passaporte[L]}
               </span>
-              <label className="tap flex cursor-pointer flex-col items-center justify-center rounded-xl text-foreground">
+              <ZonaArquivo colar onArquivo={(f) => foto(i, f)} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
                 <RotateCcw size={24} strokeWidth={2.2} />
                 <span className="text-sm font-bold">{t("refazer")}</span>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) foto(i, f);
-                  e.target.value = "";
-                }} />
-              </label>
+              </ZonaArquivo>
             </div>
           )}
           <Campo rotulo={t("nomePass")}>
@@ -717,7 +709,7 @@ function PassoExtras({ c, t, L, token, ocupado, gravar }: PassoProps) {
                 rotulo={d?.arquivo_path ? "✓" : L === "en" ? "Photo" : "Foto"}
                 previa={d?.previa}
                 onFoto={async (f) => {
-                  upd(tipo, { previa: URL.createObjectURL(f) });
+                  upd(tipo, { previa: previaDe(f) });
                   try {
                     const r = await upload(f);
                     upd(tipo, { arquivo_path: r.path });
@@ -793,7 +785,7 @@ function PassoVistos({ c, t, L, token, ocupado, gravar }: PassoProps) {
             rotulo={t("fotoVisto")}
             previa={d.previa}
             onFoto={async (f) => {
-              upd(d.tipo, { previa: URL.createObjectURL(f) });
+              upd(d.tipo, { previa: previaDe(f) });
               try {
                 const r = await upload(f);
                 upd(d.tipo, { arquivo_path: r.path });

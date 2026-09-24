@@ -8,6 +8,13 @@
       "when": 1790199142413,
       "tag": "0000_module1_cadastro_pessoal",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790282699683,
+      "tag": "0001_doc_aguardando_whatsapp",
+      "breakpoints": true
     }
   ]
 }

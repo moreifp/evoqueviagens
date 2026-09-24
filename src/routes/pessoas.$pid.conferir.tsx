@@ -10,7 +10,7 @@ import { Dado, NumeroOculto, VerFoto, dataBR } from "@/components/FichaPartes";
 import { inputCls } from "@/components/Form";
 import { fichaQuery, type Ficha, type MudancaRow } from "@/lib/pessoas";
 import { NOME_DOC, NOME_SECAO, TIPOS_EXTRA, TIPOS_VISTO, passosDoModo, type Secao } from "@/lib/cadastro-tipos";
-import { abrirWhatsApp, linkDaPessoa, urlDoLink } from "@/lib/links";
+import { abrirWhatsApp } from "@/lib/links";
 
 export const Route = createFileRoute("/pessoas/$pid/conferir")({
   head: () => ({
@@ -91,14 +91,15 @@ function Conferir() {
       await Promise.all([qc.invalidateQueries({ queryKey: ["pessoas"] }), qc.invalidateQueries({ queryKey: ["ficha", pid] })]);
 
       if (devolvidas.length) {
-        const token = await linkDaPessoa(pid);
-        const primeira = devolvidas[0]!;
+        // Correção acontece no WhatsApp: a pessoa responde lá e o admin atualiza a ficha. Sem link.
         const nome = p.apelido || p.nome.split(" ")[0];
-        const partes = devolvidas.map((x) => `${NOME_SECAO[x.secao][p.idioma]}: ${x.recado || "-"}`).join("\n");
+        const recado = devolvidas
+          .map((x) => `${NOME_SECAO[x.secao][p.idioma].toLowerCase()}: ${(x.recado || (p.idioma === "en" ? "please check" : "confira, por favor")).toLowerCase()}`)
+          .join("; ");
         const txt =
           p.idioma === "en"
-            ? `Hi ${nome}! Could you fix a detail in your travel profile?\n${partes}\n${urlDoLink(token, primeira.secao)}`
-            : `Oi, ${nome}! Pode corrigir um detalhe no seu cadastro?\n${partes}\n${urlDoLink(token, primeira.secao)}`;
+            ? `Hi ${nome}! About your travel profile: ${recado}. Could you send it to me right here on WhatsApp?`
+            : `Oi, ${nome}! Na sua ficha de viagem: ${recado}. Pode me mandar aqui mesmo pelo WhatsApp?`;
         abrirWhatsApp(p.telefone, txt);
       }
       toast.success("Conferência salva");

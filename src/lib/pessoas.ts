@@ -41,7 +41,9 @@ export type DocRow = {
   sexo: string | null;
   detalhe: string | null;
   arquivo_path: string | null;
+  aguardando_em?: string | null;
 };
+export const AGUARDANDO = "Aguardando resposta no WhatsApp";
 export type ContaRow = { id: string; person_id: string; programa: string; numero: string | null; tipo: string; categoria: string | null };
 export type PrefRow = { person_id: string; assento: string | null; quarto: string | null; bebe_alcool: boolean | null; restricoes: string[] };
 export type RevisaoRow = { id: string; person_id: string; secao: Secao; status: string; recado: string | null };
@@ -147,7 +149,8 @@ export function situacao(p: PessoaRow, docs: DocRow[], mudancas: MudancaRow[], l
   }
   if (p.status === "em_andamento")
     return { nivel: "muted", texto: `Parou no passo ${Math.max(1, p.passo_atual)} de ${total}`, aprovar: false, aviso: true, lembrar: true };
-  if (p.status === "correcao") return { nivel: "muted", texto: "Correção pedida · aguardando", aprovar: false, aviso: true, lembrar: true };
+  if (p.status === "correcao" || meus.some((d) => d.aguardando_em))
+    return { nivel: "warn", texto: AGUARDANDO, aprovar: true, aviso: true, lembrar: false };
 
   // aprovado: olhar validades
   let pior: { nivel: Nivel; texto: string } | null = null;
