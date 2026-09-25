@@ -75,3 +75,17 @@
 - [ ] Dono: domínio app.evoque.global está "falhou na configuração" — tentar de novo em Configurações → Domínios ANTES de publicar
 - [ ] Depois do domínio ativo: trocar a tarefa agendada do status de voo para app.evoque.global
 - [ ] Links de Termos e Privacidade da landing ([LINK])
+
+## Aba Restaurantes (embed Evoque Restaurants)
+- [ ] Dono: salvar a senha compartilhada no formulário seguro (RESTAURANTS_SSO_SECRET)
+- [ ] Salvar o ID da conexão (evoque-viagens) e testar com conta descartável; zero sobras
+- [ ] Dono: pedir ao Restaurants para limitar o frame a app.evoque.global, evoqueviagens.lovable.app e a prévia
+
+## Avisos no celular (push) — Firebase
+- [ ] Migration aditiva: push_device, push_pref, push_log (RLS só o dono)
+- [ ] Cliente: SDK sob demanda, sw.js existente, só app.evoque.global/localhost, permissão só após toque, iPhone exige instalação
+- [ ] Servidor: enviarAviso via conector FCM, com preferências, silêncio 22h–7h, dedupe 6h e push_log
+- [ ] Gatilhos: status de voo, aviso do organizador, convite, chegou pelo Claude, documento vencendo (diário), check-in 24h (desligado)
+- [ ] Tela "Avisos no celular" na área Eu com liga/desliga por tipo e aviso de teste
+- [ ] Testes com conta @example.com, simulação sem push real, zero sobras; não publicar
+- [ ] Dono: ligar o conector Firebase Cloud Messaging com a conta de serviço
