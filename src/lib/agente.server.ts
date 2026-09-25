@@ -86,7 +86,8 @@ function simular(v: Awaited<ReturnType<typeof carregarViagem>>, novos: ItemRotei
   const roteiro = [...v.roteiro, ...novos].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc));
   const { bilhetes, hospedagens, ctx } = montarEntrada(roteiro, [...v.tickets, ...novosTickets], v.membros);
   const ids = new Set(novos.map((n) => n.item_id));
-  const antes = new Set(rodarAuditor(v.trip, ...Object.values(montarEntrada(v.roteiro, v.tickets, v.membros)) as [never, never, never]).map((a) => a.hash_dos_dados));
+  const e0 = montarEntrada(v.roteiro, v.tickets, v.membros);
+  const antes = new Set(rodarAuditor(v.trip, e0.bilhetes, e0.hospedagens, e0.ctx).map((a) => a.hash_dos_dados));
   return ordenar(rodarAuditor(v.trip, bilhetes, hospedagens, ctx))
     .filter((a) => a.itens_envolvidos.some((i) => ids.has(i)) || !antes.has(a.hash_dos_dados))
     .map(curto);
@@ -226,8 +227,7 @@ export async function proporVoo(c: Ctx, e: z.infer<typeof esquemaVoo>) {
   const achados = simular(v, itens.map((x) => x.rot), itens.map((x) => x.tk));
   const out = [];
   for (const x of itens) {
-    const meus = achados.filter((a) => a.mensagem && (achados.length === 0 || true));
-    out.push({ ...(await gravar(c, e, "voo", x.chave, x.payload, x.resumo, meus)), titulo: x.resumo.titulo });
+    out.push({ ...(await gravar(c, e, "voo", x.chave, x.payload, x.resumo, achados)), titulo: x.resumo.titulo });
   }
   return { itens: out, achados, avisos, mensagens: frase(achados) };
 }
