@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Camera, FileImage, FileUp, CheckCircle2 } from "lucide-react";
+import { Camera, FileImage, FileUp, CheckCircle2, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { Campo, inputCls } from "@/components/Form";
