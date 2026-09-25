@@ -11,6 +11,7 @@ import { ATALHOS, conferir, ordenar, regraPassaporte, type Cartao as CartaoP, ty
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { mutar } from "@/lib/outbox";
 import { abrirWhatsApp, mensagemLembrete } from "@/lib/links";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/trip/$id/revisao")({
   head: () => ({
@@ -55,6 +56,15 @@ function Pessoas({ id }: { id: string }) {
   const { data: lista = [], isLoading } = useQuery(conferirQuery(id));
   const { data: regras = [] } = useQuery(entryRulesQuery());
   const { data: bilhetes = [] } = useQuery(ticketsQuery(id));
+  // Telefone da ficha: só vem de quem tem conta e liberou o bloco básico (ou é da família do organizador).
+  const { data: fones = {} } = useQuery({
+    queryKey: ["telefones", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("telefones_viagem", { _tid: id });
+      if (error) throw error;
+      return Object.fromEntries((data ?? []).map((r) => [r.person_id, r.telefone])) as Record<string, string>;
+    },
+  });
   const [paises, setPaises] = useState<string[]>([]);
   const [ajustar, setAjustar] = useState(false);
   useEffect(() => {
@@ -86,7 +96,7 @@ function Pessoas({ id }: { id: string }) {
         <button onClick={() => setAjustar((v) => !v)} className="tap mt-2 flex items-center gap-2 text-lg font-bold text-accent"><Settings2 size={24} /> Ajustar para este destino</button>
         {ajustar && <AjusteRegra atual={regra} onSalvar={salvarRegra} />}
       </section>
-      {cartoes.map((c) => <CartaoPessoa key={c.c.member_id} k={c} tripId={id} destino={trip.destino || trip.nome} />)}
+      {cartoes.map((c) => <CartaoPessoa key={c.c.member_id} k={c} tripId={id} destino={trip.destino || trip.nome} fone={fones[c.c.person_id] ?? c.c.convite_telefone} />)}
       {cartoes.length === 0 && <p className="text-lg text-muted-foreground">Ninguém na viagem ainda.</p>}
     </main>
   );
