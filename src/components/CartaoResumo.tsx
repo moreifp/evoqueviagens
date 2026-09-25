@@ -1,8 +1,8 @@
-import { BedDouble, Car, Map, Plane, Ticket, Utensils, Lock } from "lucide-react";
+import { BedDouble, Car, Map as MapIcon, Plane, Ticket, Utensils, Lock } from "lucide-react";
 import type { ItemRoteiro } from "@/lib/data";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal } from "@/lib/format";
 
-const ICONES: Record<string, typeof Plane> = { voo: Plane, hotel: BedDouble, carro: Car, passeio: Map, restaurante: Utensils };
+const ICONES: Record<string, typeof Plane> = { voo: Plane, hotel: BedDouble, carro: Car, passeio: MapIcon, restaurante: Utensils };
 
 /** Item em que a pessoa não está: só título, horário e quem vai. */
 export function CartaoResumo({ r }: { r: ItemRoteiro }) {
