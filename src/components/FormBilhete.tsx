@@ -13,6 +13,8 @@ import { CampoAeroporto } from "@/components/CampoAeroporto";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
 import { baixa, lerEdicao } from "@/lib/caixaClaude";
+import { PreencherArquivo, casarPessoa } from "@/components/PreencherArquivo";
+import type { Leitura } from "@/lib/reserva-ai.functions";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
@@ -62,7 +64,10 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
-    const x = JSON.parse(raw) as Record<string, string | null>;
+    aplicar(JSON.parse(raw) as Leitura);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inicial, tripId]);
+  function aplicar(x: Leitura) {
     const origem = (x.origem_iata ?? "").toUpperCase().slice(0, 3);
     const destino = (x.destino_iata ?? "").toUpperCase().slice(0, 3);
     setF((v) => ({ ...v, tipo: x.tipo === "trem" || x.tipo === "onibus" ? x.tipo : "voo", companhia: x.companhia ?? "", numero: x.numero ?? "", localizador: x.localizador ?? "", origem_iata: origem, destino_iata: destino, origem_cidade: x.origem_cidade ?? "", destino_cidade: x.destino_cidade ?? "", partida: dataLocal(x.inicio), chegada: dataLocal(x.fim) }));
@@ -72,7 +77,10 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
       const d = destino ? porIata(lista, destino) : undefined;
       setF((v) => ({ ...v, partida_tz: o?.tz ?? v.partida_tz, chegada_tz: d?.tz ?? v.chegada_tz, origem_cidade: v.origem_cidade || o?.cidade || "", destino_cidade: v.destino_cidade || d?.cidade || "" }));
     }).catch(() => undefined);
-  }, [inicial, tripId]);
+    const lidos = (x.passageiros ?? []).length ? x.passageiros : (x.pessoas ?? []).map((nome) => ({ nome, assento: null, eticket: null }));
+    const novos = lidos.flatMap((p) => { const pid = casarPessoa(p.nome, membros); return pid ? [{ id: novoId(), person_id: pid, nome_no_bilhete: p.nome.toUpperCase(), assento: p.assento ?? "", eticket: p.eticket ?? "" }] : []; });
+    if (novos.length) setPax(novos.filter((p, i) => novos.findIndex((q) => q.person_id === p.person_id) === i));
+  }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nomeDoc = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -155,6 +163,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
 
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
+      {!inicial && <PreencherArquivo tripId={tripId} esperado="voo" onLido={aplicar} />}
       <Campo rotulo="Tipo">
         <select value={f.tipo} onChange={set("tipo")} className={inputCls}>
           <option value="voo">Voo</option>
