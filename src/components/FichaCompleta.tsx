@@ -32,7 +32,18 @@ export function FichaCompleta({ personId, itens, owner }: { personId: string; it
           <div key={g}>
             <h2 className="mb-2 flex items-baseline justify-between text-2xl">{g}<span className="text-lg font-bold text-muted-foreground">{ok} de {lista.length}</span></h2>
             <ul className="divide-y divide-border overflow-hidden rounded-lg border-2 border-border bg-card">
-              {lista.map((i) => (
+              {lista.map((i) => i.docs?.length ? (
+                <li key={i.id}>
+                  {i.docs.map((d) => (
+                    <button key={d.id} type="button" onClick={() => navigate({ href: d.href })} className="tap flex min-h-16 w-full items-center gap-3 border-b border-border px-4 text-left text-lg last:border-b-0">
+                      <CheckCircle2 size={28} className="shrink-0 text-ok" aria-hidden />
+                      <span className="min-w-0 flex-1"><span className="block font-bold">{d.label}</span><span className="block text-base text-muted-foreground">Feito</span></span>
+                      <ChevronRight size={24} aria-hidden />
+                    </button>
+                  ))}
+                  {owner && i.novo && <button type="button" onClick={() => navigate({ href: i.novo!.href })} className="tap flex min-h-14 w-full items-center px-4 pl-14 text-left text-lg font-bold text-accent">{i.novo.label}</button>}
+                </li>
+              ) : (
                 <li key={i.id} className="flex items-center">
                   <button type="button" disabled={!owner} onClick={() => navigate({ href: i.href })} className="tap flex min-h-16 flex-1 items-center gap-3 px-4 text-left text-lg">
                     {i.done ? <CheckCircle2 size={28} className="shrink-0 text-ok" aria-hidden /> : i.dispensado ? <MinusCircle size={28} className="shrink-0 text-muted-foreground" aria-hidden /> : <CircleDashed size={28} className={`shrink-0 ${i.obrigatorio ? "text-danger" : "text-warn"}`} aria-hidden />}

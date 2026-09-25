@@ -57,9 +57,9 @@ function TelaEmail() {
       const a = oi ? porIata(aero, oi) : undefined, b = di ? porIata(aero, di) : undefined;
       const pax: Linha["pax"] = []; const semPar: string[] = [];
       for (const p of t.passageiros) {
-        const pid = casarPessoa(p.nome, membros);
-        if (pid && !pax.some((x) => x.person_id === pid)) pax.push({ person_id: pid, nome_no_bilhete: p.nome.toUpperCase(), assento: p.assento ?? "", eticket: p.eticket ?? "" });
-        else if (!pid) semPar.push(p.nome);
+        const pid = casarPessoa(p.nome, membros, new Set(pax.map((x) => x.person_id)));
+        if (pid) pax.push({ person_id: pid, nome_no_bilhete: p.nome.toUpperCase(), assento: p.assento ?? "", eticket: p.eticket ?? "" });
+        else semPar.push(p.nome);
       }
       return {
         id: novoId(), tipo: t.tipo, companhia: t.companhia ?? "", numero: t.numero ?? "", localizador: t.localizador ?? "",

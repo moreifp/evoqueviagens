@@ -6,6 +6,7 @@ import { expensesQuery, membersQuery, tripQuery } from "@/lib/data";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { CATEGORIAS } from "@/lib/categorias";
 import { EditarItem } from "@/components/EditarItem";
+import { EditarMoedaDespesa } from "@/components/EditarMoedaDespesa";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
@@ -99,7 +100,7 @@ function Lista() {
                       <p className="truncate text-lg font-bold text-foreground">{d.descricao}</p>
                       {d.moeda_original !== trip.moeda_base && (
                         <p className="text-sm font-semibold text-muted-foreground">
-                          {fmtMoney(Number(d.valor_original), d.moeda_original)}
+                          {fmtMoney(Number(d.valor_original), d.moeda_original)} · taxa {String(d.taxa_cambio).replace(".", ",")}{(d as { taxa_fonte?: string | null }).taxa_fonte ? ` · ${(d as { taxa_fonte?: string }).taxa_fonte}${(d as { taxa_data?: string | null }).taxa_data ? ` · ${dataBRCurta(String((d as { taxa_data?: string | null }).taxa_data))}` : ""}` : ""}
                         </p>
                       )}
                     </div>
@@ -114,6 +115,7 @@ function Lista() {
                     campos={[{ chave: "descricao", rotulo: "Descrição" }, { chave: "valor_original", rotulo: `Valor (${d.moeda_original})`, tipo: "number" }]}
                     ajustar={(v, it) => (v.valor_original != null ? { ...v, valor_moeda_base: Math.round(Number(v.valor_original) * Number(it.taxa_cambio) * 100) / 100, editado_em: new Date().toISOString() } : { ...v, editado_em: new Date().toISOString() })}
                   />
+                  <EditarMoedaDespesa d={d as never} moedaBase={trip.moeda_base} queryKey={expensesQuery(id).queryKey} />
                   </li>
                 );
               })}

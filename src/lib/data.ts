@@ -358,7 +358,7 @@ export async function buscarCotacaoDetalhe(de: string, para: string): Promise<Co
   const hoje = new Date().toISOString().slice(0, 10);
   if (de === para) return { taxa: 1, fonte: "mesma moeda", data: hoje };
   try {
-    const r = await fetch(`https://api.frankfurter.app/latest?from=${encodeURIComponent(de)}&to=${encodeURIComponent(para)}`);
+    const r = await fetch(`https://api.frankfurter.dev/v1/latest?base=${encodeURIComponent(de)}&symbols=${encodeURIComponent(para)}`);
     if (r.ok) {
       const j = (await r.json()) as { date?: string; rates?: Record<string, number> };
       const t = j.rates?.[para];
