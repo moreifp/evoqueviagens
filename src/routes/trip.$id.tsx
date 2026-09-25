@@ -2,7 +2,6 @@ import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { BarraInferior, BotaoFlutuante } from "@/components/Chrome";
 
 export const Route = createFileRoute("/trip/$id")({
-  ssr: false,
   component: TripLayout,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-lg text-foreground">
