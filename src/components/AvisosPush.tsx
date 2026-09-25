@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BellOff, Send, Smartphone } from "lucide-react";
+import { Bell, BellOff, ChevronDown, Send, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { estadoPush, ligarAvisos, tokenSalvo, esquecerToken, type EstadoPush } from "@/lib/push";
@@ -26,8 +26,9 @@ const TIPOS: { chave: keyof Omit<Pref, "silencio_inicio" | "silencio_fim">; nome
   { chave: "checkin", nome: "Lembrete de check-in", detalhe: "24h antes do voo" },
 ];
 
-/** Seção "Avisos no celular" da tela Eu. */
+/** Seção "Avisos no celular" da tela Eu — recolhida por padrão, no fim da tela. */
 export function AvisosPush() {
+  const [aberto, setAberto] = useState(false);
   const [estado, setEstado] = useState<EstadoPush>(() => (typeof window === "undefined" ? "fora_do_app" : estadoPush()));
   const [pref, setPref] = useState<Pref>(PREF_PADRAO);
   const [ocupado, setOcupado] = useState(false);
