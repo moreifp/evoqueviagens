@@ -63,7 +63,7 @@ function NovaViagem() {
         status: "planejada",
       } }];
       if (origem) {
-        for (const m of membros) ops.push({ tipo: "insert", tabela: "trip_member", valores: { id: novoId(), trip_id: tripId, person_id: m.person_id, papel: m.papel, status: m.status } });
+        for (const m of membros.filter((x) => x.papel !== "owner")) ops.push({ tipo: "insert", tabela: "trip_member", valores: { id: novoId(), trip_id: tripId, person_id: m.person_id, papel: m.papel, status: m.status } });
         const delta = Date.parse(`${inicio}T12:00:00Z`) - Date.parse(`${origem.data_inicio}T12:00:00Z`);
         for (const r of reservas) {
           const rid = novoId();
