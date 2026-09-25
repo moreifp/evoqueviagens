@@ -121,7 +121,7 @@ function AjusteRegra({ atual, onSalvar }: { atual: { meses: number; base: string
   );
 }
 
-function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string; destino: string; fone: string | null }] {
+function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string; destino: string; fone: string | null }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const primeiro = k.c.nome.split(" ")[0] ?? k.c.nome;
   const achadoAviso = k.achados.find((a) => a.aviso);
