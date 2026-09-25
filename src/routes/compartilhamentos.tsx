@@ -23,6 +23,12 @@ export const Route = createFileRoute("/compartilhamentos")({
   component: Compartilhamentos,
 });
 
+function resumo(g: GrantRow) {
+  return g.blocos
+    .map((b) => (b === "viagens" && g.trip_ids ? `${nomeBloco(b)} (${g.trip_ids.length})` : nomeBloco(b)))
+    .join(" · ");
+}
+
 function Compartilhamentos() {
   const qc = useQueryClient();
   const { data } = useQuery(pessoasQuery());
@@ -34,6 +40,8 @@ function Compartilhamentos() {
   const [link, setLink] = useState<string | null>(null);
   const [editando, setEditando] = useState<string | null>(null);
   const [edBlocos, setEdBlocos] = useState<Bloco[]>([]);
+  const [trips, setTrips] = useState<string[] | null>(null);
+  const [edTrips, setEdTrips] = useState<string[] | null>(null);
 
   const uid = data?.uid;
   const dou = (data?.grants ?? []).filter((g) => g.owner_id === uid);
@@ -42,7 +50,7 @@ function Compartilhamentos() {
   async function gerar() {
     if (!modo) return;
     try {
-      const r = await convidar({ data: { direcao: modo, blocos: modo === "oferta" ? blocos : TODOS_BLOCOS } });
+      const r = await convidar({ data: { direcao: modo, blocos: modo === "oferta" ? blocos : TODOS_BLOCOS, tripIds: modo === "oferta" ? trips : null } });
       setLink(`${window.location.origin}/convite/${r.token}`);
     } catch {
       toast.error("Não deu certo agora. Verifique a internet.");
@@ -61,7 +69,7 @@ function Compartilhamentos() {
 
   async function salvarBlocos(g: GrantRow) {
     try {
-      await fnMudar({ data: { id: g.id, blocos: edBlocos } });
+      await fnMudar({ data: { id: g.id, blocos: edBlocos, tripIds: edTrips } });
       setEditando(null);
       toast.success(edBlocos.length ? "Compartilhamento atualizado" : "Acesso revogado");
       qc.invalidateQueries({ queryKey: ["pessoas"] });
@@ -102,7 +110,7 @@ function Compartilhamentos() {
           <section className="space-y-3 rounded-2xl border-2 border-border bg-card p-4">
             <h2 className="text-2xl">{modo === "oferta" ? "O que a pessoa vai ver?" : "Pedir acesso"}</h2>
             {modo === "oferta" ? (
-              <EscolherBlocos valor={blocos} onChange={setBlocos} />
+              <EscolherBlocos valor={blocos} onChange={setBlocos} tripIds={trips} onTrips={setTrips} />
             ) : (
               <p className="text-lg text-foreground">A pessoa recebe o link, cria a conta e escolhe o que mostrar para você.</p>
             )}
@@ -162,7 +170,7 @@ function Compartilhamentos() {
             <p className="text-xl font-bold text-foreground">{g.grantee_nome ?? "Alguém"}</p>
             {editando === g.id ? (
               <>
-                <EscolherBlocos valor={edBlocos} onChange={setEdBlocos} />
+                <EscolherBlocos valor={edBlocos} onChange={setEdBlocos} tripIds={edTrips} onTrips={setEdTrips} />
                 <div className="flex gap-2">
                   <button onClick={() => salvarBlocos(g)} className="tap flex-1 rounded-xl bg-primary text-lg font-bold text-primary-foreground">
                     Salvar
@@ -174,12 +182,13 @@ function Compartilhamentos() {
               </>
             ) : (
               <>
-                <p className="text-base text-muted-foreground">{g.blocos.map(nomeBloco).join(" · ")}</p>
+                <p className="text-base text-muted-foreground">{resumo(g)}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
                       setEditando(g.id);
                       setEdBlocos(g.blocos as Bloco[]);
+                      setEdTrips(g.trip_ids ?? null);
                     }}
                     className="tap flex-1 rounded-xl border-2 border-border text-lg font-bold text-foreground"
                   >
@@ -203,7 +212,7 @@ function Compartilhamentos() {
         {recebo.map((g) => (
           <div key={g.id} className="space-y-2 rounded-2xl border border-border bg-card p-3">
             <p className="text-xl font-bold text-foreground">{g.owner_nome ?? "Alguém"}</p>
-            <p className="text-base text-muted-foreground">{g.blocos.map(nomeBloco).join(" · ")}</p>
+            <p className="text-base text-muted-foreground">{resumo(g)}</p>
             <button onClick={() => cortar(g)} className="tap w-full rounded-xl border-2 border-border text-lg font-bold text-foreground">
               Deixar de ver
             </button>
