@@ -43,7 +43,7 @@ function NovaViagem() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
   function somarDias(iso: string, dias: number) {
-    const [a, m, d] = iso.split("-").map(Number);
+    const [a = 0, m = 1, d = 1] = iso.split("-").map(Number);
     return isoDia(new Date(a, m - 1, d + dias));
   }
   const hoje = isoDia(new Date());
