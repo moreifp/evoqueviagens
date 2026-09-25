@@ -10,7 +10,7 @@ import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from
 import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
-import { anexarImportado } from "@/lib/importAnexo";
+import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 
 export const TIPOS_RESERVA = [
   { v: "carro", r: "Carro" },
@@ -47,7 +47,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | number | null>;
     const tipo = ["carro", "passeio", "restaurante", "outro"].includes(String(x.tipo)) ? x.tipo as "carro" | "passeio" | "restaurante" | "outro" : "outro";
-    setF((v) => ({ ...v, tipo, titulo: String(x.titulo ?? ""), inicio: String(x.inicio ?? ""), fim: String(x.fim ?? ""), local: String(x.local ?? ""), cidade: String(x.cidade ?? ""), localizador: String(x.localizador ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL") }));
+    setF((v) => ({ ...v, tipo, titulo: String(x.titulo ?? ""), inicio: dataLocal(x.inicio as string | null), fim: dataLocal(x.fim as string | null), local: String(x.local ?? ""), cidade: String(x.cidade ?? ""), localizador: String(x.localizador ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL") }));
   }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
@@ -108,7 +108,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     });
     try {
       const r = await enviar(ops);
-      await anexarImportado(tripId, "reservation", id);
+      await anexarImportado(tripId, "reservation", id).catch((e: Error) => toast.error(`Reserva salva, mas o anexo não subiu: ${e.message}`));
       toast.success(aviso(r, "Reserva salva"));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
       navigate({ to: "/trip/$id/reservas", params: { id: tripId } });
