@@ -155,6 +155,13 @@
       "when": 1790315197804,
       "tag": "0021_receber_convites_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790317137775,
+      "tag": "0022_conferir_pedir_avisos",
+      "breakpoints": true
     }
   ]
 }

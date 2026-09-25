@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery } from "./data";
+import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, avisosMeusQuery, pedidosRecebidosQuery } from "./data";
 import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
 import { guardarAnexo, limparAnexos } from "./anexosOffline";
@@ -63,6 +63,9 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
     await qc.fetchQuery({ ...peopleQuery(), staleTime: 0 }).catch(() => null);
     await qc.fetchQuery({ ...convitesQuery(), staleTime: 0 }).catch(() => null);
     await qc.fetchQuery({ ...confiancaQuery(), staleTime: 0 }).catch(() => null);
+    await qc.fetchQuery({ ...avisosMeusQuery(), staleTime: 0 }).catch(() => null);
+    await qc.fetchQuery({ ...pedidosRecebidosQuery(), staleTime: 0 }).catch(() => null);
+    await qc.fetchQuery({ ...entryRulesQuery(), staleTime: 0 }).catch(() => null);
     for (const t of alvo) {
       try {
         await Promise.all([
@@ -85,6 +88,7 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
         const roteiroT = qc.getQueryData(roteiroQuery(t.id).queryKey) ?? [];
         await Promise.all(roteiroT.filter((r) => r.detalhe).map((r) => qc.fetchQuery({ ...autoriaQuery(r.item_tipo, r.item_id), staleTime: 0 }).catch(() => null)));
         await qc.fetchQuery({ ...pedidosQuery(t.id), staleTime: 0 }).catch(() => null);
+        await qc.fetchQuery({ ...conferirQuery(t.id), staleTime: 0 }).catch(() => null);
         const hoteis = qc.getQueryData(lodgingsQuery(t.id).queryKey) ?? [];
         const refs = [...bilhetes.map((b) => b.anexo_url), ...hoteis.map((h) => h.anexo_url)].filter((r): r is string => !!r);
         refs.forEach((r) => manter.add(r));
