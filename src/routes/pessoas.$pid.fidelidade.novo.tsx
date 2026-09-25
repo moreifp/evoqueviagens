@@ -12,7 +12,7 @@ import { saveVaultItem, useVaultUnlocked } from "@/lib/vault";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/pessoas/$pid/fidelidade/novo")({
-  validateSearch: (s: Record<string, unknown>): { editar?: string } => ({ editar: typeof s.editar === "string" ? s.editar : undefined }),
+  validateSearch: (s: Record<string, unknown>): { editar?: string; tipo?: string } => ({ editar: typeof s.editar === "string" ? s.editar : undefined, tipo: typeof s.tipo === "string" ? s.tipo : undefined }),
   head: () => ({ meta: [
     { title: "Programa de fidelidade — Evoque Viagens" }, { name: "description", content: "Adicione ou edite um programa de fidelidade." },
     { property: "og:title", content: "Programa de fidelidade — Evoque Viagens" }, { property: "og:description", content: "Cadastre seu programa de fidelidade." },
@@ -25,7 +25,7 @@ function Novo() {
   const { pid } = Route.useParams(); const { editar } = Route.useSearch();
   const nav = useNavigate(); const qc = useQueryClient(); const { data } = useQuery(euQuery(pid));
   const atual = editar ? data?.fidelidades.find((x) => x.id === editar) : undefined;
-  const [f, setF] = useState({ programa: "", tipo: "aerea", numero: "", categoria: "", titular: "", site_url: "" });
+  const [f, setF] = useState({ programa: "", tipo: Route.useSearch().tipo ?? "aerea", numero: "", categoria: "", titular: "", site_url: "" });
   const [loaded, setLoaded] = useState(!editar);
   const [cofre, setCofre] = useState(false); const [login, setLogin] = useState(""); const [senha, setSenha] = useState("");
   const [saving, setSaving] = useState(false);
