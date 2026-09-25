@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, LogIn, Chrome } from "lucide-react";
+import { Plane, LogIn, Chrome, Apple } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -79,11 +79,11 @@ function Entrar() {
   const criarAdmin = useServerFn(cadastrarAdmin);
   const confereAdmin = useServerFn(verificarAdmin);
 
-  async function entrarGoogle() {
+  async function entrarSocial(provedor: "google" | "apple") {
     if (carregando) return;
     setCarregando(true);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.origin });
       if (r.error || r.redirected) {
         setCarregando(false);
         if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
@@ -158,12 +158,22 @@ function Entrar() {
 
         <button
           type="button"
-          onClick={entrarGoogle}
+          onClick={() => entrarSocial("google")}
           disabled={carregando}
-          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+          className="tap mb-3 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
         >
           <Chrome size={28} strokeWidth={2.2} />
           Entrar com Google
+        </button>
+
+        <button
+          type="button"
+          onClick={() => entrarSocial("apple")}
+          disabled={carregando}
+          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+        >
+          <Apple size={28} strokeWidth={2.2} />
+          Entrar com Apple
         </button>
 
         <form onSubmit={enviar} className="space-y-4">
