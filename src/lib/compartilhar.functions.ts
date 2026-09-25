@@ -141,6 +141,20 @@ export const verConvite = createServerFn({ method: "POST" })
     };
   });
 
+export const listarCompartilhamentos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: grants, error } = await context.supabase.from("share_grant").select("*").eq("status", "ativo").order("created_at", { ascending: false });
+    if (error) throw new Error("FALHA");
+    const ids = [...new Set((grants ?? []).flatMap((grant) => grant.trip_ids ?? []))];
+    let trips: { id: string; nome: string }[] = [];
+    if (ids.length) {
+      const { data } = await context.supabase.from("trip").select("id,nome").in("id", ids);
+      trips = data ?? [];
+    }
+    return { grants: grants ?? [], trips, uid: context.userId };
+  });
+
 export const aceitarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ token: z.string().max(100), blocos: blocosSchema, tripIds: tripsSchema }).parse(d))
