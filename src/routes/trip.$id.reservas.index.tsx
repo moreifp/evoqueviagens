@@ -74,6 +74,7 @@ function Reservas() {
                 </div>
               </div>
               <AnexosItem tripId={id} itemTipo="reservation" itemId={d.id} podeEditar={r.editar} />
+              <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap flex w-full items-center justify-center border-t border-border text-lg font-bold text-accent">Abrir reserva</Link>
               {r.editar && <AcoesItem tabela="reservation" id={d.id} tripId={id} editarPara="/trip/$id/reservas/nova" queryKey={reservasQuery(id).queryKey} />}
             </article>
           );
