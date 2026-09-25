@@ -15,6 +15,12 @@ const ANEXOS = "evoque-anexos"; // cópias de anexos gravadas pelo app; nunca ap
 const SHELL = "/__shell";
 const OFFLINE = "/offline.html";
 
+// Respostas que vieram de redirecionamento não podem responder a uma navegação: recria sem a marca.
+async function limpar(r) {
+  if (!r.redirected) return r;
+  return new Response(await r.blob(), { status: r.status, statusText: r.statusText, headers: r.headers });
+}
+
 function ignorar(url) {
   return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
 }
@@ -25,10 +31,13 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open(CACHE);
       const lista = [OFFLINE, ...(self.__EVOQUE_PRECACHE || [])];
       // Um arquivo que falhar não impede os outros.
-      await Promise.allSettled(lista.map((u) => cache.add(new Request(u, { cache: "reload" }))));
+      await Promise.allSettled(lista.map(async (u) => {
+        const r = await fetch(new Request(u, { cache: "reload" }));
+        if (r.ok) await cache.put(u, await limpar(r));
+      }));
       try {
         const r = await fetch("/", { cache: "reload", credentials: "same-origin" });
-        if (r.ok) await cache.put(SHELL, r);
+        if (r.ok) await cache.put(SHELL, await limpar(r));
       } catch (e) {}
       await self.skipWaiting();
     })(),
