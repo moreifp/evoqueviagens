@@ -21,7 +21,7 @@ export const Route = createFileRoute("/pessoas/$pid/documentos/$did")({
 function Documento() {
   const { pid, did } = Route.useParams(); const qc = useQueryClient(); const nav = useNavigate();
   const { data } = useQuery(documentoQuery(pid, did)); const [revealed, setRevealed] = useState(false); const [full, setFull] = useState<string | null>(null); const [urls, setUrls] = useState<Record<string, string>>({});
-  useEffect(() => { if (!data || !navigator.onLine) return; let alive = true; void supabase.storage.from("documentos").createSignedUrls(data.anexos.map((a) => a.storage_path), 600).then(({ data: signed }) => { if (alive) setUrls(Object.fromEntries((signed ?? []).map((x) => [x.path ?? "", x.signedUrl]))); }); return () => { alive = false; }; }, [data]);
+  useEffect(() => { if (!data || !navigator.onLine) return; let alive = true; void supabase.storage.from("documentos").createSignedUrls(data.anexos.map((a) => a.storage_path), 600).then(({ data: signed }) => { if (alive) setUrls(Object.fromEntries((signed ?? []).flatMap((x) => x.path && x.signedUrl ? [[x.path, x.signedUrl]] : []))); }); return () => { alive = false; }; }, [data]);
   if (!data) return <p className="p-6 text-lg">Carregando…</p>;
   const doc = data.documento; const owner = data.pessoa.account_id === data.uid; const st = statusDocumento(doc); const primary = data.anexos.find((a) => a.is_primary) ?? data.anexos[0]; const sees = data.compartilhamentos.filter((g) => g.owner_id === data.uid && g.blocos.includes("documentos"));
 
