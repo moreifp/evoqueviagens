@@ -43,7 +43,7 @@ export async function anexarPrivado(tripId: string, ticketIds: string[], o: Orig
   const up = await supabase.storage.from("documentos").upload(path, blob, { contentType: o.mime || blob.type || "application/octet-stream" });
   if (up.error) throw new Error(up.error.message);
   for (const itemId of ticketIds) {
-    await mutar({ tipo: "insert", tabela: "item_attachment", valores: { id: novoId(), item_tipo: "ticket", item_id: itemId, storage_path: path, nome: `E-mail da agência · ${o.nome}`, content_type: o.mime || blob.type, size_bytes: blob.size, privado: true } });
+    await mutar({ tipo: "insert", tabela: "item_attachment", valores: { id: novoId(), item_tipo: "ticket", item_id: itemId, storage_path: path, nome: `🔒 E-mail da agência (só organizador) · ${o.nome}`, content_type: o.mime || blob.type, size_bytes: blob.size, privado: true } });
   }
 }
 
