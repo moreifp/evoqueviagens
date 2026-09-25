@@ -158,12 +158,22 @@ function Entrar() {
 
         <button
           type="button"
-          onClick={entrarGoogle}
+          onClick={() => entrarSocial("google")}
           disabled={carregando}
-          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+          className="tap mb-3 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
         >
           <Chrome size={28} strokeWidth={2.2} />
           Entrar com Google
+        </button>
+
+        <button
+          type="button"
+          onClick={() => entrarSocial("apple")}
+          disabled={carregando}
+          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+        >
+          <Apple size={28} strokeWidth={2.2} />
+          Entrar com Apple
         </button>
 
         <form onSubmit={enviar} className="space-y-4">
