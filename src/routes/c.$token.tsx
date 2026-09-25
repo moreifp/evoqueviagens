@@ -533,19 +533,22 @@ function BotaoFoto({
   rotulo, onFoto, grande, previa, en,
 }: { rotulo: string; onFoto: (f: File) => void; grande?: boolean; previa?: string | null; en?: boolean }) {
   return (
-    <ZonaArquivo
-      colar={grande}
-      onArquivo={onFoto}
-      className={
-        grande
-          ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
-          : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
-      }
-    >
-      {previa && !grande ? <Miniatura src={previa} className="h-10 w-10 rounded" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
-      {rotulo}
-      {grande && <DicaArrastar en={en} />}
-    </ZonaArquivo>
+    <div className="flex flex-col gap-2">
+      <ZonaArquivo
+        colar={grande}
+        onArquivo={onFoto}
+        className={
+          grande
+            ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
+            : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
+        }
+      >
+        {previa && !grande ? <Miniatura src={previa} className="h-10 w-10 rounded" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
+        {rotulo}
+        {grande && <DicaArrastar en={en} />}
+      </ZonaArquivo>
+      <TirarFoto onFoto={onFoto} en={en} />
+    </div>
   );
 }
 

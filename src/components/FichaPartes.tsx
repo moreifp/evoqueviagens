@@ -269,7 +269,7 @@ export function Editor({
               )}
             </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <ZonaArquivo
               colar
               onArquivo={escolher}
@@ -281,6 +281,7 @@ export function Editor({
               </span>
               <DicaArrastar />
             </ZonaArquivo>
+            <TirarFoto onFoto={escolher} className="flex-1" />
             {(foto.path || novaFoto) && novaFoto !== null && (
               <button
                 type="button"
