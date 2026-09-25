@@ -113,6 +113,13 @@
       "when": 1790308861811,
       "tag": "0015_membros_viagem",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790309335467,
+      "tag": "0016_item_read_inline",
+      "breakpoints": true
     }
   ]
 }
