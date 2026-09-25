@@ -63,12 +63,12 @@ function NovaViagem() {
         status: "planejada",
       } }];
       if (origem) {
-        for (const m of membros) ops.push({ tipo: "insert", tabela: "trip_member", valores: { id: novoId(), trip_id: tripId, person_id: m.person_id, papel: m.papel, status: m.status } });
+        for (const m of membros.filter((x) => x.papel !== "owner")) ops.push({ tipo: "insert", tabela: "trip_member", valores: { id: novoId(), trip_id: tripId, person_id: m.person_id, papel: m.papel, status: m.status } });
         const delta = Date.parse(`${inicio}T12:00:00Z`) - Date.parse(`${origem.data_inicio}T12:00:00Z`);
         for (const r of reservas) {
           const rid = novoId();
           const deslocar = (iso: string | null) => iso ? new Date(Date.parse(iso) + delta).toISOString() : null;
-          ops.push({ tipo: "insert", tabela: "reservation", valores: { id: rid, trip_id: tripId, tipo: r.tipo, titulo: r.titulo, inicio_utc: deslocar(r.inicio_utc), inicio_tz: r.inicio_tz, fim_utc: deslocar(r.fim_utc), fim_tz: r.fim_tz, local: r.local, cidade: r.cidade, localizador: r.localizador, valor: r.valor, moeda: r.moeda, origem: "duplicacao" } });
+          ops.push({ tipo: "insert", tabela: "reservation", valores: { id: rid, trip_id: tripId, tipo: r.tipo, titulo: r.titulo, inicio_utc: deslocar(r.inicio_utc), inicio_tz: r.inicio_tz, fim_utc: deslocar(r.fim_utc), fim_tz: r.fim_tz, local: r.local, cidade: r.cidade, localizador: r.localizador, valor: r.valor, moeda: r.moeda, origem: "ui" } });
           for (const p of r.pessoas) ops.push({ tipo: "insert", tabela: "reservation_person", valores: { id: novoId(), reservation_id: rid, person_id: p.person_id, papel: p.papel } });
         }
       }

@@ -93,6 +93,7 @@ function Hospedagem() {
               </ul>
             )}
             <AnexosItem tripId={id} itemTipo="lodging" itemId={h.id} podeEditar={r.editar} />
+            <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "lodging", itemId: h.id }} className="tap flex w-full items-center justify-center border-t border-border text-lg font-bold text-accent">Abrir hotel</Link>
             {r.editar && <AcoesItem tabela="lodging" id={h.id} tripId={id} editarPara="/trip/$id/hospedagem/nova" queryKey={lodgingsQuery(id).queryKey} />}
           </article>
           );

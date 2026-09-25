@@ -142,6 +142,13 @@ function CartaoEmbarque({ b, s, editar, nome }: { b: Ticket; s?: StatusVooT; edi
       <AnexosItem tripId={b.trip_id} itemTipo="ticket" itemId={b.id} podeEditar={editar} />
       {editar && <AcoesItem tabela="ticket" id={b.id} tripId={b.trip_id} editarPara="/trip/$id/bilhetes/novo" queryKey={ticketsQuery(b.trip_id).queryKey} />}
 
+      <Link
+        to="/trip/$id/item/$tipo/$itemId"
+        params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }}
+        className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-accent"
+      >
+        Abrir {b.tipo === "voo" ? "voo" : "trecho"}
+      </Link>
       <button
         onClick={() => setAberto((a) => !a)}
         className="tap flex w-full items-center justify-center gap-2 border-t border-border text-base font-bold text-muted-foreground"

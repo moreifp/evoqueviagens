@@ -12,7 +12,8 @@ import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
-import { anexarImportado } from "@/lib/importAnexo";
+import { anexarImportado, dataLocal } from "@/lib/importAnexo";
+import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
 type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string };
 
@@ -51,7 +52,15 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | null>;
-    setF((v) => ({ ...v, tipo: x.tipo === "trem" || x.tipo === "onibus" ? x.tipo : "voo", companhia: x.companhia ?? "", numero: x.numero ?? "", localizador: x.localizador ?? "", origem_iata: x.origem_iata ?? "", destino_iata: x.destino_iata ?? "", origem_cidade: x.origem_cidade ?? "", destino_cidade: x.destino_cidade ?? "", partida: x.inicio ?? "", chegada: x.fim ?? "" }));
+    const origem = (x.origem_iata ?? "").toUpperCase().slice(0, 3);
+    const destino = (x.destino_iata ?? "").toUpperCase().slice(0, 3);
+    setF((v) => ({ ...v, tipo: x.tipo === "trem" || x.tipo === "onibus" ? x.tipo : "voo", companhia: x.companhia ?? "", numero: x.numero ?? "", localizador: x.localizador ?? "", origem_iata: origem, destino_iata: destino, origem_cidade: x.origem_cidade ?? "", destino_cidade: x.destino_cidade ?? "", partida: dataLocal(x.inicio), chegada: dataLocal(x.fim) }));
+    // Fuso vem do aeroporto: sem isso a hora lida seria gravada no fuso do aparelho.
+    void carregarAeroportos().then((lista) => {
+      const o = origem ? porIata(lista, origem) : undefined;
+      const d = destino ? porIata(lista, destino) : undefined;
+      setF((v) => ({ ...v, partida_tz: o?.tz ?? v.partida_tz, chegada_tz: d?.tz ?? v.chegada_tz, origem_cidade: v.origem_cidade || o?.cidade || "", destino_cidade: v.destino_cidade || d?.cidade || "" }));
+    }).catch(() => undefined);
   }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nomeDoc = (pid: string) => {
@@ -132,7 +141,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
 
     try {
       const r = await enviar(ops);
-      await anexarImportado(tripId, "ticket", id);
+      await anexarImportado(tripId, "ticket", id).catch((e: Error) => toast.error(`Voo salvo, mas o anexo não subiu: ${e.message}`));
       toast.success(aviso(r, "Bilhete salvo"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });

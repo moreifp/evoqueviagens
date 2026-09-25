@@ -10,7 +10,7 @@ import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
-import { anexarImportado } from "@/lib/importAnexo";
+import { anexarImportado, dataLocal, soData } from "@/lib/importAnexo";
 
 type QuartoF = { id: string; nome: string; tipo: string; hospedes: { id: string; person_id: string }[] };
 
@@ -41,7 +41,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | number | null>;
-    setF((v) => ({ ...v, nome: String(x.titulo ?? ""), cidade: String(x.cidade ?? ""), endereco: String(x.local ?? ""), localizador: String(x.localizador ?? ""), checkin: String(x.inicio ?? ""), checkout: String(x.fim ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL"), cancelamento_gratis_ate: String(x.cancelamento_gratis_ate ?? "") }));
+    setF((v) => ({ ...v, nome: String(x.titulo ?? ""), cidade: String(x.cidade ?? ""), endereco: String(x.local ?? ""), localizador: String(x.localizador ?? ""), checkin: dataLocal(x.inicio as string | null), checkout: dataLocal(x.fim as string | null), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL"), cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate as string | null) }));
   }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
@@ -128,7 +128,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
 
     try {
       const r = await enviar(ops);
-      await anexarImportado(tripId, "lodging", id);
+      await anexarImportado(tripId, "lodging", id).catch((e: Error) => toast.error(`Hotel salvo, mas o anexo não subiu: ${e.message}`));
       toast.success(aviso(r, "Hospedagem salva"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
