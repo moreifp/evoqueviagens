@@ -12,7 +12,7 @@ import { saveVaultItem, useVaultUnlocked } from "@/lib/vault";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/pessoas/$pid/fidelidade/novo")({
-  validateSearch: (s: Record<string, unknown>) => ({ editar: typeof s.editar === "string" ? s.editar : undefined }),
+  validateSearch: (s: Record<string, unknown>): { editar?: string } => ({ editar: typeof s.editar === "string" ? s.editar : undefined }),
   head: () => ({ meta: [
     { title: "Programa de fidelidade — Evoque Viagens" }, { name: "description", content: "Adicione ou edite um programa de fidelidade." },
     { property: "og:title", content: "Programa de fidelidade — Evoque Viagens" }, { property: "og:description", content: "Cadastre seu programa de fidelidade." },
