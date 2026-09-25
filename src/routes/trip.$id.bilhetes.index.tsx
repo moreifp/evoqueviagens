@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { EditarItem } from "@/components/EditarItem";
+import { abrirAnexo } from "@/lib/anexosOffline";
+import { toast } from "sonner";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { StatusVoo } from "@/components/StatusVoo";
 import type { StatusVoo as StatusVooT } from "@/lib/voo";
@@ -111,16 +114,20 @@ function CartaoEmbarque({ b, s }: { b: Ticket; s?: StatusVooT }) {
       <StatusVoo b={b} s={s} />
 
       {b.anexo_url && (
-        <a
-          href={b.anexo_url}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          onClick={() => void abrirAnexo(b.anexo_url!).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
           className="tap flex w-full items-center justify-center gap-3 border-t border-border bg-muted text-lg font-bold text-foreground"
         >
           <FileText size={28} strokeWidth={2.2} />
           Ver documento
-        </a>
+        </button>
       )}
+      <EditarItem
+        tabela="ticket"
+        item={b as unknown as { id: string } & Record<string, unknown>}
+        queryKey={ticketsQuery(b.trip_id).queryKey}
+        campos={[{ chave: "localizador", rotulo: "Localizador" }, { chave: "assento", rotulo: "Assento" }, { chave: "nome_no_bilhete", rotulo: "Passageiro" }]}
+      />
 
       <button
         onClick={() => setAberto((a) => !a)}

@@ -9,7 +9,11 @@ export function BaixarOffline() {
     const t = setTimeout(() => void baixarTudo(qc), 2500);
     const on = () => void baixarTudo(qc, true);
     window.addEventListener("online", on);
+    // Depois de enviar as edições guardadas, busca de novo para a tela bater com o servidor.
+    const sinc = () => void qc.invalidateQueries();
+    window.addEventListener("evoque-sincronizado", sinc);
     return () => {
+      window.removeEventListener("evoque-sincronizado", sinc);
       clearTimeout(t);
       window.removeEventListener("online", on);
     };

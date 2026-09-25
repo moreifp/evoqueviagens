@@ -54,6 +54,7 @@ export async function sincronizar() {
   enviando = true;
   try {
     let ops = await ler();
+    let enviadas = 0;
     while (ops.length) {
       try {
         await executar(ops[0]!);
@@ -61,9 +62,11 @@ export async function sincronizar() {
         if (ehErroDeRede(e)) break;
         console.error("Descartada edição inválida", e);
       }
+      enviadas++;
       ops = ops.slice(1);
       await gravar(ops);
     }
+    if (enviadas > 0) window.dispatchEvent(new Event("evoque-sincronizado"));
   } finally {
     enviando = false;
   }
