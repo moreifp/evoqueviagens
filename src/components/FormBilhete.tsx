@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -12,10 +12,11 @@ import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
+import { anexarImportado } from "@/lib/importAnexo";
 
 type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string };
 
-export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Ticket }) {
+export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; inicial?: Ticket; copiarDe?: Ticket }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
@@ -25,7 +26,7 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     companhia: inicial?.companhia ?? "",
     numero: inicial?.numero ?? "",
     localizador: inicial?.localizador ?? "",
-    grupo_reserva: inicial?.grupo_reserva ?? "",
+    grupo_reserva: inicial?.grupo_reserva ?? copiarDe?.grupo_reserva ?? "",
     origem_iata: inicial?.origem_iata ?? "",
     destino_iata: inicial?.destino_iata ?? "",
     origem_cidade: inicial?.origem_cidade ?? "",
@@ -36,8 +37,8 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     chegada: inicial ? utcParaLocal(inicial.chegada_utc, inicial.chegada_tz) : "",
   }));
   const [pax, setPax] = useState<Pax[]>(() =>
-    (inicial?.passageiros ?? []).map((p) => ({
-      id: p.id,
+    (inicial?.passageiros ?? copiarDe?.passageiros ?? []).map((p) => ({
+      id: inicial ? p.id : novoId(),
       person_id: p.person_id,
       nome_no_bilhete: p.nome_no_bilhete ?? "",
       assento: p.assento ?? "",
@@ -45,6 +46,13 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     })),
   );
   const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    if (inicial) return;
+    const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
+    sessionStorage.removeItem(`evoque-import-${tripId}`);
+    const x = JSON.parse(raw) as Record<string, string | null>;
+    setF((v) => ({ ...v, tipo: x.tipo === "trem" || x.tipo === "onibus" ? x.tipo : "voo", companhia: x.companhia ?? "", numero: x.numero ?? "", localizador: x.localizador ?? "", origem_iata: x.origem_iata ?? "", destino_iata: x.destino_iata ?? "", origem_cidade: x.origem_cidade ?? "", destino_cidade: x.destino_cidade ?? "", partida: x.inicio ?? "", chegada: x.fim ?? "" }));
+  }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nomeDoc = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -124,6 +132,7 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
 
     try {
       const r = await enviar(ops);
+      await anexarImportado(tripId, "ticket", id);
       toast.success(aviso(r, "Bilhete salvo"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });

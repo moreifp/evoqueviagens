@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
+import { anexarImportado } from "@/lib/importAnexo";
 
 type QuartoF = { id: string; nome: string; tipo: string; hospedes: { id: string; person_id: string }[] };
 
@@ -29,11 +30,19 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     valor: inicial?.valor != null ? String(inicial.valor) : "",
     moeda: inicial?.moeda ?? "BRL",
     politica_cancelamento: inicial?.politica_cancelamento ?? "",
+    cancelamento_gratis_ate: inicial?.cancelamento_gratis_ate ?? "",
   }));
   const [quartos, setQuartos] = useState<QuartoF[]>(() =>
     (inicial?.quartos ?? []).map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes.map((g) => ({ id: g.id, person_id: g.person_id })) })),
   );
   const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    if (inicial) return;
+    const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
+    sessionStorage.removeItem(`evoque-import-${tripId}`);
+    const x = JSON.parse(raw) as Record<string, string | number | null>;
+    setF((v) => ({ ...v, nome: String(x.titulo ?? ""), cidade: String(x.cidade ?? ""), endereco: String(x.local ?? ""), localizador: String(x.localizador ?? ""), checkin: String(x.inicio ?? ""), checkout: String(x.fim ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL"), cancelamento_gratis_ate: String(x.cancelamento_gratis_ate ?? "") }));
+  }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -57,6 +66,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       valor: f.valor ? Number(f.valor.replace(",", ".")) : null,
       moeda: f.valor ? f.moeda : null,
       politica_cancelamento: f.politica_cancelamento.trim() || null,
+      cancelamento_gratis_ate: f.cancelamento_gratis_ate || null,
     };
     const ops: Op[] = [];
     if (!inicial) ops.push({ tipo: "insert", tabela: "lodging", valores: { id, trip_id: tripId, ...valores } });
@@ -118,6 +128,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
 
     try {
       const r = await enviar(ops);
+      await anexarImportado(tripId, "lodging", id);
       toast.success(aviso(r, "Hospedagem salva"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
@@ -166,6 +177,9 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       </div>
       <Campo rotulo="Cancelamento">
         <textarea value={f.politica_cancelamento} onChange={set("politica_cancelamento")} rows={2} className={`${inputCls} py-3`} />
+      </Campo>
+      <Campo rotulo="Cancelamento grátis até">
+        <input type="date" value={f.cancelamento_gratis_ate} onChange={set("cancelamento_gratis_ate")} className={inputCls} />
       </Campo>
 
       <section className="space-y-3">

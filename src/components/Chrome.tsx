@@ -43,13 +43,13 @@ export function BarraInferior({ tripId: _tripId }: { tripId: string }) {
 export function BotaoFlutuante({ tripId }: { tripId: string }) {
   return (
     <Link
-      to="/trip/$id/despesas/nova"
+      to="/trip/$id/adicionar"
       params={{ id: tripId }}
-      aria-label="Lançar despesa"
-      className="gradient-hero shadow-medium fixed bottom-24 right-4 z-20 flex h-[68px] w-[68px] flex-col items-center justify-center rounded-full"
+      aria-label="Adicionar à viagem"
+      className="gradient-hero shadow-medium fixed bottom-24 right-4 z-20 flex h-[72px] min-w-[132px] items-center justify-center gap-2 rounded-full px-5"
     >
       <Plus size={30} strokeWidth={2.2} />
-      <span className="text-xs font-bold">Gasto</span>
+      <span className="text-lg font-bold">Adicionar</span>
     </Link>
   );
 }

@@ -1,4 +1,4 @@
-# Roadmap — Módulo 2 parte 1
+# Roadmap — Módulo 2 partes 1 e 2
 
 - [x] Migrations 0014–0016 (modelo, permissões, roteiro_viagem, membros_viagem, anexos trip/)
 - [x] Aeroportos embarcados + fuso automático
@@ -9,3 +9,16 @@
 - [x] Auditor por pessoa
 - [x] Teste A/B por API (34/34) + telas + limpeza
 - [ ] Editar sem internet: confirmar na versão instalada (o teste na prévia não conclui, ver relatório)
+
+## Parte 2 — desenho aprovado
+
+- [ ] Excluir somente a pessoa “Beto Teste” e confirmar ausência de vínculos/sobras
+- [ ] Migration aditiva: cidades, cancelamento grátis e vínculo item→despesa
+- [ ] Ajustar tokens claros e conferir a área “Eu”
+- [ ] Redesenhar Viagens e visão da viagem
+- [ ] Criar tela Adicionar com leitura assistida por IA e fallback manual
+- [ ] Criar detalhes de voo, hotel e reservas
+- [ ] Implementar duplicação, copiar para volta e virar despesa
+- [ ] Preservar e validar cobertura offline completa
+- [ ] Rodar os 10 testes, gerar cinco capturas e apagar todos os dados descartáveis
+- [ ] Não publicar

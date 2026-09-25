@@ -120,6 +120,13 @@
       "when": 1790309335467,
       "tag": "0016_item_read_inline",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790311314626,
+      "tag": "0017_trip_visual_details",
+      "breakpoints": true
     }
   ]
 }

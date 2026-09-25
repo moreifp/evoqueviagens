@@ -5,7 +5,7 @@ import { FormBilhete } from "@/components/FormBilhete";
 import { ticketsQuery } from "@/lib/data";
 
 export const Route = createFileRoute("/trip/$id/bilhetes/novo")({
-  validateSearch: (s: Record<string, unknown>): { editar?: string } => (typeof s.editar === "string" ? { editar: s.editar } : {}),
+  validateSearch: (s: Record<string, unknown>): { editar?: string; copiar?: string } => ({ ...(typeof s.editar === "string" ? { editar: s.editar } : {}), ...(typeof s.copiar === "string" ? { copiar: s.copiar } : {}) }),
   head: () => ({
     meta: [
       { title: "Bilhete — Evoque Viagens" },
@@ -23,14 +23,15 @@ export const Route = createFileRoute("/trip/$id/bilhetes/novo")({
 
 function TelaBilhete() {
   const { id } = Route.useParams();
-  const { editar } = Route.useSearch();
+  const { editar, copiar } = Route.useSearch();
   const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
   const inicial = editar ? bilhetes.find((b) => b.id === editar) : undefined;
+  const modelo = copiar ? bilhetes.find((b) => b.id === copiar) : undefined;
   if (editar && !inicial) return <p className="p-6 text-lg">Você não pode editar este bilhete.</p>;
   return (
     <>
       <Topo titulo={inicial ? "Editar bilhete" : "Novo bilhete"} voltarPara="/trip/$id/bilhetes" voltarParams={{ id }} />
-      <FormBilhete key={editar ?? "novo"} tripId={id} inicial={inicial} />
+      <FormBilhete key={editar ?? copiar ?? "novo"} tripId={id} inicial={inicial} copiarDe={modelo} />
     </>
   );
 }
