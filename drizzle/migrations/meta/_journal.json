@@ -106,6 +106,13 @@
       "when": 1790308702985,
       "tag": "0014_viagem_modelo",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790308861811,
+      "tag": "0015_membros_viagem",
+      "breakpoints": true
     }
   ]
 }

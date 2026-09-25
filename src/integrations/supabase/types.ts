@@ -1549,6 +1549,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      membros_viagem: {
+        Args: { _tid: string }
+        Returns: {
+          apelido: string
+          id: string
+          kind: string
+          meu: boolean
+          nome: string
+          nome_como_no_documento: string
+          papel: string
+          person_id: string
+          status: string
+        }[]
+      }
       roteiro_viagem: {
         Args: { _tid: string }
         Returns: {
