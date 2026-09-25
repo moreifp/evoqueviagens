@@ -26,7 +26,10 @@ import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
+import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
 import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
+import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
+import { Route as PessoasPidFidelidadeNovoRouteImport } from './routes/pessoas.$pid.fidelidade.novo'
 import { Route as TripIdBilhetesIndexRouteImport } from './routes/trip.$id.bilhetes.index'
 import { Route as TripIdBilhetesNovoRouteImport } from './routes/trip.$id.bilhetes.novo'
 import { Route as TripIdDespesasIndexRouteImport } from './routes/trip.$id.despesas.index'
@@ -119,10 +122,27 @@ const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
   path: '/revisao',
   getParentRoute: () => TripIdRoute,
 } as any)
+const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
+  id: '/pessoas/$pid/documentos/$did',
+  path: '/pessoas/$pid/documentos/$did',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PessoasPidDocumentosNovoRoute =
   PessoasPidDocumentosNovoRouteImport.update({
     id: '/pessoas/$pid/documentos/novo',
     path: '/pessoas/$pid/documentos/novo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PessoasPidFidelidadeIndexRoute =
+  PessoasPidFidelidadeIndexRouteImport.update({
+    id: '/pessoas/$pid/fidelidade/',
+    path: '/pessoas/$pid/fidelidade/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PessoasPidFidelidadeNovoRoute =
+  PessoasPidFidelidadeNovoRouteImport.update({
+    id: '/pessoas/$pid/fidelidade/novo',
+    path: '/pessoas/$pid/fidelidade/novo',
     getParentRoute: () => rootRouteImport,
   } as any)
 const TripIdBilhetesIndexRoute = TripIdBilhetesIndexRouteImport.update({
@@ -174,10 +194,13 @@ export interface FileRoutesByFullPath {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade/': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -199,10 +222,13 @@ export interface FileRoutesByTo {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem': typeof TripIdHospedagemIndexRoute
@@ -226,10 +252,13 @@ export interface FileRoutesById {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade/': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -254,10 +283,13 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade/'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -279,10 +311,13 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid'
     | '/trip/$id'
+    | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade'
     | '/trip/$id/bilhetes'
     | '/trip/$id/despesas'
     | '/trip/$id/hospedagem'
@@ -305,10 +340,13 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade/'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -328,7 +366,10 @@ export interface RootRouteChildren {
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
+  PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
   PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
+  PessoasPidFidelidadeNovoRoute: typeof PessoasPidFidelidadeNovoRoute
+  PessoasPidFidelidadeIndexRoute: typeof PessoasPidFidelidadeIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,11 +493,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdRevisaoRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/pessoas/$pid/documentos/$did': {
+      id: '/pessoas/$pid/documentos/$did'
+      path: '/pessoas/$pid/documentos/$did'
+      fullPath: '/pessoas/$pid/documentos/$did'
+      preLoaderRoute: typeof PessoasPidDocumentosDidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pessoas/$pid/documentos/novo': {
       id: '/pessoas/$pid/documentos/novo'
       path: '/pessoas/$pid/documentos/novo'
       fullPath: '/pessoas/$pid/documentos/novo'
       preLoaderRoute: typeof PessoasPidDocumentosNovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/fidelidade/': {
+      id: '/pessoas/$pid/fidelidade/'
+      path: '/pessoas/$pid/fidelidade'
+      fullPath: '/pessoas/$pid/fidelidade/'
+      preLoaderRoute: typeof PessoasPidFidelidadeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/fidelidade/novo': {
+      id: '/pessoas/$pid/fidelidade/novo'
+      path: '/pessoas/$pid/fidelidade/novo'
+      fullPath: '/pessoas/$pid/fidelidade/novo'
+      preLoaderRoute: typeof PessoasPidFidelidadeNovoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trip/$id/bilhetes/': {
@@ -547,7 +609,10 @@ const rootRouteChildren: RootRouteChildren = {
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
+  PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
   PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
+  PessoasPidFidelidadeNovoRoute: PessoasPidFidelidadeNovoRoute,
+  PessoasPidFidelidadeIndexRoute: PessoasPidFidelidadeIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
