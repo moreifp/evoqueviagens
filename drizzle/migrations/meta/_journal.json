@@ -36,6 +36,13 @@
       "when": 1790299517173,
       "tag": "0004_contas_proprias_compartilhamento",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790299906442,
+      "tag": "0005_person_read_owner_direto",
+      "breakpoints": true
     }
   ]
 }
