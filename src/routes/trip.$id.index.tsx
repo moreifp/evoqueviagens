@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Receipt, Ticket as TicketIcon, Users, CalendarCheck, Utensils, ListChecks } from "lucide-react";
+import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2 } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { useQuery } from "@tanstack/react-query";
 import { cancelado, formatarAtraso } from "@/lib/voo";
 import { apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
-import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
+import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/")({
   head: () => ({
@@ -61,14 +61,14 @@ function VisaoGeral() {
   const proximoHotel = hospedagens.find((h) => h.checkin >= agora);
   const usarBilhete =
     proximoBilhete && (!proximoHotel || proximoBilhete.partida_utc <= proximoHotel.checkin);
-  const total = despesas.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
+  void despesas;
 
   const grave = visiveis.find((a) => a.severidade === "resolver");
   const medio = visiveis.find((a) => a.severidade === "conferir");
 
   return (
     <>
-      <Topo titulo={trip.nome} voltarPara="/viagens" />
+      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {trip.moeda_base.toLowerCase()} · você organiza</p></div><button disabled aria-label="Compartilhar viagem em breve" className="tap flex items-center justify-center text-muted-foreground"><Share2 size={28}/></button></header>
       <main className="space-y-4 px-4 pt-3">
         <SeloOffline tripId={id} />
         {mudancas.map((m) => <Link key={m} to="/trip/$id/bilhetes" params={{ id }} className="tap flex items-center gap-3 rounded-2xl bg-warn px-4 py-3 text-warn-foreground"><Plane size={28} strokeWidth={2.2} className="shrink-0" /><span className="text-lg font-bold">{m}</span></Link>)}
@@ -123,21 +123,8 @@ function VisaoGeral() {
           </span>
         </Link>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Atalho
-            to="/trip/$id/despesas"
-            id={id}
-            Icone={Receipt}
-            numero={fmtMoney(total, trip.moeda_base)}
-            rotulo="Despesas"
-          />
-          <Atalho to="/trip/$id/bilhetes" id={id} Icone={TicketIcon} numero={String(bilhetes.length)} rotulo="Bilhetes" />
-          <Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" />
-          <Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" />
-          <Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" />
-          <Atalho to="/trip/$id/restaurantes" id={id} Icone={Utensils} numero="·" rotulo="Restaurantes" />
-          <Atalho to="/trip/$id/revisao" id={id} Icone={ListChecks} numero={String(visiveis.length)} rotulo="Revisão" />
-        </div>
+        <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" /></div>
+        <section className="space-y-5 pb-28"><h2 className="text-2xl">Roteiro por dia</h2>{Object.entries(Object.groupBy(roteiro, (item) => chaveDia(item.inicio_utc, item.inicio_tz))).map(([dia,itens]) => <div key={dia}><h3 className="mb-2 text-lg font-extrabold uppercase">{dataBRCurta(dia)}</h3><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{(itens ?? []).map((item) => <Link key={item.item_id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: item.item_tipo, itemId: item.item_id }} className="tap flex items-center gap-3 px-4"><strong className="num w-16 text-xl">{horaNoFuso(item.inicio_utc,item.inicio_tz)}</strong><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.titulo}</strong><span className="text-base text-muted-foreground">{item.pessoas.map(p=>p.nome).join(", ")}</span></span>{visiveis.some(a=>a.itens.some(x=>x.id===item.item_id))&&<span className="rounded-full bg-warn px-2 py-1 text-sm font-bold text-warn-foreground">Conferir</span>}</Link>)}</div></div>)}</section>
       </main>
     </>
   );

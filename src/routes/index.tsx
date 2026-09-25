@@ -9,6 +9,8 @@ export const Route = createFileRoute("/")({
     { name: "description", content: "Seus documentos, fidelidade, preferências e compartilhamentos de viagem." },
     { property: "og:title", content: "Minha conta — Evoque Viagens" },
     { property: "og:description", content: "Seus dados pessoais de viagem, seguros e disponíveis offline." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
   ] }),
   component: MinhaConta,
 });
