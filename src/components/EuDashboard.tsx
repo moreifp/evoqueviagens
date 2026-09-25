@@ -14,6 +14,7 @@ import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
+import { versaoBuild } from "@/lib/versao";
 
 const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
 const LISTA_VAZIA: never[] = [];
