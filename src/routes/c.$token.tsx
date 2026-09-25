@@ -633,7 +633,7 @@ function PassoVoce({ c, t, token, ocupado, gravar }: PassoProps) {
           {previa ? <img src={previa} alt="" className="h-full w-full object-cover" /> : <Camera size={40} strokeWidth={2.2} className="text-accent" />}
         </ZonaArquivo>
         <span className="text-base font-bold text-foreground">{t("foto")}</span>
-        <TirarFoto onFoto={escolherFoto} en={L === "en"} className="w-full" />
+        <TirarFoto onFoto={escolherFoto} en={p.idioma === "en"} className="w-full" />
       </div>
       <Campo rotulo={t("apelido")}>
         <input className={inp} value={v.apelido} onChange={(e) => setV({ ...v, apelido: e.target.value })} />
