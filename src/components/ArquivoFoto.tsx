@@ -142,7 +142,10 @@ export function TirarFoto({ onFoto, en = false, className = "" }: { onFoto: (f: 
 
   function capturar() {
     const v = videoRef.current;
-    if (!v || !v.videoWidth) return;
+    if (!v || !v.videoWidth) {
+      toast.error(en ? "Wait for the camera to load and try again." : "Aguarde a câmera carregar e tente de novo.");
+      return;
+    }
     const c = document.createElement("canvas");
     c.width = v.videoWidth;
     c.height = v.videoHeight;
