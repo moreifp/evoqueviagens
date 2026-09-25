@@ -43,7 +43,7 @@ function ignorar(url) {
   return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
 }
 
-self.addEventListener("install", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE);
@@ -62,7 +62,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-self.addEventListener("activate", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const nomes = await caches.keys();
@@ -101,7 +101,7 @@ async function arquivo(request) {
   return r;
 }
 
-self.addEventListener("fetch", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
