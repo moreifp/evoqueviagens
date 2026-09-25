@@ -4,7 +4,9 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
-import { fusoLocal, MOEDAS } from "@/lib/format";
+import { fusoLocal } from "@/lib/format";
+import { CampoMoeda } from "@/components/CampoMoeda";
+import { moedaValida } from "@/lib/moedas";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
 import { aviso, montarOpsHotel, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
@@ -70,7 +72,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicial, tripId]);
   function aplicar(x: Leitura) {
-    setF((v) => ({ ...v, nome: x.titulo ?? v.nome, cidade: x.cidade ?? v.cidade, endereco: x.local ?? v.endereco, localizador: x.localizador ?? v.localizador, checkin: dataLocal(x.inicio) || v.checkin, checkout: dataLocal(x.fim) || v.checkout, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda && (MOEDAS as readonly string[]).includes(x.moeda) ? x.moeda : v.moeda, cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate) || v.cancelamento_gratis_ate, politica_cancelamento: x.politica_cancelamento ?? v.politica_cancelamento }));
+    setF((v) => ({ ...v, nome: x.titulo ?? v.nome, cidade: x.cidade ?? v.cidade, endereco: x.local ?? v.endereco, localizador: x.localizador ?? v.localizador, checkin: dataLocal(x.inicio) || v.checkin, checkout: dataLocal(x.fim) || v.checkout, valor: x.valor == null ? v.valor : String(x.valor), moeda: moedaValida(x.moeda) ? x.moeda.toUpperCase() : v.moeda, cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate) || v.cancelamento_gratis_ate, politica_cancelamento: x.politica_cancelamento ?? v.politica_cancelamento }));
     const qs = (x.quartos ?? []).length ? x.quartos : (x.pessoas ?? []).length ? [{ nome: "Quarto 1", tipo: null, hospedes: x.pessoas }] : [];
     if (qs.length) setQuartos(qs.map((q) => ({ id: novoId(), nome: q.nome, tipo: q.tipo ?? "", hospedes: [...new Set(q.hospedes.map((n) => casarPessoa(n, ativos)).filter(Boolean) as string[])].map((pid) => ({ id: novoId(), person_id: pid })) })));
   }
@@ -182,18 +184,10 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       <Campo rotulo="Localizador">
         <input value={f.localizador} onChange={set("localizador")} className={`${inputCls} mono-code`} />
       </Campo>
-      <div className="grid grid-cols-[1fr_120px] gap-3">
-        <Campo rotulo="Valor">
+      <Campo rotulo="Valor">
           <input inputMode="decimal" value={f.valor} onChange={set("valor")} className={inputCls} />
         </Campo>
-        <Campo rotulo="Moeda">
-          <select value={f.moeda} onChange={set("moeda")} className={inputCls}>
-            {MOEDAS.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </Campo>
-      </div>
+      <CampoMoeda value={f.moeda} onChange={(m) => setF((v) => ({ ...v, moeda: m }))} />
       <Campo rotulo="Cancelamento">
         <textarea value={f.politica_cancelamento} onChange={set("politica_cancelamento")} rows={2} className={`${inputCls} py-3`} />
       </Campo>

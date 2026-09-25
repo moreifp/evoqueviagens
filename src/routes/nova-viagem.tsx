@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { tripQuery, tripsQuery, type Trip } from "@/lib/data";
-import { MOEDAS } from "@/lib/format";
+import { CampoMoeda } from "@/components/CampoMoeda";
 import { supabase } from "@/integrations/supabase/client";
 import { Campo, inputCls } from "@/components/Form";
 import { CampoCidades } from "@/components/CampoCidades";
@@ -120,15 +120,7 @@ function NovaViagem() {
             <input type="date" required value={fim} min={minFim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
           </Campo>
         </div>
-        <Campo rotulo="Moeda da viagem">
-          <select value={moeda} onChange={(e) => setMoeda(e.target.value)} className={inputCls}>
-            {MOEDAS.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </Campo>
+        <CampoMoeda rotulo="Moeda da viagem" value={moeda} onChange={setMoeda} />
         <button
           type="submit"
           disabled={salvando}

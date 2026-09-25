@@ -4,7 +4,9 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { membersQuery, reservasQuery, type Reserva } from "@/lib/data";
-import { fusoLocal, MOEDAS } from "@/lib/format";
+import { fusoLocal } from "@/lib/format";
+import { CampoMoeda } from "@/components/CampoMoeda";
+import { moedaValida } from "@/lib/moedas";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
 import { aviso, montarOpsReserva, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { Campo, inputCls } from "@/components/Form";
@@ -192,18 +194,10 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       <Campo rotulo="Localizador">
         <input value={f.localizador} onChange={set("localizador")} className={`${inputCls} mono-code`} />
       </Campo>
-      <div className="grid grid-cols-[1fr_120px] gap-3">
-        <Campo rotulo="Valor">
+      <Campo rotulo="Valor">
           <input inputMode="decimal" value={f.valor} onChange={set("valor")} className={inputCls} />
         </Campo>
-        <Campo rotulo="Moeda">
-          <select value={f.moeda} onChange={set("moeda")} className={inputCls}>
-            {MOEDAS.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </Campo>
-      </div>
+      <CampoMoeda value={f.moeda} onChange={(m) => setF((v) => ({ ...v, moeda: m }))} />
 
       <section className="space-y-3">
         <h2 className="text-xl">Quem vai</h2>
