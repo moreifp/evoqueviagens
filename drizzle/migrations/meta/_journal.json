@@ -127,6 +127,13 @@
       "when": 1790311314626,
       "tag": "0017_trip_visual_details",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790312733019,
+      "tag": "0018_conferencia_nomes_unaccent",
+      "breakpoints": true
     }
   ]
 }
