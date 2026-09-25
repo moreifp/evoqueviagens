@@ -1,5 +1,3 @@
-import { textoBagagem } from "@/lib/bagagem";
-import { Luggage } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AcoesItem } from "@/components/AcoesItem";
 import { AnexosItem } from "@/components/AnexosItem";
@@ -133,8 +131,6 @@ function CartaoEmbarque({ b, s, editar, nome }: { b: Ticket; s?: StatusVooT; edi
       </div>
 
       <StatusVoo b={b} s={s} />
-
-      {(() => { const t = textoBagagem(b.passageiros[0] ?? b) || textoBagagem(b); const dif = b.passageiros.filter((p) => textoBagagem(p) && textoBagagem(p) !== t); return t || dif.length ? <div className="border-t border-border px-4 py-3 text-lg"><p className="font-semibold"><Luggage size={22} strokeWidth={2.2} className="mr-2 inline" aria-hidden />{t || "Bagagem"}</p>{dif.map((p) => <p key={p.id} className="text-base text-muted-foreground">{nome(p.person_id)}: {textoBagagem(p)}</p>)}</div> : null; })()}
 
       {b.passageiros.length > 0 && (
         <ul className="space-y-2 border-t border-border p-4">
