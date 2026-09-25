@@ -9,6 +9,8 @@ const db = supabase as unknown as { from: (table: string) => any };
 export type EuPessoa = {
   id: string;
   account_id: string | null;
+  visto_negado?: boolean | null;
+  visto_negado_detalhe?: string | null;
   kind: string;
   nome: string;
   apelido: string | null;

@@ -31,7 +31,7 @@ export function textoDoEml(raw: string): string {
   }
   if (!partes.length) { const i = raw.search(/\r?\n\r?\n/); return semHtml(i >= 0 ? raw.slice(i) : raw).trim(); }
   // Prefere o texto simples; se só houver HTML, usa ele.
-  return (partes.find((p) => p.trim().length > 40) ?? partes[0]).slice(0, 90_000).trim();
+  return (partes.find((p) => p.trim().length > 40) ?? partes[0] ?? "").slice(0, 90_000).trim();
 }
 
 /** Guarda o e-mail/arquivo original como anexo PRIVADO (só o organizador vê) de cada bilhete criado. */
