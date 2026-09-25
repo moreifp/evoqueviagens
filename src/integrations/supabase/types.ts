@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_alerta: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_alerta_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_usage: {
+        Row: {
+          aviso_em: string | null
+          mes: string
+          unidades: number
+        }
+        Insert: {
+          aviso_em?: string | null
+          mes: string
+          unidades?: number
+        }
+        Update: {
+          aviso_em?: string | null
+          mes?: string
+          unidades?: number
+        }
+        Relationships: []
+      }
       app_admin: {
         Row: {
           added_by: string | null
@@ -245,6 +292,80 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_status: {
+        Row: {
+          atraso_chegada_min: number | null
+          atraso_partida_min: number | null
+          chegada_prevista_utc: string | null
+          chegada_real_utc: string | null
+          chegada_revista_utc: string | null
+          consultado_em: string
+          esteira: string | null
+          id: string
+          origem: string
+          partida_prevista_utc: string | null
+          partida_real_utc: string | null
+          partida_revista_utc: string | null
+          payload_json: Json | null
+          portao_chegada: string | null
+          portao_partida: string | null
+          status: string | null
+          terminal_chegada: string | null
+          terminal_partida: string | null
+          ticket_id: string
+        }
+        Insert: {
+          atraso_chegada_min?: number | null
+          atraso_partida_min?: number | null
+          chegada_prevista_utc?: string | null
+          chegada_real_utc?: string | null
+          chegada_revista_utc?: string | null
+          consultado_em?: string
+          esteira?: string | null
+          id?: string
+          origem?: string
+          partida_prevista_utc?: string | null
+          partida_real_utc?: string | null
+          partida_revista_utc?: string | null
+          payload_json?: Json | null
+          portao_chegada?: string | null
+          portao_partida?: string | null
+          status?: string | null
+          terminal_chegada?: string | null
+          terminal_partida?: string | null
+          ticket_id: string
+        }
+        Update: {
+          atraso_chegada_min?: number | null
+          atraso_partida_min?: number | null
+          chegada_prevista_utc?: string | null
+          chegada_real_utc?: string | null
+          chegada_revista_utc?: string | null
+          consultado_em?: string
+          esteira?: string | null
+          id?: string
+          origem?: string
+          partida_prevista_utc?: string | null
+          partida_real_utc?: string | null
+          partida_revista_utc?: string | null
+          payload_json?: Json | null
+          portao_chegada?: string | null
+          portao_partida?: string | null
+          status?: string | null
+          terminal_chegada?: string | null
+          terminal_partida?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_status_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
             referencedColumns: ["id"]
           },
         ]
@@ -1018,7 +1139,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
     }
     Enums: {
       [_ in never]: never

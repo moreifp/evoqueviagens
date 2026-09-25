@@ -71,6 +71,13 @@
       "when": 1790303688562,
       "tag": "0009_fix_attachment_policy_revoke_anon",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790304695156,
+      "tag": "0010_flight_status",
+      "breakpoints": true
     }
   ]
 }
