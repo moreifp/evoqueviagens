@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as CompartilhamentosRouteImport } from './routes/compartilhamentos'
 import { Route as DespesasRouteImport } from './routes/despesas'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as RestaurantesRouteImport } from './routes/restaurantes'
 import { Route as ViagensRouteImport } from './routes/viagens'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
@@ -66,6 +68,11 @@ const DespesasRoute = DespesasRouteImport.update({
   path: '/despesas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NovaViagemRoute = NovaViagemRouteImport.update({
   id: '/nova-viagem',
   path: '/nova-viagem',
@@ -86,6 +93,12 @@ const ViagensRoute = ViagensRouteImport.update({
   path: '/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CTokenRoute = CTokenRouteImport.update({
   id: '/c/$token',
   path: '/c/$token',
@@ -236,10 +249,12 @@ export interface FileRoutesByFullPath {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
@@ -274,10 +289,12 @@ export interface FileRoutesByTo {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
@@ -312,10 +329,12 @@ export interface FileRoutesById {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
@@ -352,10 +371,12 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
@@ -390,10 +411,12 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
     | '/pessoas/$pid/conferir'
@@ -427,10 +450,12 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
@@ -466,10 +491,12 @@ export interface RootRouteChildren {
   ClaudeRoute: typeof ClaudeRoute
   CompartilhamentosRoute: typeof CompartilhamentosRoute
   DespesasRoute: typeof DespesasRoute
+  McpRoute: typeof McpRoute
   NovaViagemRoute: typeof NovaViagemRoute
   PerfilRoute: typeof PerfilRoute
   RestaurantesRoute: typeof RestaurantesRoute
   ViagensRoute: typeof ViagensRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
@@ -514,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DespesasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova-viagem': {
       id: '/nova-viagem'
       path: '/nova-viagem'
@@ -540,6 +574,13 @@ declare module '@tanstack/react-router' {
       path: '/viagens'
       fullPath: '/viagens'
       preLoaderRoute: typeof ViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/c/$token': {
@@ -787,10 +828,13 @@ const rootRouteChildren: RootRouteChildren = {
   ClaudeRoute: ClaudeRoute,
   CompartilhamentosRoute: CompartilhamentosRoute,
   DespesasRoute: DespesasRoute,
+  McpRoute: McpRoute,
   NovaViagemRoute: NovaViagemRoute,
   PerfilRoute: PerfilRoute,
   RestaurantesRoute: RestaurantesRoute,
   ViagensRoute: ViagensRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
