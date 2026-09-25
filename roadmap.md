@@ -43,3 +43,19 @@
 - [x] Tela Chegou pelo Claude + chips + botão em Adicionar; offline pela fila
 - [x] 9 testes + comparação antes/depois; zero sobras; não publicar; não ligar MCP
 - [ ] Ligar o MCP (dono, em Agent integrations)
+
+## Revisão final (noite de 25/09)
+- [x] Varredura de segurança e linter do banco revisados; nada crítico explorável
+- [x] Build de produção limpo e tipos sem erro
+- [x] Fumaça em 22 telas com conta descartável: nenhuma em branco ou com erro
+- [x] Busca de lugar espera 600 ms
+- [x] WhatsApp de "Lembrar"/"Aviso" usa o telefone da ficha quando a pessoa liberou o bloco básico (migration 0025)
+- [x] Dados de teste apagados; 7 pessoas reais intactas
+
+## Depende do dono
+- [ ] Assinar AeroDataBox no RapidAPI (status de voo)
+- [ ] Publicar
+- [ ] Ligar o MCP em Agent integrations
+- [ ] Criar a conexão Logo.dev
+- [ ] Testar offline no celular com o app instalado
+- [ ] (opcional) Ligar a proteção contra senhas vazadas nas configurações de login

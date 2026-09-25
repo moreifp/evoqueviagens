@@ -176,6 +176,13 @@
       "when": 1790321414365,
       "tag": "0024_agent_inbox",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790323089591,
+      "tag": "0025_telefones_viagem",
+      "breakpoints": true
     }
   ]
 }

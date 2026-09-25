@@ -11,6 +11,7 @@ import { ATALHOS, conferir, ordenar, regraPassaporte, type Cartao as CartaoP, ty
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { mutar } from "@/lib/outbox";
 import { abrirWhatsApp, mensagemLembrete } from "@/lib/links";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/trip/$id/revisao")({
   head: () => ({
@@ -55,6 +56,15 @@ function Pessoas({ id }: { id: string }) {
   const { data: lista = [], isLoading } = useQuery(conferirQuery(id));
   const { data: regras = [] } = useQuery(entryRulesQuery());
   const { data: bilhetes = [] } = useQuery(ticketsQuery(id));
+  // Telefone da ficha: só vem de quem tem conta e liberou o bloco básico (ou é da família do organizador).
+  const { data: fones = {} } = useQuery({
+    queryKey: ["telefones", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("telefones_viagem", { _tid: id });
+      if (error) throw error;
+      return Object.fromEntries((data ?? []).map((r) => [r.person_id, r.telefone])) as Record<string, string>;
+    },
+  });
   const [paises, setPaises] = useState<string[]>([]);
   const [ajustar, setAjustar] = useState(false);
   useEffect(() => {
@@ -86,7 +96,7 @@ function Pessoas({ id }: { id: string }) {
         <button onClick={() => setAjustar((v) => !v)} className="tap mt-2 flex items-center gap-2 text-lg font-bold text-accent"><Settings2 size={24} /> Ajustar para este destino</button>
         {ajustar && <AjusteRegra atual={regra} onSalvar={salvarRegra} />}
       </section>
-      {cartoes.map((c) => <CartaoPessoa key={c.c.member_id} k={c} tripId={id} destino={trip.destino || trip.nome} />)}
+      {cartoes.map((c) => <CartaoPessoa key={c.c.member_id} k={c} tripId={id} destino={trip.destino || trip.nome} fone={fones[c.c.person_id] ?? c.c.convite_telefone} />)}
       {cartoes.length === 0 && <p className="text-lg text-muted-foreground">Ninguém na viagem ainda.</p>}
     </main>
   );
@@ -111,7 +121,7 @@ function AjusteRegra({ atual, onSalvar }: { atual: { meses: number; base: string
   );
 }
 
-function CartaoPessoa({ k, tripId, destino }: { k: CartaoP; tripId: string; destino: string }) {
+function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string; destino: string; fone: string | null }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const primeiro = k.c.nome.split(" ")[0] ?? k.c.nome;
   const achadoAviso = k.achados.find((a) => a.aviso);
@@ -137,7 +147,7 @@ function CartaoPessoa({ k, tripId, destino }: { k: CartaoP; tripId: string; dest
         </Link>
       )}
       {k.semConta && (
-        <button onClick={() => abrirWhatsApp(k.c.convite_telefone, mensagemLembrete("pt", primeiro, `${location.origin}/`))} className="tap mx-4 mb-4 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl border border-border text-lg font-bold">
+        <button onClick={() => abrirWhatsApp(fone, mensagemLembrete("pt", primeiro, `${location.origin}/`))} className="tap mx-4 mb-4 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl border border-border text-lg font-bold">
           <MessageCircle size={24} /> Lembrar pelo WhatsApp
         </button>
       )}
@@ -147,21 +157,21 @@ function CartaoPessoa({ k, tripId, destino }: { k: CartaoP; tripId: string; dest
             <Send size={22} className="mr-2 inline" /> Enviar aviso
           </button>
         ) : (
-          <AvisoForm tripId={tripId} k={k} texto={aviso} setTexto={setAviso} primeiro={primeiro} destino={destino} campoInicial={achadoAviso?.campo ?? null} />
+          <AvisoForm tripId={tripId} k={k} texto={aviso} setTexto={setAviso} primeiro={primeiro} destino={destino} fone={fone} campoInicial={achadoAviso?.campo ?? null} />
         )
       )}
     </article>
   );
 }
 
-function AvisoForm({ tripId, k, texto, setTexto, primeiro, destino, campoInicial }: { tripId: string; k: CartaoP; texto: string; setTexto: (t: string | null) => void; primeiro: string; destino: string; campoInicial: string | null }) {
+function AvisoForm({ tripId, k, texto, setTexto, primeiro, destino, fone, campoInicial }: { tripId: string; k: CartaoP; fone: string | null; texto: string; setTexto: (t: string | null) => void; primeiro: string; destino: string; campoInicial: string | null }) {
   const qc = useQueryClient();
   const [campo, setCampo] = useState<string | null>(campoInicial);
   async function enviarAviso(whats: boolean) {
     if (!texto.trim()) return;
     try {
       const r = await mutar({ tipo: "insert", tabela: "trip_notice", valores: { id: crypto.randomUUID(), trip_id: tripId, person_id: k.c.person_id, tipo: "aviso", mensagem: texto.trim(), campo, canal: whats ? "app+whatsapp" : "app" } });
-      if (whats) abrirWhatsApp(k.c.convite_telefone, texto.trim());
+      if (whats) abrirWhatsApp(fone, texto.trim());
       toast.success(r === "fila" ? "Guardado. Envia quando a internet voltar." : "Aviso enviado.");
       setTexto(null);
       void qc.invalidateQueries({ queryKey: ["conferir", tripId] });
