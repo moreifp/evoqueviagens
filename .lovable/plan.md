@@ -1,69 +1,84 @@
-# Módulo 2 · Viagem, parte 3 — participantes (enviar e receber)
+# Módulo 2 · Viagem, parte 4 — "Está tudo certo?", pedir dados e avisos
 
-Inclui os dois pendentes da parte 2: duplicação tudo-ou-nada e o teste 8 (organizador × membro). Migrations só aditivas, cadastro pessoal intocado, tudo offline, nenhuma publicação, nenhum envio a pessoa real.
+Migrations só aditivas. Cadastro pessoal só lido, pelas permissões que já existem (bloco Documentos do share_grant ou dependente próprio). Offline via "baixar viagem" e fila. Nada publicado. Nenhuma mensagem vai para pessoa real.
 
-## 0. Duplicar viagem tudo-ou-nada
-- Nova função no banco `duplicar_viagem(origem, novo_id, nome, cidades, inicio, fim, moeda)` que, numa única transação, cria a viagem, copia participantes (menos o dono, que entra pelo gatilho existente) e copia só as reservas manuais com seus participantes, deslocando os dias. Qualquer erro desfaz tudo.
-- Só quem organiza a viagem de origem pode duplicar.
-- A tela "Nova viagem" chama essa função em vez de várias gravações soltas. Sem internet: a chamada inteira entra na fila como uma única operação (novo tipo "rpc" na fila) e a viagem aparece na hora com o ID local; se o servidor recusar ao sincronizar, a viagem local é retirada e aparece aviso.
+Princípio: o app avisa, não garante e nunca bloqueia. Frases de visto sempre no formato "sem exigência registrada em <data> · confirme no consulado", com a fonte.
 
-## 1. Adicionar participantes (organizador, tela Pessoas)
-- Escolha com um toque em cartões grandes com avatar: "Eu", "Minha família" (dependentes), "Quem compartilha comigo" e "Convidar".
-- Estado inicial automático: `aceito` se for eu, meu dependente, ou se a conta da pessoa tem confiança ativa em mim (`trip_trust`); nos demais casos `convidado`. Essa decisão é feita no banco (gatilho na entrada do participante), não no aparelho.
-- "Convidar" (sem conta): nome, e-mail ou WhatsApp, idioma português/inglês. Cria um pré-cadastro da pessoa (reaproveitando o fluxo existente de pré-cadastro por link) e o participante como `convidado`. Gera mensagem pronta:
-  - WhatsApp: `api.whatsapp.com/send` com texto no idioma escolhido.
-  - E-mail: link `mailto:` com assunto e texto prontos (o app não dispara e-mail sozinho, então nada vai para pessoa real no teste).
-- Ao criar conta/entrar com o mesmo e-mail do convite, o pré-cadastro é ligado à conta (fluxo que já existe) e a viagem aparece esperando aceite.
+## 1. Tela "Está tudo certo?" (só o organizador)
+- Substitui a tela Revisão atual da viagem e tem duas abas: **Pessoas** e **Datas e hotéis**. A aba Datas e hotéis reaproveita os achados que o auditor já faz.
+- Um cartão por participante, nesta ordem: Resolver (vermelho), depois Sem acesso ou Esperando (âmbar), depois Conferir (azul), por último Tudo certo (verde).
+- **Com o bloco Documentos liberado, ou dependente do próprio organizador:**
+  - Validade do passaporte, sempre marcada como "regra geral · confirme" e editável por destino. Schengen: valer 3 meses depois da saída. Outros destinos: 6 meses depois da chegada.
+  - Nome no bilhete comparado com o nome no passaporte. Reaproveita a conferência de nomes que já existe.
+  - Visto ou autorização eletrônica, só quando houver regra cadastrada.
+  - Vacina e seguro, quando estiverem cadastrados.
+- **Sem o bloco:** "Não liberou documentos · não dá para conferir" e o botão "Pedir documentos".
+- **Sem conta:** "Ainda sem conta · convite enviado" e o botão "Lembrar pelo WhatsApp".
+- **Regras de entrada:** tabela nova, que começa vazia.
+  - Sem regra para o par nacionalidade × destino: "Sem regra cadastrada para este destino · confira no consulado".
+  - Regra verificada há mais de 180 dias: aparece como "não verificado".
+- **Ajuste da regra do passaporte por destino:** fica guardado na própria viagem. O organizador pode trocar os meses e a base (saída ou chegada). O cadastro de regras de entrada não muda.
 
-## 2. Receber (participante, topo da aba Viagens)
-- Substitui o espaço reservado por um cartão por convite: "Diego adicionou você a Portugal 2026 · 18 a 28/10".
-- Resumo do que é dele, vindo de uma leitura segura nova (`convites_recebidos`): quantos voos no nome dele e assento, hotéis e quarto, trens, carros (com "motorista" quando for o papel). Sem mostrar dados de outras pessoas antes de aceitar.
-- Caixa "Receber do Diego sem perguntar — próximas viagens dele entram direto": grava ou revoga `trip_trust`.
-- Aceitar: status `aceito`. Recusar: status `recusado`; some da lista dele; nada do organizador é apagado.
-- Itens adicionados depois a uma viagem aceita aparecem direto (já é assim, porque a visão depende do status aceito).
-- Vale também para dependentes: quem recebe é a conta do responsável.
-- Em "Quem vê seus dados" entra a lista "Recebo viagens direto de…" com "Parar".
+## 2. Pedir dados (do organizador para o participante)
+- O cartão abre a tela "Pedir para Gabriela" com:
+  - Blocos pré-marcados pelo que a viagem precisa: Documentos, Fidelidade e Preferências. Emergência vem desmarcado.
+  - Prazo: "Até o fim da viagem" (padrão) ou "Sempre".
+  - Envio: "Pedir no app" ou "WhatsApp". O WhatsApp manda um link que abre o pedido na conta dela.
+- **Na conta da participante:**
+  - Aparece um cartão "Diego quer ver seus dados · para Portugal 2026 · até 28/10", com Recusar e "Escolher e aceitar".
+  - Usa a tela de aceitar compartilhamento que já existe, com a frase "Ele só vê. Não edita nada seu. Senhas do cofre nunca vão."
+- **Prazo "Até o fim da viagem":** o acesso concedido também expira no fim da viagem. Depois dessa data, o banco deixa de liberar os documentos e o cartão volta para "Sem acesso".
+- **Pedido para dependente:** vai para a conta do responsável.
 
-## 3. Visão do participante
-A tela da viagem muda conforme quem abre:
-- "SEU PRÓXIMO" no gradiente, com assento e localizador copiável.
-- "O que é seu": voos, quarto e reservas em que está, com detalhe completo e voucher (regras de acesso atuais já liberam isso).
-- "A viagem": roteiro em resumo (hora, título, quem) pela leitura `roteiro_viagem` já existente.
-- "Quem vai": avatares e a frase "Você vê nomes e horários. Documentos de cada um, só o organizador vê."
-- "Adicionar meu voo ou reserva — comprou por fora? Coloque aqui": cria item com autoria do participante; ele edita só o que criou (regra atual); o organizador vê "Adicionado por Marcos".
-- "Pedir correção ao organizador": mensagem curta gravada em `trip_notice` (tipo `pedido_correcao`, enviada pelo participante); aparece para o organizador na visão da viagem com "Resolvido".
+## 3. Avisos
+- No achado do cartão, "Enviar aviso" abre uma mensagem pronta e editável, com atalhos Passaporte · Visto · Vacina · Seguro. Exemplo: "Seu passaporte vence 15/12/2026. Para Portugal ele precisa valer até 28/01/2027. Dá para renovar antes?"
+- O aviso pode ser enviado no app, pelo WhatsApp ou pelos dois.
+- **Para o participante:** o aviso aparece como faixa âmbar tocável na tela Eu e no cartão da viagem.
+  - Some sozinho quando o documento em questão é atualizado.
+  - Também some com o botão "Já resolvi".
+  - Se for de um dependente, vai para o responsável.
 
-## 4. Organizador vê o estado de cada um
-- Chips: Aceitou (verde) · Esperando (âmbar) · Recusou (vermelho) · Sem conta (âmbar) com "Lembrar" por WhatsApp ou e-mail, usando a mesma mensagem do convite.
+## 4. Offline
+- A tela "Está tudo certo?" entra no "baixar viagem" do organizador.
+- Os avisos da pessoa entram no download da tela Eu.
+- Criar pedido, enviar aviso e tocar em "Já resolvi" passam pela fila offline. Abrir o WhatsApp precisa de internet.
 
-## 5. Offline
-- O "baixar viagem" do participante inclui a visão dele (itens dele, roteiro resumido, quem vai) e os convites recebidos.
-- Aceitar, recusar, ligar/desligar "sem perguntar", adicionar participante, pedir correção e criar item próprio passam pela fila offline. Convidar por WhatsApp/e-mail precisa de conexão só para abrir o app de mensagens.
+## 5. Teste (só contas e e-mails `@example.com`)
+1. A organiza com:
+   - B: liberou documentos, passaporte vencendo antes do limite.
+   - C: não liberou documentos.
+   - Um dependente de A, sem passaporte.
+   - D: sem conta.
+2. Conferir cada cartão (cor, texto e ordem) e a frase "Sem regra cadastrada".
+3. A pede documentos a C. C aceita com prazo até o fim da viagem, e o cartão de C passa para conferir.
+4. A manda aviso a B. B vê o aviso na tela Eu e no cartão da viagem.
+5. B atualiza o passaporte e o aviso some. Testar também "Já resolvi" em outro aviso.
+6. Simular o fim da viagem: o acesso de C expira e o cartão volta para "Sem acesso".
+7. B e C não veem a tela nem os documentos de ninguém, nem pela tela nem direto no banco.
+8. Offline: A abre a tela sem internet e envia um aviso, que sincroniza quando a internet volta.
+9. Conferir se a regra de 3 ou 6 meses e o ajuste por destino estão certos.
+10. Apagar contas, pessoas, viagens, pedidos, avisos e arquivos de teste, e conferir zero sobras.
 
-## 6. Teste (só contas e e-mails descartáveis `@example.com`)
-1. Conta A organiza; conta B; convidado C sem conta.
-2. A cria viagem com voo para A, B e um dependente de A; dependente e A entram aceitos, B esperando.
-3. B vê o convite com o resumo só do que é dele; aceita e liga "sem perguntar".
-4. A cria outra viagem com B: B recebe direto, aceito.
-5. C cria conta com o e-mail do convite e vê o convite esperando.
-6. B adiciona o próprio voo; A vê "Adicionado por B".
-7. B tenta editar item de A (bloqueado) e tentar ler documentos de qualquer pessoa (bloqueado), pela tela e direto no banco.
-8. B recusa uma terceira viagem; A vê "Recusou"; itens de A intactos.
-9. B pede correção; A vê o pedido.
-10. Teste 8 da parte 2: permissões organizador × membro, tela "Eu", documentos e compartilhamento pessoal continuam iguais.
-11. Duplicar: forçar falha na cópia (reserva inválida) e confirmar que nenhuma viagem, participante ou reserva fica gravada; depois duplicar com sucesso.
-12. Offline: B baixa a viagem, sem internet abre a visão dele e aceita um convite; sincroniza ao voltar.
-13. Apagar contas, pessoas, viagens, itens e arquivos de teste; conferir zero sobras no banco e armazenamento.
-Entrega: resultado de cada teste, migrations, arquivos alterados e prints (convite recebido, visão do participante, Pessoas do organizador).
+Entrega: resultado de cada teste, migrations, arquivos alterados e prints (tela Pessoas, pedir dados, pedido recebido, aviso na tela Eu).
 
 ## Detalhes técnicos
-- Migration aditiva:
-  - `public.duplicar_viagem(...)` SECURITY DEFINER, checa `owns_trip(origem)`, tudo em uma função plpgsql (atômica).
-  - Gatilho BEFORE INSERT em `trip_member` definindo status `aceito` quando pessoa é do dono da viagem (`account_id`/`owner_id` = dono) ou quando existe `trip_trust` ativo (`account_id` da pessoa, `organizer_id` = dono, `revogado_em is null`); caso contrário força `convidado`.
-  - `public.convites_recebidos()` SECURITY DEFINER: convites `convidado` de pessoas com `account_id = auth.uid()` ou `owner_id = auth.uid()` (dependentes), com nome do organizador, datas e contagens/assento/quarto só das linhas dessas pessoas.
-  - Permitir que o responsável responda pelo dependente em `trip_member` (ajuste no guard/policy de update usando `owner_id`).
-  - `trip_notice`: policy de insert para participante aceito com `tipo = 'pedido_correcao'` e `enviado_por = auth.uid()`; organizador lê/resolve.
-  - Colunas novas em `trip_member`: `convite_email text`, `convite_telefone text`, `convite_idioma text default 'pt'`, `lembrado_em timestamptz` (nulas).
-- Fila offline: novo tipo de operação `rpc` (nome + argumentos), executado em ordem como os demais.
-- Nova tela/segmentos em `trip.$id.index.tsx` (visão organizador × participante), `trip.$id.pessoas.tsx` (seletor e estados), `viagens.tsx` (cartões de convite), `compartilhamentos.tsx` (lista de confiança), `nova-viagem.tsx` (RPC), `lib/data.ts` e `lib/offline.ts` (novas leituras no download).
-- Nada em `person`/documentos/fidelidade/cofre/share_* é alterado em schema; o pré-cadastro reaproveita o fluxo atual.
+- **Migration aditiva:**
+  - `entry_rule`:
+    - Colunas: `nacionalidade char(2)`, `pais_destino char(2)`, `exigencia text`, `detalhe`, `estadia_max_dias`, `validade_passaporte_min_meses`, `lead_time_dias`, `fonte_url text not null`, `verificado_em date not null`.
+    - Leitura para authenticated, escrita só para admin. Fica sem dados.
+  - `trip`: novas colunas `validade_passaporte_meses int` e `validade_base text` ('saida' ou 'chegada'), ambas nulas. Nulo significa usar o padrão.
+  - `trip_notice`: novas colunas `documento_id uuid` e `campo text`, ambas nulas.
+    - Gatilho em `traveler_document` (AFTER UPDATE/INSERT, sem mudar o schema dessa tabela) marca `resolvido_em` nos avisos abertos da pessoa para aquele tipo.
+    - Policy de update para quem responde pela pessoa (dono da conta ou responsável) poder marcar "Já resolvi".
+    - Policy de select para esse mesmo responsável.
+  - `share_grant.expira_em` já existe. A leitura dos documentos pelas funções e policies atuais passa a ignorar grants vencidos (`expira_em < now()`).
+  - `share_invite`: pedido com `direcao='pedido'` e `trip_id`. Ao aceitar, `expira_em` do grant recebe o fim da viagem quando o prazo escolhido é esse.
+  - `conferir_viagem(_tid)`: SECURITY DEFINER, só para o organizador. Para cada membro devolve status, acesso (liberado, sem acesso, sem conta, dependente), dados mínimos do passaporte (validade, nome) e vacina/seguro, somente quando o acesso existe. O cálculo das datas é feito em TypeScript puro no auditor.
+- **Front:**
+  - `trip.$id.revisao.tsx` reescrita.
+  - Novo `src/lib/conferencia.ts` com as regras puras e as mensagens prontas.
+  - Nova rota `trip.$id.pedir.$pid.tsx`.
+  - Novo componente `AvisoForm`.
+  - Novo componente `AvisosEu` na tela Eu e na lista de viagens.
+  - Cartão de pedido recebido junto de ConvitesRecebidos.
+  - `offline.ts` e `data.ts` ganham as consultas novas.
