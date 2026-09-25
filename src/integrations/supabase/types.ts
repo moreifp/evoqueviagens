@@ -559,6 +559,7 @@ export type Database = {
           owner_nome: string | null
           revogado_em: string | null
           status: string
+          trip_ids: string[] | null
         }
         Insert: {
           blocos?: string[]
@@ -570,6 +571,7 @@ export type Database = {
           owner_nome?: string | null
           revogado_em?: string | null
           status?: string
+          trip_ids?: string[] | null
         }
         Update: {
           blocos?: string[]
@@ -581,6 +583,7 @@ export type Database = {
           owner_nome?: string | null
           revogado_em?: string | null
           status?: string
+          trip_ids?: string[] | null
         }
         Relationships: []
       }
@@ -596,6 +599,7 @@ export type Database = {
           person_id: string | null
           token_cifrado: string | null
           token_hash: string
+          trip_ids: string[] | null
           usado_em: string | null
           usado_por: string | null
         }
@@ -610,6 +614,7 @@ export type Database = {
           person_id?: string | null
           token_cifrado?: string | null
           token_hash: string
+          trip_ids?: string[] | null
           usado_em?: string | null
           usado_por?: string | null
         }
@@ -624,6 +629,7 @@ export type Database = {
           person_id?: string | null
           token_cifrado?: string | null
           token_hash?: string
+          trip_ids?: string[] | null
           usado_em?: string | null
           usado_por?: string | null
         }
