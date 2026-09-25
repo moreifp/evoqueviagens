@@ -75,6 +75,7 @@ function FichaPessoa() {
   const navigate = useNavigate();
   const { data: f, isLoading } = useQuery(fichaQuery(pid));
   const { data: lista } = useQuery(pessoasQuery());
+  const somenteLeitura = !!lista && !!f && f.pessoa.account_id !== lista.uid;
   const [editando, setEditando] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState(false);
   const [confirmarLink, setConfirmarLink] = useState(false);
@@ -479,6 +480,12 @@ function FichaPessoa() {
     <div className="min-h-screen bg-background pb-16">
       <Topo titulo={p.apelido || p.nome} voltarPara="/" />
       <main className="space-y-4 px-4 pt-4">
+        {somenteLeitura && (
+          <p className="rounded-2xl border-2 border-accent bg-card p-3 text-lg font-semibold text-foreground">
+            Compartilhado com você · só leitura. Só o dono da ficha pode mudar.
+          </p>
+        )}
+        <fieldset disabled={somenteLeitura} className={somenteLeitura ? "contents [&_button]:hidden [&_input]:pointer-events-none" : "contents"}>
         <div className="flex items-center gap-4">
           <AvatarPessoa nome={p.nome} foto={p.foto_url} tamanho={72} />
           <div className="min-w-0 flex-1">
@@ -771,6 +778,7 @@ function FichaPessoa() {
             </div>
           )}
         </div>
+        </fieldset>
       </main>
     </div>
   );
