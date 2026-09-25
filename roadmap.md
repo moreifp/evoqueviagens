@@ -67,3 +67,11 @@
 - [ ] Modo leitura condicionado ao bloco Documentos
 - [ ] Cache/download offline, acessibilidade e testes descartáveis
 - [ ] Limpeza com zero sobras; não publicar
+
+## Domínio app.evoque.global (set/2026)
+- [x] Landing em evoque.global/www; telas redirecionam 301 para app.evoque.global (evoqueviagens.lovable.app idem); MCP/.well-known/API/OAuth livres
+- [x] Manifesto e service worker só no app; SW antigo se desfaz na landing com aviso
+- [x] Links de convite/pedido/WhatsApp/MCP → app.evoque.global
+- [ ] Dono: domínio app.evoque.global está "falhou na configuração" — tentar de novo em Configurações → Domínios ANTES de publicar
+- [ ] Depois do domínio ativo: trocar a tarefa agendada do status de voo para app.evoque.global
+- [ ] Links de Termos e Privacidade da landing ([LINK])
