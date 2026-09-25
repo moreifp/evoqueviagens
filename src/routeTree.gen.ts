@@ -13,13 +13,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as CompartilhamentosRouteImport } from './routes/compartilhamentos'
 import { Route as DespesasRouteImport } from './routes/despesas'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as RestaurantesRouteImport } from './routes/restaurantes'
 import { Route as ViagensRouteImport } from './routes/viagens'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
 import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
@@ -66,6 +69,11 @@ const DespesasRoute = DespesasRouteImport.update({
   path: '/despesas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NovaViagemRoute = NovaViagemRouteImport.update({
   id: '/nova-viagem',
   path: '/nova-viagem',
@@ -86,6 +94,12 @@ const ViagensRoute = ViagensRouteImport.update({
   path: '/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CTokenRoute = CTokenRouteImport.update({
   id: '/c/$token',
   path: '/c/$token',
@@ -99,6 +113,11 @@ const ConviteTokenRoute = ConviteTokenRouteImport.update({
 const TripIdRoute = TripIdRouteImport.update({
   id: '/trip/$id',
   path: '/trip/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PessoasPidIndexRoute = PessoasPidIndexRouteImport.update({
@@ -236,13 +255,16 @@ export interface FileRoutesByFullPath {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -274,12 +296,15 @@ export interface FileRoutesByTo {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -312,13 +337,16 @@ export interface FileRoutesById {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
   '/restaurantes': typeof RestaurantesRoute
   '/viagens': typeof ViagensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -352,13 +380,16 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -390,12 +421,15 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -427,13 +461,16 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/mcp'
     | '/nova-viagem'
     | '/perfil'
     | '/restaurantes'
     | '/viagens'
+    | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -466,13 +503,16 @@ export interface RootRouteChildren {
   ClaudeRoute: typeof ClaudeRoute
   CompartilhamentosRoute: typeof CompartilhamentosRoute
   DespesasRoute: typeof DespesasRoute
+  McpRoute: typeof McpRoute
   NovaViagemRoute: typeof NovaViagemRoute
   PerfilRoute: typeof PerfilRoute
   RestaurantesRoute: typeof RestaurantesRoute
   ViagensRoute: typeof ViagensRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
@@ -514,6 +554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DespesasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova-viagem': {
       id: '/nova-viagem'
       path: '/nova-viagem'
@@ -542,6 +589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/$token': {
       id: '/c/$token'
       path: '/c/$token'
@@ -561,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/trip/$id'
       fullPath: '/trip/$id'
       preLoaderRoute: typeof TripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pessoas/$pid/': {
@@ -787,13 +848,17 @@ const rootRouteChildren: RootRouteChildren = {
   ClaudeRoute: ClaudeRoute,
   CompartilhamentosRoute: CompartilhamentosRoute,
   DespesasRoute: DespesasRoute,
+  McpRoute: McpRoute,
   NovaViagemRoute: NovaViagemRoute,
   PerfilRoute: PerfilRoute,
   RestaurantesRoute: RestaurantesRoute,
   ViagensRoute: ViagensRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
