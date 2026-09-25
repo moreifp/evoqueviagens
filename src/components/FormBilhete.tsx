@@ -128,7 +128,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     if (!mud.length) {
       if (inicial?.id) {
         void anexarPrivado(tripId, [inicial.id], o)
-          .then(() => { void qc.invalidateQueries({ queryKey: ["anexos", "ticket", inicial.id] }); toast.success("Nada novo nos campos — guardei uma cópia do e-mail nos anexos do bilhete (só você vê)."); })
+          .then(() => { void qc.invalidateQueries({ queryKey: ["anexos", tripId] }); toast.success("Nada novo nos campos — guardei uma cópia do e-mail nos anexos do bilhete (só você vê)."); })
           .catch((e: Error) => toast.error(`Não deu para guardar o e-mail: ${e.message}`));
       } else {
         setOriginal(o);
