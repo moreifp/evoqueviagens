@@ -14,6 +14,7 @@ import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 
 const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
+const LISTA_VAZIA: never[] = [];
 
 export function EuDashboard({ personId, back = false }: { personId: string; back?: boolean }) {
   const { data, isLoading, error } = useQuery(euQuery(personId));
@@ -27,8 +28,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const qc = useQueryClient();
   const [addingDependent, setAddingDependent] = useState(false);
   const [dependentName, setDependentName] = useState("");
-  const { data: viagens = [] } = useQuery(tripsQuery());
-  const { data: regras = [] } = useQuery(entryRulesQuery());
+  const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
+  const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
 
   const { pessoa: p } = data;
   const owner = p.account_id === data.uid;
@@ -39,7 +40,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const hoje = new Date().toISOString().slice(0, 10);
   const limite90 = new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10);
   const proxima = [...viagens].filter((v) => !v.arquivada_em && v.data_fim >= hoje && v.data_inicio <= limite90).sort((a, b) => a.data_inicio.localeCompare(b.data_inicio))[0] ?? null;
-  const { data: bilhetes = [] } = useQuery({ ...ticketsQuery(proxima?.id ?? ""), enabled: Boolean(proxima) });
+  const { data: bilhetes = LISTA_VAZIA } = useQuery({ ...ticketsQuery(proxima?.id ?? ""), enabled: Boolean(proxima) });
   const [paises, setPaises] = useState<string[]>([]);
   useEffect(() => {
     if (!proxima) { setPaises([]); return; }
