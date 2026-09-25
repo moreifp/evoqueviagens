@@ -12,6 +12,7 @@ import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
+import { anexarImportado } from "@/lib/importAnexo";
 
 type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string };
 
@@ -131,6 +132,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
 
     try {
       const r = await enviar(ops);
+      await anexarImportado(tripId, "ticket", id);
       toast.success(aviso(r, "Bilhete salvo"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });

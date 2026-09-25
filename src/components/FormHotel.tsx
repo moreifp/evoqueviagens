@@ -10,6 +10,7 @@ import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
+import { anexarImportado } from "@/lib/importAnexo";
 
 type QuartoF = { id: string; nome: string; tipo: string; hospedes: { id: string; person_id: string }[] };
 
@@ -127,6 +128,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
 
     try {
       const r = await enviar(ops);
+      await anexarImportado(tripId, "lodging", id);
       toast.success(aviso(r, "Hospedagem salva"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });

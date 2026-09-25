@@ -10,6 +10,7 @@ import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from
 import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
+import { anexarImportado } from "@/lib/importAnexo";
 
 export const TIPOS_RESERVA = [
   { v: "carro", r: "Carro" },
@@ -107,6 +108,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     });
     try {
       const r = await enviar(ops);
+      await anexarImportado(tripId, "reservation", id);
       toast.success(aviso(r, "Reserva salva"));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
       navigate({ to: "/trip/$id/reservas", params: { id: tripId } });
