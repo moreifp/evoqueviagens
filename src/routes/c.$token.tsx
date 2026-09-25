@@ -48,7 +48,7 @@ function LinkAntigo() {
   );
 }
 // Mantido para referência; não é mais usado.
-export { CadastroParticipante };
+void CadastroParticipante;
 
 type L = "pt" | "en";
 const T = {
