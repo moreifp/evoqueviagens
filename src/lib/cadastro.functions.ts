@@ -189,7 +189,6 @@ const NOMES_TIPO: Record<string, string> = {
   global_entry: "Global Entry / TSA card",
   visto: "visa or electronic travel authorization",
   esta: "ESTA travel authorization",
-  seguro: "travel insurance policy",
   outro: "travel identity or travel-support document",
 };
 

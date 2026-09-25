@@ -107,11 +107,7 @@ export const minhaPessoaQuery = () =>
     },
   });
 
-export const euQuery = (personId: string) =>
-  queryOptions({
-    queryKey: ["eu", personId],
-    networkMode: "offlineFirst",
-    queryFn: async (): Promise<EuDados> => {
+async function loadEu(personId: string): Promise<EuDados> {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id ?? "";
       const pessoas = await rows<EuPessoa[]>(db.from("person").select("*").eq("id", personId).is("deleted_at", null).limit(1));
@@ -127,8 +123,14 @@ export const euQuery = (personId: string) =>
           : Promise.resolve([]),
         rows<EuDados["compartilhamentos"]>(db.from("share_grant").select("*").eq("status", "ativo")),
       ]);
-      return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, uid, compartilhamentos };
-    },
+  return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, uid, compartilhamentos };
+}
+
+export const euQuery = (personId: string) =>
+  queryOptions({
+    queryKey: ["eu", personId],
+    networkMode: "offlineFirst",
+    queryFn: () => loadEu(personId),
   });
 
 export const documentoQuery = (personId: string, documentId: string) =>
@@ -136,7 +138,7 @@ export const documentoQuery = (personId: string, documentId: string) =>
     queryKey: ["documento", personId, documentId],
     networkMode: "offlineFirst",
     queryFn: async () => {
-      const dados = await euQuery(personId).queryFn({} as never);
+      const dados = await loadEu(personId);
       const documento = dados.documentos.find((item) => item.id === documentId);
       if (!documento) throw new Error("Documento não encontrado.");
       return { ...dados, documento, anexos: dados.anexos.filter((item) => item.document_id === documentId) };

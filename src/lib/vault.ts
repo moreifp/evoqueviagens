@@ -23,8 +23,9 @@ function base64ToBytes(value: string) {
 
 async function derive(password: string, salt: Uint8Array, iterations = ITERATIONS) {
   const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+  const stableSalt = new Uint8Array(salt).buffer;
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", hash: "SHA-256", salt, iterations },
+    { name: "PBKDF2", hash: "SHA-256", salt: stableSalt, iterations },
     material,
     { name: "AES-GCM", length: 256 },
     false,
