@@ -104,4 +104,4 @@
 - [x] 4. Ficha completa agrupada, obrigatórios só passaporte e emergência, "Não tenho"
 - [x] 5. Colar e-mail da agência (novo, Adicionar e edição com merge), sem preços, anexo privado
 
-- [ ] Investigar: "Avisos no celular" não aparece no fim da tela inicial (relato 22:30)
+- [x] Corrigido: seção "Avisos no celular" agora aparece também na prévia ("Ligue no app instalado")
