@@ -62,7 +62,7 @@ export function CampoCidades({ cidades, onChange }: { cidades: string[]; onChang
         <input
           value={texto}
           onChange={(e) => { const v = e.target.value; if (v.endsWith(",")) add(v.slice(0, -1)); else setTexto(v); }}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (sug[0] && online) add(sug[0].texto.split(",")[0]); else add(texto); } }}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (sug[0] && online) add(sug[0].texto.split(",")[0] ?? ""); else add(texto); } }}
           onBlur={() => setTimeout(() => { if (!sug.length && texto.trim()) add(texto); }, 250)}
           placeholder={online ? (cidades.length ? "Outra cidade" : "Digite a cidade para buscar") : "Sem internet · digite e toque Enter"}
           autoComplete="off"
@@ -73,7 +73,7 @@ export function CampoCidades({ cidades, onChange }: { cidades: string[]; onChang
           <ul role="listbox" className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-medium">
             {sug.map((s) => (
               <li key={s.place_id}>
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => add(s.texto.split(",")[0])}
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => add(s.texto.split(",")[0] ?? "")}
                   className="flex min-h-[56px] w-full items-center gap-3 px-4 py-2 text-left text-lg hover:bg-muted">
                   <MapPin size={22} className="shrink-0 text-accent" /> {s.texto}
                 </button>
