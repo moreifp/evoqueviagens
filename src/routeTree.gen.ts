@@ -28,6 +28,7 @@ import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
+import { Route as EnIndexRouteImport } from './routes/en.index'
 import { Route as EnConnectAssistantRouteImport } from './routes/en.connect-assistant'
 import { Route as EnContactRouteImport } from './routes/en.contact'
 import { Route as EnPrivacyRouteImport } from './routes/en.privacy'
@@ -160,6 +161,11 @@ const ConviteTokenRoute = ConviteTokenRouteImport.update({
   id: '/convite/$token',
   path: '/convite/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EnIndexRoute = EnIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EnRoute,
 } as any)
 const EnConnectAssistantRoute = EnConnectAssistantRouteImport.update({
   id: '/connect-assistant',
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/en/': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
@@ -413,7 +420,6 @@ export interface FileRoutesByTo {
   '/conectar-assistente': typeof ConectarAssistenteRoute
   '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
-  '/en': typeof EnRouteWithChildren
   '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
@@ -430,6 +436,7 @@ export interface FileRoutesByTo {
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
+  '/en': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
@@ -488,6 +495,7 @@ export interface FileRoutesById {
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/en/': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
@@ -547,6 +555,7 @@ export interface FileRouteTypes {
     | '/en/privacy'
     | '/en/terms'
     | '/trip/$id'
+    | '/en/'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
@@ -586,7 +595,6 @@ export interface FileRouteTypes {
     | '/conectar-assistente'
     | '/contato'
     | '/despesas'
-    | '/en'
     | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
@@ -603,6 +611,7 @@ export interface FileRouteTypes {
     | '/en/contact'
     | '/en/privacy'
     | '/en/terms'
+    | '/en'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/en/privacy'
     | '/en/terms'
     | '/trip/$id'
+    | '/en/'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
@@ -865,6 +875,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/convite/$token'
       preLoaderRoute: typeof ConviteTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/en/': {
+      id: '/en/'
+      path: '/'
+      fullPath: '/en/'
+      preLoaderRoute: typeof EnIndexRouteImport
+      parentRoute: typeof EnRoute
     }
     '/en/connect-assistant': {
       id: '/en/connect-assistant'
@@ -1126,6 +1143,7 @@ interface EnRouteChildren {
   EnContactRoute: typeof EnContactRoute
   EnPrivacyRoute: typeof EnPrivacyRoute
   EnTermsRoute: typeof EnTermsRoute
+  EnIndexRoute: typeof EnIndexRoute
 }
 
 const EnRouteChildren: EnRouteChildren = {
@@ -1133,6 +1151,7 @@ const EnRouteChildren: EnRouteChildren = {
   EnContactRoute: EnContactRoute,
   EnPrivacyRoute: EnPrivacyRoute,
   EnTermsRoute: EnTermsRoute,
+  EnIndexRoute: EnIndexRoute,
 }
 
 const EnRouteWithChildren = EnRoute._addFileChildren(EnRouteChildren)
