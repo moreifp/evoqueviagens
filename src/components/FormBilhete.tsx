@@ -6,12 +6,13 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Passageiro, type Ticket } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsVoo, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
+import { baixa, lerEdicao } from "@/lib/caixaClaude";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
@@ -47,8 +48,18 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     })),
   );
   const [salvando, setSalvando] = useState(false);
+  const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   useEffect(() => {
     if (inicial) return;
+    const ed = lerEdicao(tripId, "voo");
+    if (ed) {
+      const p = ed.payload as unknown as { id: string; valores: Ticket; passageiros: Passageiro[] };
+      const v = p.valores;
+      setClaude({ inboxId: ed.inboxId, id: p.id });
+      setF({ tipo: v.tipo, companhia: v.companhia ?? "", numero: v.numero ?? "", localizador: v.localizador ?? "", grupo_reserva: v.grupo_reserva ?? "", origem_iata: v.origem_iata ?? "", destino_iata: v.destino_iata ?? "", origem_cidade: v.origem_cidade ?? "", destino_cidade: v.destino_cidade ?? "", partida_tz: v.partida_tz, chegada_tz: v.chegada_tz, partida: utcParaLocal(v.partida_utc, v.partida_tz), chegada: utcParaLocal(v.chegada_utc, v.chegada_tz) });
+      setPax(p.passageiros.map((x) => ({ id: x.id, person_id: x.person_id, nome_no_bilhete: x.nome_no_bilhete ?? "", assento: x.assento ?? "", eticket: x.eticket ?? "" })));
+      return;
+    }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | null>;
@@ -73,7 +84,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     if (!f.partida || !f.chegada) return toast.error("Preencha partida e chegada.");
     setSalvando(true);
     const antesAchados = achadosDoCache(qc, tripId);
-    const id = inicial?.id ?? novoId();
+    const id = inicial?.id ?? claude?.id ?? novoId();
     const valores = {
       tipo: f.tipo,
       companhia: f.companhia.trim() || null,
@@ -92,21 +103,8 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const paxRows = pax
       .filter((p) => p.person_id)
       .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null }));
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "ticket", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "ticket", id, valores: mud });
-    }
-    ops.push(
-      ...diffFilhos(
-        "ticket_passenger",
-        (inicial?.passageiros ?? []) as unknown as ({ id: string } & Record<string, unknown>)[],
-        paxRows,
-        ["person_id", "nome_no_bilhete", "assento", "eticket"],
-        { ticket_id: id },
-      ),
-    );
+    const ops: Op[] = montarOpsVoo({ tripId, id, valores: claude ? { ...valores, origem: "agente" } as typeof valores : valores, passageiros: paxRows, inicial });
+    if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
     // Aparece na tela na hora.
     const novo: Ticket = {
@@ -145,6 +143,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
       toast.success(aviso(r, "Bilhete salvo"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
+      if (claude) void qc.invalidateQueries({ queryKey: ["caixa-claude"] });
       navigate({ to: "/trip/$id/bilhetes", params: { id: tripId } });
     } catch (err) {
       toast.error((err as Error).message || "Não deu para salvar.");

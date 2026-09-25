@@ -6,10 +6,11 @@ import { Check } from "lucide-react";
 import { membersQuery, reservasQuery, type Reserva } from "@/lib/data";
 import { fusoLocal, MOEDAS } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsReserva, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
+import { baixa, lerEdicao } from "@/lib/caixaClaude";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { CampoLugar } from "@/components/CampoLugar";
 import type { Lugar } from "@/lib/lugares.functions";
@@ -54,8 +55,19 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     }));
     setGeo({ lat: l.lat, lng: l.lng, place_id: l.place_id, site: l.site });
   }
+  const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   useEffect(() => {
     if (inicial) return;
+    const ed = lerEdicao(tripId, "reserva");
+    if (ed) {
+      const p = ed.payload as unknown as { id: string; valores: Reserva; pessoas: PessoaF[] };
+      const v = p.valores;
+      setClaude({ inboxId: ed.inboxId, id: p.id });
+      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? "BRL" });
+      setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null });
+      setPessoas(p.pessoas.map((x) => ({ id: x.id, person_id: x.person_id, papel: x.papel ?? "" })));
+      return;
+    }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | number | null>;
@@ -76,7 +88,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     e.preventDefault();
     if (!f.titulo.trim() || !f.inicio) return toast.error("Preencha o nome e o início.");
     setSalvando(true);
-    const id = inicial?.id ?? novoId();
+    const id = inicial?.id ?? claude?.id ?? novoId();
     const valores = {
       tipo: f.tipo,
       titulo: f.titulo.trim(),
@@ -92,13 +104,8 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       ...geo,
     };
     const rows = pessoas.map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel.trim() || null }));
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "reservation", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "reservation", id, valores: mud });
-    }
-    ops.push(...diffFilhos("reservation_person", (inicial?.pessoas ?? []) as unknown as ({ id: string } & Record<string, unknown>)[], rows, ["person_id", "papel"], { reservation_id: id }));
+    const ops: Op[] = montarOpsReserva({ tripId, id, valores: claude ? ({ ...valores, origem: "agente" } as typeof valores) : valores, pessoas: rows, inicial });
+    if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
     const novo = { ...(inicial ?? { criado_por: null }), id, trip_id: tripId, ...valores, pessoas: rows.map((r) => ({ ...r, reservation_id: id })) } as Reserva;
     naTela<Reserva>(qc, reservasQuery(tripId).queryKey, (l) => [...l.filter((x) => x.id !== id), novo].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)));
@@ -125,6 +132,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       await anexarImportado(tripId, "reservation", id).catch((e: Error) => toast.error(`Reserva salva, mas o anexo não subiu: ${e.message}`));
       toast.success(aviso(r, "Reserva salva"));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
+      if (claude) void qc.invalidateQueries({ queryKey: ["caixa-claude"] });
       navigate({ to: "/trip/$id/reservas", params: { id: tripId } });
     } catch (err) {
       toast.error((err as Error).message || "Não deu para salvar.");

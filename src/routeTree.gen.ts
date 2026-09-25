@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as CompartilhamentosRouteImport } from './routes/compartilhamentos'
 import { Route as DespesasRouteImport } from './routes/despesas'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
@@ -24,6 +25,7 @@ import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.co
 import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdAdicionarRouteImport } from './routes/trip.$id.adicionar'
+import { Route as TripIdClaudeRouteImport } from './routes/trip.$id.claude'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
@@ -47,6 +49,11 @@ import { Route as TripIdItemTipoItemIdRouteImport } from './routes/trip.$id.item
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaudeRoute = ClaudeRouteImport.update({
+  id: '/claude',
+  path: '/claude',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompartilhamentosRoute = CompartilhamentosRouteImport.update({
@@ -117,6 +124,11 @@ const TripIdIndexRoute = TripIdIndexRouteImport.update({
 const TripIdAdicionarRoute = TripIdAdicionarRouteImport.update({
   id: '/adicionar',
   path: '/adicionar',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdClaudeRoute = TripIdClaudeRouteImport.update({
+  id: '/claude',
+  path: '/claude',
   getParentRoute: () => TripIdRoute,
 } as any)
 const TripIdPessoasRoute = TripIdPessoasRouteImport.update({
@@ -221,6 +233,7 @@ const TripIdItemTipoItemIdRoute = TripIdItemTipoItemIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
@@ -233,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
+  '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -257,6 +271,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
@@ -268,6 +283,7 @@ export interface FileRoutesByTo {
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
+  '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -293,6 +309,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
   '/nova-viagem': typeof NovaViagemRoute
@@ -305,6 +322,7 @@ export interface FileRoutesById {
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
+  '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -331,6 +349,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/claude'
     | '/compartilhamentos'
     | '/despesas'
     | '/nova-viagem'
@@ -343,6 +362,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
+    | '/trip/$id/claude'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -367,6 +387,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/claude'
     | '/compartilhamentos'
     | '/despesas'
     | '/nova-viagem'
@@ -378,6 +399,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
+    | '/trip/$id/claude'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -402,6 +424,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/claude'
     | '/compartilhamentos'
     | '/despesas'
     | '/nova-viagem'
@@ -414,6 +437,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
+    | '/trip/$id/claude'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -439,6 +463,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClaudeRoute: typeof ClaudeRoute
   CompartilhamentosRoute: typeof CompartilhamentosRoute
   DespesasRoute: typeof DespesasRoute
   NovaViagemRoute: typeof NovaViagemRoute
@@ -466,6 +491,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claude': {
+      id: '/claude'
+      path: '/claude'
+      fullPath: '/claude'
+      preLoaderRoute: typeof ClaudeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compartilhamentos': {
@@ -564,6 +596,13 @@ declare module '@tanstack/react-router' {
       path: '/adicionar'
       fullPath: '/trip/$id/adicionar'
       preLoaderRoute: typeof TripIdAdicionarRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/claude': {
+      id: '/trip/$id/claude'
+      path: '/claude'
+      fullPath: '/trip/$id/claude'
+      preLoaderRoute: typeof TripIdClaudeRouteImport
       parentRoute: typeof TripIdRoute
     }
     '/trip/$id/pessoas': {
@@ -704,6 +743,7 @@ declare module '@tanstack/react-router' {
 
 interface TripIdRouteChildren {
   TripIdAdicionarRoute: typeof TripIdAdicionarRoute
+  TripIdClaudeRoute: typeof TripIdClaudeRoute
   TripIdPessoasRoute: typeof TripIdPessoasRoute
   TripIdRestaurantesRoute: typeof TripIdRestaurantesRoute
   TripIdRevisaoRoute: typeof TripIdRevisaoRoute
@@ -722,6 +762,7 @@ interface TripIdRouteChildren {
 
 const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdAdicionarRoute: TripIdAdicionarRoute,
+  TripIdClaudeRoute: TripIdClaudeRoute,
   TripIdPessoasRoute: TripIdPessoasRoute,
   TripIdRestaurantesRoute: TripIdRestaurantesRoute,
   TripIdRevisaoRoute: TripIdRevisaoRoute,
@@ -743,6 +784,7 @@ const TripIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClaudeRoute: ClaudeRoute,
   CompartilhamentosRoute: CompartilhamentosRoute,
   DespesasRoute: DespesasRoute,
   NovaViagemRoute: NovaViagemRoute,

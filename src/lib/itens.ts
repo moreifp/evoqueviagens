@@ -69,3 +69,69 @@ export function noRoteiro(qc: QueryClient, tripId: string, item: ItemRoteiro) {
 export function tiraDoRoteiro(qc: QueryClient, tripId: string, itemId: string) {
   naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) => l.filter((x) => x.item_id !== itemId));
 }
+
+/* ── Camada de escrita única dos itens da viagem ─────────────────────────────
+ * Usada pelos formulários e pela confirmação da caixa "Chegou pelo Claude".
+ * Recebe os valores já no formato das colunas e devolve as operações em ordem.
+ */
+type Filho = { id: string } & Record<string, unknown>;
+type Antes<T> = (T & { id: string }) | null | undefined;
+
+export type VooValores = {
+  tipo: string; companhia: string | null; numero: string | null; localizador: string | null; grupo_reserva: string | null;
+  origem_iata: string | null; destino_iata: string | null; origem_cidade: string | null; destino_cidade: string | null;
+  partida_utc: string; partida_tz: string; chegada_utc: string; chegada_tz: string;
+};
+export type PaxLinha = { id: string; person_id: string; nome_no_bilhete: string | null; assento: string | null; eticket: string | null };
+
+export function montarOpsVoo(a: { tripId: string; id: string; valores: VooValores; passageiros: PaxLinha[]; inicial?: Antes<{ passageiros?: unknown[] }> }): Op[] {
+  const ops: Op[] = [];
+  if (!a.inicial) ops.push({ tipo: "insert", tabela: "ticket", valores: { id: a.id, trip_id: a.tripId, ...a.valores } });
+  else {
+    const mud = diffCampos(a.inicial as unknown as Record<string, unknown>, a.valores);
+    if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "ticket", id: a.id, valores: mud });
+  }
+  ops.push(...diffFilhos("ticket_passenger", (a.inicial?.passageiros ?? []) as Filho[], a.passageiros, ["person_id", "nome_no_bilhete", "assento", "eticket"], { ticket_id: a.id }));
+  return ops;
+}
+
+export type HotelValores = {
+  nome: string; endereco: string | null; cidade: string | null; checkin: string; checkout: string; localizador: string | null;
+  valor: number | null; moeda: string | null; politica_cancelamento: string | null; cancelamento_gratis_ate: string | null;
+  lat: number | null; lng: number | null; place_id: string | null; site: string | null; tz: string;
+};
+export type QuartoLinha = { id: string; nome: string; tipo: string | null; hospedes: { id: string; person_id: string }[] };
+
+export function montarOpsHotel(a: { tripId: string; id: string; valores: HotelValores; quartos: QuartoLinha[]; inicial?: Antes<{ quartos?: { id: string; hospedes: unknown[] }[] }> }): Op[] {
+  const ops: Op[] = [];
+  if (!a.inicial) ops.push({ tipo: "insert", tabela: "lodging", valores: { id: a.id, trip_id: a.tripId, ...a.valores } });
+  else {
+    const mud = diffCampos(a.inicial as unknown as Record<string, unknown>, a.valores);
+    if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "lodging", id: a.id, valores: mud });
+  }
+  const antesQ = a.inicial?.quartos ?? [];
+  ops.push(...diffFilhos("lodging_room", antesQ as unknown as Filho[], a.quartos.map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo })), ["nome", "tipo"], { lodging_id: a.id }));
+  for (const q of a.quartos) {
+    const anteriores = antesQ.find((x) => x.id === q.id)?.hospedes ?? [];
+    ops.push(...diffFilhos("lodging_guest", anteriores as Filho[], q.hospedes.filter((g) => g.person_id), ["person_id"], { room_id: q.id }));
+  }
+  return ops;
+}
+
+export type ReservaValores = {
+  tipo: string; titulo: string; inicio_utc: string; inicio_tz: string; fim_utc: string | null; fim_tz: string | null;
+  local: string | null; cidade: string | null; localizador: string | null; valor: number | null; moeda: string | null;
+  lat: number | null; lng: number | null; place_id: string | null; site: string | null;
+};
+export type PessoaReservaLinha = { id: string; person_id: string; papel: string | null };
+
+export function montarOpsReserva(a: { tripId: string; id: string; valores: ReservaValores; pessoas: PessoaReservaLinha[]; inicial?: Antes<{ pessoas?: unknown[] }> }): Op[] {
+  const ops: Op[] = [];
+  if (!a.inicial) ops.push({ tipo: "insert", tabela: "reservation", valores: { id: a.id, trip_id: a.tripId, ...a.valores } });
+  else {
+    const mud = diffCampos(a.inicial as unknown as Record<string, unknown>, a.valores);
+    if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "reservation", id: a.id, valores: mud });
+  }
+  ops.push(...diffFilhos("reservation_person", (a.inicial?.pessoas ?? []) as Filho[], a.pessoas, ["person_id", "papel"], { reservation_id: a.id }));
+  return ops;
+}

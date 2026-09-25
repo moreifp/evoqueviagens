@@ -6,10 +6,11 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
 import { fusoLocal, MOEDAS } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsHotel, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
+import { baixa, lerEdicao } from "@/lib/caixaClaude";
 import { anexarImportado, dataLocal, soData } from "@/lib/importAnexo";
 import { CampoLugar } from "@/components/CampoLugar";
 import type { Lugar } from "@/lib/lugares.functions";
@@ -48,8 +49,19 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     (inicial?.quartos ?? []).map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes.map((g) => ({ id: g.id, person_id: g.person_id })) })),
   );
   const [salvando, setSalvando] = useState(false);
+  const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   useEffect(() => {
     if (inicial) return;
+    const ed = lerEdicao(tripId, "hotel");
+    if (ed) {
+      const p = ed.payload as unknown as { id: string; valores: Lodging & { tz: string }; quartos: QuartoF[] };
+      const v = p.valores;
+      setClaude({ inboxId: ed.inboxId, id: p.id });
+      setF({ nome: v.nome, endereco: v.endereco ?? "", cidade: v.cidade ?? "", checkin: utcParaLocal(v.checkin, v.tz), checkout: utcParaLocal(v.checkout, v.tz), localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? "BRL", politica_cancelamento: v.politica_cancelamento ?? "", cancelamento_gratis_ate: v.cancelamento_gratis_ate ?? "" });
+      setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null, tz: v.tz });
+      setQuartos(p.quartos.map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes })));
+      return;
+    }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     const x = JSON.parse(raw) as Record<string, string | number | null>;
@@ -67,7 +79,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     if (f.checkout <= f.checkin) return toast.error("A saída precisa ser depois da entrada.");
     setSalvando(true);
     const antesAchados = achadosDoCache(qc, tripId);
-    const id = inicial?.id ?? novoId();
+    const id = inicial?.id ?? claude?.id ?? novoId();
     const valores = {
       nome: f.nome.trim(),
       endereco: f.endereco.trim() || null,
@@ -85,34 +97,14 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       site: geo.site,
       tz: geo.tz,
     };
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "lodging", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "lodging", id, valores: mud });
-    }
-    const antesQ = inicial?.quartos ?? [];
-    ops.push(
-      ...diffFilhos(
-        "lodging_room",
-        antesQ as unknown as ({ id: string } & Record<string, unknown>)[],
-        quartos.map((q) => ({ id: q.id, nome: q.nome.trim() || "Quarto", tipo: q.tipo.trim() || null })),
-        ["nome", "tipo"],
-        { lodging_id: id },
-      ),
-    );
-    for (const q of quartos) {
-      const anteriores = antesQ.find((x) => x.id === q.id)?.hospedes ?? [];
-      ops.push(
-        ...diffFilhos(
-          "lodging_guest",
-          anteriores as unknown as ({ id: string } & Record<string, unknown>)[],
-          q.hospedes.filter((g) => g.person_id),
-          ["person_id"],
-          { room_id: q.id },
-        ),
-      );
-    }
+    const ops: Op[] = montarOpsHotel({
+      tripId,
+      id,
+      valores: claude ? ({ ...valores, origem: "agente" } as typeof valores) : valores,
+      quartos: quartos.map((q) => ({ id: q.id, nome: q.nome.trim() || "Quarto", tipo: q.tipo.trim() || null, hospedes: q.hospedes })),
+      inicial,
+    });
+    if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
     const novosQuartos: Quarto[] = quartos.map((q) => ({
       id: q.id,
@@ -149,6 +141,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       toast.success(aviso(r, "Hospedagem salva"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
+      if (claude) void qc.invalidateQueries({ queryKey: ["caixa-claude"] });
       navigate({ to: "/trip/$id/hospedagem", params: { id: tripId } });
     } catch (err) {
       toast.error((err as Error).message || "Não deu para salvar.");

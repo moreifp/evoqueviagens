@@ -42,7 +42,7 @@ export function dataNoFuso(iso: string, tz: string) {
       timeZone: tz,
     }).format(new Date(iso));
   } catch {
-    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
+    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" }).format(
       new Date(iso),
     );
   }
@@ -81,14 +81,14 @@ export function nomeFusoCurto(tz: string) {
 
 export function dataBRCurta(data: string) {
   const [a, m, d] = data.split("-").map(Number);
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" }).format(
     new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, d ?? 1)),
   );
 }
 
 export function mesAno(data: string) {
   const [a, m] = data.split("-").map(Number);
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
+  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(Date.UTC(a ?? 1970, (m ?? 1) - 1, 1)),
   );
 }

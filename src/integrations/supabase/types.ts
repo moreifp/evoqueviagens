@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_inbox: {
+        Row: {
+          account_id: string
+          achados_json: Json
+          criado_em: string
+          id: string
+          idempotency_key: string
+          item_id: string | null
+          lote_id: string | null
+          origem_cliente: string | null
+          payload_json: Json
+          resolvido_em: string | null
+          status: string
+          tipo_alvo: string
+          trip_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          achados_json?: Json
+          criado_em?: string
+          id?: string
+          idempotency_key: string
+          item_id?: string | null
+          lote_id?: string | null
+          origem_cliente?: string | null
+          payload_json: Json
+          resolvido_em?: string | null
+          status?: string
+          tipo_alvo: string
+          trip_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          achados_json?: Json
+          criado_em?: string
+          id?: string
+          idempotency_key?: string
+          item_id?: string | null
+          lote_id?: string | null
+          origem_cliente?: string | null
+          payload_json?: Json
+          resolvido_em?: string | null
+          status?: string
+          tipo_alvo?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_inbox_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_alerta: {
         Row: {
           created_at: string

@@ -462,3 +462,22 @@ export const pedidosRecebidosQuery = () =>
     queryKey: ["pedidos_recebidos"],
     queryFn: async () => (await rpc<PedidoRecebido[] | null>("pedidos_recebidos")) ?? [],
   });
+
+/** Caixa "Chegou pelo Claude": itens pendentes propostos pelo agente (só o dono lê). */
+export type ItemCaixa = {
+  id: string;
+  trip_id: string | null;
+  tipo_alvo: "voo" | "hotel" | "reserva" | "despesa";
+  payload_json: { id: string; resumo?: { titulo: string; origem: string | null; avisos: string[] } } & Record<string, unknown>;
+  achados_json: { regra_id: string; severidade: string; mensagem: string }[];
+  lote_id: string | null;
+  criado_em: string;
+};
+export const caixaClaudeQuery = () =>
+  queryOptions({
+    queryKey: ["caixa-claude"],
+    queryFn: () =>
+      unwrap<ItemCaixa[]>(
+        db.from("agent_inbox").select("id,trip_id,tipo_alvo,payload_json,achados_json,lote_id,criado_em").eq("status", "pendente").order("criado_em", { ascending: true }),
+      ),
+  });

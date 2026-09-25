@@ -35,3 +35,11 @@
 - [x] Abrir no mapa / Como chegar / Ver o dia no mapa
 - [ ] Logos: código pronto; aguarda o dono criar a conexão Logo.dev
 - [x] Teste completo + zero sobras; não publicar
+
+## Chegou pelo Claude
+- [x] Migration 0024 agent_inbox (aditiva, RLS dono)
+- [x] Funções propor_*/listar/detalhar/rodar_revisao (sessão de quem chama)
+- [x] Extrair montarOps* dos formulários; teste antes/depois pela tela (voo, hotel, reserva) igual
+- [x] Tela Chegou pelo Claude + chips + botão em Adicionar; offline pela fila
+- [x] 9 testes + comparação antes/depois; zero sobras; não publicar; não ligar MCP
+- [ ] Ligar o MCP (dono, em Agent integrations)
