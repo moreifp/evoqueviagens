@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
+import { euQuery, mascararFinal, nomeDocumento, paisPt, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
 import { dataBR } from "./FichaPartes";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
@@ -137,12 +137,12 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
               const count = data.anexos.filter((a) => a.document_id === doc.id).length || (doc.arquivo_path ? 1 : 0);
               if (doc.tipo === "passaporte") return (
                 <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="block rounded-lg bg-primary p-5 text-primary-foreground shadow-medium">
-                  <div className="flex items-center justify-between"><span className="text-base font-bold">PASSAPORTE · {doc.pais_emissor ?? "PAÍS"}</span><span className={`rounded-full px-3 py-1 text-sm font-bold ${STATUS[st.tone]}`}>{st.label}</span></div>
+                  <div className="flex items-center justify-between"><span className="text-base font-bold">PASSAPORTE · {(paisPt(doc.pais_emissor) || "PAÍS").toUpperCase()}</span><span className={`rounded-full px-3 py-1 text-sm font-bold ${STATUS[st.tone]}`}>{st.label}</span></div>
                   <p className="mono-code mt-5 text-2xl">{mascararFinal(doc.numero)}</p>
                   <div className="mt-4 flex justify-between text-base"><span>Validade {dataBR(doc.validade)}</span><span>{count} {count === 1 ? "anexo" : "anexos"}</span></div>
                 </Link>
               );
-              return <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="tap flex items-center gap-3 border-b border-border py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-base font-bold">{doc.tipo.slice(0, 3).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block text-lg">{nomeDocumento(doc.tipo)}</strong><span className="block text-base text-muted-foreground">{mascararFinal(doc.numero)} · {count} {count === 1 ? "anexo" : "anexos"}</span></span><ChevronRight size={26} /></Link>;
+              return <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="tap flex items-center gap-3 border-b border-border py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-base font-bold">{doc.tipo.slice(0, 3).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block text-lg">{nomeDocumento(doc.tipo)}{paisPt(doc.pais_emissor) ? ` · ${paisPt(doc.pais_emissor)}` : ""}</strong><span className="block text-base text-muted-foreground">{mascararFinal(doc.numero)} · {count} {count === 1 ? "anexo" : "anexos"}</span></span><ChevronRight size={26} /></Link>;
             })}
             {!data.documentos.length && (owner ? <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Camera size={28} /> Fotografar seu primeiro documento</Link> : <p className="text-lg text-muted-foreground">Nenhum documento.</p>)}
           </div>

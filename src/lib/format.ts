@@ -1,4 +1,3 @@
-export const MOEDAS = ["BRL", "USD", "EUR", "GBP", "ARS", "CLP", "JPY", "CHF"] as const;
 
 export function fmtMoney(valor: number, moeda: string) {
   try {

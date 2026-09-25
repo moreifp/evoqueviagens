@@ -170,7 +170,18 @@ export function statusDocumento(doc: EuDocumento) {
 }
 
 export type GrupoFicha = "Documentos" | "Vistos e entrada" | "Saúde e seguro" | "Fidelidade" | "Pessoal";
-export type ItemFicha = { id: string; label: string; grupo: GrupoFicha; done: boolean; dispensado: boolean; obrigatorio: boolean; href: string };
+export type ItemFicha = { id: string; label: string; grupo: GrupoFicha; done: boolean; dispensado: boolean; obrigatorio: boolean; href: string; docs?: { id: string; label: string; href: string }[]; novo?: { label: string; href: string } };
+
+const ISO3: Record<string, string> = { BRA: "BR", ITA: "IT", USA: "US", PRT: "PT", ESP: "ES", DEU: "DE", FRA: "FR", GBR: "GB", ARG: "AR", CAN: "CA", JPN: "JP", CHE: "CH", URY: "UY", PRY: "PY", CHL: "CL", MEX: "MX", KOR: "KR", AUS: "AU", IRL: "IE", POL: "PL", ISR: "IL", LBN: "LB", NLD: "NL", AUT: "AT", BEL: "BE" };
+const APELIDO: Record<string, string> = { US: "EUA", GB: "Reino Unido" };
+/** Nome do país em português a partir do pais_emissor (BR, BRA ou nome livre). */
+export function paisPt(v: string | null | undefined): string {
+  const t = (v ?? "").trim(); if (!t) return "";
+  const up = t.toUpperCase(); const c2 = up.length === 3 ? ISO3[up] : up.length === 2 ? up : null;
+  if (!c2) return t;
+  if (APELIDO[c2]) return APELIDO[c2];
+  try { return new Intl.DisplayNames(["pt-BR"], { type: "region" }).of(c2) ?? t; } catch { return t; }
+}
 export const GRUPOS_FICHA: GrupoFicha[] = ["Documentos", "Vistos e entrada", "Saúde e seguro", "Fidelidade", "Pessoal"];
 
 /** Todos os itens do cadastro pessoal. Obrigatórios: passaporte e emergência; o resto pode ser "Não tenho". */
@@ -207,7 +218,12 @@ export function progressoFicha(dados: EuDados) {
     { id: "preferencias", label: "Preferências", grupo: "Pessoal", done: !!dados.preferencias, href: `/pessoas/${p.id}/dados?secao=preferencias` },
   ];
   const OBRIG = new Set(["passaporte", "emergencia"]);
-  const itens: ItemFicha[] = base.map((i) => ({ ...i, obrigatorio: OBRIG.has(i.id), dispensado: !i.done && !OBRIG.has(i.id) && dispensas.has(i.id) }));
+  const REPETE = new Set(["passaporte", "visto", "esta", "eta_canada", "eta_uk", "etias", "k_eta", "outro_visto", "vacina", "outra_vacina", "seguro", "global_entry"]);
+  const itens: ItemFicha[] = base.map((i) => ({ ...i,
+    ...(REPETE.has(i.id) && i.done ? {
+      docs: dados.documentos.filter((d) => d.tipo === i.id).map((d) => ({ id: d.id, label: `${i.id === "passaporte" ? "Passaporte" : i.id === "visto" ? "Visto" : i.label.split(" · ")[0]}${paisPt(d.pais_emissor) ? ` · ${paisPt(d.pais_emissor)}` : ""}`, href: `/pessoas/${p.id}/documentos/${d.id}` })),
+      novo: i.id === "passaporte" ? { label: "+ Novo passaporte", href: doc("passaporte") } : i.id === "visto" ? { label: "+ Novo visto", href: doc("visto") } : undefined,
+    } : {}), obrigatorio: OBRIG.has(i.id), dispensado: !i.done && !OBRIG.has(i.id) && dispensas.has(i.id) }));
   const feitos = itens.filter((i) => i.done || i.dispensado).length;
   const total = itens.length;
   return { itens, feitos, total, percentual: Math.round((feitos / total) * 100) };
