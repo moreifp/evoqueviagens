@@ -6,6 +6,7 @@ export type Trip = {
   owner_id: string;
   nome: string;
   destino: string | null;
+  cidades: string[];
   data_inicio: string;
   data_fim: string;
   moeda_base: string;
@@ -36,6 +37,7 @@ export type Ticket = {
   anexo_url: string | null;
   criado_por: string | null;
   grupo_reserva: string | null;
+  expense_id: string | null;
   passageiros: Passageiro[];
 };
 
@@ -68,6 +70,7 @@ export type Reserva = {
   valor: number | null;
   moeda: string | null;
   criado_por: string | null;
+  expense_id: string | null;
   pessoas: { id: string; reservation_id: string; person_id: string; papel: string | null; deleted_at?: string | null }[];
 };
 
@@ -112,8 +115,10 @@ export type Lodging = {
   valor: number | null;
   moeda: string | null;
   politica_cancelamento: string | null;
+  cancelamento_gratis_ate: string | null;
   anexo_url: string | null;
   criado_por: string | null;
+  expense_id: string | null;
   quartos: Quarto[];
 };
 
@@ -130,6 +135,8 @@ export type Expense = {
   pago_por: string | null;
   comprovante_url: string | null;
 };
+
+export type ConferenciaNome = { person_id: string; estado: "confere" | "sem_passaporte" | "sem_acesso" | "conferir" };
 
 export type Person = {
   id: string;
@@ -271,6 +278,16 @@ export const membersQuery = (tripId: string) =>
     queryKey: ["members", tripId],
     queryFn: async () => {
       const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: Membro[] | null; error: { message: string } | null }> }).rpc("membros_viagem", { _tid: tripId });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+export const conferenciaNomesQuery = (ticketId: string) =>
+  queryOptions({
+    queryKey: ["conferencia_nomes", ticketId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: ConferenciaNome[] | null; error: { message: string } | null }> }).rpc("conferencia_nomes_voo", { _ticket_id: ticketId });
       if (error) throw new Error(error.message);
       return data ?? [];
     },

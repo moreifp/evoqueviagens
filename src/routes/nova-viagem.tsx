@@ -18,14 +18,16 @@ export const Route = createFileRoute("/nova-viagem")({
       { property: "og:description", content: "Cadastre uma viagem com datas e moeda de referência." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { duplicar?: string } => typeof s.duplicar === "string" ? { duplicar: s.duplicar } : {},
   component: NovaViagem,
 });
 
 
 function NovaViagem() {
   const navigate = useNavigate();
+  const { duplicar } = Route.useSearch();
   const qc = useQueryClient();
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(() => duplicar ? "Cópia da viagem" : "");
   const [destino, setDestino] = useState("");
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
@@ -41,6 +43,7 @@ function NovaViagem() {
         owner_id: auth.user?.id,
         nome,
         destino: destino || null,
+        cidades: destino ? destino.split(",").map((x) => x.trim()).filter(Boolean) : [],
         data_inicio: inicio,
         data_fim: fim,
         moeda_base: moeda,
