@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
 import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
 import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } from "@/components/FichaPartes";
-import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
+import { DicaArrastar, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
 import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
