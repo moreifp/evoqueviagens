@@ -115,13 +115,12 @@ export function AvisosPush() {
     }
   }
 
-  if (estado === "fora_do_app") return null;
-
   const resumo =
     estado === "ligado" ? "Ligados neste aparelho"
     : estado === "desligado" ? "Desligados neste aparelho"
     : estado === "bloqueado" ? "Bloqueados no navegador"
     : estado === "iphone_sem_instalar" ? "Instale o app para receber"
+    : estado === "fora_do_app" ? "Ligue no app instalado"
     : "Este navegador não aceita avisos";
 
   return (
@@ -141,6 +140,14 @@ export function AvisosPush() {
       </button>
       {aberto && (
       <div className="mt-3 rounded-[18px] border border-border bg-card p-4 shadow-soft">
+        {estado === "fora_do_app" && (
+          <div className="flex gap-3">
+            <Smartphone size={28} strokeWidth={2.2} className="shrink-0 text-accent" />
+            <p className="text-lg font-semibold text-foreground">
+              Aqui é só uma prévia. Abra o app instalado no celular (ou app.evoque.global) para ligar e ajustar os avisos.
+            </p>
+          </div>
+        )}
         {estado === "iphone_sem_instalar" && (
           <div className="flex gap-3">
             <Smartphone size={28} strokeWidth={2.2} className="shrink-0 text-accent" />

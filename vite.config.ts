@@ -62,6 +62,9 @@ export default defineConfig({
   },
   plugins: [preCacheOffline(), mcpPlugin()],
   vite: {
+    // Carimbo de data/hora de cada build — mostrado no fim da tela "Eu" para
+    // confirmar no aparelho se a versão publicada é a mais recente.
+    define: { __EVOQUE_BUILD__: JSON.stringify(new Date().toISOString()) },
     resolve: {
       alias: {
         "entities/lib/decode.js": join(process.cwd(), "node_modules/entities/lib/decode.js"),
