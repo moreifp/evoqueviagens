@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { AlertTriangle, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
@@ -12,6 +13,8 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery(euQuery(personId));
+  const [addingDependent, setAddingDependent] = useState(false);
+  const [dependentName, setDependentName] = useState("");
   if (isLoading) return <p className="p-6 text-lg text-muted-foreground">Carregando seus dados…</p>;
   if (error || !data) return <p className="p-6 text-lg text-danger">{error?.message ?? "Não foi possível abrir seus dados."}</p>;
 
@@ -29,6 +32,14 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
     await supabase.auth.signOut();
     qc.clear();
     navigate({ to: "/" });
+  }
+
+  async function addDependent() {
+    if (!dependentName.trim()) return;
+    const { error: insertError } = await supabase.from("person").insert({ nome: dependentName.trim(), apelido: dependentName.trim().split(/\s+/)[0], kind: "dependent", status: "em_andamento" });
+    if (insertError) return;
+    setDependentName(""); setAddingDependent(false);
+    await qc.invalidateQueries({ queryKey: ["eu", personId] });
   }
 
   return (
@@ -54,7 +65,7 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
               <p className="truncate text-base opacity-90">{p.email ?? "E-mail não informado"}</p>
             </div>
           </div>
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-background/30"><div className="h-full bg-background" style={{ width: `${progresso.percentual}%` }} /></div>
+          <progress value={progresso.percentual} max={100} aria-label={`Ficha ${progresso.percentual}% completa`} className="mt-5 h-3 w-full overflow-hidden rounded-full accent-current" />
           <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de 10</p>
           {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <Link key={item.label} to={item.href as never} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</Link>)}</div>}
         </section>
@@ -93,7 +104,8 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
 
         {owner && (
           <section>
-            <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Família</h2><Link to="/?novoDependente=1" className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</Link></div>
+            <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Família</h2><button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button></div>
+            {addingDependent && <div className="mb-3 flex gap-2"><input value={dependentName} onChange={(event) => setDependentName(event.target.value)} placeholder="Nome do dependente" className="tap min-w-0 flex-1 rounded-lg border-2 border-input bg-card px-4 text-lg" /><button onClick={() => void addDependent()} className="tap rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">Adicionar</button></div>}
             <div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>
           </section>
         )}
