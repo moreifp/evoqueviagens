@@ -39,7 +39,8 @@ function Pessoas() {
   const candidatos = pessoas.filter((p) => !naViagem.has(p.id) && p.kind !== "precadastro");
 
   async function adicionar(p: (typeof pessoas)[number]) {
-    const meu = !!p.account_id && membros.some((m) => m.meu) ? pessoas.find((x) => x.kind === "self")?.account_id === p.account_id : false;
+    const meuUid = pessoas.find((x) => x.id === membros.find((m) => m.meu)?.person_id)?.account_id;
+    const meu = !!meuUid && p.account_id === meuUid;
     const status = meu ? "aceito" : "convidado";
     const row: Membro = { id: novoId(), person_id: p.id, papel: "membro", status, nome: p.nome, apelido: p.apelido ?? null, nome_como_no_documento: p.nome_como_no_documento, kind: p.kind ?? "self", meu };
     naTela<Membro>(qc, key, (l) => [...l, row]);

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
+import { ChevronLeft, Plus, User, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
 import { useConexao } from "@/lib/outbox";
 
 export function Topo({
@@ -35,35 +35,9 @@ export function Avatar() {
   return null;
 }
 
-const ABAS = [
-  { to: "/trip/$id", rotulo: "Programação", Icone: CalendarDays, exact: true },
-  { to: "/trip/$id/restaurantes", rotulo: "Restaurantes", Icone: UtensilsCrossed, exact: false },
-  { to: "/trip/$id/despesas", rotulo: "Dinheiro", Icone: CircleDollarSign, exact: false },
-] as const;
-
-export function BarraInferior({ tripId }: { tripId: string }) {
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-      {ABAS.map(({ to, rotulo, Icone, exact }) => {
-        const alvo = to.replace("$id", tripId);
-        const ativo = exact ? path === alvo : path.startsWith(alvo);
-        return (
-          <Link
-            key={to}
-            to={to as never}
-            params={{ id: tripId } as never}
-            className={`tap flex flex-col items-center justify-center gap-1 py-2 ${
-              ativo ? "text-accent" : "text-muted-foreground"
-            }`}
-          >
-            <Icone size={26} strokeWidth={2.2} />
-            <span className="text-xs font-bold">{rotulo}</span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
+/** Dentro da viagem: a mesma barra de 4 abas de fora (Viagens fica marcada). */
+export function BarraInferior({ tripId: _tripId }: { tripId: string }) {
+  return <AbasApp />;
 }
 
 export function BotaoFlutuante({ tripId }: { tripId: string }) {
@@ -95,7 +69,7 @@ export function AbasApp() {
       className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
     >
       {ABAS_APP.map(({ to, rotulo, Icone, exact }) => {
-        const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to);
+        const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to) || (to === "/viagens" && path.startsWith("/trip"));
         return (
           <Link
             key={to}
