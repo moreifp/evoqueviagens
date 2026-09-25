@@ -59,3 +59,11 @@
 - [ ] Criar a conexão Logo.dev
 - [ ] Testar offline no celular com o app instalado
 - [ ] (opcional) Ligar a proteção contra senhas vazadas nas configurações de login
+
+## Resumo de validades “Em ordem”
+- [ ] Regras puras de validade e prazo por tipo de documento
+- [ ] Painel expansível na tela Eu, substituindo o aviso isolado
+- [ ] Próxima viagem em 90 dias e dependentes
+- [ ] Modo leitura condicionado ao bloco Documentos
+- [ ] Cache/download offline, acessibilidade e testes descartáveis
+- [ ] Limpeza com zero sobras; não publicar
