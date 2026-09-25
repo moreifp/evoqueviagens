@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { pessoasQuery } from "@/lib/pessoas";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
@@ -80,7 +81,10 @@ function NovoBilhete() {
     chegada_tz: fusoLocal(),
     assento: "",
     nome_no_bilhete: "",
+    traveler_person_id: "",
   });
+  const { data: lista } = useQuery(pessoasQuery());
+  const meus = (lista?.pessoas ?? []).filter((p) => p.account_id === lista?.uid && p.kind !== "precadastro");
   const [salvando, setSalvando] = useState(false);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((v) => ({ ...v, [k]: e.target.value }));
@@ -110,6 +114,7 @@ function NovoBilhete() {
         chegada_tz: f.chegada_tz,
         assento: f.assento || null,
         nome_no_bilhete: f.nome_no_bilhete || null,
+        traveler_person_id: f.traveler_person_id || null,
       });
       await qc.invalidateQueries({ queryKey: ["tickets", id] });
       const depoisT = await qc.fetchQuery(ticketsQuery(id));
@@ -183,6 +188,27 @@ function NovoBilhete() {
             {FUSOS.map((t) => (
               <option key={t} value={t}>
                 {t}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo rotulo="Viajante">
+          <select
+            value={f.traveler_person_id}
+            onChange={(e) => {
+              const p = meus.find((x) => x.id === e.target.value);
+              setF((v) => ({
+                ...v,
+                traveler_person_id: e.target.value,
+                nome_no_bilhete: p ? (p.nome_como_no_documento || p.nome) : v.nome_no_bilhete,
+              }));
+            }}
+            className={inputCls}
+          >
+            <option value="">Escolher…</option>
+            {meus.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.kind === "self" ? `Eu (${p.apelido || p.nome})` : p.apelido || p.nome}
               </option>
             ))}
           </select>
