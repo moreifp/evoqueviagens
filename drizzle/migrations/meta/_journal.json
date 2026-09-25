@@ -85,6 +85,13 @@
       "when": 1790304838268,
       "tag": "0011_enable_cron_net",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790304866605,
+      "tag": "0012_cron_config_private",
+      "breakpoints": true
     }
   ]
 }
