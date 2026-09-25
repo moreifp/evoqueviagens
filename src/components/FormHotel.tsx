@@ -6,7 +6,7 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
 import { fusoLocal, MOEDAS } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsHotel, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
@@ -85,34 +85,13 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       site: geo.site,
       tz: geo.tz,
     };
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "lodging", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "lodging", id, valores: mud });
-    }
-    const antesQ = inicial?.quartos ?? [];
-    ops.push(
-      ...diffFilhos(
-        "lodging_room",
-        antesQ as unknown as ({ id: string } & Record<string, unknown>)[],
-        quartos.map((q) => ({ id: q.id, nome: q.nome.trim() || "Quarto", tipo: q.tipo.trim() || null })),
-        ["nome", "tipo"],
-        { lodging_id: id },
-      ),
-    );
-    for (const q of quartos) {
-      const anteriores = antesQ.find((x) => x.id === q.id)?.hospedes ?? [];
-      ops.push(
-        ...diffFilhos(
-          "lodging_guest",
-          anteriores as unknown as ({ id: string } & Record<string, unknown>)[],
-          q.hospedes.filter((g) => g.person_id),
-          ["person_id"],
-          { room_id: q.id },
-        ),
-      );
-    }
+    const ops: Op[] = montarOpsHotel({
+      tripId,
+      id,
+      valores,
+      quartos: quartos.map((q) => ({ id: q.id, nome: q.nome.trim() || "Quarto", tipo: q.tipo.trim() || null, hospedes: q.hospedes })),
+      inicial,
+    });
 
     const novosQuartos: Quarto[] = quartos.map((q) => ({
       id: q.id,

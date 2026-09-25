@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { membersQuery, reservasQuery, type Reserva } from "@/lib/data";
 import { fusoLocal, MOEDAS } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsReserva, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
@@ -92,13 +92,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       ...geo,
     };
     const rows = pessoas.map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel.trim() || null }));
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "reservation", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "reservation", id, valores: mud });
-    }
-    ops.push(...diffFilhos("reservation_person", (inicial?.pessoas ?? []) as unknown as ({ id: string } & Record<string, unknown>)[], rows, ["person_id", "papel"], { reservation_id: id }));
+    const ops: Op[] = montarOpsReserva({ tripId, id, valores, pessoas: rows, inicial });
 
     const novo = { ...(inicial ?? { criado_por: null }), id, trip_id: tripId, ...valores, pessoas: rows.map((r) => ({ ...r, reservation_id: id })) } as Reserva;
     naTela<Reserva>(qc, reservasQuery(tripId).queryKey, (l) => [...l.filter((x) => x.id !== id), novo].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)));

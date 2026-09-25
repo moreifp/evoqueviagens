@@ -6,7 +6,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Passageiro, type Ticket } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
+import { aviso, montarOpsVoo, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
@@ -92,21 +92,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const paxRows = pax
       .filter((p) => p.person_id)
       .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null }));
-    const ops: Op[] = [];
-    if (!inicial) ops.push({ tipo: "insert", tabela: "ticket", valores: { id, trip_id: tripId, ...valores } });
-    else {
-      const mud = diffCampos(inicial as unknown as Record<string, unknown>, valores);
-      if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "ticket", id, valores: mud });
-    }
-    ops.push(
-      ...diffFilhos(
-        "ticket_passenger",
-        (inicial?.passageiros ?? []) as unknown as ({ id: string } & Record<string, unknown>)[],
-        paxRows,
-        ["person_id", "nome_no_bilhete", "assento", "eticket"],
-        { ticket_id: id },
-      ),
-    );
+    const ops: Op[] = montarOpsVoo({ tripId, id, valores, passageiros: paxRows, inicial });
 
     // Aparece na tela na hora.
     const novo: Ticket = {
