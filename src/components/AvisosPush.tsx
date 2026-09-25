@@ -202,6 +202,7 @@ export function AvisosPush() {
           </div>
         )}
       </div>
+      )}
     </section>
   );
 }
