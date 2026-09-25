@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import coastAsset from "@/assets/marketing/coast-editorial.webp.asset.json";
 import trainAsset from "@/assets/marketing/train-editorial.webp.asset.json";
+import { HOSTS_LANDING } from "@/lib/site";
 import { marketingHtml, type MarketingPageKey } from "./marketing-content";
 import "./marketing.css";
 
@@ -39,9 +40,11 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const isEnglish = page.endsWith("-en");
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const html = useMemo(() => prepareHtml(page, preview), [page, preview]);
+  const [reviewHost, setReviewHost] = useState(false);
+  const html = useMemo(() => prepareHtml(page, preview || reviewHost), [page, preview, reviewHost]);
 
   useEffect(() => setTheme(initialTheme()), []);
+  useEffect(() => setReviewHost(!HOSTS_LANDING.has(window.location.hostname)), []);
 
   useEffect(() => {
     const previous = document.documentElement.lang;
