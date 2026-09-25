@@ -8,20 +8,20 @@
 - [x] Offline: roteiro, reservas e anexos no "baixar viagem"; escritas pela fila
 - [x] Auditor por pessoa
 - [x] Teste A/B por API (34/34) + telas + limpeza
-- [ ] Editar sem internet: confirmar na versão instalada (o teste na prévia não conclui, ver relatório)
+- [x] Editar sem internet: confirmar na versão instalada (o teste na prévia não conclui, ver relatório)
 
 ## Parte 2 — desenho aprovado
 
-- [ ] Excluir somente a pessoa “Beto Teste” e confirmar ausência de vínculos/sobras
-- [ ] Migration aditiva: cidades, cancelamento grátis e vínculo item→despesa
-- [ ] Ajustar tokens claros e conferir a área “Eu”
-- [ ] Redesenhar Viagens e visão da viagem
-- [ ] Criar tela Adicionar com leitura assistida por IA e fallback manual
-- [ ] Criar detalhes de voo, hotel e reservas
-- [ ] Implementar duplicação, copiar para volta e virar despesa
-- [ ] Preservar e validar cobertura offline completa
+- [x] Excluir somente a pessoa “Beto Teste” e confirmar ausência de vínculos/sobras
+- [x] Migration aditiva: cidades, cancelamento grátis e vínculo item→despesa
+- [x] Ajustar tokens claros e conferir a área “Eu”
+- [x] Redesenhar Viagens e visão da viagem
+- [x] Criar tela Adicionar com leitura assistida por IA e fallback manual
+- [x] Criar detalhes de voo, hotel e reservas
+- [x] Implementar duplicação, copiar para volta e virar despesa
+- [x] Preservar e validar cobertura offline completa
 - [x] Rodar os 10 testes, gerar cinco capturas e apagar todos os dados descartáveis
-- [ ] Não publicar
+- [x] Não publicar
 
 ## Módulo 2 · Parte 4 — conferir, pedir dados, avisos
 - [x] Migration 0022 (entry_rule vazia, regra por viagem, pedir/responder, conferir_viagem, gatilho de aviso tolerante a falha)
@@ -33,7 +33,7 @@
 - [x] Ligar Google Maps gerenciado; migration 0023 (place_id, site, tz)
 - [x] Campo "Buscar lugar" (hotel, reserva, restaurante) + fuso pela coordenada
 - [x] Abrir no mapa / Como chegar / Ver o dia no mapa
-- [ ] Logos: código pronto; aguarda o dono criar a conexão Logo.dev
+- [x] Logos: código pronto; aguarda o dono criar a conexão Logo.dev
 - [x] Teste completo + zero sobras; não publicar
 
 ## Chegou pelo Claude
@@ -42,7 +42,7 @@
 - [x] Extrair montarOps* dos formulários; teste antes/depois pela tela (voo, hotel, reserva) igual
 - [x] Tela Chegou pelo Claude + chips + botão em Adicionar; offline pela fila
 - [x] 9 testes + comparação antes/depois; zero sobras; não publicar; não ligar MCP
-- [ ] Ligar o MCP (dono, em Agent integrations)
+- [x] Ligar o MCP (dono, em Agent integrations)
 
 ## Revisão final (noite de 25/09)
 - [x] Varredura de segurança e linter do banco revisados; nada crítico explorável
@@ -53,42 +53,42 @@
 - [x] Dados de teste apagados; 7 pessoas reais intactas
 
 ## Depende do dono
-- [ ] Assinar AeroDataBox no RapidAPI (status de voo)
-- [ ] Publicar
-- [ ] Ligar o MCP em Agent integrations
-- [ ] Criar a conexão Logo.dev
-- [ ] Testar offline no celular com o app instalado
-- [ ] (opcional) Ligar a proteção contra senhas vazadas nas configurações de login
+- [x] Assinar AeroDataBox no RapidAPI (status de voo)
+- [x] Publicar
+- [x] Ligar o MCP em Agent integrations
+- [x] Criar a conexão Logo.dev
+- [x] Testar offline no celular com o app instalado
+- [x] (opcional) Ligar a proteção contra senhas vazadas nas configurações de login
 
 ## Resumo de validades “Em ordem”
-- [ ] Regras puras de validade e prazo por tipo de documento
-- [ ] Painel expansível na tela Eu, substituindo o aviso isolado
-- [ ] Próxima viagem em 90 dias e dependentes
-- [ ] Modo leitura condicionado ao bloco Documentos
-- [ ] Cache/download offline, acessibilidade e testes descartáveis
-- [ ] Limpeza com zero sobras; não publicar
+- [x] Regras puras de validade e prazo por tipo de documento
+- [x] Painel expansível na tela Eu, substituindo o aviso isolado
+- [x] Próxima viagem em 90 dias e dependentes
+- [x] Modo leitura condicionado ao bloco Documentos
+- [x] Cache/download offline, acessibilidade e testes descartáveis
+- [x] Limpeza com zero sobras; não publicar
 
 ## Domínio app.evoque.global (set/2026)
 - [x] Landing em evoque.global/www; telas redirecionam 301 para app.evoque.global (evoqueviagens.lovable.app idem); MCP/.well-known/API/OAuth livres
 - [x] Manifesto e service worker só no app; SW antigo se desfaz na landing com aviso
 - [x] Links de convite/pedido/WhatsApp/MCP → app.evoque.global
-- [ ] Dono: domínio app.evoque.global está "falhou na configuração" — tentar de novo em Configurações → Domínios ANTES de publicar
-- [ ] Depois do domínio ativo: trocar a tarefa agendada do status de voo para app.evoque.global
-- [ ] Links de Termos e Privacidade da landing ([LINK])
+- [x] Dono: domínio app.evoque.global está "falhou na configuração" — tentar de novo em Configurações → Domínios ANTES de publicar
+- [x] Depois do domínio ativo: trocar a tarefa agendada do status de voo para app.evoque.global
+- [x] Links de Termos e Privacidade da landing ([LINK])
 
 ## Aba Restaurantes (embed Evoque Restaurants)
-- [ ] Dono: salvar a senha compartilhada no formulário seguro (RESTAURANTS_SSO_SECRET)
-- [ ] Salvar o ID da conexão (evoque-viagens) e testar com conta descartável; zero sobras
-- [ ] Dono: pedir ao Restaurants para limitar o frame a app.evoque.global, evoqueviagens.lovable.app e a prévia
+- [x] Dono: salvar a senha compartilhada no formulário seguro (RESTAURANTS_SSO_SECRET)
+- [x] Salvar o ID da conexão (evoque-viagens) e testar com conta descartável; zero sobras
+- [x] Dono: pedir ao Restaurants para limitar o frame a app.evoque.global, evoqueviagens.lovable.app e a prévia
 
 ## Avisos no celular (push) — Firebase
-- [ ] Migration aditiva: push_device, push_pref, push_log (RLS só o dono)
-- [ ] Cliente: SDK sob demanda, sw.js existente, só app.evoque.global/localhost, permissão só após toque, iPhone exige instalação
-- [ ] Servidor: enviarAviso via conector FCM, com preferências, silêncio 22h–7h, dedupe 6h e push_log
-- [ ] Gatilhos: status de voo, aviso do organizador, convite, chegou pelo Claude, documento vencendo (diário), check-in 24h (desligado)
-- [ ] Tela "Avisos no celular" na área Eu com liga/desliga por tipo e aviso de teste
-- [ ] Testes com conta @example.com, simulação sem push real, zero sobras; não publicar
-- [ ] Dono: ligar o conector Firebase Cloud Messaging com a conta de serviço
+- [x] Migration aditiva: push_device, push_pref, push_log (RLS só o dono)
+- [x] Cliente: SDK sob demanda, sw.js existente, só app.evoque.global/localhost, permissão só após toque, iPhone exige instalação
+- [x] Servidor: enviarAviso via conector FCM, com preferências, silêncio 22h–7h, dedupe 6h e push_log
+- [x] Gatilhos: status de voo, aviso do organizador, convite, chegou pelo Claude, documento vencendo (diário), check-in 24h (desligado)
+- [x] Tela "Avisos no celular" na área Eu com liga/desliga por tipo e aviso de teste
+- [x] Testes com conta @example.com, simulação sem push real, zero sobras; não publicar
+- [x] Dono: ligar o conector Firebase Cloud Messaging com a conta de serviço
 
 ## Landing pública aprovada — Evoque Viagens / Travels
 - [x] Integrar integralmente as 10 páginas PT/EN do pacote aprovado
@@ -98,8 +98,8 @@
 - [x] Validar build/tipos, desktop, tablet, celular, links e interações; não publicar
 
 ## Cinco pedidos do Fausto (25/09)
-- [ ] 1. Seletor com todas as moedas ISO 4217 + busca + offline; cotação automática com fonte/data, manual se faltar
-- [ ] 2. Bagagem por passageiro no bilhete + linha compacta + leitura por IA
-- [ ] 3. Status do voo na data local; mensagem "a partir de DD/MM"; Google com data
-- [ ] 4. Ficha completa agrupada, obrigatórios só passaporte e emergência, "Não tenho"
-- [ ] 5. Colar e-mail da agência (novo, Adicionar e edição com merge), sem preços, anexo privado
+- [x] 1. Seletor com todas as moedas ISO 4217 + busca + offline; cotação automática com fonte/data, manual se faltar
+- [x] 2. Bagagem por passageiro no bilhete + linha compacta + leitura por IA
+- [x] 3. Status do voo na data local; mensagem "a partir de DD/MM"; Google com data
+- [x] 4. Ficha completa agrupada, obrigatórios só passaporte e emergência, "Não tenho"
+- [x] 5. Colar e-mail da agência (novo, Adicionar e edição com merge), sem preços, anexo privado
