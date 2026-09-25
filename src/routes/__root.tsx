@@ -15,6 +15,8 @@ import { AbasApp, AvisoConexao } from "@/components/Chrome";
 import { ConviteInstalar } from "@/components/ConviteInstalar";
 import { BaixarOffline } from "@/components/BaixarOffline";
 
+import { noHostLanding } from "@/lib/host";
+import { HOSTS_LANDING, HOSTS_SO_REDIRECIONA } from "@/lib/site";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -113,8 +115,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: () => ({ landing: noHostLanding() }),
+  head: ({ loaderData }) => ({
     meta: [
+      // Telas do app não entram em buscadores; só a landing de evoque.global.
+      ...(loaderData?.landing ? [] : [{ name: "robots", content: "noindex, nofollow" }]),
       { charSet: "utf-8" },
       {
         name: "viewport",
@@ -130,7 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preload", href: "/fonts/inter-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: "/fonts/outfit-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
+      ...(loaderData?.landing ? [] : [{ rel: "manifest", href: "/manifest.webmanifest" }]),
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
     ],
@@ -156,7 +161,23 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  const { landing } = Route.useLoaderData();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  // Raiz de evoque.global: landing pública, sem login, abas, cache nem service worker.
+  if (landing && path === "/") return <Outlet />;
+  return <RootApp />;
+}
+
+function hostComApp() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return !HOSTS_LANDING.has(h) && !HOSTS_SO_REDIRECIONA.has(h);
+}
+
+function RootApp() {
   const { queryClient } = Route.useRouteContext();
+  const [instalavel, setInstalavel] = useState(false);
+  useEffect(() => setInstalavel(hostComApp()), []);
   // Só desenha as telas depois de trazer do aparelho os dados guardados:
   // sem isso, uma tela aberta sem internet ficaria esperando a rede.
   const [restaurado, setRestaurado] = useState(false);
@@ -188,7 +209,7 @@ function RootComponent() {
         if (!cancelado) setRestaurado(true);
       }
     })();
-    void import("@/lib/sw-registro").then((m) => m.registrarServiceWorker());
+    if (hostComApp()) void import("@/lib/sw-registro").then((m) => m.registrarServiceWorker());
     return () => {
       cancelado = true;
     };
@@ -198,7 +219,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {restaurado ? <Conteudo /> : <div className="min-h-screen bg-background" />}
       <AvisoConexao />
-      <ConviteInstalar />
+      {instalavel && <ConviteInstalar />}
       <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
