@@ -409,6 +409,7 @@ export type Database = {
       lodging: {
         Row: {
           anexo_url: string | null
+          cancelamento_gratis_ate: string | null
           checkin: string
           checkout: string
           cidade: string | null
@@ -416,6 +417,7 @@ export type Database = {
           criado_por: string | null
           deleted_at: string | null
           endereco: string | null
+          expense_id: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -430,6 +432,7 @@ export type Database = {
         }
         Insert: {
           anexo_url?: string | null
+          cancelamento_gratis_ate?: string | null
           checkin: string
           checkout: string
           cidade?: string | null
@@ -437,6 +440,7 @@ export type Database = {
           criado_por?: string | null
           deleted_at?: string | null
           endereco?: string | null
+          expense_id?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -451,6 +455,7 @@ export type Database = {
         }
         Update: {
           anexo_url?: string | null
+          cancelamento_gratis_ate?: string | null
           checkin?: string
           checkout?: string
           cidade?: string | null
@@ -458,6 +463,7 @@ export type Database = {
           criado_por?: string | null
           deleted_at?: string | null
           endereco?: string | null
+          expense_id?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -471,6 +477,13 @@ export type Database = {
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lodging_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lodging_traveler_person_id_fkey"
             columns: ["traveler_person_id"]
@@ -854,6 +867,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           deleted_at: string | null
+          expense_id: string | null
           fim_tz: string | null
           fim_utc: string | null
           id: string
@@ -875,6 +889,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           deleted_at?: string | null
+          expense_id?: string | null
           fim_tz?: string | null
           fim_utc?: string | null
           id?: string
@@ -896,6 +911,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           deleted_at?: string | null
+          expense_id?: string | null
           fim_tz?: string | null
           fim_utc?: string | null
           id?: string
@@ -913,6 +929,13 @@ export type Database = {
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reservation_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservation_trip_id_fkey"
             columns: ["trip_id"]
@@ -1095,6 +1118,7 @@ export type Database = {
           deleted_at: string | null
           destino_cidade: string | null
           destino_iata: string | null
+          expense_id: string | null
           grupo_reserva: string | null
           id: string
           localizador: string | null
@@ -1120,6 +1144,7 @@ export type Database = {
           deleted_at?: string | null
           destino_cidade?: string | null
           destino_iata?: string | null
+          expense_id?: string | null
           grupo_reserva?: string | null
           id?: string
           localizador?: string | null
@@ -1145,6 +1170,7 @@ export type Database = {
           deleted_at?: string | null
           destino_cidade?: string | null
           destino_iata?: string | null
+          expense_id?: string | null
           grupo_reserva?: string | null
           id?: string
           localizador?: string | null
@@ -1160,6 +1186,13 @@ export type Database = {
           trip_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_traveler_person_id_fkey"
             columns: ["traveler_person_id"]
@@ -1303,6 +1336,7 @@ export type Database = {
         Row: {
           arquivada_em: string | null
           capa_url: string | null
+          cidades: string[]
           created_at: string
           data_fim: string
           data_inicio: string
@@ -1317,6 +1351,7 @@ export type Database = {
         Insert: {
           arquivada_em?: string | null
           capa_url?: string | null
+          cidades?: string[]
           created_at?: string
           data_fim: string
           data_inicio: string
@@ -1331,6 +1366,7 @@ export type Database = {
         Update: {
           arquivada_em?: string | null
           capa_url?: string | null
+          cidades?: string[]
           created_at?: string
           data_fim?: string
           data_inicio?: string
@@ -1549,6 +1585,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      conferencia_nomes_voo: {
+        Args: { _ticket_id: string }
+        Returns: {
+          estado: string
+          person_id: string
+        }[]
+      }
       membros_viagem: {
         Args: { _tid: string }
         Returns: {
