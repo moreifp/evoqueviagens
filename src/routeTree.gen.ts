@@ -33,6 +33,8 @@ import { Route as TripIdClaudeRouteImport } from './routes/trip.$id.claude'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
+import { Route as ApiPublicHooksAvisosDiariosRouteImport } from './routes/api/public/hooks/avisos-diarios'
+import { Route as ApiPublicHooksPushEventoRouteImport } from './routes/api/public/hooks/push-evento'
 import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -174,6 +176,18 @@ const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
   path: '/revisao',
   getParentRoute: () => TripIdRoute,
 } as any)
+const ApiPublicHooksAvisosDiariosRoute =
+  ApiPublicHooksAvisosDiariosRouteImport.update({
+    id: '/api/public/hooks/avisos-diarios',
+    path: '/api/public/hooks/avisos-diarios',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksPushEventoRoute =
+  ApiPublicHooksPushEventoRouteImport.update({
+    id: '/api/public/hooks/push-evento',
+    path: '/api/public/hooks/push-evento',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksStatusVoosRoute =
   ApiPublicHooksStatusVoosRouteImport.update({
     id: '/api/public/hooks/status-voos',
@@ -300,6 +314,8 @@ export interface FileRoutesByFullPath {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -344,6 +360,8 @@ export interface FileRoutesByTo {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
+  '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -390,6 +408,8 @@ export interface FileRoutesById {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -437,6 +457,8 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -481,6 +503,8 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid'
     | '/trip/$id'
+    | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -526,6 +550,8 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -566,6 +592,8 @@ export interface RootRouteChildren {
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
+  ApiPublicHooksAvisosDiariosRoute: typeof ApiPublicHooksAvisosDiariosRoute
+  ApiPublicHooksPushEventoRoute: typeof ApiPublicHooksPushEventoRoute
   ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -746,6 +774,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/trip/$id/revisao'
       preLoaderRoute: typeof TripIdRevisaoRouteImport
       parentRoute: typeof TripIdRoute
+    }
+    '/api/public/hooks/avisos-diarios': {
+      id: '/api/public/hooks/avisos-diarios'
+      path: '/api/public/hooks/avisos-diarios'
+      fullPath: '/api/public/hooks/avisos-diarios'
+      preLoaderRoute: typeof ApiPublicHooksAvisosDiariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/push-evento': {
+      id: '/api/public/hooks/push-evento'
+      path: '/api/public/hooks/push-evento'
+      fullPath: '/api/public/hooks/push-evento'
+      preLoaderRoute: typeof ApiPublicHooksPushEventoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/status-voos': {
       id: '/api/public/hooks/status-voos'
@@ -944,6 +986,8 @@ const rootRouteChildren: RootRouteChildren = {
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
+  ApiPublicHooksAvisosDiariosRoute: ApiPublicHooksAvisosDiariosRoute,
+  ApiPublicHooksPushEventoRoute: ApiPublicHooksPushEventoRoute,
   ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

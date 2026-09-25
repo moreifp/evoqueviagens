@@ -183,6 +183,20 @@
       "when": 1790323089591,
       "tag": "0025_telefones_viagem",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790337697120,
+      "tag": "0026_0026_push",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790337944551,
+      "tag": "0027_0027_push_gatilhos",
+      "breakpoints": true
     }
   ]
 }

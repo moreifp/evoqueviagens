@@ -34,8 +34,18 @@ export const Route = createFileRoute("/api/public/hooks/status-voos")({
             }
             return Response.json({ ok: true, parado: "limite", consultados });
           }
-          await atualizarTicket(t, "auto", false);
+          const antes = ult as Record<string, unknown> | null;
+          const r = await atualizarTicket(t, "auto", false);
           consultados++;
+          // Avisa os passageiros se o voo atrasou, mudou de portão, foi cancelado ou abriu embarque.
+          if (r.status && !r.daCache) {
+            try {
+              const { gatilhoVoo } = await import("@/lib/push.gatilhos.server");
+              await gatilhoVoo(t.id, antes, r.status as unknown as Record<string, unknown>);
+            } catch (e) {
+              console.error("gatilhoVoo", e);
+            }
+          }
         }
         return Response.json({ ok: true, consultados });
       },
