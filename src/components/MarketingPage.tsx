@@ -44,6 +44,14 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
   useEffect(() => setTheme(initialTheme()), []);
 
   useEffect(() => {
+    const previous = document.documentElement.lang;
+    document.documentElement.lang = isEnglish ? "en" : "pt-BR";
+    return () => {
+      document.documentElement.lang = previous;
+    };
+  }, [isEnglish]);
+
+  useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const menu = root.querySelector<HTMLButtonElement>(".menu-toggle");

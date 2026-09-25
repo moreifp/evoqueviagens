@@ -7,7 +7,7 @@ import { noHostLanding } from "@/lib/host";
 import { marketingHead } from "@/lib/marketing-head";
 
 const LANDING_TITULO = "Evoque Viagens | A viagem inteira. Mesmo sem internet.";
-const LANDING_DESC = "Documentos, bilhetes, hotéis e reservas num lugar só — e o app confere se está tudo certo antes do aeroporto. Funciona sem internet.";
+const LANDING_DESC = "Documentos, voos, hotéis e reservas em um só lugar. Confira pendências e tenha sua viagem salva à mão, mesmo sem internet.";
 
 export const Route = createFileRoute("/")({
   loader: () => ({ landing: noHostLanding() }),

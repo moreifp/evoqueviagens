@@ -1,5 +1,5 @@
 export const MARKETING_ORIGIN = "https://evoque.global";
-export const MARKETING_IMAGE = `${MARKETING_ORIGIN}/assets/coast-editorial.png`;
+export const MARKETING_IMAGE = `${MARKETING_ORIGIN}/__l5e/assets-v1/f0e4caa1-a7ef-404f-b083-8ce710ac6644/coast-editorial.webp`;
 
 type MarketingHeadOptions = {
   title: string;
@@ -19,6 +19,7 @@ export function marketingHead({ title, description, path, alternatePath, locale,
     meta: [
       { title },
       { name: "description", content: description },
+      { httpEquiv: "content-language", content: locale === "pt_BR" ? "pt-BR" : "en" },
       { name: "robots", content: noindex ? "noindex, nofollow" : "index, follow" },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
