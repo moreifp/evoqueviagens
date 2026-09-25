@@ -1,7 +1,7 @@
 import { ChipClaude } from "@/components/CaixaClaude";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Map as IconeMapa, Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2 } from "lucide-react";
+import { Map as IconeMapa, Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VisaoParticipante } from "@/components/VisaoParticipante";
@@ -101,7 +101,7 @@ function VisaoOrganizador({ id }: { id: string }) {
 
   return (
     <>
-      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {trip.moeda_base.toLowerCase()} · você organiza</p></div><button disabled aria-label="Compartilhar viagem em breve" className="tap flex items-center justify-center text-muted-foreground"><Share2 size={28}/></button></header>
+      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {trip.moeda_base.toLowerCase()} · você organiza</p></div><Link to="/nova-viagem" search={{ editar: trip.id }} className="tap flex flex-col items-center justify-center text-sm font-bold"><Pencil size={26}/>Editar</Link><button disabled aria-label="Compartilhar viagem em breve" className="tap flex items-center justify-center text-muted-foreground"><Share2 size={28}/></button></header>
       <main className="space-y-4 px-4 pt-3">
         <SeloOffline tripId={id} />
         <ChipClaude tripId={id} />
