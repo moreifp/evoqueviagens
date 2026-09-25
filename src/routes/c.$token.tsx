@@ -153,6 +153,11 @@ function CadastroParticipante() {
   useEffect(() => {
     const atual = ++chamada.current;
     setErro(null);
+    // Token fora do formato (curto demais, caracteres inválidos) nem vai ao servidor.
+    if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) {
+      setErro("LINK_INVALIDO");
+      return;
+    }
     abrir({ data: { token } })
       .then((r) => {
         if (atual !== chamada.current) return;
@@ -162,8 +167,11 @@ function CadastroParticipante() {
           setContato(r.contato ?? null);
         }
       })
-      .catch(() => {
-        if (atual === chamada.current) setErro("REDE");
+      .catch((e) => {
+        if (atual !== chamada.current) return;
+        // Erro de validação do servidor (token malformado) vira "link inválido", não tela quebrada.
+        const msg = String(e?.message ?? e ?? "");
+        setErro(msg.includes("too_small") || msg.includes("ZodError") ? "LINK_INVALIDO" : "REDE");
       });
   }, [token, tentativa]); // eslint-disable-line react-hooks/exhaustive-deps
 
