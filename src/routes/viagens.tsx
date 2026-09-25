@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQueries, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Copy, MapPin, Plus } from "lucide-react";
-import { findingsQuery, membersQuery, tripsQuery } from "@/lib/data";
+import { findingsQuery, membersQuery, tripsQuery, type Trip } from "@/lib/data";
 import { dataBRCurta, diasAte } from "@/lib/format";
 import { AvatarGrupo } from "@/components/AvatarGrupo";
 
@@ -22,9 +22,10 @@ function Viagens() {
   const atual = futuras.find((v) => v.data_inicio <= hoje) ?? futuras[0];
   const proximas = futuras.filter((v) => v.id !== atual?.id);
   const passadas = ordenadas.filter((v) => v.arquivada_em || v.data_fim < hoje).reverse();
-  const extras = useQueries({ queries: atual ? [membersQuery(atual.id), findingsQuery(atual.id)] : [] });
-  const membros = (extras[0]?.data ?? []) as { nome: string; papel: string; meu: boolean }[];
-  const achados = (extras[1]?.data ?? []) as { severidade: string; dispensado_em: string | null }[];
+  const { data: membrosData } = useQuery({ ...membersQuery(atual?.id ?? ""), enabled: Boolean(atual) });
+  const { data: achadosData } = useQuery({ ...findingsQuery(atual?.id ?? ""), enabled: Boolean(atual) });
+  const membros = membrosData ?? [];
+  const achados = achadosData ?? [];
   const resolver = achados.filter((x) => x.severidade === "resolver" && !x.dispensado_em).length;
   const dono = membros.find((m) => m.papel === "owner");
   return <div className="min-h-screen bg-background pb-28">
@@ -43,7 +44,7 @@ function Viagens() {
   </div>;
 }
 
-function Lista({ titulo, viagens }: { titulo: string; viagens: ReturnType<typeof useSuspenseQuery<ReturnType<typeof tripsQuery>>>["data"] }) {
+function Lista({ titulo, viagens }: { titulo: string; viagens: Trip[] }) {
   if (!viagens.length) return null;
   return <section><h2 className="mb-3 text-2xl">{titulo}</h2><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{viagens.map((v) => <Link key={v.id} to="/trip/$id" params={{ id: v.id }} className="tap flex items-center gap-3 px-4"><MapPin size={26} className="text-accent" /><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{v.nome}</strong><span className="text-base text-muted-foreground">{dataBRCurta(v.data_inicio)} · {v.destino}</span></span></Link>)}</div></section>;
 }
