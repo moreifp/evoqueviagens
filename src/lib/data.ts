@@ -142,7 +142,7 @@ export type Person = {
   data_nascimento: string | null;
 };
 
-export type Membro = { id: string; papel: string; status: string; person_id: string; person: Person | null };
+export type Membro = { id: string; person_id: string; papel: string; status: string; nome: string; apelido: string | null; nome_como_no_documento: string | null; kind: string; meu: boolean };
 
 export type Finding = {
   id: string;
@@ -269,14 +269,11 @@ export const expensesQuery = (tripId: string) =>
 export const membersQuery = (tripId: string) =>
   queryOptions({
     queryKey: ["members", tripId],
-    queryFn: () =>
-      unwrap<Membro[]>(
-        db
-          .from("trip_member")
-          .select("id, papel, status, person_id, person:person_id(id, nome, apelido, account_id, kind, nome_como_no_documento, nacionalidades, data_nascimento)")
-          .eq("trip_id", tripId)
-          .is("deleted_at", null),
-      ),
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: Membro[] | null; error: { message: string } | null }> }).rpc("membros_viagem", { _tid: tripId });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
 export const peopleQuery = () =>
