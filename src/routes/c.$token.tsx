@@ -612,26 +612,28 @@ function PassoVoce({ c, t, token, ocupado, gravar }: PassoProps) {
   const upload = useUpload(token);
   const dados = () => ({ person: { ...v, foto_url: foto } });
   usePausa(() => gravar(dados(), "pausa"));
+  const escolherFoto = async (f: File) => {
+    setPrevia(URL.createObjectURL(f));
+    try {
+      const r = await upload(f, 800);
+      setFoto(r.path);
+    } catch {
+      toast.error(t("erro"));
+    }
+  };
   return (
     <>
       <div className="flex flex-col items-center gap-2">
         <ZonaArquivo
           aceita={ACEITA_FOTO}
           ariaLabel={t("foto")}
-          onArquivo={async (f) => {
-            setPrevia(URL.createObjectURL(f));
-            try {
-              const r = await upload(f, 800);
-              setFoto(r.path);
-            } catch {
-              toast.error(t("erro"));
-            }
-          }}
+          onArquivo={escolherFoto}
           className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-dashed border-accent bg-accent/5"
         >
           {previa ? <img src={previa} alt="" className="h-full w-full object-cover" /> : <Camera size={40} strokeWidth={2.2} className="text-accent" />}
         </ZonaArquivo>
         <span className="text-base font-bold text-foreground">{t("foto")}</span>
+        <TirarFoto onFoto={escolherFoto} en={L === "en"} className="w-full" />
       </div>
       <Campo rotulo={t("apelido")}>
         <input className={inp} value={v.apelido} onChange={(e) => setV({ ...v, apelido: e.target.value })} />
@@ -727,10 +729,13 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
               <span className="flex-1 text-base font-bold">
                 {d.lido === "lendo" ? t("lendo") : d.lido === "ok" ? t("lemos") : d.lido === "falhou" ? t("naoLemos") : NOME_SECAO.passaporte[L]}
               </span>
-              <ZonaArquivo colar onArquivo={(f) => foto(i, f)} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
-                <RotateCcw size={24} strokeWidth={2.2} />
-                <span className="text-sm font-bold">{t("refazer")}</span>
-              </ZonaArquivo>
+              <div className="flex flex-col gap-2">
+                <ZonaArquivo colar onArquivo={(f) => foto(i, f)} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
+                  <RotateCcw size={24} strokeWidth={2.2} />
+                  <span className="text-sm font-bold">{t("refazer")}</span>
+                </ZonaArquivo>
+                <TirarFoto onFoto={(f) => foto(i, f)} en={L === "en"} />
+              </div>
             </div>
           )}
           <Campo rotulo={t("nomePass")}>

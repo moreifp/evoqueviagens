@@ -339,7 +339,7 @@ function FichaPessoa() {
               </div>
             )}
             <VerFoto key={d.arquivo_path ?? "sem"} path={d.arquivo_path} />
-            <div className="mt-2">
+            <div className="mt-2 flex flex-col gap-2">
               <ZonaArquivo
                 onArquivo={(file) => {
                   setFotoPendente({ chave, file });
@@ -353,6 +353,12 @@ function FichaPessoa() {
                 </span>
                 <DicaArrastar />
               </ZonaArquivo>
+              <TirarFoto
+                onFoto={(file) => {
+                  setFotoPendente({ chave, file });
+                  setEditando(chave);
+                }}
+              />
             </div>
           </>
         )}
