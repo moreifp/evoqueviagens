@@ -1,149 +1,49 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, MapPin, Users } from "lucide-react";
-import { tripsQuery } from "@/lib/data";
-import { dataBRCurta, diasAte, mesAno } from "@/lib/format";
+import { useQueries, useSuspenseQuery } from "@tanstack/react-query";
+import { Copy, MapPin, Plus } from "lucide-react";
+import { findingsQuery, membersQuery, tripsQuery } from "@/lib/data";
+import { dataBRCurta, diasAte } from "@/lib/format";
+import { AvatarGrupo } from "@/components/AvatarGrupo";
 
 export const Route = createFileRoute("/viagens")({
-  head: () => ({
-    meta: [
-      { title: "Evoque Viagens — suas viagens em um lugar só" },
-      {
-        name: "description",
-        content:
-          "Bilhetes, hospedagem, gastos e conferência de datas da sua viagem, prontos para abrir no aeroporto.",
-      },
-      { property: "og:title", content: "Evoque Viagens" },
-      {
-        property: "og:description",
-        content: "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência.",
-      },
-    ],
-  }),
-  component: MinhasViagens,
-  errorComponent: ({ error }) => (
-    <div role="alert" className="p-6 text-lg text-foreground">
-      {error.message}
-    </div>
-  ),
-  notFoundComponent: () => <div className="p-6 text-lg">Nada aqui.</div>,
+  head: () => ({ meta: [
+    { title: "Viagens — Evoque Viagens" }, { name: "description", content: "Suas viagens atuais, próximas e passadas." },
+    { property: "og:title", content: "Viagens — Evoque Viagens" }, { property: "og:description", content: "Suas viagens atuais, próximas e passadas." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
+  component: Viagens,
 });
 
-function MinhasViagens() {
+function Viagens() {
   const { data: viagens } = useSuspenseQuery(tripsQuery());
-
-  const ativas = viagens.filter((v) => !v.arquivada_em);
-  const arquivadas = viagens.filter((v) => v.arquivada_em);
   const hoje = new Date().toISOString().slice(0, 10);
-  const atual =
-    ativas.find((v) => v.data_inicio <= hoje && v.data_fim >= hoje) ??
-    ativas.find((v) => v.data_inicio > hoje) ??
-    ativas[0];
-  const outras = ativas.filter((v) => v.id !== atual?.id);
-
-  return (
-    <div className="min-h-screen bg-background pb-52">
-      <header className="flex items-center gap-2 px-4 py-3">
-        <h1 className="flex-1 text-3xl">Minhas viagens</h1>
-      </header>
-
-      <main className="px-4">
-        {atual ? (
-          <CardGrande id={atual.id} nome={atual.nome} destino={atual.destino} inicio={atual.data_inicio} fim={atual.data_fim} />
-        ) : (
-          <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-lg font-semibold text-foreground">Nenhuma viagem ainda</p>
-          </div>
-        )}
-
-        {outras.length > 0 && (
-          <section className="mt-6 space-y-3">
-            {outras.map((v) => (
-              <Link
-                key={v.id}
-                to="/trip/$id"
-                params={{ id: v.id }}
-                className="shadow-soft tap flex items-center gap-3 rounded-2xl border border-border bg-card px-4"
-              >
-                <MapPin size={28} strokeWidth={2.2} className="text-accent" />
-                <span className="flex-1 truncate text-lg font-bold text-foreground">{v.nome}</span>
-                <span className="text-base font-semibold text-muted-foreground">
-                  {dataBRCurta(v.data_inicio)}
-                </span>
-              </Link>
-            ))}
-          </section>
-        )}
-
-        {arquivadas.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-base font-bold uppercase tracking-wide text-muted-foreground">
-              Arquivadas
-            </h2>
-            <ul className="mt-2 divide-y divide-border">
-              {arquivadas.map((v) => (
-                <li key={v.id}>
-                  <Link
-                    to="/trip/$id"
-                    params={{ id: v.id }}
-                    className="tap flex items-center justify-between gap-3"
-                  >
-                    <span className="truncate text-base font-semibold text-foreground">{v.nome}</span>
-                    <span className="text-sm text-muted-foreground">{mesAno(v.data_inicio)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </main>
-
-      <div className="fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] border-t border-border bg-background px-4 py-3">
-        <Link
-          to="/nova-viagem"
-          className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
-        >
-          <Plus size={28} strokeWidth={2.2} />
-          Nova viagem
-        </Link>
-      </div>
-    </div>
-  );
+  const ordenadas = [...viagens].sort((a,b) => a.data_inicio.localeCompare(b.data_inicio));
+  const futuras = ordenadas.filter((v) => !v.arquivada_em && v.data_fim >= hoje);
+  const atual = futuras.find((v) => v.data_inicio <= hoje) ?? futuras[0];
+  const proximas = futuras.filter((v) => v.id !== atual?.id);
+  const passadas = ordenadas.filter((v) => v.arquivada_em || v.data_fim < hoje).reverse();
+  const extras = useQueries({ queries: atual ? [membersQuery(atual.id), findingsQuery(atual.id)] : [] });
+  const membros = (extras[0]?.data ?? []) as { nome: string; papel: string; meu: boolean }[];
+  const achados = (extras[1]?.data ?? []) as { severidade: string; dispensado_em: string | null }[];
+  const resolver = achados.filter((x) => x.severidade === "resolver" && !x.dispensado_em).length;
+  const dono = membros.find((m) => m.papel === "owner");
+  return <div className="min-h-screen bg-background pb-28">
+    <header className="flex items-center gap-3 px-4 py-4"><h1 className="flex-1 text-3xl">Viagens</h1><Link to="/nova-viagem" className="tap flex items-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground"><Plus size={24} /> Nova viagem</Link></header>
+    <main className="mx-auto max-w-3xl space-y-7 px-4">
+      <section aria-label="Convites recebidos" className="rounded-[18px] border border-dashed border-border bg-card p-4"><strong className="text-lg">Convites recebidos</strong><p className="text-base text-muted-foreground">Seus próximos convites aparecerão aqui.</p></section>
+      {atual ? <Link to="/trip/$id" params={{ id: atual.id }} className="gradient-hero shadow-medium block rounded-[18px] p-5">
+        <p className="text-base font-extrabold uppercase">{diasAte(atual.data_inicio) > 0 ? `Em ${diasAte(atual.data_inicio)} dias` : "Em andamento"}</p>
+        <h2 className="mt-3 text-3xl">{atual.nome}</h2><p className="mt-2 flex items-center gap-2 text-lg"><MapPin size={23} />{atual.cidades?.join(" · ") || atual.destino || "Cidades a definir"}</p>
+        <p className="mt-1 text-lg">{dataBRCurta(atual.data_inicio)} a {dataBRCurta(atual.data_fim)}</p><p className="mt-3 text-lg font-bold">{dono?.meu ? "Você organiza" : `${dono?.nome ?? "Outra pessoa"} organiza`}</p>
+        <div className="mt-4 flex items-center justify-between gap-3"><AvatarGrupo nomes={membros.map((m) => m.nome)} />{resolver > 0 && <span className="rounded-full bg-danger px-3 py-2 text-base font-bold text-danger-foreground">{resolver} {resolver === 1 ? "ponto" : "pontos"} para resolver</span>}</div>
+      </Link> : <div className="rounded-[18px] border-2 border-dashed border-border p-8 text-center text-lg">Nenhuma viagem ainda.</div>}
+      <Lista titulo="Próximas" viagens={proximas} />
+      {passadas.length > 0 && <section><h2 className="mb-3 text-2xl">Passadas</h2><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{passadas.map((v) => <div key={v.id} className="flex items-center gap-2 px-4 py-3"><Link to="/trip/$id" params={{ id: v.id }} className="tap min-w-0 flex-1"><strong className="block truncate text-lg">{v.nome}</strong><span className="text-base text-muted-foreground">{dataBRCurta(v.data_inicio)} a {dataBRCurta(v.data_fim)}</span></Link><Link to="/nova-viagem" search={{ duplicar: v.id }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Copy size={22} /> Duplicar</Link></div>)}</div></section>}
+    </main>
+  </div>;
 }
 
-function CardGrande({
-  id,
-  nome,
-  destino,
-  inicio,
-  fim,
-}: {
-  id: string;
-  nome: string;
-  destino: string | null;
-  inicio: string;
-  fim: string;
-}) {
-  const dias = diasAte(inicio);
-  const selo =
-    dias > 0 ? `Começa em ${dias} ${dias === 1 ? "dia" : "dias"}` : dias === 0 ? "Começa hoje" : "Em andamento";
-  return (
-    <Link
-      to="/trip/$id"
-      params={{ id }}
-      className="gradient-hero shadow-medium block rounded-3xl p-6"
-    >
-      <span className="inline-flex items-center rounded-full bg-black/25 px-4 py-2 text-sm font-bold">
-        {selo}
-      </span>
-      <h2 className="mt-4 text-xl leading-tight">{nome}</h2>
-      <p className="mt-2 text-lg font-semibold opacity-95">
-        {dataBRCurta(inicio)} — {dataBRCurta(fim)}
-      </p>
-      <p className="mt-1 flex items-center gap-2 text-base opacity-90">
-        <Users size={22} strokeWidth={2.2} />
-        {destino ?? "Destino a definir"}
-      </p>
-    </Link>
-  );
+function Lista({ titulo, viagens }: { titulo: string; viagens: ReturnType<typeof useSuspenseQuery<ReturnType<typeof tripsQuery>>>["data"] }) {
+  if (!viagens.length) return null;
+  return <section><h2 className="mb-3 text-2xl">{titulo}</h2><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{viagens.map((v) => <Link key={v.id} to="/trip/$id" params={{ id: v.id }} className="tap flex items-center gap-3 px-4"><MapPin size={26} className="text-accent" /><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{v.nome}</strong><span className="text-base text-muted-foreground">{dataBRCurta(v.data_inicio)} · {v.destino}</span></span></Link>)}</div></section>;
 }
