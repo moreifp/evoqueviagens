@@ -12,16 +12,26 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as CompartilhamentosRouteImport } from './routes/compartilhamentos'
+import { Route as ConectarAssistenteRouteImport } from './routes/conectar-assistente'
+import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DespesasRouteImport } from './routes/despesas'
+import { Route as EnRouteImport } from './routes/en'
+import { Route as LandingPreviewRouteImport } from './routes/landing-preview'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RestaurantesRouteImport } from './routes/restaurantes'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
+import { Route as EnConnectAssistantRouteImport } from './routes/en.connect-assistant'
+import { Route as EnContactRouteImport } from './routes/en.contact'
+import { Route as EnPrivacyRouteImport } from './routes/en.privacy'
+import { Route as EnTermsRouteImport } from './routes/en.terms'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
@@ -70,9 +80,29 @@ const CompartilhamentosRoute = CompartilhamentosRouteImport.update({
   path: '/compartilhamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConectarAssistenteRoute = ConectarAssistenteRouteImport.update({
+  id: '/conectar-assistente',
+  path: '/conectar-assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DespesasRoute = DespesasRouteImport.update({
   id: '/despesas',
   path: '/despesas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnRoute = EnRouteImport.update({
+  id: '/en',
+  path: '/en',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingPreviewRoute = LandingPreviewRouteImport.update({
+  id: '/landing-preview',
+  path: '/landing-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
@@ -95,9 +125,19 @@ const PerfilRoute = PerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RestaurantesRoute = RestaurantesRouteImport.update({
   id: '/restaurantes',
   path: '/restaurantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ViagensRoute = ViagensRouteImport.update({
@@ -120,6 +160,26 @@ const ConviteTokenRoute = ConviteTokenRouteImport.update({
   id: '/convite/$token',
   path: '/convite/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EnConnectAssistantRoute = EnConnectAssistantRouteImport.update({
+  id: '/connect-assistant',
+  path: '/connect-assistant',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnContactRoute = EnContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnPrivacyRoute = EnPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnTermsRoute = EnTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => EnRoute,
 } as any)
 const TripIdRoute = TripIdRouteImport.update({
   id: '/trip/$id',
@@ -293,16 +353,26 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
+  '/conectar-assistente': typeof ConectarAssistenteRoute
+  '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
+  '/en': typeof EnRouteWithChildren
+  '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/restaurantes': typeof RestaurantesRoute
+  '/termos': typeof TermosRoute
   '/viagens': typeof ViagensRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/en/connect-assistant': typeof EnConnectAssistantRoute
+  '/en/contact': typeof EnContactRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/terms': typeof EnTermsRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
@@ -340,16 +410,26 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
+  '/conectar-assistente': typeof ConectarAssistenteRoute
+  '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
+  '/en': typeof EnRouteWithChildren
+  '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/restaurantes': typeof RestaurantesRoute
+  '/termos': typeof TermosRoute
   '/viagens': typeof ViagensRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/en/connect-assistant': typeof EnConnectAssistantRoute
+  '/en/contact': typeof EnContactRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/terms': typeof EnTermsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
@@ -387,16 +467,26 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
+  '/conectar-assistente': typeof ConectarAssistenteRoute
+  '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
+  '/en': typeof EnRouteWithChildren
+  '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/restaurantes': typeof RestaurantesRoute
+  '/termos': typeof TermosRoute
   '/viagens': typeof ViagensRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/en/connect-assistant': typeof EnConnectAssistantRoute
+  '/en/contact': typeof EnContactRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/terms': typeof EnTermsRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
@@ -436,16 +526,26 @@ export interface FileRouteTypes {
     | '/'
     | '/claude'
     | '/compartilhamentos'
+    | '/conectar-assistente'
+    | '/contato'
     | '/despesas'
+    | '/en'
+    | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
+    | '/privacidade'
     | '/restaurantes'
+    | '/termos'
     | '/viagens'
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/en/connect-assistant'
+    | '/en/contact'
+    | '/en/privacy'
+    | '/en/terms'
     | '/trip/$id'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
@@ -483,16 +583,26 @@ export interface FileRouteTypes {
     | '/'
     | '/claude'
     | '/compartilhamentos'
+    | '/conectar-assistente'
+    | '/contato'
     | '/despesas'
+    | '/en'
+    | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
+    | '/privacidade'
     | '/restaurantes'
+    | '/termos'
     | '/viagens'
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/en/connect-assistant'
+    | '/en/contact'
+    | '/en/privacy'
+    | '/en/terms'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
@@ -529,16 +639,26 @@ export interface FileRouteTypes {
     | '/'
     | '/claude'
     | '/compartilhamentos'
+    | '/conectar-assistente'
+    | '/contato'
     | '/despesas'
+    | '/en'
+    | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
+    | '/privacidade'
     | '/restaurantes'
+    | '/termos'
     | '/viagens'
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/en/connect-assistant'
+    | '/en/contact'
+    | '/en/privacy'
+    | '/en/terms'
     | '/trip/$id'
     | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
@@ -577,12 +697,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClaudeRoute: typeof ClaudeRoute
   CompartilhamentosRoute: typeof CompartilhamentosRoute
+  ConectarAssistenteRoute: typeof ConectarAssistenteRoute
+  ContatoRoute: typeof ContatoRoute
   DespesasRoute: typeof DespesasRoute
+  EnRoute: typeof EnRouteWithChildren
+  LandingPreviewRoute: typeof LandingPreviewRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   McpRoute: typeof McpRoute
   NovaViagemRoute: typeof NovaViagemRoute
   PerfilRoute: typeof PerfilRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RestaurantesRoute: typeof RestaurantesRoute
+  TermosRoute: typeof TermosRoute
   ViagensRoute: typeof ViagensRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CTokenRoute: typeof CTokenRoute
@@ -628,11 +754,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompartilhamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conectar-assistente': {
+      id: '/conectar-assistente'
+      path: '/conectar-assistente'
+      fullPath: '/conectar-assistente'
+      preLoaderRoute: typeof ConectarAssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/despesas': {
       id: '/despesas'
       path: '/despesas'
       fullPath: '/despesas'
       preLoaderRoute: typeof DespesasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/en': {
+      id: '/en'
+      path: '/en'
+      fullPath: '/en'
+      preLoaderRoute: typeof EnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing-preview': {
+      id: '/landing-preview'
+      path: '/landing-preview'
+      fullPath: '/landing-preview'
+      preLoaderRoute: typeof LandingPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manifest.webmanifest': {
@@ -663,11 +817,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/restaurantes': {
       id: '/restaurantes'
       path: '/restaurantes'
       fullPath: '/restaurantes'
       preLoaderRoute: typeof RestaurantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/viagens': {
@@ -697,6 +865,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/convite/$token'
       preLoaderRoute: typeof ConviteTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/en/connect-assistant': {
+      id: '/en/connect-assistant'
+      path: '/connect-assistant'
+      fullPath: '/en/connect-assistant'
+      preLoaderRoute: typeof EnConnectAssistantRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/contact': {
+      id: '/en/contact'
+      path: '/contact'
+      fullPath: '/en/contact'
+      preLoaderRoute: typeof EnContactRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/privacy': {
+      id: '/en/privacy'
+      path: '/privacy'
+      fullPath: '/en/privacy'
+      preLoaderRoute: typeof EnPrivacyRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/terms': {
+      id: '/en/terms'
+      path: '/terms'
+      fullPath: '/en/terms'
+      preLoaderRoute: typeof EnTermsRouteImport
+      parentRoute: typeof EnRoute
     }
     '/trip/$id': {
       id: '/trip/$id'
@@ -925,6 +1121,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface EnRouteChildren {
+  EnConnectAssistantRoute: typeof EnConnectAssistantRoute
+  EnContactRoute: typeof EnContactRoute
+  EnPrivacyRoute: typeof EnPrivacyRoute
+  EnTermsRoute: typeof EnTermsRoute
+}
+
+const EnRouteChildren: EnRouteChildren = {
+  EnConnectAssistantRoute: EnConnectAssistantRoute,
+  EnContactRoute: EnContactRoute,
+  EnPrivacyRoute: EnPrivacyRoute,
+  EnTermsRoute: EnTermsRoute,
+}
+
+const EnRouteWithChildren = EnRoute._addFileChildren(EnRouteChildren)
+
 interface TripIdRouteChildren {
   TripIdAdicionarRoute: typeof TripIdAdicionarRoute
   TripIdClaudeRoute: typeof TripIdClaudeRoute
@@ -970,12 +1182,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClaudeRoute: ClaudeRoute,
   CompartilhamentosRoute: CompartilhamentosRoute,
+  ConectarAssistenteRoute: ConectarAssistenteRoute,
+  ContatoRoute: ContatoRoute,
   DespesasRoute: DespesasRoute,
+  EnRoute: EnRouteWithChildren,
+  LandingPreviewRoute: LandingPreviewRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   McpRoute: McpRoute,
   NovaViagemRoute: NovaViagemRoute,
   PerfilRoute: PerfilRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RestaurantesRoute: RestaurantesRoute,
+  TermosRoute: TermosRoute,
   ViagensRoute: ViagensRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
