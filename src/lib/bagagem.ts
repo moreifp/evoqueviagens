@@ -9,7 +9,7 @@ export function pegarBagagem(x: Partial<Bagagem> | null | undefined): Bagagem {
   return { bag_mao_qtd: x?.bag_mao_qtd ?? null, bag_mao_kg: x?.bag_mao_kg ?? null, item_pessoal: x?.item_pessoal ?? null, bag_desp_qtd: x?.bag_desp_qtd ?? null, bag_desp_kg: x?.bag_desp_kg ?? null };
 }
 
-const kg = (n: number | null) => (n != null ? ` ${String(n).replace(".", ",")} kg` : "");
+const kg = (n: number | null | undefined) => (n != null ? ` ${String(n).replace(".", ",")} kg` : "");
 
 /** "1 mão 10 kg · item pessoal · 2 × 23 kg despachadas" */
 export function textoBagagem(b: Partial<Bagagem> | null | undefined): string {
