@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 /** Arquivos de /public que entram no pré-cache (anexos grandes e o próprio SW ficam de fora). */
 function listarPublic(dir: string, base = ""): string[] {
@@ -59,5 +60,5 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  plugins: [preCacheOffline()],
+  plugins: [preCacheOffline(), mcpPlugin()],
 });
