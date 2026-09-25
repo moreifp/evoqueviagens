@@ -28,6 +28,8 @@ function Pessoas() {
   const navigate = useNavigate();
   const { data, isLoading, error } = useQuery(pessoasQuery());
   const [criando, setCriando] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [abrirNovo, setAbrirNovo] = useState(false);
 
   // Guarda cada ficha no aparelho para abrir sem internet.
   useEffect(() => {
@@ -64,8 +66,8 @@ function Pessoas() {
 
   async function novoDependente() {
     if (criando) return;
-    const nome = window.prompt("Nome do dependente (ex.: sua filha)");
-    if (!nome?.trim()) return;
+    const nome = novoNome;
+    if (!nome.trim()) return;
     setCriando(true);
     const { data: nova, error: e } = await supabase
       .from("person")
@@ -138,14 +140,39 @@ function Pessoas() {
 
             {titulo("Minha família", "Dependentes sem login próprio, geridos por você.")}
             {grupos.familia.map((i) => cartao(i, true))}
-            <button
-              onClick={novoDependente}
-              disabled={criando}
-              className="tap flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-lg font-bold text-foreground"
-            >
-              <Baby size={26} strokeWidth={2.2} />
-              Adicionar dependente
-            </button>
+            {abrirNovo ? (
+              <div className="space-y-2 rounded-2xl border-2 border-border bg-card p-3">
+                <label className="block">
+                  <span className="text-base font-semibold">Nome do dependente</span>
+                  <input
+                    autoFocus
+                    value={novoNome}
+                    onChange={(e) => setNovoNome(e.target.value)}
+                    className="tap mt-2 w-full rounded-xl border-2 border-input bg-background px-4 text-lg text-foreground"
+                  />
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={novoDependente}
+                    disabled={criando || !novoNome.trim()}
+                    className="tap flex-1 rounded-xl bg-primary text-lg font-bold text-primary-foreground disabled:opacity-60"
+                  >
+                    Adicionar
+                  </button>
+                  <button onClick={() => setAbrirNovo(false)} className="tap rounded-xl border-2 border-border px-4 text-lg font-bold text-foreground">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAbrirNovo(true)}
+                className="tap flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-lg font-bold text-foreground"
+              >
+                <Baby size={26} strokeWidth={2.2} />
+                Adicionar dependente
+              </button>
+            )}
 
             {[...grupos.comigo.entries()].map(([dono, itens]) => {
               const g = data.grants.find((x) => x.owner_id === dono);
