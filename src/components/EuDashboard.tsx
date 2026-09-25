@@ -173,6 +173,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {owner && !self && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
 
         {self && <AvisosPush />}
+        {versaoBuild() && <p className="pt-2 pb-4 text-center text-xs text-muted-foreground/70">Versão {versaoBuild()}</p>}
       </main>
     </div>
   );
