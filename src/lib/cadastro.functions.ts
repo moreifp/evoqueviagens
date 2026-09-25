@@ -179,6 +179,7 @@ export const lerPassaporteAdmin = createServerFn({ method: "POST" })
   });
 
 const NOMES_TIPO: Record<string, string> = {
+  passaporte: "passport data page",
   rg: "Brazilian ID card (RG / Carteira de Identidade, possibly the new CIN)",
   cnh: "Brazilian driver's license (CNH)",
   pid: "International Driving Permit (PID)",
@@ -186,7 +187,40 @@ const NOMES_TIPO: Record<string, string> = {
   outra_vacina: "vaccination certificate",
   seguro: "travel insurance policy",
   global_entry: "Global Entry / TSA card",
+  visto: "visa or electronic travel authorization",
+  esta: "ESTA travel authorization",
+  seguro: "travel insurance policy",
+  outro: "travel identity or travel-support document",
 };
+
+export const identificarDocumentoAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000) }).parse(d))
+  .handler(async ({ data }) => {
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) return { ok: false as const };
+    try {
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          response_format: { type: "json_object" },
+          messages: [{ role: "user", content: [
+            { type: "text", text: "Identify this travel document. Return ONLY JSON with key tipo, one of: passaporte, rg, cnh, pid, visto, esta, vacina, outra_vacina, seguro, global_entry, outro. Never infer a more specific type unless clearly visible." },
+            { type: "image_url", image_url: { url: data.imagem } },
+          ] }],
+        }),
+      });
+      if (!r.ok) return { ok: false as const };
+      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
+      const match = /\{[\s\S]*\}/.exec(j.choices?.[0]?.message?.content ?? "");
+      const tipo = match ? String((JSON.parse(match[0]) as { tipo?: unknown }).tipo ?? "outro") : "outro";
+      return { ok: true as const, tipo: tipo in NOMES_TIPO ? tipo : "outro" };
+    } catch {
+      return { ok: false as const };
+    }
+  });
 
 function dataOk(v: unknown): string | null {
   if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
