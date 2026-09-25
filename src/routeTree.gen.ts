@@ -34,6 +34,9 @@ import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
 import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
 import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
 import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
@@ -177,6 +180,22 @@ const ApiPublicHooksStatusVoosRoute =
     path: '/api/public/hooks/status-voos',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
   id: '/pessoas/$pid/documentos/$did',
   path: '/pessoas/$pid/documentos/$did',
@@ -282,6 +301,9 @@ export interface FileRoutesByFullPath {
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -323,6 +345,9 @@ export interface FileRoutesByTo {
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -366,6 +391,9 @@ export interface FileRoutesById {
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -410,6 +438,9 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/api/public/hooks/status-voos'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -451,6 +482,9 @@ export interface FileRouteTypes {
     | '/pessoas/$pid'
     | '/trip/$id'
     | '/api/public/hooks/status-voos'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -493,6 +527,9 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/api/public/hooks/status-voos'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -530,6 +567,9 @@ export interface RootRouteChildren {
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
   ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
   PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
   PessoasPidFidelidadeFidRoute: typeof PessoasPidFidelidadeFidRoute
@@ -714,6 +754,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksStatusVoosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pessoas/$pid/documentos/$did': {
       id: '/pessoas/$pid/documentos/$did'
       path: '/pessoas/$pid/documentos/$did'
@@ -884,6 +945,9 @@ const rootRouteChildren: RootRouteChildren = {
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
   ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
   PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
   PessoasPidFidelidadeFidRoute: PessoasPidFidelidadeFidRoute,
