@@ -968,6 +968,120 @@ export type Database = {
           },
         ]
       }
+      push_device: {
+        Row: {
+          account_id: string
+          ativo: boolean
+          criado_em: string
+          id: string
+          plataforma: string
+          token: string
+          user_agent: string | null
+          visto_em: string
+        }
+        Insert: {
+          account_id: string
+          ativo?: boolean
+          criado_em?: string
+          id?: string
+          plataforma?: string
+          token: string
+          user_agent?: string | null
+          visto_em?: string
+        }
+        Update: {
+          account_id?: string
+          ativo?: boolean
+          criado_em?: string
+          id?: string
+          plataforma?: string
+          token?: string
+          user_agent?: string | null
+          visto_em?: string
+        }
+        Relationships: []
+      }
+      push_log: {
+        Row: {
+          account_id: string
+          corpo: string
+          enviado_em: string
+          erro: string | null
+          id: string
+          ref_id: string | null
+          status: string
+          tipo: string
+          titulo: string
+          url: string | null
+        }
+        Insert: {
+          account_id: string
+          corpo: string
+          enviado_em?: string
+          erro?: string | null
+          id?: string
+          ref_id?: string | null
+          status: string
+          tipo: string
+          titulo: string
+          url?: string | null
+        }
+        Update: {
+          account_id?: string
+          corpo?: string
+          enviado_em?: string
+          erro?: string | null
+          id?: string
+          ref_id?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      push_pref: {
+        Row: {
+          account_id: string
+          atualizado_em: string
+          aviso: boolean
+          checkin: boolean
+          claude: boolean
+          convite: boolean
+          criado_em: string
+          documento: boolean
+          silencio_fim: string
+          silencio_inicio: string
+          voo: boolean
+        }
+        Insert: {
+          account_id: string
+          atualizado_em?: string
+          aviso?: boolean
+          checkin?: boolean
+          claude?: boolean
+          convite?: boolean
+          criado_em?: string
+          documento?: boolean
+          silencio_fim?: string
+          silencio_inicio?: string
+          voo?: boolean
+        }
+        Update: {
+          account_id?: string
+          atualizado_em?: string
+          aviso?: boolean
+          checkin?: boolean
+          claude?: boolean
+          convite?: boolean
+          criado_em?: string
+          documento?: boolean
+          silencio_fim?: string
+          silencio_inicio?: string
+          voo?: boolean
+        }
+        Relationships: []
+      }
       reservation: {
         Row: {
           cidade: string | null

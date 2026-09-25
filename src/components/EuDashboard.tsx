@@ -7,6 +7,7 @@ import { AvatarPessoa } from "./Pessoa";
 import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
 import { dataBR } from "./FichaPartes";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
+import { AvisosPush } from "./AvisosPush";
 import { EmOrdem } from "./EmOrdem";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
@@ -66,6 +67,18 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   }, [bilhetes, data.documentos, paises, p.kind, p.nacionalidades, p.nome, p.nome_como_no_documento, personId, proxima, regras]);
 
   async function sair() {
+    // Apaga o token de avisos deste aparelho antes de sair.
+    try {
+      const { tokenSalvo, esquecerToken } = await import("@/lib/push");
+      const token = tokenSalvo();
+      if (token) {
+        const { removerAparelho } = await import("@/lib/push.functions");
+        await removerAparelho({ data: { token } }).catch(() => {});
+        esquecerToken();
+      }
+    } catch {
+      /* segue com a saída mesmo assim */
+    }
     await supabase.auth.signOut();
     qc.clear();
     navigate({ to: "/" });
@@ -111,6 +124,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
+        {self && <AvisosPush />}
 
         <section>
           <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Documentos</h2>{owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Plus size={24} /> Adicionar</Link>}</div>

@@ -101,6 +101,39 @@ async function arquivo(request) {
   return r;
 }
 
+// Avisos push (Firebase Cloud Messaging): o recebimento em segundo plano mora aqui,
+// no mesmo worker do app — sem segundo service worker.
+if (!HOST_SEM_APP) self.addEventListener("push", (event) => {
+  let dados = {};
+  try { dados = event.data ? event.data.json() : {}; } catch (e) { dados = {}; }
+  const notif = dados.notification || {};
+  const titulo = notif.title || "Evoque Viagens";
+  const url = typeof dados.data?.url === "string" && dados.data.url.startsWith("/") ? dados.data.url : "/";
+  event.waitUntil(
+    self.registration.showNotification(titulo, {
+      body: notif.body || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url },
+    }),
+  );
+});
+
+if (!HOST_SEM_APP) self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil((async () => {
+    const abas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const aberta = abas.find((c) => c.url.startsWith(self.location.origin));
+    if (aberta) {
+      await aberta.focus();
+      aberta.navigate(self.location.origin + url).catch(() => {});
+    } else {
+      await self.clients.openWindow(url);
+    }
+  })());
+});
+
 if (!HOST_SEM_APP) self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
