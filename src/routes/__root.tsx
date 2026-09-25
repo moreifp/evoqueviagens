@@ -180,13 +180,8 @@ function RootComponent() {
         buster: "evoque-eu-v1",
       });
     })();
-    // Desativa o cache antigo que podia misturar duas versões do app.
-    // O arquivo /sw.js também se autodesativa para alcançar visitantes antigos.
     if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker
-        .getRegistrations()
-        .then((regs) => Promise.all(regs.filter((reg) => reg.active?.scriptURL.endsWith("/sw.js")).map((reg) => reg.unregister())))
-        .catch(() => {});
+      void navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
     return () => {
       cancelado = true;
