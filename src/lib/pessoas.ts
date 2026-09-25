@@ -29,7 +29,10 @@ export type PessoaRow = {
   idioma: "pt" | "en";
   consentimento_em: string | null;
   atualizado_em: string;
+  account_id: string | null;
+  kind: "self" | "dependent" | "precadastro";
 };
+export type GrantRow = { id: string; owner_id: string; grantee_id: string; owner_nome: string | null; grantee_nome: string | null; blocos: string[]; status: string; created_at: string };
 
 export type DocRow = {
   id: string;
@@ -69,20 +72,22 @@ async function q<T>(p: PromiseLike<{ data: T | null; error: { message: string } 
   return (data ?? []) as T;
 }
 
-export type Lista = { pessoas: PessoaRow[]; docs: DocRow[]; mudancas: MudancaRow[]; links: LinkRow[] };
+export type Lista = { pessoas: PessoaRow[]; docs: DocRow[]; mudancas: MudancaRow[]; links: LinkRow[]; uid: string; grants: GrantRow[] };
 
 export const pessoasQuery = () =>
   queryOptions({
     queryKey: ["pessoas"],
     networkMode: "offlineFirst",
     queryFn: async (): Promise<Lista> => {
-      const [pessoas, docs, mudancas, links] = await Promise.all([
+      const uid = (await supabase.auth.getSession()).data.session?.user.id ?? "";
+      const [pessoas, docs, mudancas, links, grants] = await Promise.all([
         q<PessoaRow[]>(db.from("person").select("*").is("deleted_at", null).order("nome")),
         q<DocRow[]>(db.from("traveler_document").select("*").is("deleted_at", null)),
         q<MudancaRow[]>(db.from("person_change").select("*").eq("status", "pendente").is("deleted_at", null)),
         q<LinkRow[]>(db.from("cadastro_link").select("person_id, ultimo_acesso_em, created_at").is("revogado_em", null)),
+        q<GrantRow[]>(db.from("share_grant").select("*").eq("status", "ativo")),
       ]);
-      return { pessoas, docs, mudancas, links };
+      return { pessoas, docs, mudancas, links, uid, grants };
     },
   });
 

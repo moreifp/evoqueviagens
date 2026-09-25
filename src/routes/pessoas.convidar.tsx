@@ -57,7 +57,7 @@ function Convidar() {
       for (const l of validas) {
         const { data, error } = await db
           .from("person")
-          .insert({ nome: l.nome.trim(), apelido: l.nome.trim().split(" ")[0], telefone: l.tel.trim() || null, idioma })
+          .insert({ nome: l.nome.trim(), apelido: l.nome.trim().split(" ")[0], telefone: l.tel.trim() || null, idioma, kind: "precadastro" })
           .select("id")
           .single();
         if (error) throw new Error(error.message);

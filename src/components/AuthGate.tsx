@@ -5,28 +5,25 @@ import { Plane, LogIn, Chrome, Apple } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { cadastrarAdmin, verificarAdmin } from "@/lib/cadastro.functions";
+import { useQueryClient } from "@tanstack/react-query";
+import { garantirMinhaFicha } from "@/lib/compartilhar.functions";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [pronto, setPronto] = useState(false);
 
-  const confereAdmin = useServerFn(verificarAdmin);
+  const garantir = useServerFn(garantirMinhaFicha);
+  const qc = useQueryClient();
 
   useEffect(() => {
     let vivo = true;
+    let garantido = false;
     async function aplicar(s: Session | null) {
-      if (s && s.user.app_metadata?.provider === "google") {
-        try {
-          const v = s.user.email ? await confereAdmin({ data: { email: s.user.email } }) : { ok: false };
-          if (!v.ok) {
-            await supabase.auth.signOut();
-            toast.error("Este e-mail não está na lista de administradores.");
-            s = null;
-          }
-        } catch (e) {
-          console.error(e);
-        }
+      if (s && !garantido) {
+        garantido = true;
+        garantir()
+          .then(() => qc.invalidateQueries({ queryKey: ["pessoas"] }))
+          .catch((e) => console.error(e));
       }
       if (vivo) {
         setSession(s);
@@ -60,7 +57,7 @@ function traduzErro(msg: string): { texto: string; espera?: number } {
   if (m.includes("invalid login credentials")) return { texto: "E-mail ou senha incorretos." };
   if (m.includes("email not confirmed")) return { texto: "Este e-mail ainda não foi liberado. Tente entrar de novo." };
   if (m.includes("user already registered") || m.includes("already been registered"))
-    return { texto: "Já existe uma conta com este e-mail. Toque em “Já tenho conta”." };
+    return { texto: "Já existe uma conta com este e-mail. Toque em Entrar." };
   if (m.includes("password should be at least"))
     return { texto: "A senha precisa ter pelo menos 6 caracteres." };
   if (m.includes("invalid email") || m.includes("unable to validate email"))
@@ -76,26 +73,16 @@ function Entrar() {
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
   const [carregando, setCarregando] = useState(false);
   const [espera, setEspera] = useState(0);
-  const criarAdmin = useServerFn(cadastrarAdmin);
-  const confereAdmin = useServerFn(verificarAdmin);
+  const convite = typeof window !== "undefined" && window.location.pathname.startsWith("/convite/");
 
   async function entrarSocial(provedor: "google" | "apple") {
     if (carregando) return;
     setCarregando(true);
     try {
-      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.origin });
+      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.href });
       if (r.error || r.redirected) {
         setCarregando(false);
         if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
-        return;
-      }
-      const { data } = await supabase.auth.getUser();
-      const email = data.user?.email;
-      const v = email ? await confereAdmin({ data: { email } }) : { ok: false };
-      if (!v.ok) {
-        await supabase.auth.signOut();
-        setCarregando(false);
-        toast.error("Este e-mail não está na lista de administradores.");
         return;
       }
       setCarregando(false);
@@ -116,22 +103,21 @@ function Entrar() {
     if (espera > 0 || carregando) return;
     setCarregando(true);
     if (modo === "criar") {
-      try {
-        const r = await criarAdmin({ data: { email, senha } });
-        if (!r.ok) {
-          setCarregando(false);
-          if (r.erro === "NAO_ADMIN") toast.error("Este e-mail não está na lista de administradores.");
-          else if (r.erro === "JA_EXISTE") {
-            toast.error("Essa conta já existe — toque em Entrar.");
-            setModo("entrar");
-          } else toast.error("Não deu certo agora. Tente de novo em instantes.");
-          return;
-        }
-      } catch {
-        setCarregando(false);
-        toast.error("Não deu certo agora. Tente de novo em instantes.");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: { emailRedirectTo: window.location.href },
+      });
+      setCarregando(false);
+      if (error) {
+        const { texto, espera: s } = traduzErro(error.message);
+        if (s) setEspera(s);
+        if (texto.includes("Já existe")) setModo("entrar");
+        toast.error(texto);
         return;
       }
+      if (!data.session) toast.error("Não deu certo agora. Tente de novo em instantes.");
+      return;
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     setCarregando(false);
@@ -155,6 +141,11 @@ function Entrar() {
             <p className="text-base opacity-90">Viagens</p>
           </div>
         </div>
+        <p className="mb-6 text-lg text-foreground">
+          {convite
+            ? "Você recebeu um convite. Entre ou crie sua conta para continuar."
+            : "Seus documentos, fidelidades e viagens, só seus. Compartilhe com quem quiser."}
+        </p>
 
         <button
           type="button"
@@ -210,7 +201,7 @@ function Entrar() {
               ? `Aguarde ${espera}s`
               : modo === "entrar"
                 ? "Entrar"
-                : "Criar minha senha"}
+                : "Criar minha conta"}
           </button>
           {espera > 0 && (
             <p className="text-center text-base text-muted-foreground">
@@ -224,7 +215,7 @@ function Entrar() {
           onClick={() => setModo(modo === "entrar" ? "criar" : "entrar")}
           className="tap mt-4 w-full rounded-xl text-base font-semibold text-accent underline"
         >
-          {modo === "entrar" ? "Primeiro acesso (administrador)" : "Já tenho senha"}
+          {modo === "entrar" ? "Não tenho conta · criar agora" : "Já tenho conta · entrar"}
         </button>
       </div>
     </div>

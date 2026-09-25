@@ -28,8 +28,27 @@ export const Route = createFileRoute("/c/$token")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: CadastroParticipante,
+  component: LinkAntigo,
 });
+
+/** Links pessoais antigos (sem login) foram substituídos por contas próprias. */
+function LinkAntigo() {
+  return (
+    <div className="min-h-screen bg-background px-5 pt-16">
+      <div className="mx-auto max-w-md space-y-4">
+        <h1 className="text-3xl">O Evoque mudou</h1>
+        <p className="text-lg text-foreground">
+          Agora cada pessoa tem a própria conta e é dona dos seus dados. Crie sua conta para continuar e peça um convite novo a quem te enviou este link.
+        </p>
+        <a href="/" className="gradient-hero shadow-medium tap flex w-full items-center justify-center rounded-2xl text-xl font-bold">
+          Criar minha conta
+        </a>
+      </div>
+    </div>
+  );
+}
+// Mantido para referência; não é mais usado.
+void CadastroParticipante;
 
 type L = "pt" | "en";
 const T = {

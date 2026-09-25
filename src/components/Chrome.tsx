@@ -54,7 +54,7 @@ export function Avatar() {
             onClick={() => setAberto(false)}
             className="tap flex w-full items-center rounded-lg px-4 text-left text-lg font-semibold text-foreground"
           >
-            Administradores
+            Minha conta
           </Link>
           <button
             onClick={async () => {

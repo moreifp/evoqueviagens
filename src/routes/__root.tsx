@@ -177,7 +177,7 @@ function RootComponent() {
           key: "evoque-cache",
         }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
-        buster: "evoque-v2",
+        buster: "evoque-v3",
       });
     })();
     // Desativa o cache antigo que podia misturar duas versões do app.
