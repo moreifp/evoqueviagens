@@ -358,7 +358,9 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
                 <input value={p.eticket} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, eticket: e.target.value } : x)))} className={`${inputCls} mono-code`} />
               </Campo>
             </div>
-            {p.bag ? (
+            {modoBag === "individual" ? (
+              <CamposBagagem titulo="Bagagem desta pessoa" valor={p.bag ?? bag} onChange={(b) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: b } : x)))} />
+            ) : p.bag ? (
               <div className="space-y-2">
                 <CamposBagagem titulo="Bagagem desta pessoa" valor={p.bag} onChange={(b) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: b } : x)))} />
                 <button type="button" onClick={() => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: null } : x)))} className="tap w-full rounded-xl border-2 border-border text-lg font-bold">Usar a bagagem padrão</button>
