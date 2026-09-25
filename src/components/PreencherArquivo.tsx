@@ -33,7 +33,8 @@ export function casarPessoa(nome: string, membros: Membro[]): string | null {
       if (!cand) continue;
       const t = norm(cand);
       const comuns = t.filter((x) => alvo.has(x)).length;
-      const nota = comuns >= 2 ? comuns + 1 : comuns === 1 && (t.length === 1 || alvo.size === 1) ? 1 : 0;
+      // Dois nomes em comum, ou nome único dos dois lados (ex.: apelido "Gabi" lido como "Gabi").
+      const nota = comuns >= 2 ? comuns + 1 : comuns === 1 && t.length === 1 && alvo.size === 1 ? 1 : 0;
       if (nota && (!melhor || nota > melhor.nota)) melhor = { pid: m.person_id, nota };
     }
   }
