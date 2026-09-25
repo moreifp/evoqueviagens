@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as CompartilhamentosRouteImport } from './routes/compartilhamentos'
 import { Route as DespesasRouteImport } from './routes/despesas'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NovaViagemRouteImport } from './routes/nova-viagem'
 import { Route as PerfilRouteImport } from './routes/perfil'
@@ -67,6 +68,11 @@ const CompartilhamentosRoute = CompartilhamentosRouteImport.update({
 const DespesasRoute = DespesasRouteImport.update({
   id: '/despesas',
   path: '/despesas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/claude': typeof ClaudeRoute
   '/compartilhamentos': typeof CompartilhamentosRoute
   '/despesas': typeof DespesasRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
   '/nova-viagem': typeof NovaViagemRoute
   '/perfil': typeof PerfilRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '/claude'
     | '/compartilhamentos'
     | '/despesas'
+    | '/manifest.webmanifest'
     | '/mcp'
     | '/nova-viagem'
     | '/perfil'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   ClaudeRoute: typeof ClaudeRoute
   CompartilhamentosRoute: typeof CompartilhamentosRoute
   DespesasRoute: typeof DespesasRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   McpRoute: typeof McpRoute
   NovaViagemRoute: typeof NovaViagemRoute
   PerfilRoute: typeof PerfilRoute
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/despesas'
       fullPath: '/despesas'
       preLoaderRoute: typeof DespesasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -848,6 +868,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaudeRoute: ClaudeRoute,
   CompartilhamentosRoute: CompartilhamentosRoute,
   DespesasRoute: DespesasRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   McpRoute: McpRoute,
   NovaViagemRoute: NovaViagemRoute,
   PerfilRoute: PerfilRoute,
