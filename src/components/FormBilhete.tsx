@@ -61,6 +61,12 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const p0 = (inicial ?? copiarDe)?.passageiros?.[0];
     return p0 ? pegarBagagem(p0) : BAGAGEM_VAZIA;
   });
+  // Modo da bagagem: "todos" (uma regra para o voo inteiro) ou "individual" (cada passageiro tem a sua, ex.: executiva × econômica).
+  const [modoBag, setModoBag] = useState<"todos" | "individual">(() => {
+    const src = (inicial ?? copiarDe)?.passageiros ?? [];
+    const base = pegarBagagem(inicial ?? copiarDe);
+    return src.some((q) => { const b = pegarBagagem(q); return temBagagem(b) && !mesmaBagagem(b, base); }) ? "individual" : "todos";
+  });
   // Passageiros com bagagem diferente do padrão do bilhete ficam com ajuste próprio.
   useEffect(() => {
     const src = inicial?.passageiros ?? copiarDe?.passageiros ?? [];
