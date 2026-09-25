@@ -84,6 +84,7 @@ export type EuDados = {
   dependentes: EuPessoa[];
   documentosDependentes: Record<string, EuDocumento[]>;
   uid: string;
+  dispensas: string[];
   compartilhamentos: { id: string; owner_id: string; grantee_id: string; owner_nome: string | null; grantee_nome: string | null; blocos: string[]; trip_ids: string[] | null; created_at: string }[];
 };
 
@@ -124,11 +125,14 @@ async function loadEu(personId: string): Promise<EuDados> {
           : Promise.resolve([]),
         rows<EuDados["compartilhamentos"]>(db.from("share_grant").select("*").eq("status", "ativo")),
       ]);
+  const dispensas = pessoa.account_id === uid
+    ? (await rows<{ item: string }[]>(db.from("person_item_dispensa").select("item").eq("person_id", personId).is("deleted_at", null)).catch(() => [])).map((d) => d.item)
+    : [];
   const docsDependentes = dependentes.length
     ? await rows<EuDocumento[]>(db.from("traveler_document").select("*").in("person_id", dependentes.map((d) => d.id)).is("deleted_at", null).order("created_at", { ascending: false }))
     : [];
   const documentosDependentes = Object.fromEntries(dependentes.map((d) => [d.id, docsDependentes.filter((doc) => doc.person_id === d.id)]));
-  return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, documentosDependentes, uid, compartilhamentos };
+  return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, documentosDependentes, uid, compartilhamentos, dispensas };
 }
 
 export const euQuery = (personId: string) =>
@@ -163,23 +167,48 @@ export function statusDocumento(doc: EuDocumento) {
   return { label: "Válido", tone: "ok" as const };
 }
 
+export type GrupoFicha = "Documentos" | "Vistos e entrada" | "Saúde e seguro" | "Fidelidade" | "Pessoal";
+export type ItemFicha = { id: string; label: string; grupo: GrupoFicha; done: boolean; dispensado: boolean; obrigatorio: boolean; href: string };
+export const GRUPOS_FICHA: GrupoFicha[] = ["Documentos", "Vistos e entrada", "Saúde e seguro", "Fidelidade", "Pessoal"];
+
+/** Todos os itens do cadastro pessoal. Obrigatórios: passaporte e emergência; o resto pode ser "Não tenho". */
 export function progressoFicha(dados: EuDados) {
   const p = dados.pessoa;
   const tem = (tipos: readonly string[]) => dados.documentos.some((d) => tipos.includes(d.tipo));
-  const itens = [
-    { label: "Foto", done: !!p.foto_url, href: `/pessoas/${p.id}/dados` },
-    { label: "Dados pessoais", done: !!(p.nome && p.data_nascimento && p.sexo && p.nacionalidades.length), href: `/pessoas/${p.id}/dados` },
-    { label: "Passaporte", done: tem(["passaporte"]), href: `/pessoas/${p.id}/documentos/novo?tipo=passaporte` },
-    { label: "RG", done: tem(["rg"]), href: `/pessoas/${p.id}/documentos/novo?tipo=rg` },
-    { label: "CNH", done: tem(["cnh"]), href: `/pessoas/${p.id}/documentos/novo?tipo=cnh` },
-    { label: "Visto ou autorização", done: tem(TIPOS_VISTO), href: `/pessoas/${p.id}/documentos/novo?tipo=visto` },
-    { label: "Vacina", done: tem(["vacina", "outra_vacina"]), href: `/pessoas/${p.id}/documentos/novo?tipo=vacina` },
-    { label: "Fidelidade", done: dados.fidelidades.length > 0, href: `/pessoas/${p.id}/fidelidade` },
-    { label: "Preferências", done: !!dados.preferencias, href: `/pessoas/${p.id}/dados?secao=preferencias` },
-    { label: "Contato de emergência", done: !!(p.emergencia_nome && p.emergencia_telefone), href: `/pessoas/${p.id}/dados?secao=emergencia` },
+  const fid = (tipo: string) => dados.fidelidades.some((f) => f.tipo === tipo);
+  const doc = (tipo: string) => `/pessoas/${p.id}/documentos/novo?tipo=${tipo}`;
+  const dispensas = new Set(dados.dispensas ?? []);
+  const base: Omit<ItemFicha, "dispensado" | "obrigatorio">[] = [
+    { id: "passaporte", label: "Passaporte", grupo: "Documentos", done: tem(["passaporte"]), href: doc("passaporte") },
+    { id: "cpf", label: "CPF", grupo: "Documentos", done: !!p.cpf, href: `/pessoas/${p.id}/dados` },
+    { id: "rg", label: "RG", grupo: "Documentos", done: tem(["rg"]), href: doc("rg") },
+    { id: "cnh", label: "CNH", grupo: "Documentos", done: tem(["cnh"]), href: doc("cnh") },
+    { id: "pid", label: "Permissão Internacional (PID)", grupo: "Documentos", done: tem(["pid"]), href: doc("pid") },
+    { id: "visto", label: "Visto EUA", grupo: "Vistos e entrada", done: tem(["visto"]), href: doc("visto") },
+    { id: "esta", label: "ESTA · EUA", grupo: "Vistos e entrada", done: tem(["esta"]), href: doc("esta") },
+    { id: "eta_canada", label: "eTA · Canadá", grupo: "Vistos e entrada", done: tem(["eta_canada"]), href: doc("eta_canada") },
+    { id: "eta_uk", label: "ETA · Reino Unido", grupo: "Vistos e entrada", done: tem(["eta_uk"]), href: doc("eta_uk") },
+    { id: "etias", label: "ETIAS · Europa", grupo: "Vistos e entrada", done: tem(["etias"]), href: doc("etias") },
+    { id: "k_eta", label: "K-ETA · Coreia", grupo: "Vistos e entrada", done: tem(["k_eta"]), href: doc("k_eta") },
+    { id: "outro_visto", label: "Outro visto", grupo: "Vistos e entrada", done: tem(["outro_visto"]), href: doc("outro_visto") },
+    { id: "visto_negado", label: "Visto negado ou em processo", grupo: "Vistos e entrada", done: p.visto_negado != null, href: `/pessoas/${p.id}/dados?secao=visto` },
+    { id: "global_entry", label: "Global Entry / TSA PreCheck (KTN)", grupo: "Vistos e entrada", done: tem(["global_entry"]), href: doc("global_entry") },
+    { id: "vacina", label: "Vacina febre amarela", grupo: "Saúde e seguro", done: tem(["vacina"]), href: doc("vacina") },
+    { id: "outra_vacina", label: "Outras vacinas", grupo: "Saúde e seguro", done: tem(["outra_vacina"]), href: doc("outra_vacina") },
+    { id: "seguro", label: "Seguro-viagem", grupo: "Saúde e seguro", done: tem(["seguro"]), href: doc("seguro") },
+    { id: "fid_aerea", label: "Programas aéreos", grupo: "Fidelidade", done: fid("aerea"), href: `/pessoas/${p.id}/fidelidade/novo?tipo=aerea` },
+    { id: "fid_hotel", label: "Hotéis", grupo: "Fidelidade", done: fid("hotel"), href: `/pessoas/${p.id}/fidelidade/novo?tipo=hotel` },
+    { id: "fid_locadora", label: "Locadoras", grupo: "Fidelidade", done: fid("locadora"), href: `/pessoas/${p.id}/fidelidade/novo?tipo=locadora` },
+    { id: "fid_sala_vip", label: "Sala VIP", grupo: "Fidelidade", done: fid("sala_vip"), href: `/pessoas/${p.id}/fidelidade/novo?tipo=sala_vip` },
+    { id: "endereco", label: "Endereço", grupo: "Pessoal", done: !!p.endereco, href: `/pessoas/${p.id}/dados` },
+    { id: "emergencia", label: "Contato de emergência", grupo: "Pessoal", done: !!(p.emergencia_nome && p.emergencia_telefone), href: `/pessoas/${p.id}/dados?secao=emergencia` },
+    { id: "preferencias", label: "Preferências", grupo: "Pessoal", done: !!dados.preferencias, href: `/pessoas/${p.id}/dados?secao=preferencias` },
   ];
-  const feitos = itens.filter((item) => item.done).length;
-  return { itens, feitos, percentual: feitos * 10 };
+  const OBRIG = new Set(["passaporte", "emergencia"]);
+  const itens: ItemFicha[] = base.map((i) => ({ ...i, obrigatorio: OBRIG.has(i.id), dispensado: !i.done && !OBRIG.has(i.id) && dispensas.has(i.id) }));
+  const feitos = itens.filter((i) => i.done || i.dispensado).length;
+  const total = itens.length;
+  return { itens, feitos, total, percentual: Math.round((feitos / total) * 100) };
 }
 
 export function mascararFinal(numero: string | null) {
