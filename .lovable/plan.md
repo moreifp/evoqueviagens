@@ -1,35 +1,64 @@
-# Evoque sem internet (etapa offline)
+# Módulo 2 · Viagem, parte 1
 
-## 0. Correção imediata
-- Reagendar o job `status-voos-15min` para chamar `https://evoqueviagens.lovable.app/api/public/hooks/status-voos`. Nada mais muda no AeroDataBox.
+Modelo com vários passageiros/quartos/hóspedes, permissões por item, fuso automático pelo aeroporto, editar/apagar completo, barra de 4 abas dentro da viagem e auditor por pessoa. Tudo continua funcionando sem internet. Sem publicar.
 
-## 1. Primeiro: a tela de viagem em branco no teste
-O que já sei (lido no código e no navegador de teste):
-- Não é o servidor rodando a consulta sem sessão. O AuthGate desenha uma tela vazia no servidor e só mostra as telas depois de ler a sessão no aparelho, então as telas de viagem nunca rodam no servidor.
-- No navegador de teste, a consulta de bilhetes ficou "carregando" para sempre (fetching, nenhuma falha), enquanto a rede mostrava respostas 200 repetidas. Até a moldura de "Carregando…" não aparecia, e todas as rotas constavam como "success".
-- Causa ainda NÃO confirmada. Hipóteses em ordem: (a) trava de sessão do cliente de login (a sessão injetada pelo teste renova o token enquanto `garantirMinhaFicha` e as consultas disputam a mesma trava); (b) o cache restaurado do aparelho sobrescrevendo a consulta em andamento; (c) React mantendo a tela anterior durante a navegação.
-- Passo: reproduzir com login pela própria tela de entrar (sem injetar sessão), depois isolar cada hipótese. Se acontecer também com login normal, é problema real e será corrigido nesta etapa (é o mesmo caminho que o modo sem internet usa). Vou dizer qual foi.
+## 1. Banco (uma migration aditiva: `0014_viagem_modelo.sql`)
 
-## 2. O que muda para o usuário
-- O app abre no avião em qualquer tela, mesmo uma nunca aberta antes, com os dados guardados.
-- Viagens próximas ou em andamento, a ficha Eu e os dependentes ficam baixados sozinhos quando há internet. No topo da viagem aparece um selo discreto: "Disponível sem internet · atualizado há 2 h" ou "Baixando…".
-- Anexos de bilhete, hotel e os seus documentos (e dos dependentes) abrem sem internet. Documentos compartilhados por outras pessoas não ficam no aparelho.
-- Sem internet, nunca aparece a tela de login. O app entra em modo leitura com o que está guardado e renova a sessão quando a rede volta.
-- Erros sem internet não recarregam a página: mostram "Tentar de novo".
-- Um convite, uma vez só, para "Adicionar à tela de início" (no iPhone: Compartilhar → Adicionar à Tela de Início), com "Agora não".
-- Editar e apagar bilhete, hotel e despesa sem internet aparece na hora, com "1 alteração esperando internet", e sobe sozinho depois.
+Colunas novas
+- `trip_member`: status (convidado|aceito|recusado|saiu, default 'convidado'), convidado_por, respondido_em.
+- `ticket`: criado_por, origem ('ui'|'agente', default 'ui'), grupo_reserva.
+- `lodging`: criado_por, origem.
+- `share_invite` e `share_grant`: trip_id (null). `share_grant`: expira_em (null).
+- Comentários `DEPRECATED` em ticket.traveler_person_id / assento / nome_no_bilhete / anexo_url e lodging.traveler_person_id / anexo_url.
 
-## 3. Detalhes técnicos
-- **O1/O2 — service worker:** um script pós-build gera a lista de todos os arquivos de `dist/client` com um hash de versão e grava `sw.js` com essa lista. A instalação pré-cacheia tudo e a ativação apaga caches `evoque-*` antigos. Navegação: rede primeiro; sem rede, devolve o shell do app guardado (HTML da raiz pré-cacheado), e `/offline.html` só se nem o shell existir. `/~oauth` e `/api/` ficam fora. O `sw.js` continua escrito à mão (o app já tem um), sem trocar por `vite-plugin-pwa`, para não mudar o esquema de atualização em produção. Continua sem registro em prévia ou iframe, com `?sw=off` para desligar. Se preferir `vite-plugin-pwa`, me diga.
-- **Shell e dados:** as telas de viagem hoje buscam os dados na hora de abrir. Vou garantir que todas as consultas usem o cache do aparelho (já existe cache no IndexedDB por 30 dias) e que nenhuma espere a rede quando há dado guardado.
-- **O3 — baixar viagem:** `src/lib/baixarOffline.ts` roda ao abrir o app e ao voltar a rede, com intervalo mínimo de 30 min. Viagens não arquivadas com `data_fim >= hoje - 0` e até 60 dias à frente (mais as em andamento): pré-carrega nas mesmas chaves de consulta usadas pelas telas (trip, tickets, lodging, expense, trip_member, consistency_finding, flight_status) e também a ficha Eu, documentos, fidelidade e dependentes. Guarda "baixado em" por viagem no IndexedDB para o selo.
-- **O4 — anexos:** baixa os arquivos pelos links assinados e grava no Cache Storage `evoque-anexos` (chave = caminho no storage), somente para arquivos de ticket/lodging dessas viagens e documentos da própria conta e dependentes. Ao abrir um anexo: usa a cópia guardada se não houver rede, senão usa o link assinado. Arquivos que não são mais usados são apagados na próxima sincronização.
-- **O5 — sessão:** o AuthGate lê a sessão guardada no localStorage. Se `!navigator.onLine` e existe sessão (mesmo vencida), entra em modo leitura. `garantirMinhaFicha` só roda online, sem bloquear a tela. No evento `online` renova a sessão; se a renovação falhar, aí sim pede login.
-- **O6:** o ErrorComponent do __root só recarrega sozinho se `navigator.onLine`.
-- **O7:** chama `navigator.storage.persist()` uma vez. Convite de instalação usando `beforeinstallprompt` (Android/desktop) ou a instrução do iPhone, lembrado no localStorage.
-- **O8:** Outfit e Inter em woff2 em `/public/fonts`, com `@font-face` em styles.css. Remove os links do Google Fonts.
-- **Fila offline:** revisar editar/apagar de bilhete, hotel e despesa para passar por `mutar()` de `src/lib/outbox.ts`, com atualização imediata no cache de consultas e contador de pendências no aviso de conexão.
-- Sem migrations. Não toca em tabelas do cadastro pessoal. Não publica.
+Tabelas novas (todas com GRANT a authenticated/service_role, sem anon, RLS ligado, soft delete)
+- `ticket_passenger`, `lodging_room`, `lodging_guest`, `reservation`, `reservation_person`, `item_attachment`, `trip_trust`, `trip_notice` — campos exatamente como no pedido.
 
-## 4. Teste (resultado mostrado no fim)
-Build de produção servido localmente (o SW não roda na prévia). Conta e viagem descartáveis com bilhete, hotel, despesa e um anexo. Passos: instala o SW → abre a viagem uma vez → modo offline → abre visão da viagem, bilhetes, hotéis, despesas e uma tela nunca aberta (ex.: Revisão) → abre o anexo → edita uma despesa offline (aparece na hora e com "1 alteração esperando internet") → volta online → confere no banco que sincronizou. Depois apago conta, viagem e arquivos.
+Gatilho: ao criar viagem, o dono entra em trip_member como 'aceito' com a ficha "Eu".
+
+## 2. Permissões (SECURITY DEFINER em app_private)
+
+- `acct_person(pid)`: a pessoa é o "Eu" ou um dependente da minha conta.
+- `can_view_trip(tid)` (substitui a atual): dono · membro 'aceito' cujo person é meu ou dependente meu · grant "viagens" ativo, dentro de trip_ids e não expirado.
+- `can_view_item_detail(tipo, id)`: dono da viagem · criado_por · passageiro/hóspede/pessoa do item que seja meu ou dependente meu.
+- `can_edit_item(tipo, id)`: dono da viagem ou criado_por.
+- `can_view(pid, bloco)` e as políticas por bloco passam a exigir `expira_em is null or expira_em > now()`. Documentos continuam só por `can_view(pid,'documentos')`; nenhuma regra de viagem abre documento ou foto.
+
+Como fica o "resumo" para quem não está no item: o RLS é por linha, não por coluna. Então:
+- Tabelas completas (ticket, lodging, reservation, passageiros, quartos, hóspedes, anexos) só são lidas com `can_view_item_detail`.
+- Uma função `roteiro_viagem(tid)` (security definer, checa `can_view_trip`) devolve para todos os membros só título, tipo, horários/fusos, cidade/IATA e nomes de quem vai — sem localizador, e-ticket, assento, valor nem anexo.
+- Escrita (insert/update) exige `can_edit_item`; insert exige `can_view_trip` e criado_por = eu.
+- Anexos no storage: pasta nova `trip/{trip_id}/{item_id}/…`, liberada por `can_view_item_detail` via item_attachment.
+
+## 3. Fuso automático
+
+- Script gera `public/data/aeroportos.json` a partir do OurAirports (domínio público) — só aeroportos com IATA e `scheduled_service=yes` (~4 mil) — com nome, cidade, país, lat, lng e fuso IANA (calculado pela coordenada com uma tabela de fusos de domínio público). Arquivo entra no pré-cache do app.
+- No bilhete: campo IATA com sugestões; ao escolher, preenche cidade e fuso. Seletor de 10 fusos some; fica "Trocar fuso" discreto.
+
+## 4. Telas
+
+- Formulários completos de bilhete (passageiros: pessoa, nome no bilhete, assento, e-ticket, fidelidade), hotel (quartos e hóspedes), reserva nova (carro/passeio/restaurante/outro, pessoas com papel) — o mesmo formulário serve para criar e editar, já preenchido.
+- Editar/Apagar com Desfazer 10 s em bilhete, hotel, reserva e "Tirar da viagem" em pessoas. Botões só aparecem para quem pode editar.
+- Itens em que a pessoa não está aparecem como cartão de resumo.
+- Anexos múltiplos por item (lista, adicionar, apagar).
+- Barra da viagem: troca a de 3 abas pela mesma de 4 abas de fora (Eu · Viagens · Restaurantes · Despesas).
+
+## 5. Offline
+
+- Novas consultas (passageiros, quartos, hóspedes, reservas, anexos, roteiro) entram no "Baixar viagem"; anexos de item_attachment vão para o cache de anexos (só os que a pessoa pode ver).
+- Todas as escritas (inclusive linhas filhas: passageiros, quartos, hóspedes) passam pela fila offline, com ids gerados no aparelho para os filhos funcionarem antes de sincronizar.
+
+## 6. Auditor
+
+- Nome no bilhete via ticket_passenger.
+- "Noite sem cama" por pessoa: entre o voo que a traz e o que a leva, cada noite precisa de um quarto com ela como hóspede; senão vira achado "Fulano sem quarto na noite de DD/MM".
+
+## 7. Teste (resultado mostrado no fim)
+
+Conta A: viagem com 1 voo de 3 passageiros (1 dependente), hotel com 2 quartos, reserva de carro. Conta B aceita como membro, passageira do voo, não do carro. Conferir: B vê roteiro, próprio assento, voucher do hotel dela, carro só em resumo, nenhum documento, não edita itens de A (tentativa pela API bloqueada). Editar e apagar com Desfazer online e offline. Auditor acha "pessoa sem quarto". Tudo apagado no fim; lista de migrations e arquivos.
+
+## Detalhes técnicos
+
+- Não toca em person, traveler_document, document_attachment, loyalty_account, vault_*; em share_* só adiciona colunas e atualiza as funções de leitura por bloco.
+- Arquivos principais: `drizzle/migrations/0014_*`, `scripts/aeroportos.ts`, `public/data/aeroportos.json`, `src/lib/aeroportos.ts`, `src/lib/data.ts`, `src/lib/offline.ts`, `src/lib/anexosOffline.ts`, `src/lib/auditoria.ts`, `src/components/{FormBilhete,FormHotel,FormReserva,AnexosItem,CampoAeroporto}.tsx`, `src/components/Chrome.tsx`, rotas `trip.$id.*` (nova `trip.$id.reservas.*`), `vite.config.ts` (pré-cache do JSON).
+- Ponto de atenção: `can_view_trip` hoje não considera membros; a troca é compatível porque as tabelas estão vazias.
