@@ -117,10 +117,30 @@ export function AvisosPush() {
 
   if (estado === "fora_do_app") return null;
 
+  const resumo =
+    estado === "ligado" ? "Ligados neste aparelho"
+    : estado === "desligado" ? "Desligados neste aparelho"
+    : estado === "bloqueado" ? "Bloqueados no navegador"
+    : estado === "iphone_sem_instalar" ? "Instale o app para receber"
+    : "Este navegador não aceita avisos";
+
   return (
     <section aria-label="Avisos no celular">
-      <h2 className="mb-3 text-2xl">Avisos no celular</h2>
-      <div className="rounded-[18px] border border-border bg-card p-4 shadow-soft">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        className="tap flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left"
+      >
+        <Bell size={28} strokeWidth={2.2} className="shrink-0 text-accent" />
+        <span className="min-w-0 flex-1">
+          <strong className="block text-lg">Avisos no celular</strong>
+          <span className="text-base text-muted-foreground">{resumo}</span>
+        </span>
+        <ChevronDown size={26} strokeWidth={2.4} className={`shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+      {aberto && (
+      <div className="mt-3 rounded-[18px] border border-border bg-card p-4 shadow-soft">
         {estado === "iphone_sem_instalar" && (
           <div className="flex gap-3">
             <Smartphone size={28} strokeWidth={2.2} className="shrink-0 text-accent" />
