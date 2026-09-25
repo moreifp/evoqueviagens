@@ -1140,6 +1140,7 @@ export type Database = {
     }
     Functions: {
       somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
+      verificar_cron_voos: { Args: { _t: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
