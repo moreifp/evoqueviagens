@@ -3,12 +3,15 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Check, Delete, ChevronLeft } from "lucide-react";
-import { buscarCotacao, expensesQuery, insertRow, tripQuery } from "@/lib/data";
+import { buscarCotacao, expensesQuery, tripQuery } from "@/lib/data";
 import { fmtMoney, MOEDAS } from "@/lib/format";
 import { CATEGORIAS } from "@/lib/categorias";
 import { supabase } from "@/integrations/supabase/client";
+import { mutar } from "@/lib/outbox";
+import { novoId } from "@/lib/itens";
 
 export const Route = createFileRoute("/trip/$id/despesas/nova")({
+  validateSearch: (s: Record<string, unknown>) => ({ itemTipo: typeof s.itemTipo === "string" ? s.itemTipo : "", itemId: typeof s.itemId === "string" ? s.itemId : "", descricao: typeof s.descricao === "string" ? s.descricao : "", valor: typeof s.valor === "string" ? s.valor : "", moeda: typeof s.moeda === "string" ? s.moeda : "", data: typeof s.data === "string" ? s.data : "" }),
   head: () => ({
     meta: [
       { title: "Novo gasto — Evoque Viagens" },
@@ -24,16 +27,17 @@ export const Route = createFileRoute("/trip/$id/despesas/nova")({
 
 function NovaDespesa() {
   const { id } = Route.useParams();
+  const origem = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: trip } = useSuspenseQuery(tripQuery(id));
   useSuspenseQuery(expensesQuery(id));
 
   const [passo, setPasso] = useState<1 | 2 | 3>(1);
-  const [digitos, setDigitos] = useState("");
-  const [moeda, setMoeda] = useState(trip.moeda_base);
+  const [digitos, setDigitos] = useState(() => origem.valor ? String(Math.round(Number(origem.valor) * 100)) : "");
+  const [moeda, setMoeda] = useState(origem.moeda || trip.moeda_base);
   const [categoria, setCategoria] = useState("alimentacao");
-  const [descricao, setDescricao] = useState("");
+  const [descricao, setDescricao] = useState(origem.descricao);
   const [taxa, setTaxa] = useState("1");
   const [buscandoTaxa, setBuscandoTaxa] = useState(false);
   const [comprovante, setComprovante] = useState<string | null>(null);
@@ -66,20 +70,23 @@ function NovaDespesa() {
     setSalvando(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      await insertRow("expense", {
+      const expenseId = novoId();
+      const resultado = await mutar({ tipo: "insert", tabela: "expense", valores: {
+        id: expenseId,
         trip_id: id,
         descricao: descricao || CATEGORIAS.find((c) => c.id === categoria)?.rotulo || "Gasto",
         categoria,
-        data: new Date().toISOString().slice(0, 10),
+        data: origem.data || new Date().toISOString().slice(0, 10),
         valor_original: valor,
         moeda_original: moeda,
         taxa_cambio: Number(taxa || "1"),
         valor_moeda_base: Number(valorBase.toFixed(2)),
         comprovante_url: comprovante,
         criado_por: auth.user?.id,
-      });
+      } });
+      if (origem.itemId && ["ticket", "lodging", "reservation"].includes(origem.itemTipo)) await mutar({ tipo: "update", tabela: origem.itemTipo, id: origem.itemId, valores: { expense_id: expenseId } });
       await qc.invalidateQueries({ queryKey: ["expenses", id] });
-      toast.success("Gasto lançado");
+      toast.success(resultado === "fila" ? "Sem internet · gasto salvo no aparelho" : "Gasto lançado");
       navigate({ to: "/trip/$id/despesas", params: { id } });
     } catch (e) {
       toast.error((e as Error).message);
