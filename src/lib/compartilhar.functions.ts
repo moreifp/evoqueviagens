@@ -5,6 +5,7 @@ import { adminClient, cifrar, decifrar, sha256Hex } from "./cadastro.server";
 
 export const BLOCOS = ["basico", "documentos", "fidelidade", "preferencias", "dependentes", "viagens"] as const;
 const blocosSchema = z.array(z.enum(BLOCOS)).max(6);
+const tripsSchema = z.array(z.string().uuid()).max(500).nullable().optional();
 const TRINTA_DIAS = 30 * 86400_000;
 
 function tokenNovo() {
@@ -58,7 +59,7 @@ export const garantirMinhaFicha = createServerFn({ method: "POST" })
 export const criarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ direcao: z.enum(["pedido", "oferta"]), blocos: blocosSchema, personId: z.string().uuid().optional() }).parse(d),
+    z.object({ direcao: z.enum(["pedido", "oferta"]), blocos: blocosSchema, tripIds: tripsSchema, personId: z.string().uuid().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const ctx = context as Ctx;
@@ -97,6 +98,7 @@ export const criarConvite = createServerFn({ method: "POST" })
       from_nome: nomeDe(ctx, self),
       direcao: data.direcao,
       blocos: data.blocos,
+      trip_ids: await tripsDoDono(db, ctx.userId, data.tripIds),
       person_id: data.personId ?? null,
       token_hash: await sha256Hex(token),
       token_cifrado: await cifrar(token),
@@ -104,6 +106,14 @@ export const criarConvite = createServerFn({ method: "POST" })
     if (error) throw new Error("FALHA");
     return { token };
   });
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function tripsDoDono(db: any, owner: string, ids: string[] | null | undefined) {
+  if (ids == null) return null; // todas
+  if (!ids.length) return [];
+  const { data } = await db.from("trip").select("id").eq("owner_id", owner).in("id", ids);
+  return ((data ?? []) as { id: string }[]).map((t) => t.id);
+}
 
 async function acharConvite(token: string) {
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return null;
@@ -133,7 +143,7 @@ export const verConvite = createServerFn({ method: "POST" })
 
 export const aceitarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ token: z.string().max(100), blocos: blocosSchema }).parse(d))
+  .inputValidator((d) => z.object({ token: z.string().max(100), blocos: blocosSchema, tripIds: tripsSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const ctx = context as Ctx;
     const c = await acharConvite(data.token);
@@ -180,6 +190,7 @@ export const aceitarConvite = createServerFn({ method: "POST" })
     const [owner_id, grantee_id, owner_nome, grantee_nome] =
       c.direcao === "pedido" ? [ctx.userId, c.from_id, meuNome, c.from_nome] : [c.from_id, ctx.userId, c.from_nome, meuNome];
     const blocos = c.direcao === "pedido" ? data.blocos : (c.blocos as string[]);
+    const trip_ids = c.direcao === "pedido" ? await tripsDoDono(db, ctx.userId, data.tripIds) : (c.trip_ids as string[] | null);
     await db
       .from("share_grant")
       .update({ status: "revogado", revogado_em: new Date().toISOString() })
@@ -187,7 +198,7 @@ export const aceitarConvite = createServerFn({ method: "POST" })
       .eq("grantee_id", grantee_id)
       .eq("status", "ativo");
     if (blocos.length) {
-      const { error } = await db.from("share_grant").insert({ owner_id, grantee_id, owner_nome, grantee_nome, blocos });
+      const { error } = await db.from("share_grant").insert({ owner_id, grantee_id, owner_nome, grantee_nome, blocos, trip_ids });
       if (error) throw new Error("FALHA");
     }
     await db.from("share_invite").update({ usado_em: new Date().toISOString(), usado_por: ctx.userId }).eq("id", c.id);
@@ -197,11 +208,12 @@ export const aceitarConvite = createServerFn({ method: "POST" })
 /** Dono muda os blocos de um compartilhamento que ele deu. */
 export const mudarBlocos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), blocos: blocosSchema }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid(), blocos: blocosSchema, tripIds: tripsSchema }).parse(d))
   .handler(async ({ data, context }) => {
+    const trip_ids = await tripsDoDono(context.supabase, context.userId, data.tripIds);
     const { error } = await context.supabase
       .from("share_grant")
-      .update(data.blocos.length ? { blocos: data.blocos } : { status: "revogado", revogado_em: new Date().toISOString() })
+      .update(data.blocos.length ? { blocos: data.blocos, trip_ids } : { status: "revogado", revogado_em: new Date().toISOString() })
       .eq("id", data.id)
       .eq("owner_id", context.userId);
     if (error) throw new Error("FALHA");
