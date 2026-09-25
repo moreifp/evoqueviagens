@@ -22,6 +22,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
 import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
@@ -112,6 +113,11 @@ const ConviteTokenRoute = ConviteTokenRouteImport.update({
 const TripIdRoute = TripIdRouteImport.update({
   id: '/trip/$id',
   path: '/trip/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PessoasPidIndexRoute = PessoasPidIndexRouteImport.update({
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -459,6 +470,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/convite/$token'
     | '/trip/$id'
+    | '/.lovable/oauth/consent'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -500,6 +512,7 @@ export interface RootRouteChildren {
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
@@ -602,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/trip/$id'
       fullPath: '/trip/$id'
       preLoaderRoute: typeof TripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pessoas/$pid/': {
@@ -838,6 +858,7 @@ const rootRouteChildren: RootRouteChildren = {
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
