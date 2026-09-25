@@ -127,7 +127,6 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
-        {self && <AvisosPush />}
 
         <section>
           <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Documentos</h2>{owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Plus size={24} /> Adicionar</Link>}</div>
