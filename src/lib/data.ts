@@ -38,6 +38,7 @@ export type Ticket = {
   criado_por: string | null;
   grupo_reserva: string | null;
   expense_id: string | null;
+  bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null;
   passageiros: Passageiro[];
 };
 
@@ -49,6 +50,7 @@ export type Passageiro = {
   assento: string | null;
   eticket: string | null;
   loyalty_account_id: string | null;
+  bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null;
   deleted_at?: string | null;
 };
 
