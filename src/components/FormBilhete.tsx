@@ -15,7 +15,7 @@ import type { Op } from "@/lib/outbox";
 
 type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string };
 
-export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Ticket }) {
+export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; inicial?: Ticket; copiarDe?: Ticket }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
@@ -25,7 +25,7 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     companhia: inicial?.companhia ?? "",
     numero: inicial?.numero ?? "",
     localizador: inicial?.localizador ?? "",
-    grupo_reserva: inicial?.grupo_reserva ?? "",
+    grupo_reserva: inicial?.grupo_reserva ?? copiarDe?.grupo_reserva ?? "",
     origem_iata: inicial?.origem_iata ?? "",
     destino_iata: inicial?.destino_iata ?? "",
     origem_cidade: inicial?.origem_cidade ?? "",
@@ -36,8 +36,8 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     chegada: inicial ? utcParaLocal(inicial.chegada_utc, inicial.chegada_tz) : "",
   }));
   const [pax, setPax] = useState<Pax[]>(() =>
-    (inicial?.passageiros ?? []).map((p) => ({
-      id: p.id,
+    (inicial?.passageiros ?? copiarDe?.passageiros ?? []).map((p) => ({
+      id: inicial ? p.id : novoId(),
       person_id: p.person_id,
       nome_no_bilhete: p.nome_no_bilhete ?? "",
       assento: p.assento ?? "",
