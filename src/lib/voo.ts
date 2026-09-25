@@ -28,13 +28,13 @@ export function codigoCompanhia(companhia: string | null | undefined): string | 
 
 /** "TP" + "088" → "TP88". Aceita também número já com a companhia ("TP 088"). */
 export function numeroVoo(companhia: string | null | undefined, numero: string | null | undefined): string | null {
-  const bruto = (numero ?? "").toUpperCase().replace(/\s+/g, "");
-  const m = /^([A-Z0-9]{2})?0*(\d{1,4}[A-Z]?)$/.exec(bruto.replace(/^([A-Z]{2}|[A-Z]\d|\d[A-Z])(?=\d)/, "$1"));
+  const bruto = (numero ?? "").toUpperCase().replace(/[\s-]+/g, "");
   const embutido = /^([A-Z]{2}|[A-Z]\d|\d[A-Z])0*(\d{1,4}[A-Z]?)$/.exec(bruto);
-  if (embutido && !/^\d+$/.test(bruto)) return `${embutido[1]}${embutido[2]}`;
+  if (embutido && !/^\d/.test(bruto.slice(0, 2).replace(/^\d[A-Z]$/, "X"))) return `${embutido[1]}${embutido[2]}`;
+  const so = /^0*(\d{1,4}[A-Z]?)$/.exec(bruto);
   const cod = codigoCompanhia(companhia);
-  if (!cod || !m) return null;
-  return `${cod}${m[2]}`;
+  if (!cod || !so) return embutido ? `${embutido[1]}${embutido[2]}` : null;
+  return `${cod}${so[1]}`;
 }
 
 /** Data local (YYYY-MM-DD) da partida no fuso da origem. */
