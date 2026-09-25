@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -35,6 +35,13 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     (inicial?.quartos ?? []).map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes.map((g) => ({ id: g.id, person_id: g.person_id })) })),
   );
   const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    if (inicial) return;
+    const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
+    sessionStorage.removeItem(`evoque-import-${tripId}`);
+    const x = JSON.parse(raw) as Record<string, string | number | null>;
+    setF((v) => ({ ...v, nome: String(x.titulo ?? ""), cidade: String(x.cidade ?? ""), endereco: String(x.local ?? ""), localizador: String(x.localizador ?? ""), checkin: String(x.inicio ?? ""), checkout: String(x.fim ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL"), cancelamento_gratis_ate: String(x.cancelamento_gratis_ate ?? "") }));
+  }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);

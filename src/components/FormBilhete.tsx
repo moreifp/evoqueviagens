@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -45,6 +45,13 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
     })),
   );
   const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    if (inicial) return;
+    const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
+    sessionStorage.removeItem(`evoque-import-${tripId}`);
+    const x = JSON.parse(raw) as Record<string, string | null>;
+    setF((v) => ({ ...v, tipo: x.tipo === "trem" || x.tipo === "onibus" ? x.tipo : "voo", companhia: x.companhia ?? "", numero: x.numero ?? "", localizador: x.localizador ?? "", origem_iata: x.origem_iata ?? "", destino_iata: x.destino_iata ?? "", origem_cidade: x.origem_cidade ?? "", destino_cidade: x.destino_cidade ?? "", partida: x.inicio ?? "", chegada: x.fim ?? "" }));
+  }, [inicial, tripId]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nomeDoc = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
