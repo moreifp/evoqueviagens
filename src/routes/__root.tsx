@@ -40,6 +40,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const [atualizando, setAtualizando] = useState(false);
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // Registra a pilha completa no servidor para diagnóstico.
+    void import("@/lib/cadastro.functions")
+      .then(({ relatarErro }) =>
+        relatarErro({
+          data: {
+            onde: `tela:${location.pathname.slice(0, 50)}`,
+            msg: `${String(error?.message ?? error)} | ${String(error?.stack ?? "").slice(0, 850)}`.slice(0, 1000),
+            ua: navigator.userAgent.slice(0, 300),
+          },
+        }),
+      )
+      .catch(() => {});
     // Erro de tela logo após uma publicação quase sempre é versão velha guardada no
     // aparelho (arquivos do app trocados no servidor). Recarrega uma vez, limpando
     // o service worker, para buscar a versão nova — em vez de só mostrar o erro.
