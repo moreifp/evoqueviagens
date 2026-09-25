@@ -6,7 +6,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Passageiro, type Ticket } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
-import { aviso, diffCampos, diffFilhos, enviar, naTela, novoId } from "@/lib/itens";
+import { aviso, diffCampos, diffFilhos, enviar, naTela, noRoteiro, novoId } from "@/lib/itens";
 import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import { CampoAeroporto } from "@/components/CampoAeroporto";
@@ -120,9 +120,7 @@ export function FormBilhete({ tripId, inicial }: { tripId: string; inicial?: Tic
       detalhe: true,
       editar: true,
     };
-    naTela<ItemRoteiro & { id: string }>(qc, roteiroQuery(tripId).queryKey, (l) =>
-      [...l.filter((x) => x.item_id !== id), { ...item, id } as ItemRoteiro & { id: string }].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)),
-    );
+    noRoteiro(qc, tripId, item);
 
     try {
       const r = await enviar(ops);

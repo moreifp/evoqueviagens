@@ -1,5 +1,6 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { enfileirar, mutar, type Op } from "./outbox";
+import type { ItemRoteiro } from "./data";
 
 /**
  * Gravação de itens da viagem com linhas filhas (passageiros, quartos, hóspedes, pessoas da reserva).
@@ -51,9 +52,20 @@ export function diffCampos(antes: Record<string, unknown> | null, depois: Record
 }
 
 /** Atualiza uma lista em cache na hora (com ou sem internet). */
-export function naTela<T extends { id: string }>(qc: QueryClient, key: QueryKey, f: (l: T[]) => T[]) {
+export function naTela<T>(qc: QueryClient, key: QueryKey, f: (l: T[]) => T[]) {
   void qc.cancelQueries({ queryKey: key });
   qc.setQueryData<T[]>(key, (l) => f(l ?? []));
 }
 
 export const aviso = (r: "salvo" | "fila", ok: string) => (r === "fila" ? "Sem internet · salvo no aparelho" : ok);
+
+/** Coloca/atualiza um item no roteiro guardado (para lista, auditor e offline). */
+export function noRoteiro(qc: QueryClient, tripId: string, item: ItemRoteiro) {
+  naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) =>
+    [...l.filter((x) => x.item_id !== item.item_id), item].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)),
+  );
+}
+
+export function tiraDoRoteiro(qc: QueryClient, tripId: string, itemId: string) {
+  naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) => l.filter((x) => x.item_id !== itemId));
+}
