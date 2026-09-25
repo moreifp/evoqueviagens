@@ -50,6 +50,13 @@
       "when": 1790299933016,
       "tag": "0006_trip_read_owner_direto",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790300830185,
+      "tag": "0007_share_security_trip_scope",
+      "breakpoints": true
     }
   ]
 }

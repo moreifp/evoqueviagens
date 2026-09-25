@@ -18,7 +18,6 @@ import { Route as RestaurantesRouteImport } from './routes/restaurantes'
 import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
-import { Route as PessoasConvidarRouteImport } from './routes/pessoas.convidar'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
@@ -76,11 +75,6 @@ const CTokenRoute = CTokenRouteImport.update({
 const ConviteTokenRoute = ConviteTokenRouteImport.update({
   id: '/convite/$token',
   path: '/convite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PessoasConvidarRoute = PessoasConvidarRouteImport.update({
-  id: '/pessoas/convidar',
-  path: '/pessoas/convidar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TripIdRoute = TripIdRouteImport.update({
@@ -159,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/viagens': typeof ViagensRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/pessoas/convidar': typeof PessoasConvidarRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
@@ -184,7 +177,6 @@ export interface FileRoutesByTo {
   '/viagens': typeof ViagensRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/pessoas/convidar': typeof PessoasConvidarRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
@@ -209,7 +201,6 @@ export interface FileRoutesById {
   '/viagens': typeof ViagensRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/pessoas/convidar': typeof PessoasConvidarRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
@@ -236,7 +227,6 @@ export interface FileRouteTypes {
     | '/viagens'
     | '/c/$token'
     | '/convite/$token'
-    | '/pessoas/convidar'
     | '/trip/$id'
     | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
@@ -261,7 +251,6 @@ export interface FileRouteTypes {
     | '/viagens'
     | '/c/$token'
     | '/convite/$token'
-    | '/pessoas/convidar'
     | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
@@ -285,7 +274,6 @@ export interface FileRouteTypes {
     | '/viagens'
     | '/c/$token'
     | '/convite/$token'
-    | '/pessoas/convidar'
     | '/trip/$id'
     | '/pessoas/$pid/conferir'
     | '/trip/$id/pessoas'
@@ -311,7 +299,6 @@ export interface RootRouteChildren {
   ViagensRoute: typeof ViagensRoute
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
-  PessoasConvidarRoute: typeof PessoasConvidarRoute
   TripIdRoute: typeof TripIdRouteWithChildren
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
@@ -380,13 +367,6 @@ declare module '@tanstack/react-router' {
       path: '/convite/$token'
       fullPath: '/convite/$token'
       preLoaderRoute: typeof ConviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pessoas/convidar': {
-      id: '/pessoas/convidar'
-      path: '/pessoas/convidar'
-      fullPath: '/pessoas/convidar'
-      preLoaderRoute: typeof PessoasConvidarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trip/$id': {
@@ -522,7 +502,6 @@ const rootRouteChildren: RootRouteChildren = {
   ViagensRoute: ViagensRoute,
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
-  PessoasConvidarRoute: PessoasConvidarRoute,
   TripIdRoute: TripIdRouteWithChildren,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,

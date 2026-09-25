@@ -32,7 +32,7 @@ export type PessoaRow = {
   account_id: string | null;
   kind: "self" | "dependent" | "precadastro";
 };
-export type GrantRow = { id: string; owner_id: string; grantee_id: string; owner_nome: string | null; grantee_nome: string | null; blocos: string[]; status: string; created_at: string };
+export type GrantRow = { id: string; owner_id: string; grantee_id: string; owner_nome: string | null; grantee_nome: string | null; blocos: string[]; trip_ids: string[] | null; status: string; created_at: string };
 
 export type DocRow = {
   id: string;

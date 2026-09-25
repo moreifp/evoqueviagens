@@ -34,12 +34,13 @@ function Convite() {
   const aceitar = useServerFn(aceitarConvite);
   const { data: c, isLoading } = useQuery({ queryKey: ["convite", token], queryFn: () => ver({ data: { token } }), retry: 1 });
   const [blocos, setBlocos] = useState<Bloco[]>(TODOS_BLOCOS);
+  const [trips, setTrips] = useState<string[] | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   async function ok(lista: Bloco[]) {
     setEnviando(true);
     try {
-      await aceitar({ data: { token, blocos: lista } });
+      await aceitar({ data: { token, blocos: lista, tripIds: trips } });
       await qc.invalidateQueries({ queryKey: ["pessoas"] });
       toast.success(lista.length ? "Pronto! Compartilhamento ativo." : "Tudo certo.");
       navigate({ to: "/" });
@@ -71,7 +72,7 @@ function Convite() {
               </p>
             )}
             <p className="text-lg text-foreground">Escolha o que {c.deNome} pode ver. Dá para mudar ou revogar quando quiser.</p>
-            <EscolherBlocos valor={blocos} onChange={setBlocos} />
+            <EscolherBlocos valor={blocos} onChange={setBlocos} tripIds={trips} onTrips={setTrips} />
             <button
               onClick={() => ok(blocos)}
               disabled={enviando}

@@ -184,10 +184,10 @@ function Pessoas() {
               );
             })}
 
-            {titulo("Pré-cadastros", "Pessoas convidadas que ainda não criaram a conta.")}
+            {grupos.pre.length > 0 && titulo("Pré-cadastros", "Pessoas convidadas que ainda não criaram a conta.")}
             {grupos.pre.map((i) => cartao(i, true, true))}
             <Link
-              to="/pessoas/convidar"
+              to="/compartilhamentos"
               className="tap flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-lg font-bold text-foreground"
             >
               <UserPlus size={26} strokeWidth={2.2} />
