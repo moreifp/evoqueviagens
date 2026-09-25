@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { EditarItem } from "@/components/EditarItem";
-import { abrirAnexo } from "@/lib/anexosOffline";
-import { toast } from "sonner";
+import { AcoesItem } from "@/components/AcoesItem";
+import { AnexosItem } from "@/components/AnexosItem";
+import { CartaoResumo } from "@/components/CartaoResumo";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { StatusVoo } from "@/components/StatusVoo";
 import type { StatusVoo as StatusVooT } from "@/lib/voo";
 import { useState } from "react";
-import { Plane, TrainFront, Bus, Car, FileText, Plus, ChevronDown } from "lucide-react";
+import { Plane, TrainFront, Bus, Car, Plus, ChevronDown } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { flightStatusQuery, ticketsQuery, type Ticket } from "@/lib/data";
+import { flightStatusQuery, membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Ticket } from "@/lib/data";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/bilhetes/")({
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/trip/$id/bilhetes/")({
       { name: "description", content: "Cartões de embarque da viagem, agrupados por dia." },
       { property: "og:title", content: "Bilhetes" },
       { property: "og:description", content: "Cartões de embarque da viagem, agrupados por dia." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Bilhetes,
@@ -35,12 +37,25 @@ const ICONE: Record<string, typeof Plane> = {
 
 function Bilhetes() {
   const { id } = Route.useParams();
-  const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
+  const { data: detalhes } = useSuspenseQuery(ticketsQuery(id));
+  const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
+  const { data: membros } = useSuspenseQuery(membersQuery(id));
   const { data: status } = useQuery(flightStatusQuery(id));
+  const porId = new Map(detalhes.map((b) => [b.id, b]));
+  const itens = roteiro.filter((r) => r.item_tipo === "ticket");
+  for (const b of detalhes)
+    if (!itens.some((r) => r.item_id === b.id))
+      itens.push({ item_tipo: "ticket", item_id: b.id, subtipo: b.tipo, titulo: "", inicio_utc: b.partida_utc, inicio_tz: b.partida_tz, fim_utc: b.chegada_utc, fim_tz: b.chegada_tz, cidade: null, origem_iata: null, destino_iata: null, companhia: null, numero: null, pessoas: [], detalhe: true, editar: true });
+  itens.sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc));
+  const bilhetes = itens;
+  const nome = (pid: string) => {
+    const m = membros.find((x) => x.person_id === pid);
+    return m ? m.apelido || m.nome : "?";
+  };
 
-  const grupos = new Map<string, Ticket[]>();
-  for (const b of bilhetes) {
-    const dia = chaveDia(b.partida_utc, b.partida_tz);
+  const grupos = new Map<string, ItemRoteiro[]>();
+  for (const b of itens) {
+    const dia = chaveDia(b.inicio_utc, b.inicio_tz);
     grupos.set(dia, [...(grupos.get(dia) ?? []), b]);
   }
 
@@ -59,9 +74,10 @@ function Bilhetes() {
               {dataBRCurta(dia)}
             </h2>
             <div className="mt-2 space-y-3">
-              {itens.map((b) => (
-                <CartaoEmbarque key={b.id} b={b} s={status?.[b.id]} />
-              ))}
+              {itens.map((r) => {
+                const b = porId.get(r.item_id);
+                return b ? <CartaoEmbarque key={r.item_id} b={b} s={status?.[b.id]} editar={r.editar} nome={nome} /> : <CartaoResumo key={r.item_id} r={r} />;
+              })}
             </div>
           </section>
         ))}
@@ -79,7 +95,7 @@ function Bilhetes() {
   );
 }
 
-function CartaoEmbarque({ b, s }: { b: Ticket; s?: StatusVooT }) {
+function CartaoEmbarque({ b, s, editar, nome }: { b: Ticket; s?: StatusVooT; editar: boolean; nome: (pid: string) => string }) {
   const [aberto, setAberto] = useState(false);
   const Icone = ICONE[b.tipo] ?? Plane;
   const [hh, mm] = horaNoFuso(b.partida_utc, b.partida_tz).split(":");
@@ -113,21 +129,18 @@ function CartaoEmbarque({ b, s }: { b: Ticket; s?: StatusVooT }) {
 
       <StatusVoo b={b} s={s} />
 
-      {b.anexo_url && (
-        <button
-          onClick={() => void abrirAnexo(b.anexo_url!).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
-          className="tap flex w-full items-center justify-center gap-3 border-t border-border bg-muted text-lg font-bold text-foreground"
-        >
-          <FileText size={28} strokeWidth={2.2} />
-          Ver documento
-        </button>
+      {b.passageiros.length > 0 && (
+        <ul className="space-y-2 border-t border-border p-4">
+          {b.passageiros.map((p) => (
+            <li key={p.id} className="flex items-baseline justify-between gap-3 text-lg">
+              <span className="font-bold text-foreground">{nome(p.person_id)}</span>
+              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}</span>
+            </li>
+          ))}
+        </ul>
       )}
-      <EditarItem
-        tabela="ticket"
-        item={b as unknown as { id: string } & Record<string, unknown>}
-        queryKey={ticketsQuery(b.trip_id).queryKey}
-        campos={[{ chave: "localizador", rotulo: "Localizador" }, { chave: "assento", rotulo: "Assento" }, { chave: "nome_no_bilhete", rotulo: "Passageiro" }]}
-      />
+      <AnexosItem tripId={b.trip_id} itemTipo="ticket" itemId={b.id} podeEditar={editar} />
+      {editar && <AcoesItem tabela="ticket" id={b.id} tripId={b.trip_id} editarPara="/trip/$id/bilhetes/novo" queryKey={ticketsQuery(b.trip_id).queryKey} />}
 
       <button
         onClick={() => setAberto((a) => !a)}
@@ -138,8 +151,9 @@ function CartaoEmbarque({ b, s }: { b: Ticket; s?: StatusVooT }) {
       </button>
       {aberto && (
         <dl className="space-y-2 border-t border-border p-4 text-base">
-          <Linha rotulo="Assento" valor={b.assento} />
-          <Linha rotulo="Passageiro" valor={b.nome_no_bilhete} />
+          {b.passageiros.map((p) => (
+            <Linha key={p.id} rotulo={nome(p.person_id)} valor={[p.nome_no_bilhete, p.eticket && `e-ticket ${p.eticket}`].filter(Boolean).join(" · ") || null} />
+          ))}
           <Linha rotulo="Saída" valor={b.origem_cidade} />
           <Linha rotulo="Destino" valor={b.destino_cidade} />
         </dl>

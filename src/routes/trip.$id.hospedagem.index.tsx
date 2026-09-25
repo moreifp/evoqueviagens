@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { EditarItem } from "@/components/EditarItem";
-import { abrirAnexo } from "@/lib/anexosOffline";
-import { toast } from "sonner";
+import { AcoesItem } from "@/components/AcoesItem";
+import { AnexosItem } from "@/components/AnexosItem";
+import { CartaoResumo } from "@/components/CartaoResumo";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { BedDouble, FileText, Plus } from "lucide-react";
+import { BedDouble, Plus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { lodgingsQuery } from "@/lib/data";
+import { lodgingsQuery, membersQuery, roteiroQuery } from "@/lib/data";
 import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/hospedagem/")({
@@ -15,6 +15,8 @@ export const Route = createFileRoute("/trip/$id/hospedagem/")({
       { name: "description", content: "Estadias da viagem com entrada, saída e localizador." },
       { property: "og:title", content: "Hospedagem" },
       { property: "og:description", content: "Estadias da viagem com entrada, saída e localizador." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Hospedagem,
@@ -24,18 +26,31 @@ export const Route = createFileRoute("/trip/$id/hospedagem/")({
 
 function Hospedagem() {
   const { id } = Route.useParams();
-  const { data: estadias } = useSuspenseQuery(lodgingsQuery(id));
+  const { data: detalhes } = useSuspenseQuery(lodgingsQuery(id));
+  const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
+  const { data: membros } = useSuspenseQuery(membersQuery(id));
+  const porId = new Map(detalhes.map((h) => [h.id, h]));
+  const itens = roteiro.filter((r) => r.item_tipo === "lodging");
+  // Itens recém-criados sem internet ainda podem não estar no roteiro guardado.
+  for (const h of detalhes) if (!itens.some((r) => r.item_id === h.id)) itens.push({ item_tipo: "lodging", item_id: h.id, subtipo: "hotel", titulo: h.nome, inicio_utc: h.checkin, inicio_tz: "UTC", fim_utc: h.checkout, fim_tz: "UTC", cidade: h.cidade, origem_iata: null, destino_iata: null, companhia: null, numero: null, pessoas: [], detalhe: true, editar: true });
+  const nome = (pid: string) => {
+    const m = membros.find((x) => x.person_id === pid);
+    return m ? m.apelido || m.nome : "?";
+  };
 
   return (
     <>
       <Topo titulo="Hospedagem" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-4 px-4 pt-4">
-        {estadias.length === 0 && (
+        {itens.length === 0 && (
           <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">
             Nenhuma estadia ainda
           </p>
         )}
-        {estadias.map((h) => (
+        {itens.map((r) => {
+          const h = porId.get(r.item_id);
+          if (!h) return <CartaoResumo key={r.item_id} r={r} />;
+          return (
           <article key={h.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
             <div className="flex gap-4 p-4">
               <BedDouble size={28} strokeWidth={2.2} className="mt-1 text-accent" />
@@ -66,23 +81,22 @@ function Hospedagem() {
                 )}
               </div>
             </div>
-            {h.anexo_url && (
-              <button
-                onClick={() => void abrirAnexo(h.anexo_url!).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
-                className="tap flex w-full items-center justify-center gap-3 border-t border-border bg-muted text-lg font-bold text-foreground"
-              >
-                <FileText size={28} strokeWidth={2.2} />
-                Ver voucher
-              </button>
+            {h.quartos.length > 0 && (
+              <ul className="space-y-2 border-t border-border p-4">
+                {h.quartos.map((q) => (
+                  <li key={q.id} className="text-lg">
+                    <span className="font-bold">{q.nome}</span>
+                    {q.tipo ? <span className="text-muted-foreground"> · {q.tipo}</span> : null}
+                    <span className="block text-foreground">{q.hospedes.map((g) => nome(g.person_id)).join(", ") || "Sem hóspedes"}</span>
+                  </li>
+                ))}
+              </ul>
             )}
-            <EditarItem
-              tabela="lodging"
-              item={h as unknown as { id: string } & Record<string, unknown>}
-              queryKey={lodgingsQuery(id).queryKey}
-              campos={[{ chave: "nome", rotulo: "Nome" }, { chave: "localizador", rotulo: "Localizador" }, { chave: "endereco", rotulo: "Endereço" }]}
-            />
+            <AnexosItem tripId={id} itemTipo="lodging" itemId={h.id} podeEditar={r.editar} />
+            {r.editar && <AcoesItem tabela="lodging" id={h.id} tripId={id} editarPara="/trip/$id/hospedagem/nova" queryKey={lodgingsQuery(id).queryKey} />}
           </article>
-        ))}
+          );
+        })}
 
         <Link
           to="/trip/$id/hospedagem/nova"
