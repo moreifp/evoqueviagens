@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import coastAsset from "@/assets/marketing/coast-editorial.webp.asset.json";
 import trainAsset from "@/assets/marketing/train-editorial.webp.asset.json";
 import { HOSTS_LANDING } from "@/lib/site";
@@ -59,24 +59,38 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
     if (!root) return;
     const menu = root.querySelector<HTMLButtonElement>(".menu-toggle");
     const nav = root.querySelector<HTMLElement>(".mobile-nav");
-    const themeButton = root.querySelector<HTMLButtonElement>(".theme-toggle");
 
     const closeMenu = () => {
       nav?.classList.remove("open");
       menu?.setAttribute("aria-expanded", "false");
     };
-    const toggleMenu = () => {
-      const open = menu?.getAttribute("aria-expanded") !== "true";
-      menu?.setAttribute("aria-expanded", String(open));
-      nav?.classList.toggle("open", open);
-    };
-    const handleNavClick = (event: Event) => {
-      if ((event.target as Element | null)?.closest("a")) closeMenu();
-    };
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeMenu();
     };
-    const toggleTheme = () => {
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [html]);
+
+  const handleClick = async (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as Element;
+    const root = rootRef.current;
+    if (!root) return;
+    const menu = root.querySelector<HTMLButtonElement>(".menu-toggle");
+    const nav = root.querySelector<HTMLElement>(".mobile-nav");
+
+    if (target.closest(".menu-toggle")) {
+      const open = menu?.getAttribute("aria-expanded") !== "true";
+      menu?.setAttribute("aria-expanded", String(open));
+      nav?.classList.toggle("open", open);
+      return;
+    }
+    if (target.closest(".mobile-nav a")) {
+      menu?.setAttribute("aria-expanded", "false");
+      nav?.classList.remove("open");
+    }
+    if (target.closest(".theme-toggle")) {
       setTheme((current) => {
         const next = current === "dark" ? "light" : "dark";
         try {
@@ -86,32 +100,18 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
         }
         return next;
       });
-    };
-    const handleCopy = async (event: Event) => {
-      const button = (event.target as Element | null)?.closest<HTMLButtonElement>("[data-copy]");
-      if (!button) return;
-      const status = button.parentElement?.nextElementSibling;
-      try {
-        await navigator.clipboard.writeText(button.dataset.copy ?? "");
-        if (status) status.textContent = isEnglish ? "Copied." : "Copiado.";
-      } catch {
-        if (status) status.textContent = isEnglish ? "Select and copy the text above." : "Selecione e copie o texto acima.";
-      }
-    };
-
-    menu?.addEventListener("click", toggleMenu);
-    nav?.addEventListener("click", handleNavClick);
-    themeButton?.addEventListener("click", toggleTheme);
-    root.addEventListener("click", handleCopy);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      menu?.removeEventListener("click", toggleMenu);
-      nav?.removeEventListener("click", handleNavClick);
-      themeButton?.removeEventListener("click", toggleTheme);
-      root.removeEventListener("click", handleCopy);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [html, isEnglish]);
+      return;
+    }
+    const copyButton = target.closest<HTMLButtonElement>("[data-copy]");
+    if (!copyButton) return;
+    const status = copyButton.parentElement?.nextElementSibling;
+    try {
+      await navigator.clipboard.writeText(copyButton.dataset.copy ?? "");
+      if (status) status.textContent = isEnglish ? "Copied." : "Copiado.";
+    } catch {
+      if (status) status.textContent = isEnglish ? "Select and copy the text above." : "Selecione e copie o texto acima.";
+    }
+  };
 
   useEffect(() => {
     const button = rootRef.current?.querySelector<HTMLButtonElement>(".theme-toggle");
@@ -128,6 +128,7 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
       className="marketing-site"
       data-theme={theme}
       lang={isEnglish ? "en" : "pt-BR"}
+      onClick={handleClick}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
