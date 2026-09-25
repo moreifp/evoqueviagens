@@ -1,8 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User, Users, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
+import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
 import { useConexao } from "@/lib/outbox";
-import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
 
 export function Topo({
   titulo,
@@ -29,47 +27,12 @@ export function Topo({
         <span className="w-2" />
       )}
       <h1 className="flex-1 truncate text-2xl">{titulo}</h1>
-      <Avatar />
     </header>
   );
 }
 
 export function Avatar() {
-  const [aberto, setAberto] = useState(false);
-  const navigate = useNavigate();
-  return (
-    <div className="relative">
-      <button
-        aria-label="Perfil"
-        onClick={() => setAberto((a) => !a)}
-        className="tap flex flex-col items-center justify-center rounded-full text-foreground"
-      >
-        <User size={28} strokeWidth={2.2} />
-        <span className="text-xs font-semibold">Perfil</span>
-      </button>
-      {aberto && (
-        <div className="shadow-medium absolute right-0 top-full z-30 mt-1 w-64 rounded-xl border border-border bg-card p-2">
-          <Link
-            to="/perfil"
-            onClick={() => setAberto(false)}
-            className="tap flex w-full items-center rounded-lg px-4 text-left text-lg font-semibold text-foreground"
-          >
-            Minha conta
-          </Link>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              setAberto(false);
-              navigate({ to: "/" });
-            }}
-            className="tap w-full rounded-lg px-4 text-left text-lg font-semibold text-foreground"
-          >
-            Sair
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }
 
 const ABAS = [
@@ -118,7 +81,7 @@ export function BotaoFlutuante({ tripId }: { tripId: string }) {
 }
 
 const ABAS_APP = [
-  { to: "/", rotulo: "Pessoas", Icone: Users, exact: true },
+  { to: "/", rotulo: "Eu", Icone: User, exact: true },
   { to: "/viagens", rotulo: "Viagens", Icone: Plane, exact: false },
   { to: "/restaurantes", rotulo: "Restaurantes", Icone: Utensils, exact: false },
   { to: "/despesas", rotulo: "Despesas", Icone: Wallet, exact: false },

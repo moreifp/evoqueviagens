@@ -174,10 +174,10 @@ function RootComponent() {
         queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
         persister: createAsyncStoragePersister({
           storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
-          key: "evoque-cache",
+          key: "evoque-cache-v4",
         }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
-        buster: "evoque-v3",
+        buster: "evoque-eu-v1",
       });
     })();
     // Desativa o cache antigo que podia misturar duas versões do app.
