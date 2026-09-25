@@ -1,7 +1,24 @@
 // Evoque Viagens — service worker escrito à mão.
 // A lista de arquivos do build (self.__EVOQUE_PRECACHE) e a versão (self.__EVOQUE_VERSAO)
 // são geradas a cada build em /sw-precache.js.
+// Nos domínios da landing (o app mudou para app.evoque.global) este worker só se desfaz:
+// apaga os caches do app, sai do ar e recarrega as abas abertas.
+const HOST_SEM_APP = ["evoque.global", "www.evoque.global", "evoqueviagens.lovable.app"].includes(self.location.hostname);
+if (HOST_SEM_APP) {
+  self.addEventListener("install", () => self.skipWaiting());
+  self.addEventListener("activate", (event) => {
+    event.waitUntil((async () => {
+      const nomes = await caches.keys();
+      await Promise.all(nomes.filter((n) => n.startsWith("evoque-")).map((n) => caches.delete(n)));
+      await self.registration.unregister();
+      const abas = await self.clients.matchAll({ type: "window" });
+      abas.forEach((c) => c.navigate(c.url).catch(() => {}));
+    })());
+  });
+}
+
 try {
+  if (HOST_SEM_APP) throw 0;
   importScripts("/sw-precache.js");
 } catch (e) {
   self.__EVOQUE_PRECACHE = [];
@@ -26,7 +43,7 @@ function ignorar(url) {
   return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
 }
 
-self.addEventListener("install", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE);
@@ -45,7 +62,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-self.addEventListener("activate", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const nomes = await caches.keys();
@@ -84,7 +101,7 @@ async function arquivo(request) {
   return r;
 }
 
-self.addEventListener("fetch", (event) => {
+if (!HOST_SEM_APP) self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);

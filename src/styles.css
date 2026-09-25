@@ -38,6 +38,11 @@
   --radius-3xl: calc(var(--radius) + 12px);
 
   --color-navy: var(--navy);
+  --color-ld-navy: var(--ld-navy);
+  --color-ld-sand: var(--ld-sand);
+  --color-ld-teal: var(--ld-teal);
+  --color-ld-olive: var(--ld-olive);
+  --font-wordmark: "Playfair Display", Georgia, serif;
   --color-sand: var(--sand);
   --color-sand-dark: var(--sand-dark);
   --color-olive: var(--olive);
@@ -80,6 +85,11 @@
 
 :root {
   --navy: hsl(210 56% 11%);
+  /* Landing institucional (evoque.global) */
+  --ld-navy: #0c1c2c;
+  --ld-sand: #f6f3ee;
+  --ld-teal: #25606a;
+  --ld-olive: #5d6b2e;
   --sand: hsl(40 40% 85%);
   --sand-dark: hsl(40 30% 75%);
   --olive: hsl(75 35% 36%);

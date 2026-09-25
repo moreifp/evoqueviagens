@@ -10,6 +10,7 @@ import { mutar } from "@/lib/outbox";
 import { aviso, naTela, novoId } from "@/lib/itens";
 import { dataBRCurta } from "@/lib/format";
 import { Campo, inputCls } from "@/components/Form";
+import { origemApp } from "@/lib/site";
 
 export const Route = createFileRoute("/trip/$id/pessoas")({
   head: () => ({
@@ -59,7 +60,7 @@ function Pessoas() {
   const key = membersQuery(id).queryKey;
   const dono = membros.find((m) => m.papel === "owner");
   const datas = `${dataBRCurta(trip.data_inicio)} a ${dataBRCurta(trip.data_fim)}`;
-  const link = typeof window !== "undefined" ? window.location.origin : "https://evoqueviagens.lovable.app";
+  const link = origemApp();
 
   const naViagem = new Set(membros.map((m) => m.person_id));
   const livres = pessoas.filter((p) => !naViagem.has(p.id) && p.kind !== "precadastro");

@@ -12,6 +12,7 @@ import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { mutar } from "@/lib/outbox";
 import { abrirWhatsApp, mensagemLembrete } from "@/lib/links";
 import { supabase } from "@/integrations/supabase/client";
+import { origemApp } from "@/lib/site";
 
 export const Route = createFileRoute("/trip/$id/revisao")({
   head: () => ({
@@ -147,7 +148,7 @@ function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string
         </Link>
       )}
       {k.semConta && (
-        <button onClick={() => abrirWhatsApp(fone, mensagemLembrete("pt", primeiro, `${location.origin}/`))} className="tap mx-4 mb-4 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl border border-border text-lg font-bold">
+        <button onClick={() => abrirWhatsApp(fone, mensagemLembrete("pt", primeiro, `${origemApp()}/`))} className="tap mx-4 mb-4 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl border border-border text-lg font-bold">
           <MessageCircle size={24} /> Lembrar pelo WhatsApp
         </button>
       )}

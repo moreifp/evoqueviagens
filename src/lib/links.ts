@@ -1,8 +1,9 @@
 import { cancelarLink } from "./links.functions";
 import { criarConvite } from "./compartilhar.functions";
+import { origemApp } from "./site";
 
 export function urlDoLink(token: string, _secao?: string) {
-  return `${window.location.origin}/convite/${token}`;
+  return `${origemApp()}/convite/${token}`;
 }
 
 /** Convite estável do pré-cadastro: a pessoa cria a conta, assume a ficha e escolhe o que compartilhar. */

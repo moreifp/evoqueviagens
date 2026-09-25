@@ -43,7 +43,7 @@ function preCacheOffline(): Plugin {
       } catch {
         publicos = [];
       }
-      const lista = [...new Set([...arquivos, ...publicos])].sort();
+      const lista = [...new Set([...arquivos, ...publicos, "/manifest.webmanifest"])].sort();
       const versao = createHash("sha256").update(lista.join("\n")).update(String(Date.now())).digest("hex").slice(0, 12);
       this.emitFile({
         type: "asset",

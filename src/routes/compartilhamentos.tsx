@@ -11,6 +11,7 @@ import { TODOS_BLOCOS, nomeBloco, type Bloco } from "@/lib/blocos";
 import { abrirWhatsApp } from "@/lib/links";
 
 import { ConfiancaViagens } from "@/components/ConvitesRecebidos";
+import { origemApp } from "@/lib/site";
 export const Route = createFileRoute("/compartilhamentos")({ head: () => ({ meta: [
   { title: "Quem vê seus dados — Evoque Viagens" }, { name: "description", content: "Controle quem vê seus dados e viagens." },
   { property: "og:title", content: "Quem vê seus dados — Evoque Viagens" }, { property: "og:description", content: "Compartilhamento privado, revogável e somente leitura." },
@@ -22,7 +23,7 @@ function Compartilhamentos() {
   const given=(data?.grants??[]).filter((g)=>g.owner_id===data?.uid); const received=(data?.grants??[]).filter((g)=>g.grantee_id===data?.uid); const list=tab==="dou"?given:received;
   const tripName=(id:string)=>data?.trips.find((t)=>t.id===id)?.nome??"Viagem";
   function summary(g:(typeof list)[number]){return g.blocos.map((b)=>b==="viagens"?(g.trip_ids===null?"Viagens: todas":`Viagens: ${g.trip_ids.map(tripName).join(", ")}`):nomeBloco(b)).join(" · ");}
-  async function generate(){try{const r=await invite({data:{direcao:mode,blocos:mode==="oferta"?blocks:TODOS_BLOCOS,tripIds:mode==="oferta"?tripIds:null}});setUrl(`${location.origin}/convite/${r.token}`);}catch{toast.error("Não foi possível criar o convite.");}}
+  async function generate(){try{const r=await invite({data:{direcao:mode,blocos:mode==="oferta"?blocks:TODOS_BLOCOS,tripIds:mode==="oferta"?tripIds:null}});setUrl(`${origemApp()}/convite/${r.token}`);}catch{toast.error("Não foi possível criar o convite.");}}
   async function cut(id:string){await revoke({data:{id}});await qc.invalidateQueries({queryKey:["compartilhamentos"]});toast.success("Acesso revogado");}
   async function save(id:string){await change({data:{id,blocos:blocks,tripIds}});setEditing(null);await qc.invalidateQueries({queryKey:["compartilhamentos"]});toast.success("Acesso atualizado");}
   return <div className="min-h-screen bg-background pb-24"><Topo titulo="Quem vê seus dados" voltarPara="/"/><main className="mx-auto max-w-2xl space-y-5 px-4 pt-4"><ConfiancaViagens />
