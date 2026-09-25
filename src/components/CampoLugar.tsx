@@ -6,7 +6,7 @@ import { autocompletarLugar, detalhesLugar, type Lugar, type Sugestao } from "@/
 import { inputCls } from "@/components/Form";
 
 /**
- * Campo de texto com busca de lugares. Espera 300 ms depois da última tecla, pede no mínimo 3 letras
+ * Campo de texto com busca de lugares. Espera 600 ms depois da última tecla, pede no mínimo 3 letras
  * e usa uma sessão por busca (as buscas + o detalhe escolhido contam como uma sessão no Google).
  * Sem internet vira um campo de texto normal.
  */
@@ -61,7 +61,7 @@ export function CampoLugar({
           }
         })
         .catch(() => n === pedido.current && setSug([]));
-    }, 300);
+    }, 600);
     return () => clearTimeout(t);
   }, [valor, online, perto, buscar]);
 
