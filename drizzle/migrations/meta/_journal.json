@@ -134,6 +134,27 @@
       "when": 1790312733019,
       "tag": "0018_conferencia_nomes_unaccent",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790314881915,
+      "tag": "0019_participantes_enviar_receber",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790315097595,
+      "tag": "0020_criado_por_padrao",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790315197804,
+      "tag": "0021_receber_convites_guard",
+      "breakpoints": true
     }
   ]
 }

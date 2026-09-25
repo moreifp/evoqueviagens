@@ -4,6 +4,7 @@ import { Copy, MapPin, Plus } from "lucide-react";
 import { findingsQuery, membersQuery, tripsQuery, type Trip } from "@/lib/data";
 import { dataBRCurta, diasAte } from "@/lib/format";
 import { AvatarGrupo } from "@/components/AvatarGrupo";
+import { ConvitesRecebidos } from "@/components/ConvitesRecebidos";
 
 export const Route = createFileRoute("/viagens")({
   head: () => ({ meta: [
@@ -31,7 +32,7 @@ function Viagens() {
   return <div className="min-h-screen bg-background pb-28">
     <header className="flex items-center gap-3 px-4 py-4"><h1 className="flex-1 text-3xl">Viagens</h1><Link to="/nova-viagem" className="tap flex items-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground"><Plus size={24} /> Nova viagem</Link></header>
     <main className="mx-auto max-w-3xl space-y-7 px-4">
-      <section aria-label="Convites recebidos" className="rounded-[18px] border border-dashed border-border bg-card p-4"><strong className="text-lg">Convites recebidos</strong><p className="text-base text-muted-foreground">Seus próximos convites aparecerão aqui.</p></section>
+      <ConvitesRecebidos />
       {atual ? <Link to="/trip/$id" params={{ id: atual.id }} className="gradient-hero shadow-medium block rounded-[18px] p-5">
         <p className="text-base font-extrabold uppercase">{diasAte(atual.data_inicio) > 0 ? `Em ${diasAte(atual.data_inicio)} dias` : "Em andamento"}</p>
         <h2 className="mt-3 text-3xl">{atual.nome}</h2><p className="mt-2 flex items-center gap-2 text-lg"><MapPin size={23} />{atual.cidades?.join(" · ") || atual.destino || "Cidades a definir"}</p>

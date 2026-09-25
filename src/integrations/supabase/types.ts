@@ -1383,10 +1383,14 @@ export type Database = {
       trip_member: {
         Row: {
           convidado_por: string | null
+          convite_email: string | null
+          convite_idioma: string
+          convite_telefone: string | null
           created_at: string
           deleted_at: string | null
           entrou_em: string
           id: string
+          lembrado_em: string | null
           papel: string
           person_id: string
           respondido_em: string | null
@@ -1395,10 +1399,14 @@ export type Database = {
         }
         Insert: {
           convidado_por?: string | null
+          convite_email?: string | null
+          convite_idioma?: string
+          convite_telefone?: string | null
           created_at?: string
           deleted_at?: string | null
           entrou_em?: string
           id?: string
+          lembrado_em?: string | null
           papel?: string
           person_id: string
           respondido_em?: string | null
@@ -1407,10 +1415,14 @@ export type Database = {
         }
         Update: {
           convidado_por?: string | null
+          convite_email?: string | null
+          convite_idioma?: string
+          convite_telefone?: string | null
           created_at?: string
           deleted_at?: string | null
           entrou_em?: string
           id?: string
+          lembrado_em?: string | null
           papel?: string
           person_id?: string
           respondido_em?: string | null
@@ -1585,12 +1597,65 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      autoria_item: {
+        Args: { _id: string; _tipo: string }
+        Returns: {
+          autor: string
+          editar: boolean
+          sou_eu: boolean
+        }[]
+      }
       conferencia_nomes_voo: {
         Args: { _ticket_id: string }
         Returns: {
           estado: string
           person_id: string
         }[]
+      }
+      convidar_sem_conta: {
+        Args: {
+          _email: string
+          _idioma: string
+          _member: string
+          _nome: string
+          _person: string
+          _telefone: string
+          _trip: string
+        }
+        Returns: string
+      }
+      convites_recebidos: {
+        Args: never
+        Returns: {
+          assentos: string[]
+          data_fim: string
+          data_inicio: string
+          dependente: boolean
+          hoteis: number
+          member_id: string
+          organizador: string
+          organizador_id: string
+          person_id: string
+          pessoa: string
+          quartos: string[]
+          reservas: Json
+          trens: number
+          trip_id: string
+          viagem: string
+          voos: number
+        }[]
+      }
+      duplicar_viagem: {
+        Args: {
+          _cidades: string[]
+          _fim: string
+          _inicio: string
+          _moeda: string
+          _nome: string
+          _novo: string
+          _origem: string
+        }
+        Returns: string
       }
       membros_viagem: {
         Args: { _tid: string }
@@ -1606,6 +1671,7 @@ export type Database = {
           status: string
         }[]
       }
+      receber_convites_por_email: { Args: never; Returns: number }
       roteiro_viagem: {
         Args: { _tid: string }
         Returns: {

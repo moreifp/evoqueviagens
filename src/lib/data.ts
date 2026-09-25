@@ -359,3 +359,54 @@ export const apiAlertaQuery = (tripId: string) =>
     queryKey: ["api_alerta", tripId],
     queryFn: () => unwrap<{ id: string; mensagem: string; created_at: string }[]>(db.from("api_alerta").select("id,mensagem,created_at").eq("trip_id", tripId).order("created_at", { ascending: false }).limit(1)),
   });
+
+type Rpc = { rpc: (f: string, a?: unknown) => Promise<{ data: unknown; error: { message: string } | null }> };
+async function rpc<T>(f: string, a?: unknown): Promise<T> {
+  const { data, error } = await (supabase as unknown as Rpc).rpc(f, a);
+  if (error) throw new Error(error.message);
+  return data as T;
+}
+
+export type ConviteRecebido = {
+  member_id: string; trip_id: string; person_id: string; pessoa: string; dependente: boolean; viagem: string;
+  data_inicio: string; data_fim: string; organizador_id: string; organizador: string;
+  voos: number; assentos: string[]; hoteis: number; quartos: string[]; trens: number; reservas: { tipo: string; papel: string | null }[];
+};
+
+/** Convites esperando resposta (antes, liga ao participante quem entrou com o e-mail do convite). */
+export const convitesQuery = () =>
+  queryOptions({
+    queryKey: ["convites"],
+    queryFn: async () => {
+      if (typeof navigator !== "undefined" && navigator.onLine) await rpc<number>("receber_convites_por_email").catch(() => 0);
+      return (await rpc<ConviteRecebido[] | null>("convites_recebidos")) ?? [];
+    },
+  });
+
+export type Autoria = { autor: string; sou_eu: boolean; editar: boolean };
+export const autoriaQuery = (tipo: string, id: string) =>
+  queryOptions({
+    queryKey: ["autoria", tipo, id],
+    queryFn: async () => ((await rpc<Autoria[] | null>("autoria_item", { _tipo: tipo, _id: id })) ?? [])[0] ?? null,
+  });
+
+export type Confianca = { account_id: string; organizer_id: string; revogado_em: string | null };
+export const confiancaQuery = () =>
+  queryOptions({
+    queryKey: ["trip_trust"],
+    queryFn: () => unwrap<Confianca[]>(db.from("trip_trust").select("account_id, organizer_id, revogado_em")),
+  });
+
+export type ConviteMembro = { id: string; convite_email: string | null; convite_telefone: string | null; convite_idioma: string; lembrado_em: string | null };
+export const convitesMembrosQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["convites_membros", tripId],
+    queryFn: () => unwrap<ConviteMembro[]>(db.from("trip_member").select("id, convite_email, convite_telefone, convite_idioma, lembrado_em").eq("trip_id", tripId).is("deleted_at", null)),
+  });
+
+export type Pedido = { id: string; trip_id: string; person_id: string | null; mensagem: string; enviado_em: string; resolvido_em: string | null };
+export const pedidosQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["pedidos", tripId],
+    queryFn: () => unwrap<Pedido[]>(db.from("trip_notice").select("id, trip_id, person_id, mensagem, enviado_em, resolvido_em").eq("trip_id", tripId).eq("tipo", "pedido_correcao").order("enviado_em", { ascending: false })),
+  });
