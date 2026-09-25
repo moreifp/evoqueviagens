@@ -12,6 +12,7 @@ const VERSAO = self.__EVOQUE_VERSAO || "dev";
 const CACHE = "evoque-app-" + VERSAO;
 const RUNTIME = "evoque-runtime";
 const ANEXOS = "evoque-anexos"; // cópias de anexos gravadas pelo app; nunca apagar aqui
+const LOGOS = "evoque-logos";
 const SHELL = "/__shell";
 const OFFLINE = "/offline.html";
 
@@ -48,7 +49,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const nomes = await caches.keys();
-      await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== RUNTIME && n !== ANEXOS).map((n) => caches.delete(n)));
+      await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== RUNTIME && n !== ANEXOS && n !== LOGOS).map((n) => caches.delete(n)));
       await self.clients.claim();
     })(),
   );
@@ -87,6 +88,17 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  // Logos (Logo.dev): guardados no cache de anexos para abrir sem internet.
+  if (url.hostname === "img.logo.dev") {
+    event.respondWith((async () => {
+      const g = await caches.match(req, { ignoreVary: true });
+      if (g) return g;
+      const r = await fetch(req);
+      if (r.ok || r.type === "opaque") { const c = r.clone(); caches.open(LOGOS).then((x) => x.put(req, c)); }
+      return r;
+    })());
+    return;
+  }
   if (url.origin !== self.location.origin || ignorar(url)) return;
   if (req.mode === "navigate") {
     event.respondWith(navegar(req));

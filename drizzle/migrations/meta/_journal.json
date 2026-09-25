@@ -162,6 +162,13 @@
       "when": 1790317137775,
       "tag": "0022_conferir_pedir_avisos",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790319600132,
+      "tag": "0023_0023_lugares",
+      "breakpoints": true
     }
   ]
 }

@@ -28,3 +28,10 @@
 - [x] Telas: Está tudo certo?, Pedir dados, avisos na tela Eu/Viagens, pedidos recebidos
 - [x] Teste: gatilho forçado a falhar não impede salvar documento
 - [x] Rodar os 10 testes, prints, zero sobras; não publicar
+
+## Lugares e marcas
+- [x] Ligar Google Maps gerenciado; migration 0023 (place_id, site, tz)
+- [x] Campo "Buscar lugar" (hotel, reserva, restaurante) + fuso pela coordenada
+- [x] Abrir no mapa / Como chegar / Ver o dia no mapa
+- [ ] Logos: código pronto; aguarda o dono criar a conexão Logo.dev
+- [x] Teste completo + zero sobras; não publicar

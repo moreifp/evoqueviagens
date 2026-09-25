@@ -71,6 +71,10 @@ export type Reserva = {
   moeda: string | null;
   criado_por: string | null;
   expense_id: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  place_id?: string | null;
+  site?: string | null;
   pessoas: { id: string; reservation_id: string; person_id: string; papel: string | null; deleted_at?: string | null }[];
 };
 
@@ -119,6 +123,11 @@ export type Lodging = {
   anexo_url: string | null;
   criado_por: string | null;
   expense_id: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  place_id?: string | null;
+  site?: string | null;
+  tz?: string | null;
   quartos: Quarto[];
 };
 
@@ -233,6 +242,18 @@ export const reservasQuery = (tripId: string) =>
   });
 
 /** Roteiro para todos os membros: resumo sem localizador, assento, valor nem anexo. */
+export type PontoViagem = { item_tipo: "lodging" | "reservation"; item_id: string; titulo: string; inicio_utc: string; tz: string; lat: number | null; lng: number | null; place_id: string | null };
+
+export const pontosQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["pontos", tripId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: PontoViagem[] | null; error: { message: string } | null }> }).rpc("pontos_viagem", { _tid: tripId });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
 export const roteiroQuery = (tripId: string) =>
   queryOptions({
     queryKey: ["roteiro", tripId],

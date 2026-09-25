@@ -467,9 +467,12 @@ export type Database = {
           moeda: string | null
           nome: string
           origem: string
+          place_id: string | null
           politica_cancelamento: string | null
+          site: string | null
           traveler_person_id: string | null
           trip_id: string
+          tz: string | null
           valor: number | null
         }
         Insert: {
@@ -490,9 +493,12 @@ export type Database = {
           moeda?: string | null
           nome: string
           origem?: string
+          place_id?: string | null
           politica_cancelamento?: string | null
+          site?: string | null
           traveler_person_id?: string | null
           trip_id: string
+          tz?: string | null
           valor?: number | null
         }
         Update: {
@@ -513,9 +519,12 @@ export type Database = {
           moeda?: string | null
           nome?: string
           origem?: string
+          place_id?: string | null
           politica_cancelamento?: string | null
+          site?: string | null
           traveler_person_id?: string | null
           trip_id?: string
+          tz?: string | null
           valor?: number | null
         }
         Relationships: [
@@ -921,6 +930,8 @@ export type Database = {
           localizador: string | null
           moeda: string | null
           origem: string
+          place_id: string | null
+          site: string | null
           tipo: string
           titulo: string
           trip_id: string
@@ -943,6 +954,8 @@ export type Database = {
           localizador?: string | null
           moeda?: string | null
           origem?: string
+          place_id?: string | null
+          site?: string | null
           tipo: string
           titulo: string
           trip_id: string
@@ -965,6 +978,8 @@ export type Database = {
           localizador?: string | null
           moeda?: string | null
           origem?: string
+          place_id?: string | null
+          site?: string | null
           tipo?: string
           titulo?: string
           trip_id?: string
@@ -1774,6 +1789,19 @@ export type Database = {
           _trip: string
         }
         Returns: string
+      }
+      pontos_viagem: {
+        Args: { _tid: string }
+        Returns: {
+          inicio_utc: string
+          item_id: string
+          item_tipo: string
+          lat: number
+          lng: number
+          place_id: string
+          titulo: string
+          tz: string
+        }[]
       }
       receber_convites_por_email: { Args: never; Returns: number }
       responder_pedido: {

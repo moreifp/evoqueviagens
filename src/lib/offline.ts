@@ -1,7 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, avisosMeusQuery, pedidosRecebidosQuery } from "./data";
+import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, avisosMeusQuery, pedidosRecebidosQuery, pontosQuery } from "./data";
+import { logoCia, logoSite } from "./logos";
 import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
 import { guardarAnexo, limparAnexos } from "./anexosOffline";
@@ -78,6 +79,7 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
           qc.fetchQuery({ ...apiAlertaQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...roteiroQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...reservasQuery(t.id), staleTime: 0 }),
+          qc.fetchQuery({ ...pontosQuery(t.id), staleTime: 0 }).catch(() => []),
         ]);
         // Anexos dos itens que a pessoa pode ver (o banco já filtra).
         const anexos = await qc.fetchQuery({ ...anexosQuery(t.id), staleTime: 0 });
@@ -93,6 +95,12 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
         const refs = [...bilhetes.map((b) => b.anexo_url), ...hoteis.map((h) => h.anexo_url)].filter((r): r is string => !!r);
         refs.forEach((r) => manter.add(r));
         await Promise.all(refs.map((r) => guardarAnexo(r)));
+        // Logos das companhias e hotéis (só quando o Logo.dev estiver ligado).
+        const logos = [...bilhetes.map((b) => logoCia(b.companhia, b.numero)), ...hoteis.map((h) => logoSite(h.site))].filter((u): u is string => !!u);
+        if ("caches" in window && logos.length) {
+          const c = await caches.open("evoque-logos");
+          await Promise.allSettled([...new Set(logos)].map(async (u) => { if (!(await c.match(u))) await c.put(u, await fetch(u, { mode: "no-cors" })); }));
+        }
         salvo[t.id] = Date.now();
         emitir({ baixando: estado.baixando.filter((x) => x !== t.id), em: { ...salvo } });
       } catch (e) {
