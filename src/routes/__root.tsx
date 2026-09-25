@@ -174,7 +174,7 @@ function RootComponent() {
         queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
         persister: createAsyncStoragePersister({
           storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
-          key: "evoque-cache-v4",
+          key: "evoque-cache-v5",
         }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
         buster: "evoque-eu-v1",

@@ -114,10 +114,11 @@ export async function saveVaultItem(accountId: string, loyaltyAccountId: string,
   const values = { account_id: accountId, loyalty_account_id: loyaltyAccountId, encrypted_payload: encrypted.ciphertext, iv: encrypted.iv, updated_at: new Date().toISOString() };
   const cached = { ...values, id: crypto.randomUUID(), created_at: new Date().toISOString() } as VaultItem;
   await set(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`, cached);
-  if (!navigator.onLine) throw new Error("Cofre salvo neste aparelho. Conecte para sincronizar.");
+  if (!navigator.onLine) return { localOnly: true as const };
   const { data, error } = await supabase.from("vault_item").upsert(values, { onConflict: "account_id,loyalty_account_id" }).select("*").single();
   if (error) throw new Error(error.message);
   await set(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`, data);
+  return { localOnly: false as const };
 }
 
 export async function readVaultItem(accountId: string, loyaltyAccountId: string) {
