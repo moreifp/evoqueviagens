@@ -88,9 +88,10 @@ function NovaViagem() {
         <Campo rotulo="Nome">
           <input required value={nome} onChange={(e) => setNome(e.target.value)} className={inputCls} />
         </Campo>
-        <Campo rotulo="Cidades">
-          <CampoCidades cidades={cidades} onChange={setCidades} />
-        </Campo>
+        <div role="group" aria-labelledby="rotulo-cidades">
+          <span id="rotulo-cidades" className="text-base font-bold text-foreground">Cidades</span>
+          <div className="mt-2"><CampoCidades cidades={cidades} onChange={setCidades} /></div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Campo rotulo="Início">
             <input type="date" required value={inicio} onChange={(e) => setInicio(e.target.value)} className={inputCls} />
