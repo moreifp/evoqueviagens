@@ -68,6 +68,10 @@ function NovaViagem() {
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
+    if (inicio && fim && fim <= inicio) {
+      toast.error("O fim precisa ser depois do início");
+      return;
+    }
     setSalvando(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -110,10 +114,10 @@ function NovaViagem() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Campo rotulo="Início">
-            <input type="date" required value={inicio} onChange={(e) => setInicio(e.target.value)} className={inputCls} />
+            <input type="date" required value={inicio} min={minInicio} onChange={(e) => mudarInicio(e.target.value)} className={inputCls} />
           </Campo>
           <Campo rotulo="Fim">
-            <input type="date" required value={fim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
+            <input type="date" required value={fim} min={minFim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
           </Campo>
         </div>
         <Campo rotulo="Moeda da viagem">
