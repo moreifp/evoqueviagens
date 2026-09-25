@@ -252,3 +252,21 @@ export const revogar = createServerFn({ method: "POST" })
     if (error) throw new Error("FALHA");
     return { ok: true };
   });
+
+/** Compartilhar de volta com quem já compartilha comigo — sem convite. */
+export const compartilharDeVolta = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ grantId: z.string().uuid(), blocos: blocosSchema.min(1), tripIds: tripsSchema }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const db = await adminClient();
+    const { data: g } = await db.from("share_grant").select("owner_id, owner_nome, grantee_id, status").eq("id", data.grantId).maybeSingle();
+    if (!g || g.status !== "ativo" || g.grantee_id !== ctx.userId || g.owner_id === ctx.userId) throw new Error("INVALIDO");
+    const { data: self } = await db.from("person").select("nome, apelido").eq("account_id", ctx.userId).eq("kind", "self").is("deleted_at", null).maybeSingle();
+    const trip_ids = await tripsDoDono(db, ctx.userId, data.tripIds);
+    await db.from("share_grant").update({ status: "revogado", revogado_em: new Date().toISOString() })
+      .eq("owner_id", ctx.userId).eq("grantee_id", g.owner_id).eq("status", "ativo");
+    const { error } = await db.from("share_grant").insert({ owner_id: ctx.userId, grantee_id: g.owner_id, owner_nome: nomeDe(ctx, self), grantee_nome: g.owner_nome, blocos: data.blocos, trip_ids });
+    if (error) throw new Error("FALHA");
+    return { ok: true };
+  });
