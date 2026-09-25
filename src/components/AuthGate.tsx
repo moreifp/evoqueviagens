@@ -5,6 +5,7 @@ import { Plane, LogIn, Chrome, Apple } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { garantirMinhaFicha } from "@/lib/compartilhar.functions";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -12,6 +13,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [pronto, setPronto] = useState(false);
 
   const garantir = useServerFn(garantirMinhaFicha);
+  const qc = useQueryClient();
 
   useEffect(() => {
     let vivo = true;
@@ -19,7 +21,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     async function aplicar(s: Session | null) {
       if (s && !garantido) {
         garantido = true;
-        garantir().catch((e) => console.error(e));
+        garantir()
+          .then(() => qc.invalidateQueries({ queryKey: ["pessoas"] }))
+          .catch((e) => console.error(e));
       }
       if (vivo) {
         setSession(s);
@@ -75,7 +79,7 @@ function Entrar() {
     if (carregando) return;
     setCarregando(true);
     try {
-      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.origin });
+      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.href });
       if (r.error || r.redirected) {
         setCarregando(false);
         if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
