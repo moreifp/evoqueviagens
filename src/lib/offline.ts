@@ -2,7 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
 import { apiAlertaQuery, expensesQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip } from "./data";
-import { euQuery, minhaPessoaQuery, type EuDados } from "./eu";
+import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
 import { guardarAnexo, limparAnexos } from "./anexosOffline";
 
@@ -94,8 +94,6 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
   }
 }
 
-// Import tardio para evitar ciclo com eu.ts.
-import { documentoQuery } from "./eu";
 function euQueryDoc(pid: string, did: string) {
   return documentoQuery(pid, did);
 }

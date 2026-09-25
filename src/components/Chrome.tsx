@@ -122,7 +122,11 @@ export function AvisoConexao() {
       className="fixed left-1/2 top-2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-medium"
     >
       <WifiOff size={18} strokeWidth={2.2} />
-      {online ? `Enviando ${pendentes} ${pendentes === 1 ? "alteração" : "alterações"}…` : "Sem internet · salvo no aparelho"}
+      {online
+        ? `Enviando ${pendentes} ${pendentes === 1 ? "alteração" : "alterações"}…`
+        : pendentes > 0
+          ? `Sem internet · ${pendentes} ${pendentes === 1 ? "alteração esperando" : "alterações esperando"} internet`
+          : "Sem internet · usando o que está no aparelho"}
     </div>
   );
 }
