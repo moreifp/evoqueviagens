@@ -61,4 +61,13 @@ export default defineConfig({
     server: { entry: "server" },
   },
   plugins: [preCacheOffline(), mcpPlugin()],
+  vite: {
+    resolve: {
+      alias: {
+        "entities/lib/decode.js": join(process.cwd(), "node_modules/entities/lib/decode.js"),
+        "entities/lib/encode.js": join(process.cwd(), "node_modules/entities/lib/encode.js"),
+        entities: join(process.cwd(), "node_modules/entities"),
+      },
+    },
+  },
 });

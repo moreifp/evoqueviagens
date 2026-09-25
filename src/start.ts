@@ -4,7 +4,8 @@ import { renderErrorPage } from "./lib/error-page";
 import { destinoRedirecionamento } from "./lib/site";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
+const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
+  if (new URL(request.url).pathname.startsWith("/lovable/")) return next();
   try {
     return await next();
   } catch (error) {
@@ -20,9 +21,10 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 // evoque.global / www / evoqueviagens.lovable.app: as telas moram em app.evoque.global.
-// MCP, .well-known, API, OAuth e arquivos seguem onde estão.
+// MCP, .well-known, API, OAuth, e-mails (/lovable/) e arquivos seguem onde estão.
 const hostMiddleware = createMiddleware().server(async ({ next, request }) => {
   const url = new URL(request.url);
+  if (url.pathname.startsWith("/lovable/")) return next();
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
   const destino = destinoRedirecionamento(host, url.pathname, url.search);
   if (destino && (request.method === "GET" || request.method === "HEAD")) {
