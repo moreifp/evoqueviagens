@@ -20,11 +20,11 @@
 - [ ] Criar detalhes de voo, hotel e reservas
 - [ ] Implementar duplicação, copiar para volta e virar despesa
 - [ ] Preservar e validar cobertura offline completa
-- [ ] Rodar os 10 testes, gerar cinco capturas e apagar todos os dados descartáveis
+- [x] Rodar os 10 testes, gerar cinco capturas e apagar todos os dados descartáveis
 - [ ] Não publicar
 
 ## Módulo 2 · Parte 4 — conferir, pedir dados, avisos
 - [x] Migration 0022 (entry_rule vazia, regra por viagem, pedir/responder, conferir_viagem, gatilho de aviso tolerante a falha)
-- [ ] Telas: Está tudo certo?, Pedir dados, avisos na tela Eu/Viagens, pedidos recebidos
-- [ ] Teste: gatilho forçado a falhar não impede salvar documento
-- [ ] Rodar os 10 testes, prints, zero sobras; não publicar
+- [x] Telas: Está tudo certo?, Pedir dados, avisos na tela Eu/Viagens, pedidos recebidos
+- [x] Teste: gatilho forçado a falhar não impede salvar documento
+- [x] Rodar os 10 testes, prints, zero sobras; não publicar
