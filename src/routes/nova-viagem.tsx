@@ -68,7 +68,7 @@ function NovaViagem() {
         for (const r of reservas) {
           const rid = novoId();
           const deslocar = (iso: string | null) => iso ? new Date(Date.parse(iso) + delta).toISOString() : null;
-          ops.push({ tipo: "insert", tabela: "reservation", valores: { id: rid, trip_id: tripId, tipo: r.tipo, titulo: r.titulo, inicio_utc: deslocar(r.inicio_utc), inicio_tz: r.inicio_tz, fim_utc: deslocar(r.fim_utc), fim_tz: r.fim_tz, local: r.local, cidade: r.cidade, localizador: r.localizador, valor: r.valor, moeda: r.moeda, origem: "duplicacao" } });
+          ops.push({ tipo: "insert", tabela: "reservation", valores: { id: rid, trip_id: tripId, tipo: r.tipo, titulo: r.titulo, inicio_utc: deslocar(r.inicio_utc), inicio_tz: r.inicio_tz, fim_utc: deslocar(r.fim_utc), fim_tz: r.fim_tz, local: r.local, cidade: r.cidade, localizador: r.localizador, valor: r.valor, moeda: r.moeda, origem: "ui" } });
           for (const p of r.pessoas) ops.push({ tipo: "insert", tabela: "reservation_person", valores: { id: novoId(), reservation_id: rid, person_id: p.person_id, papel: p.papel } });
         }
       }
