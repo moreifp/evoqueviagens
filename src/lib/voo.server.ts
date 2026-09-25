@@ -57,7 +57,7 @@ export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", f
     return { status: ultimo, aviso: "Não consegui atualizar agora.", numero };
   }
   // Toda resposta do servidor da API conta no plano, inclusive "não encontrado".
-  if (res.status !== 429 && res.status < 500) await db.rpc("somar_uso_api", { _mes: mesAtual(), _n: UNIDADES_POR_CHAMADA });
+  if (res.ok || res.status === 404) await db.rpc("somar_uso_api", { _mes: mesAtual(), _n: UNIDADES_POR_CHAMADA });
   if (res.status === 204 || res.status === 404) return { status: ultimo, aviso: `Não encontrei o voo ${numero} em ${data.split("-").reverse().join("/")}.`, numero };
   if (!res.ok) {
     console.error("aerodatabox", res.status, (await res.text()).slice(0, 300));
