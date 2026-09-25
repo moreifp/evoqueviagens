@@ -151,8 +151,8 @@ function Celular() {
             <p className="text-sm opacity-90">Lisboa · Porto</p>
           </div>
           <div className="space-y-3 p-4">
-            <div className="flex items-center gap-2 rounded-2xl border border-[#e8d2ad] bg-[#fbf3e6] p-3 text-sm">
-              <TriangleAlert {...ICONE} className="size-5 shrink-0 text-[#8a5a12]" />
+            <div className="flex items-center gap-2 rounded-2xl border border-validity-warn-border bg-validity-warn p-3 text-sm">
+              <TriangleAlert {...ICONE} className="size-5 shrink-0 text-ld-navy" />
               <span><strong>1 noite sem hotel</strong> · 17/11 no Porto</span>
             </div>
             <Item icone={<Plane {...ICONE} className="size-5" />} titulo="TP 088 · GRU → LIS" linha="12/11 · 22:35 → 12:10" />
