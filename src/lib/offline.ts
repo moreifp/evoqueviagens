@@ -10,7 +10,7 @@ import { guardarAnexo, limparAnexos } from "./anexosOffline";
 /** "Baixar viagem": guarda no aparelho tudo das viagens próximas e a ficha Eu + dependentes. */
 const CHAVE = "evoque-baixado";
 const INTERVALO_MIN = 30 * 60 * 1000;
-export const DIAS_A_FRENTE = 60;
+export const DIAS_A_FRENTE = 90;
 
 type Estado = { baixando: string[]; em: Record<string, number> };
 let estado: Estado = { baixando: [], em: {} };
@@ -22,7 +22,7 @@ function emitir(e: Estado) {
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
-/** Viagens não arquivadas, em andamento ou que começam em até 60 dias. */
+/** Viagens não arquivadas, em andamento ou que começam em até 90 dias. */
 export function viagensParaBaixar(trips: Trip[]) {
   const hoje = hojeISO();
   const limite = new Date(Date.now() + DIAS_A_FRENTE * 864e5).toISOString().slice(0, 10);

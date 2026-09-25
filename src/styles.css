@@ -71,6 +71,11 @@
   --color-warn-foreground: var(--warn-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-validity-ok: var(--validity-ok);
+  --color-validity-ok-border: var(--validity-ok-border);
+  --color-validity-warn: var(--validity-warn);
+  --color-validity-warn-border: var(--validity-warn-border);
+  --color-validity-danger: var(--validity-danger);
 }
 
 :root {
@@ -108,6 +113,11 @@
   --warn-foreground: hsl(40 40% 96%);
   --danger: hsl(0 60% 36%);
   --danger-foreground: hsl(40 40% 96%);
+  --validity-ok: #eef6f0;
+  --validity-ok-border: #b9d6c1;
+  --validity-warn: #fbf3e6;
+  --validity-warn-border: #e8d2ad;
+  --validity-danger: hsl(0 55% 95%);
 
   --gradient-olive-teal: linear-gradient(
     135deg,
@@ -146,6 +156,11 @@
   --warn-foreground: hsl(210 56% 8%);
   --danger: hsl(0 75% 66%);
   --danger-foreground: hsl(210 56% 8%);
+  --validity-ok: hsl(140 28% 15%);
+  --validity-ok-border: hsl(140 28% 35%);
+  --validity-warn: hsl(35 35% 16%);
+  --validity-warn-border: hsl(35 40% 38%);
+  --validity-danger: hsl(0 35% 16%);
 
   --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.5);
   --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.6);
