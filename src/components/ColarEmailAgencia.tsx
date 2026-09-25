@@ -71,7 +71,13 @@ export function ColarEmailAgencia({ onLido, compacto }: { onLido: (trechos: Trec
       className={`space-y-3 rounded-2xl border-2 border-dashed p-4 ${sobre ? "border-accent bg-muted" : "border-border bg-card"}`}
     >
       <p className="flex items-center gap-2 text-xl font-bold"><Mail size={26} strokeWidth={2.2} /> Colar e-mail da agência</p>
-      <p className="text-base text-muted-foreground">Cole o texto, arraste o .eml, PDF ou print. Lemos só voos, passageiros, assentos e bagagem. Preços e pagamento são ignorados.</p>
+      <ol className="space-y-1 text-base text-muted-foreground">
+        <li>1. Abra o e-mail da agência no seu e-mail (Mail, Gmail…).</li>
+        <li>2. Toque e segure o texto até aparecer "Copiar" e toque em Copiar.</li>
+        <li>3. Volte aqui, toque na caixa abaixo e escolha "Colar".</li>
+        <li>4. Toque em "Ler texto".</li>
+      </ol>
+      <p className="text-base text-muted-foreground">Preferir, toque em "Arquivo" e escolha o e-mail salvo como .eml, um PDF ou um print da confirmação. Lemos só voos, passageiros, assentos e bagagem — preços e pagamento são ignorados.</p>
       <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={5} placeholder="Cole aqui o e-mail da agência" aria-label="Texto do e-mail" className="w-full rounded-xl border-2 border-input bg-background p-3 text-lg" />
       <div className="grid grid-cols-2 gap-2">
         <button type="button" disabled={!online || lendo || !texto.trim()} onClick={() => void processar()} className="gradient-hero tap flex items-center justify-center gap-2 rounded-xl text-lg font-bold disabled:opacity-50">
