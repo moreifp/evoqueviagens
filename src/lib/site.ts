@@ -1,4 +1,6 @@
 /** Endereços de produção e regras por domínio (landing × app). */
+import { rotaMarketingPublica } from "./marketing";
+
 export const APP_URL = "https://app.evoque.global";
 export const APP_HOST = "app.evoque.global";
 export const LANDING_URL = "https://evoque.global";
@@ -39,7 +41,7 @@ export function destinoRedirecionamento(host: string, path: string, search: stri
   const landing = HOSTS_LANDING.has(h);
   if (!landing && !HOSTS_SO_REDIRECIONA.has(h)) return null;
   if (caminhoLivre(path)) return null;
-  if (landing && path === "/") return null;
+  if (landing && (path === "/" || rotaMarketingPublica(path))) return null;
   return `${APP_URL}${path}${search}`;
 }
 

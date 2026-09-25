@@ -89,3 +89,10 @@
 - [ ] Tela "Avisos no celular" na área Eu com liga/desliga por tipo e aviso de teste
 - [ ] Testes com conta @example.com, simulação sem push real, zero sobras; não publicar
 - [ ] Dono: ligar o conector Firebase Cloud Messaging com a conta de serviço
+
+## Landing pública aprovada — Evoque Viagens / Travels
+- [x] Integrar integralmente as 10 páginas PT/EN do pacote aprovado
+- [x] Adicionar /landing-preview e manter toda a revisão noindex
+- [x] Isolar estilos, tema, fontes e fotos editoriais do aplicativo
+- [x] Preservar separação por host, autenticação, PWA, caches, MCP/OAuth e rotas privadas
+- [x] Validar build/tipos, desktop, tablet, celular, links e interações; não publicar

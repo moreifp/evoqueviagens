@@ -16,6 +16,7 @@ import { ConviteInstalar } from "@/components/ConviteInstalar";
 import { BaixarOffline } from "@/components/BaixarOffline";
 
 import { noHostLanding } from "@/lib/host";
+import { ehRotaMarketing } from "@/lib/marketing";
 import { HOSTS_LANDING, HOSTS_SO_REDIRECIONA } from "@/lib/site";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -163,8 +164,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { landing } = Route.useLoaderData();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  // Raiz de evoque.global: landing pública, sem login, abas, cache nem service worker.
-  if (landing && path === "/") return <Outlet />;
+  // Marketing usa uma lista fechada: não carrega login, abas, cache nem service worker.
+  const marketingPublico = (landing && path === "/") || (path !== "/" && ehRotaMarketing(path));
+  if (marketingPublico) return <Outlet />;
   return <RootApp />;
 }
 
