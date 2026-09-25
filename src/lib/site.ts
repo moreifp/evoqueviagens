@@ -9,7 +9,7 @@ export const HOSTS_LANDING = new Set(["evoque.global", "www.evoque.global"]);
 export const HOSTS_SO_REDIRECIONA = new Set(["evoqueviagens.lovable.app"]);
 
 export function limparHost(h: string | null | undefined): string {
-  return (h ?? "").split(",")[0].trim().toLowerCase().replace(/:\d+$/, "");
+  return ((h ?? "").split(",")[0] ?? "").trim().toLowerCase().replace(/:\d+$/, "");
 }
 
 export function ehHostLanding(host: string) {
