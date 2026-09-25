@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { Suspense } from "react";
 import { BarraInferior, BotaoFlutuante } from "@/components/Chrome";
 
 export const Route = createFileRoute("/trip/$id")({
@@ -18,7 +19,9 @@ function TripLayout() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <Outlet />
+      <Suspense fallback={<p className="p-6 text-lg">Carregando…</p>}>
+        <Outlet />
+      </Suspense>
       {!escondeFab && <BotaoFlutuante tripId={id} />}
       <BarraInferior tripId={id} />
     </div>
