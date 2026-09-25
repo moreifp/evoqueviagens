@@ -24,17 +24,22 @@ async function paraJpeg(f: File): Promise<Blob> {
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]+/g, " ").split(/\s+/).filter((x) => x.length > 1 && !["mr", "mrs", "ms", "miss", "chd", "inf", "de", "da", "do", "dos", "das", "e"].includes(x));
 
 /** Casa um nome lido do documento com um participante (nome, apelido ou nome do documento). */
-export function casarPessoa(nome: string, membros: Membro[]): string | null {
+export function casarPessoa(nome: string, membros: Membro[], excluir?: Set<string>): string | null {
   const alvo = new Set(norm(nome));
+  const letras = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]+/g, " ").split(/\s+/).filter((y) => y.length === 1);
+  const iniciais = new Set(letras(nome));
   if (!alvo.size) return null;
   let melhor: { pid: string; nota: number } | null = null;
   for (const m of membros) {
+    if (excluir?.has(m.person_id)) continue;
     for (const cand of [m.nome_como_no_documento, m.nome, m.apelido]) {
       if (!cand) continue;
       const t = norm(cand);
       const comuns = t.filter((x) => alvo.has(x)).length;
       // Dois nomes em comum, ou nome único dos dois lados (ex.: apelido "Gabi" lido como "Gabi").
-      const nota = comuns >= 2 ? comuns + 1 : comuns === 1 && t.length === 1 && alvo.size === 1 ? 1 : 0;
+      const base = comuns >= 2 ? comuns + 1 : comuns === 1 && t.length === 1 && alvo.size === 1 ? 1 : 0;
+      // Desempate por inicial do meio ("SILVA/TESTE B" x "Teste B Silva").
+      const nota = base && letras(cand).some((l) => iniciais.has(l)) ? base + 0.5 : base;
       if (nota && (!melhor || nota > melhor.nota)) melhor = { pid: m.person_id, nota };
     }
   }
