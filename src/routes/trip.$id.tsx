@@ -15,7 +15,7 @@ export const Route = createFileRoute("/trip/$id")({
 function TripLayout() {
   const { id } = Route.useParams();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const escondeFab = path.endsWith("/despesas/nova") || path.endsWith("/adicionar") || path.includes("/item/");
+  const escondeFab = path.endsWith("/despesas/nova") || path.endsWith("/adicionar") || path.includes("/item/") || path.endsWith("/novo") || path.endsWith("/nova");
 
   return (
     <div className="min-h-screen bg-background pb-28">

@@ -45,7 +45,7 @@ export const extrairReserva = createServerFn({ method: "POST" })
       method: "POST",
       headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash", stream: true,
+        model: "openai/gpt-6-astra", stream: true,
         input: [{ role: "user", content }],
         reasoning: { effort: "low", summary: "auto" }, store: false, include: ["reasoning.encrypted_content"],
         text: { format: { type: "json_schema", name: "reserva_viagem", strict: true, schema } },

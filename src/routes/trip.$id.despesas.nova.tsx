@@ -11,7 +11,7 @@ import { mutar } from "@/lib/outbox";
 import { novoId } from "@/lib/itens";
 
 export const Route = createFileRoute("/trip/$id/despesas/nova")({
-  validateSearch: (s: Record<string, unknown>) => ({ itemTipo: typeof s.itemTipo === "string" ? s.itemTipo : "", itemId: typeof s.itemId === "string" ? s.itemId : "", descricao: typeof s.descricao === "string" ? s.descricao : "", valor: typeof s.valor === "string" ? s.valor : "", moeda: typeof s.moeda === "string" ? s.moeda : "", data: typeof s.data === "string" ? s.data : "" }),
+  validateSearch: (s: Record<string, unknown>) => ({ itemTipo: textoBusca(s.itemTipo), itemId: textoBusca(s.itemId), descricao: textoBusca(s.descricao), valor: textoBusca(s.valor), moeda: textoBusca(s.moeda), data: textoBusca(s.data) }),
   head: () => ({
     meta: [
       { title: "Novo gasto — Evoque Viagens" },
@@ -24,6 +24,11 @@ export const Route = createFileRoute("/trip/$id/despesas/nova")({
   errorComponent: ({ error }) => <div role="alert" className="p-6 text-lg">{error.message}</div>,
   notFoundComponent: () => <div className="p-6 text-lg">Viagem não encontrada.</div>,
 });
+
+function textoBusca(v: unknown) {
+  if (typeof v !== "string") return "";
+  try { const x = JSON.parse(v); return typeof x === "string" ? x : v; } catch { return v; }
+}
 
 function NovaDespesa() {
   const { id } = Route.useParams();
