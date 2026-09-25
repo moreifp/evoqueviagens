@@ -9,3 +9,9 @@
 - [x] Teste com contas descartáveis (apagadas)
 - [ ] Carros e outras reservas (aguarda confirmação)
 - [ ] Dependente que ganha login próprio (aguarda confirmação)
+- [ ] Redesenhar a área "Eu" para contas próprias
+- [ ] Criar telas de documento, anexos múltiplos e cadastro por foto/arquivo
+- [ ] Redesenhar fidelidade e implementar cofre zero-knowledge
+- [ ] Substituir Compartilhamentos por "Quem vê seus dados"
+- [ ] Remover da interface o fluxo legado de links, aprovação e wizard pessoal
+- [ ] Testar segurança, compartilhamento seletivo e funcionamento offline; apagar testes e publicar
