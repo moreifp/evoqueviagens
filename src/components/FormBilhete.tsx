@@ -124,7 +124,18 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
       if (!p.nome_no_bilhete && lido.nome) { n.nome_no_bilhete = lido.nome.toUpperCase(); mud.push(`Nome no bilhete: ${lido.nome.toUpperCase()}`); }
       return n;
     });
-    if (!mud.length) { toast("O e-mail não traz nada novo para os campos vazios."); return; }
+    // O e-mail colado sempre vira um anexo privado do bilhete, mesmo sem dados novos.
+    if (!mud.length) {
+      if (inicial?.id) {
+        void anexarPrivado(tripId, [inicial.id], o)
+          .then(() => { void qc.invalidateQueries({ queryKey: ["anexos", tripId] }); toast.success("Nada novo nos campos — guardei uma cópia do e-mail nos anexos do bilhete (só você vê)."); })
+          .catch((e: Error) => toast.error(`Não deu para guardar o e-mail: ${e.message}`));
+      } else {
+        setOriginal(o);
+        toast("Nada novo nos campos — a cópia do e-mail será anexada ao salvar.");
+      }
+      return;
+    }
     setProposta({ mudancas: mud, aplicar: () => { setF((v) => ({ ...v, ...campos })); setBag(novaBag); setPax(novoPax); setOriginal(o); setProposta(null); toast.success("Campos preenchidos. Toque em Salvar mudanças."); } });
   }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
