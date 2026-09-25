@@ -181,7 +181,10 @@ function RootComponent() {
       });
     })();
     if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js").catch(() => {});
+      void navigator.serviceWorker.register("/sw.js").then(async () => {
+        await navigator.serviceWorker.ready;
+        if (navigator.serviceWorker.controller && navigator.onLine) await fetch(window.location.href, { cache: "no-store" });
+      }).catch(() => {});
     }
     return () => {
       cancelado = true;
