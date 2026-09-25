@@ -299,7 +299,31 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
         <TrocarFuso valor={f.chegada_tz} onChange={(tz) => setF((v) => ({ ...v, chegada_tz: tz }))} />
       </div>
 
-      <CamposBagagem titulo="Bagagem (vale para todos)" valor={bag} onChange={setBag} />
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Regra de bagagem">
+          <button
+            type="button"
+            aria-pressed={modoBag === "todos"}
+            onClick={() => setModoBag("todos")}
+            className={`tap rounded-xl border-2 text-lg font-bold ${modoBag === "todos" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+          >
+            Vale para todos
+          </button>
+          <button
+            type="button"
+            aria-pressed={modoBag === "individual"}
+            onClick={() => setModoBag("individual")}
+            className={`tap rounded-xl border-2 text-lg font-bold ${modoBag === "individual" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+          >
+            Individual por pessoa
+          </button>
+        </div>
+        {modoBag === "individual" && (
+          <p className="text-base text-muted-foreground">Cada passageiro tem a própria bagagem — útil quando uns vão de executiva e outros de econômica. Preencha em cada pessoa abaixo.</p>
+        )}
+      </div>
+
+      {modoBag === "todos" && <CamposBagagem titulo="Bagagem (vale para todos)" valor={bag} onChange={setBag} />}
 
       <section className="space-y-3">
         <h2 className="text-xl">Passageiros</h2>
