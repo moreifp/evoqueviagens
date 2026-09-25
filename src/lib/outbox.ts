@@ -22,6 +22,19 @@ async function gravar(ops: Op[]) {
 }
 
 async function executar(op: Op) {
+  // Uma chamada presa (rede caiu no meio) não pode travar a fila para sempre.
+  let limite: ReturnType<typeof setTimeout> | undefined;
+  const tempo = new Promise<never>((_, rej) => {
+    limite = setTimeout(() => rej(new Error("network timeout")), 15_000);
+  });
+  try {
+    await Promise.race([executarAgora(op), tempo]);
+  } finally {
+    clearTimeout(limite);
+  }
+}
+
+async function executarAgora(op: Op) {
   let r;
   if (op.tipo === "update") r = await db.from(op.tabela).update(op.valores).eq("id", op.id);
   else if (op.tipo === "insert") r = await db.from(op.tabela).insert(op.valores);
@@ -87,10 +100,12 @@ export function useConexao() {
     window.addEventListener("offline", off);
     ouvintes.add(setPendentes);
     sincronizar();
+    const repetir = setInterval(() => void sincronizar(), 20_000);
     return () => {
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
       ouvintes.delete(setPendentes);
+      clearInterval(repetir);
     };
   }, []);
   return { online, pendentes };
