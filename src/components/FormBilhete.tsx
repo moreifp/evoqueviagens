@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Mail, Plus, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ColarEmailAgencia } from "@/components/ColarEmailAgencia";
+import { anexarPrivado, type Original } from "@/lib/emailAgencia";
+import { BAGAGEM_VAZIA, mesmaBagagem, pegarBagagem, temBagagem, textoBagagem, type Bagagem } from "@/lib/bagagem";
+import type { Trecho } from "@/lib/reserva-ai.functions";
 import { membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Passageiro, type Ticket } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { localParaUtc, utcParaLocal } from "@/lib/fuso";
@@ -18,7 +23,7 @@ import type { Leitura } from "@/lib/reserva-ai.functions";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
-type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string };
+type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string; bag?: Bagagem | null };
 
 export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; inicial?: Ticket; copiarDe?: Ticket }) {
   const navigate = useNavigate();
@@ -47,8 +52,23 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
       nome_no_bilhete: p.nome_no_bilhete ?? "",
       assento: p.assento ?? "",
       eticket: p.eticket ?? "",
+      bag: null as Bagagem | null,
     })),
   );
+  const [bag, setBag] = useState<Bagagem>(() => {
+    const base = pegarBagagem(inicial ?? copiarDe);
+    if (temBagagem(base)) return base;
+    const p0 = (inicial ?? copiarDe)?.passageiros?.[0];
+    return p0 ? pegarBagagem(p0) : BAGAGEM_VAZIA;
+  });
+  // Passageiros com bagagem diferente do padrão do bilhete ficam com ajuste próprio.
+  useEffect(() => {
+    const src = inicial?.passageiros ?? copiarDe?.passageiros ?? [];
+    setPax((l) => l.map((x) => { const o = src.find((q) => q.person_id === x.person_id); const b = o ? pegarBagagem(o) : null; return b && temBagagem(b) && !mesmaBagagem(b, bag) ? { ...x, bag: b } : x; }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [original, setOriginal] = useState<Original | null>(null);
+  const [proposta, setProposta] = useState<{ mudancas: string[]; aplicar: () => void } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   useEffect(() => {
@@ -80,6 +100,32 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const lidos = (x.passageiros ?? []).length ? x.passageiros : (x.pessoas ?? []).map((nome) => ({ nome, assento: null, eticket: null }));
     const novos = lidos.flatMap((p) => { const pid = casarPessoa(p.nome, membros); return pid ? [{ id: novoId(), person_id: pid, nome_no_bilhete: p.nome.toUpperCase(), assento: p.assento ?? "", eticket: p.eticket ?? "" }] : []; });
     if (novos.length) setPax(novos.filter((p, i) => novos.findIndex((q) => q.person_id === p.person_id) === i));
+    if (x.bagagem && temBagagem(x.bagagem)) setBag(pegarBagagem(x.bagagem));
+  }
+
+  /** Edição: junta o e-mail da agência só nos campos vazios e mostra o que mudaria. */
+  function mesclar(trechos: Trecho[], o: Original) {
+    const num = (f.numero || "").replace(/\D/g, "");
+    const t = trechos.find((x) => num && (x.numero ?? "").replace(/\D/g, "") === num) ?? trechos.find((x) => (x.origem_iata ?? "").toUpperCase() === f.origem_iata && (x.destino_iata ?? "").toUpperCase() === f.destino_iata) ?? (trechos.length === 1 ? trechos[0] : undefined);
+    if (!t) return toast.error("Não achei este voo no e-mail.");
+    const mud: string[] = []; const campos: Partial<typeof f> = {};
+    if (!f.localizador && t.localizador) { campos.localizador = t.localizador; mud.push(`Localizador: ${t.localizador}`); }
+    if (!f.companhia && t.companhia) { campos.companhia = t.companhia; mud.push(`Companhia: ${t.companhia}`); }
+    if (!f.numero && t.numero) { campos.numero = t.numero; mud.push(`Número: ${t.numero}`); }
+    const novaBag = { ...bag };
+    if (t.bagagem) for (const k of Object.keys(novaBag) as (keyof Bagagem)[]) if (novaBag[k] == null && t.bagagem[k] != null) (novaBag as Record<string, unknown>)[k] = t.bagagem[k];
+    if (!mesmaBagagem(novaBag, bag)) mud.push(`Bagagem: ${textoBagagem(novaBag)}`);
+    const novoPax = pax.map((p) => {
+      const lido = t.passageiros.find((q) => casarPessoa(q.nome, membros) === p.person_id);
+      if (!lido) return p;
+      const n = { ...p };
+      if (!p.assento && lido.assento) { n.assento = lido.assento; mud.push(`Assento de ${nomeDoc(p.person_id)}: ${lido.assento}`); }
+      if (!p.eticket && lido.eticket) { n.eticket = lido.eticket; mud.push(`E-ticket de ${nomeDoc(p.person_id)}: •••${lido.eticket.slice(-4)}`); }
+      if (!p.nome_no_bilhete && lido.nome) { n.nome_no_bilhete = lido.nome.toUpperCase(); mud.push(`Nome no bilhete: ${lido.nome.toUpperCase()}`); }
+      return n;
+    });
+    if (!mud.length) { toast("O e-mail não traz nada novo para os campos vazios."); return; }
+    setProposta({ mudancas: mud, aplicar: () => { setF((v) => ({ ...v, ...campos })); setBag(novaBag); setPax(novoPax); setOriginal(o); setProposta(null); toast.success("Campos preenchidos. Toque em Salvar mudanças."); } });
   }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nomeDoc = (pid: string) => {
@@ -107,10 +153,11 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
       partida_tz: f.partida_tz,
       chegada_utc: localParaUtc(f.chegada, f.chegada_tz),
       chegada_tz: f.chegada_tz,
+      ...bag,
     };
     const paxRows = pax
       .filter((p) => p.person_id)
-      .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null }));
+      .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null, ...(p.bag ?? bag) }));
     const ops: Op[] = montarOpsVoo({ tripId, id, valores: claude ? { ...valores, origem: "agente" } as typeof valores : valores, passageiros: paxRows, inicial });
     if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
@@ -147,6 +194,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
 
     try {
       const r = await enviar(ops);
+      if (original) await anexarPrivado(tripId, [id], original).catch((e: Error) => toast.error(`Voo salvo, mas o e-mail não subiu: ${e.message}`));
       await anexarImportado(tripId, "ticket", id).catch((e: Error) => toast.error(`Voo salvo, mas o anexo não subiu: ${e.message}`));
       toast.success(aviso(r, "Bilhete salvo"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
@@ -164,6 +212,18 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
       {!inicial && <PreencherArquivo tripId={tripId} esperado="voo" onLido={aplicar} />}
+      {!inicial && <Link to="/trip/$id/bilhetes/email" params={{ id: tripId }} className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-lg font-bold text-accent"><Mail size={26} strokeWidth={2.2} /> Colar e-mail da agência</Link>}
+      {inicial && <ColarEmailAgencia compacto onLido={mesclar} />}
+      {proposta && (
+        <div role="status" className="space-y-3 rounded-2xl border-2 border-accent bg-card p-4">
+          <p className="text-xl font-bold">O e-mail preenche {proposta.mudancas.length} campo{proposta.mudancas.length > 1 ? "s" : ""} vazio{proposta.mudancas.length > 1 ? "s" : ""}:</p>
+          <ul className="list-disc space-y-1 pl-6 text-lg">{proposta.mudancas.map((m) => <li key={m}>{m}</li>)}</ul>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={proposta.aplicar} className="gradient-hero tap rounded-xl text-lg font-bold">Usar</button>
+            <button type="button" onClick={() => setProposta(null)} className="tap rounded-xl border-2 border-border text-lg font-bold">Não usar</button>
+          </div>
+        </div>
+      )}
       <Campo rotulo="Tipo">
         <select value={f.tipo} onChange={set("tipo")} className={inputCls}>
           <option value="voo">Voo</option>
@@ -222,6 +282,8 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
         <TrocarFuso valor={f.chegada_tz} onChange={(tz) => setF((v) => ({ ...v, chegada_tz: tz }))} />
       </div>
 
+      <CamposBagagem titulo="Bagagem (vale para todos)" valor={bag} onChange={setBag} />
+
       <section className="space-y-3">
         <h2 className="text-xl">Passageiros</h2>
         {pax.map((p, i) => (
@@ -255,6 +317,14 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
                 <input value={p.eticket} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, eticket: e.target.value } : x)))} className={`${inputCls} mono-code`} />
               </Campo>
             </div>
+            {p.bag ? (
+              <div className="space-y-2">
+                <CamposBagagem titulo="Bagagem desta pessoa" valor={p.bag} onChange={(b) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: b } : x)))} />
+                <button type="button" onClick={() => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: null } : x)))} className="tap w-full rounded-xl border-2 border-border text-lg font-bold">Usar a bagagem padrão</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: { ...bag } } : x)))} className="tap w-full rounded-xl border-2 border-border text-lg font-bold">Ajustar bagagem {textoBagagem(bag) ? `(${textoBagagem(bag)})` : ""}</button>
+            )}
             <button type="button" onClick={() => setPax((l) => l.filter((x) => x.id !== p.id))} className="tap flex w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-destructive">
               <Trash2 size={24} strokeWidth={2.2} /> Tirar passageiro
             </button>
@@ -278,5 +348,27 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
         {inicial ? "Salvar mudanças" : "Salvar bilhete"}
       </button>
     </form>
+  );
+}
+
+function CamposBagagem({ titulo, valor, onChange }: { titulo: string; valor: Bagagem; onChange: (b: Bagagem) => void }) {
+  const num = (k: keyof Bagagem) => (e: React.ChangeEvent<HTMLInputElement>) => { const t = e.target.value.replace(",", "."); onChange({ ...valor, [k]: t === "" ? null : Number(t) }); };
+  const v = (k: keyof Bagagem) => (valor[k] == null ? "" : String(valor[k]));
+  return (
+    <fieldset className="space-y-3 rounded-2xl border-2 border-border bg-card p-4">
+      <legend className="px-1 text-xl font-bold">{titulo}</legend>
+      <div className="grid grid-cols-2 gap-3">
+        <Campo rotulo="Mão · quantas"><input inputMode="numeric" value={v("bag_mao_qtd")} onChange={num("bag_mao_qtd")} className={inputCls} /></Campo>
+        <Campo rotulo="Mão · kg"><input inputMode="decimal" value={v("bag_mao_kg")} onChange={num("bag_mao_kg")} className={inputCls} /></Campo>
+        <Campo rotulo="Despachadas · quantas"><input inputMode="numeric" value={v("bag_desp_qtd")} onChange={num("bag_desp_qtd")} className={inputCls} /></Campo>
+        <Campo rotulo="Kg por mala"><input inputMode="decimal" value={v("bag_desp_kg")} onChange={num("bag_desp_kg")} className={inputCls} /></Campo>
+      </div>
+      <Campo rotulo="Item pessoal (bolsa/mochila)">
+        <select value={valor.item_pessoal == null ? "" : valor.item_pessoal ? "sim" : "nao"} onChange={(e) => onChange({ ...valor, item_pessoal: e.target.value === "" ? null : e.target.value === "sim" })} className={inputCls}>
+          <option value="">Não informado</option><option value="sim">Sim</option><option value="nao">Não</option>
+        </select>
+      </Campo>
+      {textoBagagem(valor) && <p className="text-base font-semibold text-muted-foreground">{textoBagagem(valor)}</p>}
+    </fieldset>
   );
 }
