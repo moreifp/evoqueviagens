@@ -183,9 +183,10 @@ export function mascarar(n: string | null) {
   return `•••• ${n.slice(-4)}`;
 }
 
+/** Foto/arquivo do storage: usa a cópia do aparelho quando existe (offline), senão link assinado de 60 s. */
 export async function urlAssinada(path: string): Promise<string | null> {
-  const { data } = await supabase.storage.from("documentos").createSignedUrl(path, 60);
-  return data?.signedUrl ?? null;
+  const { urlDoAnexo } = await import("./anexosOffline");
+  return urlDoAnexo(path);
 }
 
 /** Itens de "Demais dados" ainda vazios (para a ficha do admin). */

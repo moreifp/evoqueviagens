@@ -12,6 +12,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
 import { AbasApp, AvisoConexao } from "@/components/Chrome";
+import { ConviteInstalar } from "@/components/ConviteInstalar";
+import { BaixarOffline } from "@/components/BaixarOffline";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -57,7 +59,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     // o service worker, para buscar a versão nova — em vez de só mostrar o erro.
     try {
       const marca = Number(sessionStorage.getItem("evoque-recarregou") ?? 0);
-      if (Date.now() - marca > 60_000) {
+      if (navigator.onLine && Date.now() - marca > 60_000) {
         sessionStorage.setItem("evoque-recarregou", String(Date.now()));
         setAtualizando(true);
         void (async () => {
@@ -126,12 +128,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap",
-      },
+      { rel: "preload", href: "/fonts/inter-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: "/fonts/outfit-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
@@ -159,33 +157,38 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Só desenha as telas depois de trazer do aparelho os dados guardados:
+  // sem isso, uma tela aberta sem internet ficaria esperando a rede.
+  const [restaurado, setRestaurado] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelado = false;
+    const liberar = setTimeout(() => setRestaurado(true), 4000);
     (async () => {
-      const [{ persistQueryClient }, { createAsyncStoragePersister }, idb] = await Promise.all([
-        import("@tanstack/react-query-persist-client"),
-        import("@tanstack/query-async-storage-persister"),
-        import("idb-keyval"),
-      ]);
-      if (cancelado) return;
-      persistQueryClient({
-        queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
-        persister: createAsyncStoragePersister({
-          storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
-          key: "evoque-cache-v5",
-        }),
-        maxAge: 1000 * 60 * 60 * 24 * 30,
-        buster: "evoque-eu-v1",
-      });
+      try {
+        const [{ persistQueryClient }, { createAsyncStoragePersister }, idb] = await Promise.all([
+          import("@tanstack/react-query-persist-client"),
+          import("@tanstack/query-async-storage-persister"),
+          import("idb-keyval"),
+        ]);
+        if (cancelado) return;
+        const [, restaurando] = persistQueryClient({
+          queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
+          persister: createAsyncStoragePersister({
+            storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
+            key: "evoque-cache-v5",
+          }),
+          maxAge: 1000 * 60 * 60 * 24 * 30,
+          buster: "evoque-eu-v1",
+        });
+        await restaurando.catch(() => {});
+      } finally {
+        clearTimeout(liberar);
+        if (!cancelado) setRestaurado(true);
+      }
     })();
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js").then(async () => {
-        await navigator.serviceWorker.ready;
-        if (navigator.serviceWorker.controller && navigator.onLine) await fetch(window.location.href, { cache: "no-store" });
-      }).catch(() => {});
-    }
+    void import("@/lib/sw-registro").then((m) => m.registrarServiceWorker());
     return () => {
       cancelado = true;
     };
@@ -193,8 +196,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Conteudo />
+      {restaurado ? <Conteudo /> : <div className="min-h-screen bg-background" />}
       <AvisoConexao />
+      <ConviteInstalar />
       <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
@@ -206,6 +210,7 @@ function Conteudo() {
   const mostraAbas = !path.startsWith("/trip/") && !path.startsWith("/pessoas/") && path !== "/nova-viagem";
   return (
     <AuthGate>
+      <BaixarOffline />
       <Outlet />
       {mostraAbas && <AbasApp />}
     </AuthGate>

@@ -5,6 +5,7 @@ import { Topo } from "@/components/Chrome";
 import { expensesQuery, membersQuery, tripQuery } from "@/lib/data";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { CATEGORIAS } from "@/lib/categorias";
+import { EditarItem } from "@/components/EditarItem";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
@@ -91,10 +92,8 @@ function Lista() {
                 const c = CATEGORIAS.find((x) => x.id === d.categoria);
                 const Icone = c?.Icone;
                 return (
-                  <li
-                    key={d.id}
-                    className="shadow-soft flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
-                  >
+                  <li key={d.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
+                  <div className="flex items-center gap-3 p-3">
                     {Icone && <Icone size={28} strokeWidth={2.2} className="text-accent" />}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-lg font-bold text-foreground">{d.descricao}</p>
@@ -107,6 +106,14 @@ function Lista() {
                     <p className="num shrink-0 text-2xl text-foreground">
                       {fmtMoney(Number(d.valor_moeda_base), trip.moeda_base)}
                     </p>
+                  </div>
+                  <EditarItem
+                    tabela="expense"
+                    item={d as unknown as { id: string } & Record<string, unknown>}
+                    queryKey={expensesQuery(id).queryKey}
+                    campos={[{ chave: "descricao", rotulo: "Descrição" }, { chave: "valor_original", rotulo: `Valor (${d.moeda_original})`, tipo: "number" }]}
+                    ajustar={(v, it) => (v.valor_original != null ? { ...v, valor_moeda_base: Math.round(Number(v.valor_original) * Number(it.taxa_cambio) * 100) / 100, editado_em: new Date().toISOString() } : { ...v, editado_em: new Date().toISOString() })}
+                  />
                   </li>
                 );
               })}

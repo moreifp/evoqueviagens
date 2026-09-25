@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { EditarItem } from "@/components/EditarItem";
+import { abrirAnexo } from "@/lib/anexosOffline";
+import { toast } from "sonner";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { BedDouble, FileText, Plus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
@@ -64,16 +67,20 @@ function Hospedagem() {
               </div>
             </div>
             {h.anexo_url && (
-              <a
-                href={h.anexo_url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                onClick={() => void abrirAnexo(h.anexo_url!).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
                 className="tap flex w-full items-center justify-center gap-3 border-t border-border bg-muted text-lg font-bold text-foreground"
               >
                 <FileText size={28} strokeWidth={2.2} />
                 Ver voucher
-              </a>
+              </button>
             )}
+            <EditarItem
+              tabela="lodging"
+              item={h as unknown as { id: string } & Record<string, unknown>}
+              queryKey={lodgingsQuery(id).queryKey}
+              campos={[{ chave: "nome", rotulo: "Nome" }, { chave: "localizador", rotulo: "Localizador" }, { chave: "endereco", rotulo: "Endereço" }]}
+            />
           </article>
         ))}
 
