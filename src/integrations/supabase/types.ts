@@ -1886,6 +1886,13 @@ export type Database = {
         }[]
       }
       somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
+      telefones_viagem: {
+        Args: { _tid: string }
+        Returns: {
+          person_id: string
+          telefone: string
+        }[]
+      }
       verificar_cron_voos: { Args: { _t: string }; Returns: boolean }
     }
     Enums: {
