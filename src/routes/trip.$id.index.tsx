@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Receipt, Ticket as TicketIcon, Users } from "lucide-react";
+import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Receipt, Ticket as TicketIcon, Users, CalendarCheck, Utensils, ListChecks } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { useQuery } from "@tanstack/react-query";
 import { cancelado, formatarAtraso } from "@/lib/voo";
-import { apiAlertaQuery, expensesQuery, flightStatusQuery, lodgingsQuery, membersQuery, ticketsQuery } from "@/lib/data";
+import { apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
 import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
@@ -16,6 +16,8 @@ export const Route = createFileRoute("/trip/$id/")({
       { name: "description", content: "Próximo compromisso, hora e local da sua viagem." },
       { property: "og:title", content: "Visão geral da viagem" },
       { property: "og:description", content: "Próximo compromisso, hora e local da sua viagem." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: VisaoGeral,
@@ -34,8 +36,11 @@ const ICONE: Record<string, typeof Plane> = {
 function VisaoGeral() {
   const { id } = Route.useParams();
   const { trip, visiveis } = useAuditoria(id);
-  const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
-  const { data: hospedagens } = useSuspenseQuery(lodgingsQuery(id));
+  const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
+  // Roteiro: todos os itens da viagem, inclusive os que a pessoa só vê em resumo.
+  const bilhetes = roteiro.filter((r) => r.item_tipo === "ticket").map((r) => ({ id: r.item_id, tipo: r.subtipo, companhia: r.companhia, numero: r.numero, origem_iata: r.origem_iata, destino_iata: r.destino_iata, origem_cidade: null as string | null, destino_cidade: r.cidade, partida_utc: r.inicio_utc, partida_tz: r.inicio_tz, chegada_utc: r.fim_utc ?? r.inicio_utc, chegada_tz: r.fim_tz ?? r.inicio_tz }));
+  const hospedagens = roteiro.filter((r) => r.item_tipo === "lodging").map((r) => ({ id: r.item_id, nome: r.titulo, cidade: r.cidade, endereco: null as string | null, checkin: r.inicio_utc, checkout: r.fim_utc ?? r.inicio_utc }));
+  const reservas = roteiro.filter((r) => r.item_tipo === "reservation");
   const { data: despesas } = useSuspenseQuery(expensesQuery(id));
   const { data: membros } = useSuspenseQuery(membersQuery(id));
 
@@ -128,7 +133,10 @@ function VisaoGeral() {
           />
           <Atalho to="/trip/$id/bilhetes" id={id} Icone={TicketIcon} numero={String(bilhetes.length)} rotulo="Bilhetes" />
           <Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" />
+          <Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" />
           <Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" />
+          <Atalho to="/trip/$id/restaurantes" id={id} Icone={Utensils} numero="·" rotulo="Restaurantes" />
+          <Atalho to="/trip/$id/revisao" id={id} Icone={ListChecks} numero={String(visiveis.length)} rotulo="Revisão" />
         </div>
       </main>
     </>

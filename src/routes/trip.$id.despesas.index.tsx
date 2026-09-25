@@ -69,8 +69,8 @@ function Lista() {
           >
             <option value="todos">Todas pessoas</option>
             {membros.map((m) => (
-              <option key={m.person?.id} value={m.person?.id}>
-                {m.person?.nome}
+              <option key={m.person_id} value={m.person_id}>
+                {m.apelido || m.nome}
               </option>
             ))}
           </select>

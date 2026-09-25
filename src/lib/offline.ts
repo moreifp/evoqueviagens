@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { apiAlertaQuery, expensesQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip } from "./data";
+import { anexosQuery, apiAlertaQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip } from "./data";
 import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
 import { guardarAnexo, limparAnexos } from "./anexosOffline";
@@ -71,7 +71,13 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
           qc.fetchQuery({ ...findingsQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...flightStatusQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...apiAlertaQuery(t.id), staleTime: 0 }),
+          qc.fetchQuery({ ...roteiroQuery(t.id), staleTime: 0 }),
+          qc.fetchQuery({ ...reservasQuery(t.id), staleTime: 0 }),
         ]);
+        // Anexos dos itens que a pessoa pode ver (o banco já filtra).
+        const anexos = await qc.fetchQuery({ ...anexosQuery(t.id), staleTime: 0 });
+        anexos.forEach((a) => manter.add(a.storage_path));
+        await Promise.all(anexos.map((a) => guardarAnexo(a.storage_path)));
         const bilhetes = await qc.fetchQuery({ ...ticketsQuery(t.id), staleTime: 0 });
         const hoteis = qc.getQueryData(lodgingsQuery(t.id).queryKey) ?? [];
         const refs = [...bilhetes.map((b) => b.anexo_url), ...hoteis.map((h) => h.anexo_url)].filter((r): r is string => !!r);

@@ -122,10 +122,21 @@ function trocaDiaMes(dia: string): string | null {
   return `${a}-${d.padStart(2, "0")}-${m.padStart(2, "0")}`;
 }
 
+/** Quem está em cada item — para as regras por pessoa. */
+export type PessoasCtx = {
+  membros: { person_id: string; nome: string; nome_como_no_documento: string | null }[];
+  passageiros: Record<string, { person_id: string; nome_no_bilhete?: string | null }[]>;
+  hospedes: Record<string, string[]>;
+};
+
+const normNome = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z ]/g, " ").replace(/\s+/g, " ").trim();
+
 export function rodarAuditor(
   trip: TripLite,
   bilhetes: TicketLite[],
   hospedagens: LodgingLite[],
+  ctx?: PessoasCtx,
 ): Achado[] {
   const achados: Achado[] = [];
   const tks = [...bilhetes].sort((a, b) => a.partida_utc.localeCompare(b.partida_utc));
@@ -148,8 +159,41 @@ export function rodarAuditor(
     const inicioNoites = primeiro ? chaveDia(primeiro.chegada_utc, primeiro.chegada_tz) : trip.data_inicio;
     const fimNoites = ultimo ? chaveDia(ultimo.partida_utc, ultimo.partida_tz) : trip.data_fim;
 
-    // A1 — noite sem cama
-    for (const noite of noitesEntre(inicioNoites, fimNoites)) {
+    const porPessoa = !!ctx && Object.values(ctx.hospedes).some((h) => h.length > 0) && Object.values(ctx.passageiros).some((p) => p.length > 0);
+    // P1 — noite sem cama por pessoa: entre o voo que traz e o que leva, ela está em algum quarto?
+    if (porPessoa && ctx) {
+      const nomes = new Map(ctx.membros.map((m) => [m.person_id, m.nome]));
+      const pessoas = new Set(Object.values(ctx.passageiros).flat().map((p) => p.person_id));
+      for (const pid of pessoas) {
+        const seus = tks.filter((t) => (ctx.passageiros[t.id] ?? []).some((p) => p.person_id === pid));
+        if (!seus.length) continue;
+        const chega = seus[0]!;
+        const sai = seus.length > 1 ? seus[seus.length - 1]! : null;
+        const ini = chaveDia(chega.chegada_utc, chega.chegada_tz);
+        const fim = sai ? chaveDia(sai.partida_utc, sai.partida_tz) : trip.data_fim;
+        const suas = hos.filter((l) => (ctx.hospedes[l.id] ?? []).includes(pid));
+        const nome = nomes.get(pid) ?? "Alguém";
+        for (const noite of noitesEntre(ini, fim)) {
+          const ok = suas.some((l) => chaveDia(l.checkin) <= noite && chaveDia(l.checkout) >= somaDias(noite, 1));
+          if (ok) continue;
+          achados.push({
+            regra_id: "P1",
+            severidade: "resolver",
+            mensagem: `${nome} está sem quarto na noite de ${dataBRCurta(noite)}.`,
+            itens_envolvidos: [trip.id, pid],
+            itens: [
+              { id: `${pid}-${noite}`, tipo: "viagem", titulo: nome, linha1: dataBRCurta(noite), linha2: "Sem quarto" },
+              refViagem,
+            ],
+            hash_dos_dados: hash("P1", pid, noite, ...suas.map((l) => `${l.id}${l.checkin}${l.checkout}`)),
+            correcao: { rotulo: "Pôr num quarto", alvo: "hospedagem" },
+          });
+        }
+      }
+    }
+
+    // A1 — noite sem cama (quando ainda não há quartos com hóspedes)
+    if (!porPessoa) for (const noite of noitesEntre(inicioNoites, fimNoites)) {
       const coberta = hos.some(
         (l) => chaveDia(l.checkin) <= noite && chaveDia(l.checkout) >= somaDias(noite, 1),
       );
@@ -234,6 +278,26 @@ export function rodarAuditor(
           itens: [refHotel(a), refHotel(b)],
           hash_dos_dados: hash("A5", a.id, a.checkin, a.checkout, b.id, b.checkin, b.checkout),
           correcao: { rotulo: "Editar hotel", alvo: "hospedagem" },
+        });
+      }
+    }
+  }
+
+  // P2 — nome no bilhete diferente do nome no documento
+  if (ctx) {
+    for (const t of tks) {
+      for (const p of ctx.passageiros[t.id] ?? []) {
+        const m = ctx.membros.find((x) => x.person_id === p.person_id);
+        if (!p.nome_no_bilhete || !m?.nome_como_no_documento) continue;
+        if (normNome(p.nome_no_bilhete) === normNome(m.nome_como_no_documento)) continue;
+        achados.push({
+          regra_id: "P2",
+          severidade: "conferir",
+          mensagem: `No bilhete está “${p.nome_no_bilhete}” e no documento de ${m.nome} está “${m.nome_como_no_documento}”.`,
+          itens_envolvidos: [t.id, p.person_id],
+          itens: [refBilhete(t)],
+          hash_dos_dados: hash("P2", t.id, p.person_id, p.nome_no_bilhete, m.nome_como_no_documento),
+          correcao: { rotulo: "Editar bilhete", alvo: "bilhetes" },
         });
       }
     }

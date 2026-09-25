@@ -34,6 +34,70 @@ export type Ticket = {
   assento: string | null;
   nome_no_bilhete: string | null;
   anexo_url: string | null;
+  criado_por: string | null;
+  grupo_reserva: string | null;
+  passageiros: Passageiro[];
+};
+
+export type Passageiro = {
+  id: string;
+  ticket_id: string;
+  person_id: string;
+  nome_no_bilhete: string | null;
+  assento: string | null;
+  eticket: string | null;
+  loyalty_account_id: string | null;
+  deleted_at?: string | null;
+};
+
+export type Hospede = { id: string; room_id: string; person_id: string; deleted_at?: string | null };
+export type Quarto = { id: string; lodging_id: string; nome: string; tipo: string | null; deleted_at?: string | null; hospedes: Hospede[] };
+
+export type Reserva = {
+  id: string;
+  trip_id: string;
+  tipo: "carro" | "passeio" | "restaurante" | "outro";
+  titulo: string;
+  inicio_utc: string;
+  inicio_tz: string;
+  fim_utc: string | null;
+  fim_tz: string | null;
+  local: string | null;
+  cidade: string | null;
+  localizador: string | null;
+  valor: number | null;
+  moeda: string | null;
+  criado_por: string | null;
+  pessoas: { id: string; reservation_id: string; person_id: string; papel: string | null; deleted_at?: string | null }[];
+};
+
+export type ItemRoteiro = {
+  item_tipo: "ticket" | "lodging" | "reservation";
+  item_id: string;
+  subtipo: string;
+  titulo: string;
+  inicio_utc: string;
+  inicio_tz: string;
+  fim_utc: string | null;
+  fim_tz: string | null;
+  cidade: string | null;
+  origem_iata: string | null;
+  destino_iata: string | null;
+  companhia: string | null;
+  numero: string | null;
+  pessoas: { id: string; nome: string; papel?: string | null }[];
+  detalhe: boolean;
+  editar: boolean;
+};
+
+export type Anexo = {
+  id: string;
+  item_tipo: "ticket" | "lodging" | "reservation";
+  item_id: string;
+  storage_path: string;
+  nome: string;
+  content_type: string;
+  size_bytes: number;
 };
 
 export type Lodging = {
@@ -49,6 +113,8 @@ export type Lodging = {
   moeda: string | null;
   politica_cancelamento: string | null;
   anexo_url: string | null;
+  criado_por: string | null;
+  quartos: Quarto[];
 };
 
 export type Expense = {
@@ -67,13 +133,16 @@ export type Expense = {
 
 export type Person = {
   id: string;
+  account_id?: string | null;
+  kind?: string;
+  apelido?: string | null;
   nome: string;
   nome_como_no_documento: string | null;
   nacionalidades: string[];
   data_nascimento: string | null;
 };
 
-export type Membro = { id: string; papel: string; person: Person };
+export type Membro = { id: string; person_id: string; papel: string; status: string; nome: string; apelido: string | null; nome_como_no_documento: string | null; kind: string; meu: boolean };
 
 export type Finding = {
   id: string;
@@ -121,11 +190,11 @@ export const ticketsQuery = (tripId: string) =>
       unwrap<Ticket[]>(
         db
           .from("ticket")
-          .select("*")
+          .select("*, passageiros:ticket_passenger(*)")
           .eq("trip_id", tripId)
           .is("deleted_at", null)
           .order("partida_utc", { ascending: true }),
-      ),
+      ).then((l) => l.map((t) => ({ ...t, passageiros: (t.passageiros ?? []).filter((p) => !p.deleted_at) }))),
   });
 
 export const lodgingsQuery = (tripId: string) =>
@@ -135,11 +204,52 @@ export const lodgingsQuery = (tripId: string) =>
       unwrap<Lodging[]>(
         db
           .from("lodging")
-          .select("*")
+          .select("*, quartos:lodging_room(*, hospedes:lodging_guest(*))")
           .eq("trip_id", tripId)
           .is("deleted_at", null)
           .order("checkin", { ascending: true }),
+      ).then((l) =>
+        l.map((h) => ({
+          ...h,
+          quartos: (h.quartos ?? []).filter((q) => !q.deleted_at).map((q) => ({ ...q, hospedes: (q.hospedes ?? []).filter((g) => !g.deleted_at) })),
+        })),
       ),
+  });
+
+export const reservasQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["reservas", tripId],
+    queryFn: () =>
+      unwrap<Reserva[]>(
+        db.from("reservation").select("*, pessoas:reservation_person(*)").eq("trip_id", tripId).is("deleted_at", null).order("inicio_utc", { ascending: true }),
+      ).then((l) => l.map((r) => ({ ...r, pessoas: (r.pessoas ?? []).filter((p) => !p.deleted_at) }))),
+  });
+
+/** Roteiro para todos os membros: resumo sem localizador, assento, valor nem anexo. */
+export const roteiroQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["roteiro", tripId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: ItemRoteiro[] | null; error: { message: string } | null }> }).rpc("roteiro_viagem", { _tid: tripId });
+      if (error) throw new Error(error.message);
+      return (data ?? []).sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc));
+    },
+  });
+
+/** Anexos dos itens que a pessoa pode ver (a regra de acesso fica no banco). */
+export const anexosQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["anexos", tripId],
+    queryFn: async () => {
+      const [t, l, r] = await Promise.all([
+        unwrap<{ id: string }[]>(db.from("ticket").select("id").eq("trip_id", tripId)),
+        unwrap<{ id: string }[]>(db.from("lodging").select("id").eq("trip_id", tripId)),
+        unwrap<{ id: string }[]>(db.from("reservation").select("id").eq("trip_id", tripId)),
+      ]);
+      const ids = [...t, ...l, ...r].map((x) => x.id);
+      if (!ids.length) return [] as Anexo[];
+      return unwrap<Anexo[]>(db.from("item_attachment").select("*").in("item_id", ids).is("deleted_at", null).order("created_at"));
+    },
   });
 
 export const expensesQuery = (tripId: string) =>
@@ -159,14 +269,11 @@ export const expensesQuery = (tripId: string) =>
 export const membersQuery = (tripId: string) =>
   queryOptions({
     queryKey: ["members", tripId],
-    queryFn: () =>
-      unwrap<Membro[]>(
-        db
-          .from("trip_member")
-          .select("id, papel, person:person_id(id, nome, nome_como_no_documento, nacionalidades, data_nascimento)")
-          .eq("trip_id", tripId)
-          .is("deleted_at", null),
-      ),
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: Membro[] | null; error: { message: string } | null }> }).rpc("membros_viagem", { _tid: tripId });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
 export const peopleQuery = () =>
@@ -176,7 +283,7 @@ export const peopleQuery = () =>
       unwrap<Person[]>(
         db
           .from("person")
-          .select("id, nome, nome_como_no_documento, nacionalidades, data_nascimento")
+          .select("id, nome, apelido, account_id, kind, nome_como_no_documento, nacionalidades, data_nascimento")
           .is("deleted_at", null)
           .order("nome"),
       ),

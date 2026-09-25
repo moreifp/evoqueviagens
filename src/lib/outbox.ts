@@ -61,6 +61,11 @@ export async function mutar(op: Op): Promise<"salvo" | "fila"> {
   return "fila";
 }
 
+/** Coloca direto na fila (usado para manter a ordem quando uma operação anterior ficou na fila). */
+export async function enfileirar(op: Op) {
+  await gravar([...(await ler()), op]);
+}
+
 let enviando = false;
 export async function sincronizar() {
   if (enviando || !navigator.onLine) return;
