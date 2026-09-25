@@ -49,7 +49,7 @@ export type DocRow = {
   aguardando_em?: string | null;
 };
 export const AGUARDANDO = "Aguardando resposta no WhatsApp";
-export type ContaRow = { id: string; person_id: string; programa: string; numero: string | null; tipo: string; categoria: string | null };
+export type ContaRow = { id: string; person_id: string; programa: string; numero: string | null; tipo: string; categoria: string | null; titular?: string | null; site_url?: string | null; cartao_path?: string | null };
 export type PrefRow = { person_id: string; assento: string | null; quarto: string | null; bebe_alcool: boolean | null; restricoes: string[]; refeicao_voo: string | null };
 export type RevisaoRow = { id: string; person_id: string; secao: Secao; status: string; recado: string | null };
 export type MudancaRow = {

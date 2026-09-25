@@ -174,19 +174,17 @@ function RootComponent() {
         queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
         persister: createAsyncStoragePersister({
           storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
-          key: "evoque-cache",
+          key: "evoque-cache-v5",
         }),
         maxAge: 1000 * 60 * 60 * 24 * 30,
-        buster: "evoque-v3",
+        buster: "evoque-eu-v1",
       });
     })();
-    // Desativa o cache antigo que podia misturar duas versões do app.
-    // O arquivo /sw.js também se autodesativa para alcançar visitantes antigos.
     if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker
-        .getRegistrations()
-        .then((regs) => Promise.all(regs.filter((reg) => reg.active?.scriptURL.endsWith("/sw.js")).map((reg) => reg.unregister())))
-        .catch(() => {});
+      void navigator.serviceWorker.register("/sw.js").then(async () => {
+        await navigator.serviceWorker.ready;
+        if (navigator.serviceWorker.controller && navigator.onLine) await fetch(window.location.href, { cache: "no-store" });
+      }).catch(() => {});
     }
     return () => {
       cancelado = true;

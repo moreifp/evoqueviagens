@@ -1,0 +1,14 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Topo } from "@/components/Chrome";
+import { Campo, inputCls } from "@/components/Form";
+import { euQuery } from "@/lib/eu";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/pessoas/$pid/fidelidade/novo")({ head: () => ({ meta: [
+  { title: "Novo programa — Evoque Viagens" }, { name: "description", content: "Adicione um programa de fidelidade." },
+  { property: "og:title", content: "Novo programa — Evoque Viagens" }, { property: "og:description", content: "Cadastre seu programa de fidelidade." },
+] }), component: Novo });
+function Novo() { const { pid } = Route.useParams(); const nav = useNavigate(); const qc = useQueryClient(); const { data } = useQuery(euQuery(pid)); const [saving,setSaving]=useState(false); async function save(fd:FormData){ if(!data || data.pessoa.account_id!==data.uid)return; setSaving(true); const id=crypto.randomUUID(); const {error}=await supabase.from("loyalty_account").insert({ id, person_id:pid, programa:String(fd.get("programa")||""), numero:String(fd.get("numero")||"")||null, tipo:String(fd.get("tipo")||"outro"), categoria:String(fd.get("categoria")||"")||null, titular:String(fd.get("titular")||"")||null, site_url:String(fd.get("site_url")||"")||null }); if(error){toast.error("Não foi possível salvar.");setSaving(false);return;} await qc.invalidateQueries({queryKey:["eu",pid]}); nav({to:"/pessoas/$pid/fidelidade/$fid",params:{pid,fid:id}}); } return <div className="min-h-screen bg-background"><Topo titulo="Novo programa" voltarPara="/pessoas/$pid/fidelidade" voltarParams={{pid}}/><form action={(fd)=>void save(fd)} className="mx-auto max-w-xl space-y-4 px-4 pt-5"><Campo rotulo="Programa"><input required name="programa" className={inputCls}/></Campo><Campo rotulo="Tipo"><select name="tipo" className={inputCls}><option value="aerea">Aérea</option><option value="hotel">Hotel</option><option value="locadora">Locadora</option><option value="sala_vip">Sala VIP</option><option value="outro">Outro</option></select></Campo><Campo rotulo="Número"><input name="numero" className={`${inputCls} mono-code`}/></Campo><Campo rotulo="Categoria"><input name="categoria" placeholder="Gold, Platinum…" className={inputCls}/></Campo><Campo rotulo="Nome do titular"><input name="titular" className={inputCls}/></Campo><Campo rotulo="Site do programa"><input name="site_url" type="url" className={inputCls}/></Campo><button disabled={saving} className="gradient-hero tap w-full rounded-lg text-lg font-bold">Salvar programa</button></form></div>; }

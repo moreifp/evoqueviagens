@@ -3,7 +3,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plus, MapPin, Users } from "lucide-react";
 import { tripsQuery } from "@/lib/data";
 import { dataBRCurta, diasAte, mesAno } from "@/lib/format";
-import { Avatar } from "@/components/Chrome";
 
 export const Route = createFileRoute("/viagens")({
   head: () => ({
@@ -46,7 +45,6 @@ function MinhasViagens() {
     <div className="min-h-screen bg-background pb-52">
       <header className="flex items-center gap-2 px-4 py-3">
         <h1 className="flex-1 text-3xl">Minhas viagens</h1>
-        <Avatar />
       </header>
 
       <main className="px-4">

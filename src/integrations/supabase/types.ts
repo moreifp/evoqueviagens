@@ -126,6 +126,60 @@ export type Database = {
           },
         ]
       }
+      document_attachment: {
+        Row: {
+          content_type: string
+          created_at: string
+          deleted_at: string | null
+          document_id: string
+          file_name: string
+          id: string
+          is_primary: boolean
+          person_id: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          deleted_at?: string | null
+          document_id: string
+          file_name: string
+          id?: string
+          is_primary?: boolean
+          person_id: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          deleted_at?: string | null
+          document_id?: string
+          file_name?: string
+          id?: string
+          is_primary?: boolean
+          person_id?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_attachment_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "traveler_document"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_attachment_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense: {
         Row: {
           categoria: string
@@ -272,6 +326,7 @@ export type Database = {
       }
       loyalty_account: {
         Row: {
+          cartao_path: string | null
           categoria: string | null
           created_at: string
           deleted_at: string | null
@@ -280,9 +335,12 @@ export type Database = {
           owner_id: string | null
           person_id: string
           programa: string
+          site_url: string | null
           tipo: string
+          titular: string | null
         }
         Insert: {
+          cartao_path?: string | null
           categoria?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -291,9 +349,12 @@ export type Database = {
           owner_id?: string | null
           person_id: string
           programa: string
+          site_url?: string | null
           tipo?: string
+          titular?: string | null
         }
         Update: {
+          cartao_path?: string | null
           categoria?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -302,7 +363,9 @@ export type Database = {
           owner_id?: string | null
           person_id?: string
           programa?: string
+          site_url?: string | null
           tipo?: string
+          titular?: string | null
         }
         Relationships: [
           {
@@ -881,6 +944,74 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vault_item: {
+        Row: {
+          account_id: string
+          created_at: string
+          encrypted_payload: string
+          id: string
+          iv: string
+          loyalty_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          encrypted_payload: string
+          id?: string
+          iv: string
+          loyalty_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          encrypted_payload?: string
+          id?: string
+          iv?: string
+          loyalty_account_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_item_loyalty_account_id_fkey"
+            columns: ["loyalty_account_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_account"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_meta: {
+        Row: {
+          account_id: string
+          created_at: string
+          kdf_iterations: number
+          kdf_salt: string
+          updated_at: string
+          verifier_ciphertext: string
+          verifier_iv: string
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          kdf_iterations?: number
+          kdf_salt: string
+          updated_at?: string
+          verifier_ciphertext: string
+          verifier_iv: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          kdf_iterations?: number
+          kdf_salt?: string
+          updated_at?: string
+          verifier_ciphertext?: string
+          verifier_iv?: string
+        }
+        Relationships: []
       }
     }
     Views: {

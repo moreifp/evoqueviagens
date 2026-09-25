@@ -21,10 +21,16 @@ import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
+import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
+import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
+import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
+import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
+import { Route as PessoasPidFidelidadeFidRouteImport } from './routes/pessoas.$pid.fidelidade.$fid'
+import { Route as PessoasPidFidelidadeNovoRouteImport } from './routes/pessoas.$pid.fidelidade.novo'
 import { Route as TripIdBilhetesIndexRouteImport } from './routes/trip.$id.bilhetes.index'
 import { Route as TripIdBilhetesNovoRouteImport } from './routes/trip.$id.bilhetes.novo'
 import { Route as TripIdDespesasIndexRouteImport } from './routes/trip.$id.despesas.index'
@@ -92,6 +98,11 @@ const PessoasPidConferirRoute = PessoasPidConferirRouteImport.update({
   path: '/pessoas/$pid/conferir',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PessoasPidDadosRoute = PessoasPidDadosRouteImport.update({
+  id: '/pessoas/$pid/dados',
+  path: '/pessoas/$pid/dados',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TripIdIndexRoute = TripIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -112,6 +123,34 @@ const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
   path: '/revisao',
   getParentRoute: () => TripIdRoute,
 } as any)
+const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
+  id: '/pessoas/$pid/documentos/$did',
+  path: '/pessoas/$pid/documentos/$did',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PessoasPidDocumentosNovoRoute =
+  PessoasPidDocumentosNovoRouteImport.update({
+    id: '/pessoas/$pid/documentos/novo',
+    path: '/pessoas/$pid/documentos/novo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PessoasPidFidelidadeIndexRoute =
+  PessoasPidFidelidadeIndexRouteImport.update({
+    id: '/pessoas/$pid/fidelidade/',
+    path: '/pessoas/$pid/fidelidade/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PessoasPidFidelidadeFidRoute = PessoasPidFidelidadeFidRouteImport.update({
+  id: '/pessoas/$pid/fidelidade/$fid',
+  path: '/pessoas/$pid/fidelidade/$fid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PessoasPidFidelidadeNovoRoute =
+  PessoasPidFidelidadeNovoRouteImport.update({
+    id: '/pessoas/$pid/fidelidade/novo',
+    path: '/pessoas/$pid/fidelidade/novo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TripIdBilhetesIndexRoute = TripIdBilhetesIndexRouteImport.update({
   id: '/bilhetes/',
   path: '/bilhetes/',
@@ -155,14 +194,20 @@ export interface FileRoutesByFullPath {
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
+  '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
+  '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade/': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -178,14 +223,20 @@ export interface FileRoutesByTo {
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
+  '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
+  '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem': typeof TripIdHospedagemIndexRoute
@@ -203,14 +254,20 @@ export interface FileRoutesById {
   '/convite/$token': typeof ConviteTokenRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
+  '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
+  '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
+  '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
+  '/pessoas/$pid/fidelidade/novo': typeof PessoasPidFidelidadeNovoRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
+  '/pessoas/$pid/fidelidade/': typeof PessoasPidFidelidadeIndexRoute
   '/trip/$id/bilhetes/': typeof TripIdBilhetesIndexRoute
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
@@ -229,14 +286,20 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/trip/$id'
     | '/pessoas/$pid/conferir'
+    | '/pessoas/$pid/dados'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/pessoas/$pid/documentos/$did'
+    | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/$fid'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade/'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -252,14 +315,20 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/convite/$token'
     | '/pessoas/$pid/conferir'
+    | '/pessoas/$pid/dados'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
     | '/pessoas/$pid'
     | '/trip/$id'
+    | '/pessoas/$pid/documentos/$did'
+    | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/$fid'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade'
     | '/trip/$id/bilhetes'
     | '/trip/$id/despesas'
     | '/trip/$id/hospedagem'
@@ -276,14 +345,20 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/trip/$id'
     | '/pessoas/$pid/conferir'
+    | '/pessoas/$pid/dados'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/pessoas/$pid/documentos/$did'
+    | '/pessoas/$pid/documentos/novo'
+    | '/pessoas/$pid/fidelidade/$fid'
+    | '/pessoas/$pid/fidelidade/novo'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
+    | '/pessoas/$pid/fidelidade/'
     | '/trip/$id/bilhetes/'
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
@@ -301,7 +376,13 @@ export interface RootRouteChildren {
   ConviteTokenRoute: typeof ConviteTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
+  PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
+  PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
+  PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
+  PessoasPidFidelidadeFidRoute: typeof PessoasPidFidelidadeFidRoute
+  PessoasPidFidelidadeNovoRoute: typeof PessoasPidFidelidadeNovoRoute
+  PessoasPidFidelidadeIndexRoute: typeof PessoasPidFidelidadeIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -390,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PessoasPidConferirRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pessoas/$pid/dados': {
+      id: '/pessoas/$pid/dados'
+      path: '/pessoas/$pid/dados'
+      fullPath: '/pessoas/$pid/dados'
+      preLoaderRoute: typeof PessoasPidDadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trip/$id/': {
       id: '/trip/$id/'
       path: '/'
@@ -417,6 +505,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/trip/$id/revisao'
       preLoaderRoute: typeof TripIdRevisaoRouteImport
       parentRoute: typeof TripIdRoute
+    }
+    '/pessoas/$pid/documentos/$did': {
+      id: '/pessoas/$pid/documentos/$did'
+      path: '/pessoas/$pid/documentos/$did'
+      fullPath: '/pessoas/$pid/documentos/$did'
+      preLoaderRoute: typeof PessoasPidDocumentosDidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/documentos/novo': {
+      id: '/pessoas/$pid/documentos/novo'
+      path: '/pessoas/$pid/documentos/novo'
+      fullPath: '/pessoas/$pid/documentos/novo'
+      preLoaderRoute: typeof PessoasPidDocumentosNovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/fidelidade/': {
+      id: '/pessoas/$pid/fidelidade/'
+      path: '/pessoas/$pid/fidelidade'
+      fullPath: '/pessoas/$pid/fidelidade/'
+      preLoaderRoute: typeof PessoasPidFidelidadeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/fidelidade/$fid': {
+      id: '/pessoas/$pid/fidelidade/$fid'
+      path: '/pessoas/$pid/fidelidade/$fid'
+      fullPath: '/pessoas/$pid/fidelidade/$fid'
+      preLoaderRoute: typeof PessoasPidFidelidadeFidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pessoas/$pid/fidelidade/novo': {
+      id: '/pessoas/$pid/fidelidade/novo'
+      path: '/pessoas/$pid/fidelidade/novo'
+      fullPath: '/pessoas/$pid/fidelidade/novo'
+      preLoaderRoute: typeof PessoasPidFidelidadeNovoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/trip/$id/bilhetes/': {
       id: '/trip/$id/bilhetes/'
@@ -504,7 +627,13 @@ const rootRouteChildren: RootRouteChildren = {
   ConviteTokenRoute: ConviteTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
+  PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
+  PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
+  PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
+  PessoasPidFidelidadeFidRoute: PessoasPidFidelidadeFidRoute,
+  PessoasPidFidelidadeNovoRoute: PessoasPidFidelidadeNovoRoute,
+  PessoasPidFidelidadeIndexRoute: PessoasPidFidelidadeIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
