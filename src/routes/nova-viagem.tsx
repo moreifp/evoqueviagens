@@ -38,6 +38,22 @@ function NovaViagem() {
   const [fim, setFim] = useState("");
   const [moeda, setMoeda] = useState("BRL");
   const [salvando, setSalvando] = useState(false);
+
+  function isoDia(d: Date) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function somarDias(iso: string, dias: number) {
+    const [a = 0, m = 1, d = 1] = iso.split("-").map(Number);
+    return isoDia(new Date(a, m - 1, d + dias));
+  }
+  const hoje = isoDia(new Date());
+  const minInicio = editar ? undefined : hoje;
+  const minFim = inicio ? somarDias(inicio, 1) : minInicio;
+
+  function mudarInicio(valor: string) {
+    setInicio(valor);
+    if (valor && (!fim || fim <= valor)) setFim(somarDias(valor, 1));
+  }
   useEffect(() => {
     if (!origem) return;
     setNome(`Cópia de ${origem.nome}`);
@@ -52,6 +68,10 @@ function NovaViagem() {
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
+    if (inicio && fim && fim <= inicio) {
+      toast.error("O fim precisa ser depois do início");
+      return;
+    }
     setSalvando(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -94,10 +114,10 @@ function NovaViagem() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Campo rotulo="Início">
-            <input type="date" required value={inicio} onChange={(e) => setInicio(e.target.value)} className={inputCls} />
+            <input type="date" required value={inicio} min={minInicio} onChange={(e) => mudarInicio(e.target.value)} className={inputCls} />
           </Campo>
           <Campo rotulo="Fim">
-            <input type="date" required value={fim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
+            <input type="date" required value={fim} min={minFim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
           </Campo>
         </div>
         <Campo rotulo="Moeda da viagem">
