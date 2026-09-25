@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2 } from "lucide-react";
-import { Topo } from "@/components/Chrome";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { VisaoParticipante } from "@/components/VisaoParticipante";
 import { useQuery } from "@tanstack/react-query";
 import { cancelado, formatarAtraso } from "@/lib/voo";
-import { apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
+import { tripQuery, apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
@@ -35,6 +37,15 @@ const ICONE: Record<string, typeof Plane> = {
 
 function VisaoGeral() {
   const { id } = Route.useParams();
+  const { data: trip } = useSuspenseQuery(tripQuery(id));
+  const [uid, setUid] = useState<string | null | undefined>(undefined);
+  useEffect(() => { void supabase.auth.getSession().then(({ data }) => setUid(data.session?.user.id ?? null)); }, []);
+  if (uid === undefined) return null;
+  if (uid !== trip.owner_id) return <VisaoParticipante trip={trip} />;
+  return <VisaoOrganizador id={id} />;
+}
+
+function VisaoOrganizador({ id }: { id: string }) {
   const { trip, visiveis } = useAuditoria(id);
   const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
   // Roteiro: todos os itens da viagem, inclusive os que a pessoa só vê em resumo.

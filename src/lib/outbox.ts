@@ -6,12 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 export type Op =
   | { tipo: "update"; tabela: string; id: string; valores: Record<string, unknown> }
   | { tipo: "insert"; tabela: string; valores: Record<string, unknown> }
-  | { tipo: "upsert"; tabela: string; valores: Record<string, unknown>; onConflict: string };
+  | { tipo: "upsert"; tabela: string; valores: Record<string, unknown>; onConflict: string }
+  | { tipo: "rpc"; funcao: string; args: Record<string, unknown> };
 
 const CHAVE = "evoque-outbox";
 const ouvintes = new Set<(n: number) => void>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as unknown as { from: (t: string) => any };
+const db = supabase as unknown as { from: (t: string) => any; rpc: (f: string, a: unknown) => any };
 
 async function ler(): Promise<Op[]> {
   return ((await get(CHAVE)) as Op[] | undefined) ?? [];
@@ -38,6 +39,7 @@ async function executarAgora(op: Op) {
   let r;
   if (op.tipo === "update") r = await db.from(op.tabela).update(op.valores).eq("id", op.id);
   else if (op.tipo === "insert") r = await db.from(op.tabela).insert(op.valores);
+  else if (op.tipo === "rpc") r = await db.rpc(op.funcao, op.args);
   else r = await db.from(op.tabela).upsert(op.valores, { onConflict: op.onConflict });
   if (r.error) throw Object.assign(new Error(r.error.message), { rede: false });
 }
