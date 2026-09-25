@@ -15,7 +15,7 @@ import {
 } from "@/lib/cadastro-tipos";
 import { blobParaDataUrl, prepararArquivo, type Ext } from "@/lib/imagem";
 import { CampoData } from "@/components/FichaPartes";
-import { ACEITA_FOTO, DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
+import { ACEITA_FOTO, DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 
 export const Route = createFileRoute("/c/$token")({
   validateSearch: (s) => z.object({ secao: z.string().optional() }).parse(s),
