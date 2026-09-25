@@ -349,16 +349,35 @@ export async function softDelete(tabela: string, id: string) {
 }
 
 /** Cotação do dia. Falha em silêncio: o campo continua editável. */
-export async function buscarCotacao(de: string, para: string): Promise<number | null> {
-  if (de === para) return 1;
+export type Cotacao = { taxa: number; fonte: string; data: string };
+
+/** Cotação para qualquer código ISO: Frankfurter (BCE) e depois open.er-api. Null = taxa manual. */
+export async function buscarCotacaoDetalhe(de: string, para: string): Promise<Cotacao | null> {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (de === para) return { taxa: 1, fonte: "mesma moeda", data: hoje };
   try {
-    const r = await fetch(`https://open.er-api.com/v6/latest/${de}`);
+    const r = await fetch(`https://api.frankfurter.app/latest?from=${encodeURIComponent(de)}&to=${encodeURIComponent(para)}`);
+    if (r.ok) {
+      const j = (await r.json()) as { date?: string; rates?: Record<string, number> };
+      const t = j.rates?.[para];
+      if (t) return { taxa: t, fonte: "Frankfurter", data: j.date ?? hoje };
+    }
+  } catch { /* tenta a próxima */ }
+  try {
+    const r = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(de)}`);
     if (!r.ok) return null;
-    const j = (await r.json()) as { rates?: Record<string, number> };
-    return j.rates?.[para] ?? null;
+    const j = (await r.json()) as { rates?: Record<string, number>; time_last_update_unix?: number };
+    const t = j.rates?.[para];
+    if (!t) return null;
+    const data = j.time_last_update_unix ? new Date(j.time_last_update_unix * 1000).toISOString().slice(0, 10) : hoje;
+    return { taxa: t, fonte: "ExchangeRate-API", data };
   } catch {
     return null;
   }
+}
+
+export async function buscarCotacao(de: string, para: string): Promise<number | null> {
+  return (await buscarCotacaoDetalhe(de, para))?.taxa ?? null;
 }
 
 /** Último status de cada voo da viagem (guardado no aparelho para funcionar offline). */
