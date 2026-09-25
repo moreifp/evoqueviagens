@@ -1,39 +1,21 @@
-# Landing aprovada Evoque Viagens / Evoque Travels
+# Botão "Compartilhar de volta"
 
-## Objetivo
-Integrar integralmente o site aprovado ao projeto atual, sem publicar, sem alterar DNS, banco, autenticação, PWA, caches, MCP/OAuth ou fluxos do aplicativo.
+## O que muda para você
+Na tela "Quem vê seus dados", aba "Comigo", cada pessoa que compartilha com você (ex.: Fausto) ganha um botão **"Compartilhar de volta"**.
 
-## Implementação
-1. **Acervo visual e fontes**
-   - Guardar as duas fotografias editoriais originais no acervo do projeto e gerar versões WebP otimizadas para a página.
-   - Incorporar localmente as fontes Outfit, Inter e Playfair Display fornecidas no pacote, sem dependência externa.
-   - Manter as capturas `desktop.png` e `celular.png` apenas como referência visual.
+- Tocou no botão: abre logo abaixo, no próprio cartão, a escolha do que ele vai ver (os mesmos blocos de sempre, já todos marcados; viagens: todas ou só algumas).
+- Tocou em "Compartilhar": pronto. Sem link, sem convite. Ele já passa a ver seus dados, somente leitura, e recebe um aviso no celular (se tiver ligado).
+- Se você já compartilha com ele, o botão vira "Você já compartilha · Mudar", que leva ao cartão na aba "Eu compartilho".
+- Senhas do cofre continuam nunca indo. Dá para revogar a qualquer momento como hoje.
 
-2. **Camada pública isolada**
-   - Criar componentes React próprios da landing para cabeçalho, menu móvel, rodapé, troca PT/EN, tema claro/escuro, FAQ, modelos fictícios e cópia do endereço MCP.
-   - Portar todo o conteúdo dos dez HTML aprovados, sem resumir ou reescrever: início, privacidade, termos, contato e conexão do assistente, em PT e EN.
-   - Isolar cores, tipografia, espaçamentos e tema em uma folha de estilos exclusiva, sem afetar as telas do app.
+## Regras
+- Só aparece para quem já compartilha com você (compartilhamento ativo) — ninguém consegue dar acesso a um desconhecido por esse caminho.
+- Nada do cadastro pessoal é alterado; nenhuma mudança no banco (usa as tabelas de compartilhamento que já existem).
+- Não publicar.
 
-3. **Rotas e separação de host**
-   - Manter `/` como landing somente em `evoque.global`/`www`, e como conta do usuário nos hosts do app.
-   - Adicionar as rotas públicas `/en`, `/privacidade`, `/termos`, `/contato`, `/conectar-assistente` e equivalentes em inglês.
-   - Adicionar `/landing-preview` como revisão pública PT com `noindex`; nesse ambiente, links de início, seções e idioma permanecem dentro do marketing.
-   - Liberar do login apenas essa lista fechada de rotas de marketing. Todas as rotas de dados continuam protegidas.
-   - Ajustar o redirecionamento por host para que as páginas de marketing permaneçam em `evoque.global`, enquanto rotas do app continuem indo para `app.evoque.global`.
-
-4. **Metadados e conteúdo aprovado**
-   - Definir título, descrição, Open Graph, Twitter, canonical e hreflang específicos por idioma e página.
-   - Manter `noindex` na rota de revisão e nas minutas de termos/privacidade; demais páginas apontam para os endereços finais aprovados.
-   - Preservar CTAs para `https://app.evoque.global`, contato exclusivo por e-mail, links Evoque, textos “em breve”, legendas de dados fictícios e o fluxo MCP aprovado.
-
-5. **Validação**
-   - Conferir tipos e o build automático do projeto.
-   - Revisar as onze rotas em desktop, tablet e celular: conteúdo, imagens, menu, FAQ, idioma, tema, cópia, foco, links, ausência de sobreposição e rolagem horizontal.
-   - Confirmar que `/` no host do app continua exibindo a conta e que nenhuma rota privada foi liberada.
-   - Atualizar o roadmap e informar arquivos, rotas, revisão/commit atual e endereço da prévia. Nada será publicado.
+## Teste
+Duas contas descartáveis @example.com: A compartilha com B; B toca "Compartilhar de volta" com alguns blocos; A vê B na aba "Comigo" com os blocos certos; B revoga; tentar compartilhar de volta com alguém que não compartilha comigo é recusado. Apagar tudo no fim.
 
 ## Detalhes técnicos
-- TanStack Start continuará como roteador e estrutura da aplicação.
-- Os HTML/CSS/JS do pacote serão convertidos para componentes e estilos locais; documentos internos do ZIP não serão servidos.
-- O componente antigo de landing será substituído sem copiar sua rotina de desregistrar service worker ou limpar caches.
-- As fotografias finais serão servidas pelo acervo CDN do projeto; os originais enviados permanecem preservados fora da versão otimizada.
+- Nova server function `compartilharDeVolta({ grantId, blocos, tripIds })` em `compartilhar.functions.ts` com `requireSupabaseAuth`: confirma que o `share_grant` está ativo e tem `grantee_id = userId`; revoga grant ativo anterior userId→owner; insere `share_grant { owner_id: userId, grantee_id: owner, blocos, trip_ids: tripsDoDono(...) }`, reaproveitando a lógica de `aceitarConvite`.
+- UI em `src/routes/compartilhamentos.tsx` usando `EscolherBlocos` e invalidando `["compartilhamentos"]`.
