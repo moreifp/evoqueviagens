@@ -51,7 +51,13 @@ export const garantirMinhaFicha = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("FALHA");
+    if (error) {
+      // Duas telas pedindo a ficha ao mesmo tempo numa conta nova: a outra chamada já criou.
+      const { data: ja } = await db.from("person").select("id").eq("account_id", context.userId).eq("kind", "self").is("deleted_at", null).maybeSingle();
+      if (ja) return { id: ja.id as string };
+      console.error("garantirMinhaFicha", error);
+      throw new Error("FALHA");
+    }
     return { id: data.id as string };
   });
 

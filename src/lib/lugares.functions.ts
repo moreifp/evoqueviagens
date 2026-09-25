@@ -29,15 +29,17 @@ export const autocompletarLugar = createServerFn({ method: "POST" })
         texto: z.string().trim().min(3).max(120),
         sessao: z.string().uuid(),
         perto: z.string().trim().max(80).optional(),
+        tipo: z.enum(["lugar", "cidade"]).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }): Promise<Sugestao[]> => {
-    const input = data.perto && !data.texto.toLowerCase().includes(data.perto.toLowerCase()) ? `${data.texto} ${data.perto}` : data.texto;
+    const cidade = data.tipo === "cidade";
+    const input = !cidade && data.perto && !data.texto.toLowerCase().includes(data.perto.toLowerCase()) ? `${data.texto} ${data.perto}` : data.texto;
     const r = await fetch(`${GATEWAY_URL}/places/v1/places:autocomplete`, {
       method: "POST",
       headers: cabecalhos({ "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text" }),
-      body: JSON.stringify({ input, sessionToken: data.sessao, languageCode: "pt-BR" }),
+      body: JSON.stringify({ input, sessionToken: data.sessao, languageCode: "pt-BR", ...(cidade ? { includedPrimaryTypes: ["(cities)"] } : {}) }),
     });
     await checar(r, "autocomplete");
     const j = (await r.json()) as { suggestions?: { placePrediction?: { placeId: string; text: { text: string } } }[] };

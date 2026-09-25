@@ -9,6 +9,8 @@ import { CATEGORIAS } from "@/lib/categorias";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { novoId } from "@/lib/itens";
+import { PreencherArquivo } from "@/components/PreencherArquivo";
+import { soData } from "@/lib/importAnexo";
 
 export const Route = createFileRoute("/trip/$id/despesas/nova")({
   validateSearch: (s: Record<string, unknown>) => ({ itemTipo: textoBusca(s.itemTipo), itemId: textoBusca(s.itemId), descricao: textoBusca(s.descricao), valor: textoBusca(s.valor), moeda: textoBusca(s.moeda), data: textoBusca(s.data) }),
@@ -47,6 +49,7 @@ function NovaDespesa() {
   const [buscandoTaxa, setBuscandoTaxa] = useState(false);
   const [comprovante, setComprovante] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [dataGasto, setDataGasto] = useState(origem.data || "");
 
   const valor = Number(digitos || "0") / 100;
   const diferente = moeda !== trip.moeda_base;
@@ -81,7 +84,7 @@ function NovaDespesa() {
         trip_id: id,
         descricao: descricao || CATEGORIAS.find((c) => c.id === categoria)?.rotulo || "Gasto",
         categoria,
-        data: origem.data || new Date().toISOString().slice(0, 10),
+        data: dataGasto || new Date().toISOString().slice(0, 10),
         valor_original: valor,
         moeda_original: moeda,
         taxa_cambio: Number(taxa || "1"),
@@ -115,6 +118,19 @@ function NovaDespesa() {
 
       {passo === 1 && (
         <main className="px-4">
+          <PreencherArquivo
+            tripId={id}
+            esperado="despesa"
+            onArquivo={(d) => setComprovante(d)}
+            onLido={(r) => {
+              if (r.valor != null) setDigitos(String(Math.round(r.valor * 100)));
+              if (r.moeda && (MOEDAS as readonly string[]).includes(r.moeda)) setMoeda(r.moeda);
+              if (r.titulo) setDescricao(r.titulo);
+              if (r.categoria && CATEGORIAS.some((c) => c.id === r.categoria)) setCategoria(r.categoria);
+              if (soData(r.inicio)) setDataGasto(soData(r.inicio));
+              if (r.valor != null) setPasso(3);
+            }}
+          />
           <p className="num mt-2 text-center text-[42px] leading-none text-foreground">
             {fmtMoney(valor, moeda)}
           </p>

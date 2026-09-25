@@ -11,6 +11,8 @@ import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
 import { baixa, lerEdicao } from "@/lib/caixaClaude";
+import { PreencherArquivo, casarPessoa } from "@/components/PreencherArquivo";
+import type { Leitura } from "@/lib/reserva-ai.functions";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { CampoLugar } from "@/components/CampoLugar";
 import type { Lugar } from "@/lib/lugares.functions";
@@ -70,10 +72,15 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
-    const x = JSON.parse(raw) as Record<string, string | number | null>;
-    const tipo = ["carro", "passeio", "restaurante", "outro"].includes(String(x.tipo)) ? x.tipo as "carro" | "passeio" | "restaurante" | "outro" : "outro";
-    setF((v) => ({ ...v, tipo, titulo: String(x.titulo ?? ""), inicio: dataLocal(x.inicio as string | null), fim: dataLocal(x.fim as string | null), local: String(x.local ?? ""), cidade: String(x.cidade ?? ""), localizador: String(x.localizador ?? ""), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL") }));
+    aplicar(JSON.parse(raw) as Leitura);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicial, tripId]);
+  function aplicar(x: Leitura) {
+    const tipo = (["carro", "passeio", "restaurante", "outro"] as const).find((t) => t === x.tipo);
+    setF((v) => ({ ...v, tipo: tipo ?? v.tipo, titulo: x.titulo ?? v.titulo, inicio: dataLocal(x.inicio) || v.inicio, fim: dataLocal(x.fim) || v.fim, local: x.local ?? v.local, cidade: x.cidade ?? v.cidade, localizador: x.localizador ?? v.localizador, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda ?? v.moeda }));
+    const pids = [...new Set((x.pessoas ?? []).map((n) => casarPessoa(n, membros)).filter(Boolean) as string[])];
+    if (pids.length) setPessoas(pids.map((pid) => ({ id: novoId(), person_id: pid, papel: "" })));
+  }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -144,6 +151,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
 
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
+      {!inicial && <PreencherArquivo tripId={tripId} esperado="reserva" onLido={aplicar} />}
       <Campo rotulo="Tipo">
         <select value={f.tipo} onChange={set("tipo")} className={inputCls}>
           {TIPOS_RESERVA.map((t) => (

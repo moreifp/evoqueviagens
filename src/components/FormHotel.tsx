@@ -13,6 +13,8 @@ import type { Op } from "@/lib/outbox";
 import { baixa, lerEdicao } from "@/lib/caixaClaude";
 import { anexarImportado, dataLocal, soData } from "@/lib/importAnexo";
 import { CampoLugar } from "@/components/CampoLugar";
+import { PreencherArquivo, casarPessoa } from "@/components/PreencherArquivo";
+import type { Leitura } from "@/lib/reserva-ai.functions";
 import type { Lugar } from "@/lib/lugares.functions";
 
 type QuartoF = { id: string; nome: string; tipo: string; hospedes: { id: string; person_id: string }[] };
@@ -64,9 +66,14 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     }
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
-    const x = JSON.parse(raw) as Record<string, string | number | null>;
-    setF((v) => ({ ...v, nome: String(x.titulo ?? ""), cidade: String(x.cidade ?? ""), endereco: String(x.local ?? ""), localizador: String(x.localizador ?? ""), checkin: dataLocal(x.inicio as string | null), checkout: dataLocal(x.fim as string | null), valor: x.valor == null ? "" : String(x.valor), moeda: String(x.moeda ?? "BRL"), cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate as string | null) }));
+    aplicar(JSON.parse(raw) as Leitura);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicial, tripId]);
+  function aplicar(x: Leitura) {
+    setF((v) => ({ ...v, nome: x.titulo ?? v.nome, cidade: x.cidade ?? v.cidade, endereco: x.local ?? v.endereco, localizador: x.localizador ?? v.localizador, checkin: dataLocal(x.inicio) || v.checkin, checkout: dataLocal(x.fim) || v.checkout, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda && (MOEDAS as readonly string[]).includes(x.moeda) ? x.moeda : v.moeda, cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate) || v.cancelamento_gratis_ate, politica_cancelamento: x.politica_cancelamento ?? v.politica_cancelamento }));
+    const qs = (x.quartos ?? []).length ? x.quartos : (x.pessoas ?? []).length ? [{ nome: "Quarto 1", tipo: null, hospedes: x.pessoas }] : [];
+    if (qs.length) setQuartos(qs.map((q) => ({ id: novoId(), nome: q.nome, tipo: q.tipo ?? "", hospedes: [...new Set(q.hospedes.map((n) => casarPessoa(n, ativos)).filter(Boolean) as string[])].map((pid) => ({ id: novoId(), person_id: pid })) })));
+  }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -155,6 +162,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
 
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
+      {!inicial && <PreencherArquivo tripId={tripId} esperado="hotel" onLido={aplicar} />}
       <Campo rotulo="Nome do hotel">
         <CampoLugar valor={f.nome} onTexto={textoMudou("nome")} onEscolher={(l) => escolherLugar(l, false)} perto={f.cidade} placeholder="Digite o nome para buscar" />
       </Campo>
