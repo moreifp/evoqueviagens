@@ -29,6 +29,13 @@
       "when": 1790286828402,
       "tag": "0003_stable_links",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790299517173,
+      "tag": "0004_contas_proprias_compartilhamento",
+      "breakpoints": true
     }
   ]
 }

@@ -211,6 +211,7 @@ export type Database = {
           moeda: string | null
           nome: string
           politica_cancelamento: string | null
+          traveler_person_id: string | null
           trip_id: string
           valor: number | null
         }
@@ -229,6 +230,7 @@ export type Database = {
           moeda?: string | null
           nome: string
           politica_cancelamento?: string | null
+          traveler_person_id?: string | null
           trip_id: string
           valor?: number | null
         }
@@ -247,10 +249,18 @@ export type Database = {
           moeda?: string | null
           nome?: string
           politica_cancelamento?: string | null
+          traveler_person_id?: string | null
           trip_id?: string
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lodging_traveler_person_id_fkey"
+            columns: ["traveler_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lodging_trip_id_fkey"
             columns: ["trip_id"]
@@ -306,6 +316,7 @@ export type Database = {
       }
       person: {
         Row: {
+          account_id: string | null
           apelido: string | null
           atualizado_em: string
           consentimento_em: string | null
@@ -321,6 +332,7 @@ export type Database = {
           foto_url: string | null
           id: string
           idioma: string
+          kind: string
           modo: string | null
           nacionalidades: string[]
           nome: string
@@ -335,6 +347,7 @@ export type Database = {
           visto_negado_detalhe: string | null
         }
         Insert: {
+          account_id?: string | null
           apelido?: string | null
           atualizado_em?: string
           consentimento_em?: string | null
@@ -350,6 +363,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           idioma?: string
+          kind?: string
           modo?: string | null
           nacionalidades?: string[]
           nome: string
@@ -364,6 +378,7 @@ export type Database = {
           visto_negado_detalhe?: string | null
         }
         Update: {
+          account_id?: string | null
           apelido?: string | null
           atualizado_em?: string
           consentimento_em?: string | null
@@ -379,6 +394,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           idioma?: string
+          kind?: string
           modo?: string | null
           nacionalidades?: string[]
           nome?: string
@@ -532,6 +548,95 @@ export type Database = {
           },
         ]
       }
+      share_grant: {
+        Row: {
+          blocos: string[]
+          created_at: string
+          grantee_id: string
+          grantee_nome: string | null
+          id: string
+          owner_id: string
+          owner_nome: string | null
+          revogado_em: string | null
+          status: string
+        }
+        Insert: {
+          blocos?: string[]
+          created_at?: string
+          grantee_id: string
+          grantee_nome?: string | null
+          id?: string
+          owner_id: string
+          owner_nome?: string | null
+          revogado_em?: string | null
+          status?: string
+        }
+        Update: {
+          blocos?: string[]
+          created_at?: string
+          grantee_id?: string
+          grantee_nome?: string | null
+          id?: string
+          owner_id?: string
+          owner_nome?: string | null
+          revogado_em?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      share_invite: {
+        Row: {
+          blocos: string[]
+          created_at: string
+          direcao: string
+          expira_em: string
+          from_id: string
+          from_nome: string | null
+          id: string
+          person_id: string | null
+          token_cifrado: string | null
+          token_hash: string
+          usado_em: string | null
+          usado_por: string | null
+        }
+        Insert: {
+          blocos?: string[]
+          created_at?: string
+          direcao?: string
+          expira_em?: string
+          from_id?: string
+          from_nome?: string | null
+          id?: string
+          person_id?: string | null
+          token_cifrado?: string | null
+          token_hash: string
+          usado_em?: string | null
+          usado_por?: string | null
+        }
+        Update: {
+          blocos?: string[]
+          created_at?: string
+          direcao?: string
+          expira_em?: string
+          from_id?: string
+          from_nome?: string | null
+          id?: string
+          person_id?: string | null
+          token_cifrado?: string | null
+          token_hash?: string
+          usado_em?: string | null
+          usado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_invite_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket: {
         Row: {
           anexo_url: string | null
@@ -552,6 +657,7 @@ export type Database = {
           partida_tz: string
           partida_utc: string
           tipo: string
+          traveler_person_id: string | null
           trip_id: string
         }
         Insert: {
@@ -573,6 +679,7 @@ export type Database = {
           partida_tz: string
           partida_utc: string
           tipo: string
+          traveler_person_id?: string | null
           trip_id: string
         }
         Update: {
@@ -594,9 +701,17 @@ export type Database = {
           partida_tz?: string
           partida_utc?: string
           tipo?: string
+          traveler_person_id?: string | null
           trip_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_traveler_person_id_fkey"
+            columns: ["traveler_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_trip_id_fkey"
             columns: ["trip_id"]
