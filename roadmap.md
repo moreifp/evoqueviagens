@@ -1,12 +1,11 @@
 # Roadmap
 
-- [x] Module 1: schema, server functions, admin + participant screens, offline
-- [x] Production build clean (typecheck + build)
-- [x] SW cache bump + network-first navigations (done in sw.js, evoque-v2)
-- [x] Login screen verified; non-admin refused. Fausto creates his own password on first access (no test users made)
-- [x] Publish (requested)
-- [x] Corrigir a tela de cadastro aberta pelo link do WhatsApp
-- [x] Orientar o enquadramento e melhorar a foto do RG antes da leitura
-- [x] Status visível da leitura do RG (lendo/ok/falhou + tentar de novo)
-- [x] Erro "l is not a function" ao abrir link pessoal: cache antigo removido no navegador padrão
-- [x] Link atual de "Demais dados" validado no publicado, sem login e sem alterar a ficha
+- [x] Module 1 (cadastro pessoal) — ver histórico
+- [x] Contas próprias: cadastro livre, ficha "Eu" automática
+- [x] Dependentes em "Minha família"
+- [x] Compartilhar por blocos (convite, aceitar, mudar, revogar), só leitura
+- [x] Pré-cadastros assumidos pelo convite
+- [x] Viajante na passagem (dono ou dependente)
+- [x] Teste com contas descartáveis (apagadas)
+- [ ] Carros e outras reservas (aguarda confirmação)
+- [ ] Dependente que ganha login próprio (aguarda confirmação)
