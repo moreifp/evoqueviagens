@@ -78,6 +78,13 @@
       "when": 1790304695156,
       "tag": "0010_flight_status",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790304838268,
+      "tag": "0011_enable_cron_net",
+      "breakpoints": true
     }
   ]
 }
