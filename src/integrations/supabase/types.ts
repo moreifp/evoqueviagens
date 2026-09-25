@@ -370,6 +370,42 @@ export type Database = {
           },
         ]
       }
+      item_attachment: {
+        Row: {
+          content_type: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          item_id: string
+          item_tipo: string
+          nome: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_id: string
+          item_tipo: string
+          nome: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item_id?: string
+          item_tipo?: string
+          nome?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: []
+      }
       lodging: {
         Row: {
           anexo_url: string | null
@@ -377,6 +413,7 @@ export type Database = {
           checkout: string
           cidade: string | null
           created_at: string
+          criado_por: string | null
           deleted_at: string | null
           endereco: string | null
           id: string
@@ -385,6 +422,7 @@ export type Database = {
           localizador: string | null
           moeda: string | null
           nome: string
+          origem: string
           politica_cancelamento: string | null
           traveler_person_id: string | null
           trip_id: string
@@ -396,6 +434,7 @@ export type Database = {
           checkout: string
           cidade?: string | null
           created_at?: string
+          criado_por?: string | null
           deleted_at?: string | null
           endereco?: string | null
           id?: string
@@ -404,6 +443,7 @@ export type Database = {
           localizador?: string | null
           moeda?: string | null
           nome: string
+          origem?: string
           politica_cancelamento?: string | null
           traveler_person_id?: string | null
           trip_id: string
@@ -415,6 +455,7 @@ export type Database = {
           checkout?: string
           cidade?: string | null
           created_at?: string
+          criado_por?: string | null
           deleted_at?: string | null
           endereco?: string | null
           id?: string
@@ -423,6 +464,7 @@ export type Database = {
           localizador?: string | null
           moeda?: string | null
           nome?: string
+          origem?: string
           politica_cancelamento?: string | null
           traveler_person_id?: string | null
           trip_id?: string
@@ -441,6 +483,80 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodging_guest: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          person_id: string
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id: string
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          person_id?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodging_guest_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lodging_guest_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "lodging_room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodging_room: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          lodging_id: string
+          nome: string
+          tipo: string | null
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          lodging_id: string
+          nome?: string
+          tipo?: string | null
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          lodging_id?: string
+          nome?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodging_room_lodging_id_fkey"
+            columns: ["lodging_id"]
+            isOneToOne: false
+            referencedRelation: "lodging"
             referencedColumns: ["id"]
           },
         ]
@@ -732,10 +848,127 @@ export type Database = {
           },
         ]
       }
+      reservation: {
+        Row: {
+          cidade: string | null
+          created_at: string
+          criado_por: string | null
+          deleted_at: string | null
+          fim_tz: string | null
+          fim_utc: string | null
+          id: string
+          inicio_tz: string
+          inicio_utc: string
+          lat: number | null
+          lng: number | null
+          local: string | null
+          localizador: string | null
+          moeda: string | null
+          origem: string
+          tipo: string
+          titulo: string
+          trip_id: string
+          valor: number | null
+        }
+        Insert: {
+          cidade?: string | null
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          fim_tz?: string | null
+          fim_utc?: string | null
+          id?: string
+          inicio_tz: string
+          inicio_utc: string
+          lat?: number | null
+          lng?: number | null
+          local?: string | null
+          localizador?: string | null
+          moeda?: string | null
+          origem?: string
+          tipo: string
+          titulo: string
+          trip_id: string
+          valor?: number | null
+        }
+        Update: {
+          cidade?: string | null
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          fim_tz?: string | null
+          fim_utc?: string | null
+          id?: string
+          inicio_tz?: string
+          inicio_utc?: string
+          lat?: number | null
+          lng?: number | null
+          local?: string | null
+          localizador?: string | null
+          moeda?: string | null
+          origem?: string
+          tipo?: string
+          titulo?: string
+          trip_id?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_person: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          papel: string | null
+          person_id: string
+          reservation_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          papel?: string | null
+          person_id: string
+          reservation_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          papel?: string | null
+          person_id?: string
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_person_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_person_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_grant: {
         Row: {
           blocos: string[]
           created_at: string
+          expira_em: string | null
           grantee_id: string
           grantee_nome: string | null
           id: string
@@ -743,11 +976,13 @@ export type Database = {
           owner_nome: string | null
           revogado_em: string | null
           status: string
+          trip_id: string | null
           trip_ids: string[] | null
         }
         Insert: {
           blocos?: string[]
           created_at?: string
+          expira_em?: string | null
           grantee_id: string
           grantee_nome?: string | null
           id?: string
@@ -755,11 +990,13 @@ export type Database = {
           owner_nome?: string | null
           revogado_em?: string | null
           status?: string
+          trip_id?: string | null
           trip_ids?: string[] | null
         }
         Update: {
           blocos?: string[]
           created_at?: string
+          expira_em?: string | null
           grantee_id?: string
           grantee_nome?: string | null
           id?: string
@@ -767,9 +1004,18 @@ export type Database = {
           owner_nome?: string | null
           revogado_em?: string | null
           status?: string
+          trip_id?: string | null
           trip_ids?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "share_grant_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       share_invite: {
         Row: {
@@ -783,6 +1029,7 @@ export type Database = {
           person_id: string | null
           token_cifrado: string | null
           token_hash: string
+          trip_id: string | null
           trip_ids: string[] | null
           usado_em: string | null
           usado_por: string | null
@@ -798,6 +1045,7 @@ export type Database = {
           person_id?: string | null
           token_cifrado?: string | null
           token_hash: string
+          trip_id?: string | null
           trip_ids?: string[] | null
           usado_em?: string | null
           usado_por?: string | null
@@ -813,6 +1061,7 @@ export type Database = {
           person_id?: string | null
           token_cifrado?: string | null
           token_hash?: string
+          trip_id?: string | null
           trip_ids?: string[] | null
           usado_em?: string | null
           usado_por?: string | null
@@ -825,6 +1074,13 @@ export type Database = {
             referencedRelation: "person"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "share_invite_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ticket: {
@@ -835,13 +1091,16 @@ export type Database = {
           chegada_utc: string
           companhia: string | null
           created_at: string
+          criado_por: string | null
           deleted_at: string | null
           destino_cidade: string | null
           destino_iata: string | null
+          grupo_reserva: string | null
           id: string
           localizador: string | null
           nome_no_bilhete: string | null
           numero: string | null
+          origem: string
           origem_cidade: string | null
           origem_iata: string | null
           partida_tz: string
@@ -857,13 +1116,16 @@ export type Database = {
           chegada_utc: string
           companhia?: string | null
           created_at?: string
+          criado_por?: string | null
           deleted_at?: string | null
           destino_cidade?: string | null
           destino_iata?: string | null
+          grupo_reserva?: string | null
           id?: string
           localizador?: string | null
           nome_no_bilhete?: string | null
           numero?: string | null
+          origem?: string
           origem_cidade?: string | null
           origem_iata?: string | null
           partida_tz: string
@@ -879,13 +1141,16 @@ export type Database = {
           chegada_utc?: string
           companhia?: string | null
           created_at?: string
+          criado_por?: string | null
           deleted_at?: string | null
           destino_cidade?: string | null
           destino_iata?: string | null
+          grupo_reserva?: string | null
           id?: string
           localizador?: string | null
           nome_no_bilhete?: string | null
           numero?: string | null
+          origem?: string
           origem_cidade?: string | null
           origem_iata?: string | null
           partida_tz?: string
@@ -907,6 +1172,64 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_passenger: {
+        Row: {
+          assento: string | null
+          created_at: string
+          deleted_at: string | null
+          eticket: string | null
+          id: string
+          loyalty_account_id: string | null
+          nome_no_bilhete: string | null
+          person_id: string
+          ticket_id: string
+        }
+        Insert: {
+          assento?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          eticket?: string | null
+          id?: string
+          loyalty_account_id?: string | null
+          nome_no_bilhete?: string | null
+          person_id: string
+          ticket_id: string
+        }
+        Update: {
+          assento?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          eticket?: string | null
+          id?: string
+          loyalty_account_id?: string | null
+          nome_no_bilhete?: string | null
+          person_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_passenger_loyalty_account_id_fkey"
+            columns: ["loyalty_account_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_account"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_passenger_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_passenger_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
             referencedColumns: ["id"]
           },
         ]
@@ -1023,30 +1346,39 @@ export type Database = {
       }
       trip_member: {
         Row: {
+          convidado_por: string | null
           created_at: string
           deleted_at: string | null
           entrou_em: string
           id: string
           papel: string
           person_id: string
+          respondido_em: string | null
+          status: string
           trip_id: string
         }
         Insert: {
+          convidado_por?: string | null
           created_at?: string
           deleted_at?: string | null
           entrou_em?: string
           id?: string
           papel?: string
           person_id: string
+          respondido_em?: string | null
+          status?: string
           trip_id: string
         }
         Update: {
+          convidado_por?: string | null
           created_at?: string
           deleted_at?: string | null
           entrou_em?: string
           id?: string
           papel?: string
           person_id?: string
+          respondido_em?: string | null
+          status?: string
           trip_id?: string
         }
         Relationships: [
@@ -1065,6 +1397,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trip_notice: {
+        Row: {
+          canal: string | null
+          enviado_em: string
+          enviado_por: string | null
+          id: string
+          lido_em: string | null
+          mensagem: string
+          person_id: string | null
+          regra_id: string | null
+          resolvido_em: string | null
+          tipo: string
+          trip_id: string
+        }
+        Insert: {
+          canal?: string | null
+          enviado_em?: string
+          enviado_por?: string | null
+          id?: string
+          lido_em?: string | null
+          mensagem: string
+          person_id?: string | null
+          regra_id?: string | null
+          resolvido_em?: string | null
+          tipo: string
+          trip_id: string
+        }
+        Update: {
+          canal?: string | null
+          enviado_em?: string
+          enviado_por?: string | null
+          id?: string
+          lido_em?: string | null
+          mensagem?: string
+          person_id?: string | null
+          regra_id?: string | null
+          resolvido_em?: string | null
+          tipo?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_notice_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_notice_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_trust: {
+        Row: {
+          account_id: string
+          criado_em: string
+          organizer_id: string
+          revogado_em: string | null
+        }
+        Insert: {
+          account_id?: string
+          criado_em?: string
+          organizer_id: string
+          revogado_em?: string | null
+        }
+        Update: {
+          account_id?: string
+          criado_em?: string
+          organizer_id?: string
+          revogado_em?: string | null
+        }
+        Relationships: []
       }
       vault_item: {
         Row: {
@@ -1139,6 +1549,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      roteiro_viagem: {
+        Args: { _tid: string }
+        Returns: {
+          cidade: string
+          companhia: string
+          destino_iata: string
+          detalhe: boolean
+          editar: boolean
+          fim_tz: string
+          fim_utc: string
+          inicio_tz: string
+          inicio_utc: string
+          item_id: string
+          item_tipo: string
+          numero: string
+          origem_iata: string
+          pessoas: Json
+          subtipo: string
+          titulo: string
+        }[]
+      }
       somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
       verificar_cron_voos: { Args: { _t: string }; Returns: boolean }
     }
