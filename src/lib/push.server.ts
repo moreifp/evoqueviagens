@@ -124,7 +124,7 @@ export async function enviarAviso(p: PedidoAviso): Promise<{ status: string }> {
         const corpoRes = (await res.text()).slice(0, 300);
         console.error("fcm", res.status, corpoRes);
         ultimoErro = `FCM ${res.status}`;
-        if (corpoRes.includes("UNREGISTERED") || corpoRes.includes("NOT_FOUND") || res.status === 404) {
+        if (corpoRes.includes("UNREGISTERED") || corpoRes.includes("NOT_FOUND") || corpoRes.includes("INVALID_ARGUMENT") || res.status === 404) {
           await db.from("push_device").update({ ativo: false }).eq("id", ap.id);
         }
       }
