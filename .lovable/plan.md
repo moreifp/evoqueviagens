@@ -1,69 +1,35 @@
-# Status do voo pelo número (AeroDataBox)
+# Evoque sem internet (etapa offline)
 
-Confirmado: o secret `AERODATABOX_KEY` já está salvo no backend. Nada no cadastro pessoal (pessoas, documentos, fidelidade, cofre, compartilhamento) nem nos passageiros/quartos será tocado. As mudanças no banco só acrescentam coisas. Não vou publicar.
+## 0. Correção imediata
+- Reagendar o job `status-voos-15min` para chamar `https://evoqueviagens.lovable.app/api/public/hooks/status-voos`. Nada mais muda no AeroDataBox.
 
-## O que você vai ver
-- **Cartão do voo (lista de bilhetes e visão da viagem):**
-  - Botão "Ver status", que abre a busca do Google (ex.: `TP88`) em outra aba e funciona sem a API.
-  - Chip grande: "No horário" (verde) · "Atrasado 40 min" (âmbar) · "Cancelado" (vermelho) · "Portão 12".
-  - Embaixo, em letra pequena: "atualizado às 18:02 · AeroDataBox".
-  - Horário revisto em destaque, com o original riscado ao lado.
-  - Botão "Atualizar agora" (desativado sem internet). Sem internet, aparece o último status guardado e a hora dele.
-- **Visão da viagem:** quando um horário muda ou um voo é cancelado, aparece uma faixa no topo com a frase do que mudou (ex.: "TP88 atrasou 1h10 · parte 23:40"). Nada de badge na navegação.
-- **Auditor:** passa a usar o horário revisto. Se o atraso atrapalhar o check-in ou uma conexão, isso vira um achado.
-- **Sem tela separada do voo:** hoje o app não tem uma tela própria para o voo, então tudo fica no cartão. Não vou criar uma tela nova.
+## 1. Primeiro: a tela de viagem em branco no teste
+O que já sei (lido no código e no navegador de teste):
+- Não é o servidor rodando a consulta sem sessão. O AuthGate desenha uma tela vazia no servidor e só mostra as telas depois de ler a sessão no aparelho, então as telas de viagem nunca rodam no servidor.
+- No navegador de teste, a consulta de bilhetes ficou "carregando" para sempre (fetching, nenhuma falha), enquanto a rede mostrava respostas 200 repetidas. Até a moldura de "Carregando…" não aparecia, e todas as rotas constavam como "success".
+- Causa ainda NÃO confirmada. Hipóteses em ordem: (a) trava de sessão do cliente de login (a sessão injetada pelo teste renova o token enquanto `garantirMinhaFicha` e as consultas disputam a mesma trava); (b) o cache restaurado do aparelho sobrescrevendo a consulta em andamento; (c) React mantendo a tela anterior durante a navegação.
+- Passo: reproduzir com login pela própria tela de entrar (sem injetar sessão), depois isolar cada hipótese. Se acontecer também com login normal, é problema real e será corrigido nesta etapa (é o mesmo caminho que o modo sem internet usa). Vou dizer qual foi.
 
-## Consultas automáticas
-- A cada 15 min, o app olha os voos que partem entre 2h atrás e daqui a 30h.
-- Um voo só é consultado quando chega a vez dele:
-  - 24h antes da partida;
-  - 6h antes;
-  - a cada 30 min nas 3h antes;
-  - a cada 60 min durante o voo;
-  - uma vez depois do pouso.
-- Quando o mês passa de 320 unidades (80% de 400), as consultas automáticas param e o dono da viagem recebe um aviso na faixa da viagem. O limite de 400 fica num único lugar, fácil de trocar.
+## 2. O que muda para o usuário
+- O app abre no avião em qualquer tela, mesmo uma nunca aberta antes, com os dados guardados.
+- Viagens próximas ou em andamento, a ficha Eu e os dependentes ficam baixados sozinhos quando há internet. No topo da viagem aparece um selo discreto: "Disponível sem internet · atualizado há 2 h" ou "Baixando…".
+- Anexos de bilhete, hotel e os seus documentos (e dos dependentes) abrem sem internet. Documentos compartilhados por outras pessoas não ficam no aparelho.
+- Sem internet, nunca aparece a tela de login. O app entra em modo leitura com o que está guardado e renova a sessão quando a rede volta.
+- Erros sem internet não recarregam a página: mostram "Tentar de novo".
+- Um convite, uma vez só, para "Adicionar à tela de início" (no iPhone: Compartilhar → Adicionar à Tela de Início), com "Agora não".
+- Editar e apagar bilhete, hotel e despesa sem internet aparece na hora, com "1 alteração esperando internet", e sobe sozinho depois.
 
-## Detalhes técnicos
-**Migration (só acrescenta):**
-- `flight_status`: as colunas pedidas, `origem` ('auto'|'manual') e um índice em `(ticket_id, consultado_em desc)`.
-  - Leitura (SELECT) para quem pode ver a viagem do ticket, via `app_private.can_view_trip(ticket.trip_id)`.
-  - Só o servidor grava: sem permissão de escrita para usuários.
-- `api_usage (mes text PK 'YYYY-MM', unidades int, aviso_em timestamptz)`: só o servidor usa.
-- Função `app_private.somar_uso(mes, n)` para somar sem risco de contagem errada quando duas consultas chegam juntas.
-- `api_alerta (trip_id, mensagem, created_at)`: guarda o aviso de limite. O dono da viagem pode ler.
+## 3. Detalhes técnicos
+- **O1/O2 — service worker:** um script pós-build gera a lista de todos os arquivos de `dist/client` com um hash de versão e grava `sw.js` com essa lista. A instalação pré-cacheia tudo e a ativação apaga caches `evoque-*` antigos. Navegação: rede primeiro; sem rede, devolve o shell do app guardado (HTML da raiz pré-cacheado), e `/offline.html` só se nem o shell existir. `/~oauth` e `/api/` ficam fora. O `sw.js` continua escrito à mão (o app já tem um), sem trocar por `vite-plugin-pwa`, para não mudar o esquema de atualização em produção. Continua sem registro em prévia ou iframe, com `?sw=off` para desligar. Se preferir `vite-plugin-pwa`, me diga.
+- **Shell e dados:** as telas de viagem hoje buscam os dados na hora de abrir. Vou garantir que todas as consultas usem o cache do aparelho (já existe cache no IndexedDB por 30 dias) e que nenhuma espere a rede quando há dado guardado.
+- **O3 — baixar viagem:** `src/lib/baixarOffline.ts` roda ao abrir o app e ao voltar a rede, com intervalo mínimo de 30 min. Viagens não arquivadas com `data_fim >= hoje - 0` e até 60 dias à frente (mais as em andamento): pré-carrega nas mesmas chaves de consulta usadas pelas telas (trip, tickets, lodging, expense, trip_member, consistency_finding, flight_status) e também a ficha Eu, documentos, fidelidade e dependentes. Guarda "baixado em" por viagem no IndexedDB para o selo.
+- **O4 — anexos:** baixa os arquivos pelos links assinados e grava no Cache Storage `evoque-anexos` (chave = caminho no storage), somente para arquivos de ticket/lodging dessas viagens e documentos da própria conta e dependentes. Ao abrir um anexo: usa a cópia guardada se não houver rede, senão usa o link assinado. Arquivos que não são mais usados são apagados na próxima sincronização.
+- **O5 — sessão:** o AuthGate lê a sessão guardada no localStorage. Se `!navigator.onLine` e existe sessão (mesmo vencida), entra em modo leitura. `garantirMinhaFicha` só roda online, sem bloquear a tela. No evento `online` renova a sessão; se a renovação falhar, aí sim pede login.
+- **O6:** o ErrorComponent do __root só recarrega sozinho se `navigator.onLine`.
+- **O7:** chama `navigator.storage.persist()` uma vez. Convite de instalação usando `beforeinstallprompt` (Android/desktop) ou a instrução do iPhone, lembrado no localStorage.
+- **O8:** Outfit e Inter em woff2 em `/public/fonts`, com `@font-face` em styles.css. Remove os links do Google Fonts.
+- **Fila offline:** revisar editar/apagar de bilhete, hotel e despesa para passar por `mutar()` de `src/lib/outbox.ts`, com atualização imediata no cache de consultas e contador de pendências no aviso de conexão.
+- Sem migrations. Não toca em tabelas do cadastro pessoal. Não publica.
 
-**Arquivos:**
-- `src/lib/voo.ts`, usado pela tela e pelo servidor:
-  - normalizar o número: companhia IATA + número sem zeros à esquerda (`TP 088` → `TP88`);
-  - converter o nome por extenso da companhia no código IATA (LATAM→LA, TAP→TP, Azul→AD, GOL→G3, American→AA, Air France→AF, KLM→KL, Iberia→IB, United→UA, Delta→DL, Emirates→EK, Lufthansa→LH, British→BA, Copa→CM, Avianca→AV e outras);
-  - data local da partida (`partida_utc` no fuso `partida_tz`);
-  - tabela de "quando é a vez" de cada voo;
-  - texto do chip.
-- `src/lib/voo.server.ts`:
-  - chama `GET https://aerodatabox.p.rapidapi.com/flights/number/{num}/{data}` com os headers do RapidAPI, enviando só o número e a data;
-  - quando vêm vários trechos, escolhe pelo `origem_iata`/`destino_iata` do ticket;
-  - converte a resposta para as colunas e grava a consulta junto com o uso.
-- `src/lib/voo.functions.ts`: `atualizarStatusVoo({ ticket_id })` com `requireSupabaseAuth`.
-  - Lê o ticket como o próprio usuário, então só funciona para quem pode ver o ticket.
-  - Se a última consulta tem menos de 10 min, devolve a guardada sem chamar a API.
-  - Se der erro ou não vier dado, devolve o último status guardado + "Não consegui atualizar agora."
-  - Número inexistente: "Não encontrei o voo TP9999 nesta data."
-  - Grava com o acesso de servidor só depois dessas verificações.
-- `src/routes/api/public/hooks/status-voos.ts`: rota das consultas automáticas, protegida por `authenticateCronRequest` (`LOVABLE_CRON_SECRET`).
-- Agendamento de 15 em 15 min chamando essa rota, criado por SQL fora da migration.
-  - São 96 execuções por dia. Cada uma é uma consulta leve ao banco, e a API só é chamada quando é a vez de algum voo.
-- `src/lib/data.ts`: nova consulta `flightStatusQuery(tripId)` (último status de cada ticket), guardada no aparelho para funcionar offline como o resto.
-- `src/components/StatusVoo.tsx`: chip, horários, "Ver status", "Atualizar agora".
-- `src/routes/trip.$id.bilhetes.index.tsx`, `src/routes/trip.$id.index.tsx`: usar o componente e mostrar a faixa de mudança.
-- `src/lib/auditoria.ts`: repassar ao `rodarAuditor` os tickets com `partida_utc`/`chegada_utc` trocados pelo horário revisto, quando houver. O auditor em si não muda.
-
-**Consumo estimado:** o limite de 400 unidades dá cerca de 200 consultas por mês. Um voo acompanhado do começo ao fim gasta perto de 12 consultas, ou seja, 24 unidades.
-
-## Testes (vou mostrar o resultado)
-1. Chamada real com um voo que exista hoje (TP88 GRU→LIS ou outro), usando um ticket de teste numa viagem descartável: status, portão e horário.
-2. Número inexistente: mensagem clara, nada quebra.
-3. Duas consultas seguidas em menos de 10 min: a segunda não gasta unidade.
-4. Conferir que `api_usage` soma certo (esperado: 4 unidades no total, 2 do voo real + 2 do número inexistente).
-5. Apagar a viagem, o ticket, os status e a conta de teste. Zerar em `api_usage` só as unidades que os testes gastaram, se você preferir não contar os testes; senão elas ficam registradas.
-
-No fim: arquivos criados e alterados, migrations, unidades gastas e confirmação de que os dados de teste foram apagados.
+## 4. Teste (resultado mostrado no fim)
+Build de produção servido localmente (o SW não roda na prévia). Conta e viagem descartáveis com bilhete, hotel, despesa e um anexo. Passos: instala o SW → abre a viagem uma vez → modo offline → abre visão da viagem, bilhetes, hotéis, despesas e uma tela nunca aberta (ex.: Revisão) → abre o anexo → edita uma despesa offline (aparece na hora e com "1 alteração esperando internet") → volta online → confere no banco que sincronizou. Depois apago conta, viagem e arquivos.
