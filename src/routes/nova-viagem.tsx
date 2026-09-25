@@ -38,6 +38,22 @@ function NovaViagem() {
   const [fim, setFim] = useState("");
   const [moeda, setMoeda] = useState("BRL");
   const [salvando, setSalvando] = useState(false);
+
+  function isoDia(d: Date) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function somarDias(iso: string, dias: number) {
+    const [a, m, d] = iso.split("-").map(Number);
+    return isoDia(new Date(a, m - 1, d + dias));
+  }
+  const hoje = isoDia(new Date());
+  const minInicio = editar ? undefined : hoje;
+  const minFim = inicio ? somarDias(inicio, 1) : minInicio;
+
+  function mudarInicio(valor: string) {
+    setInicio(valor);
+    if (valor && (!fim || fim <= valor)) setFim(somarDias(valor, 1));
+  }
   useEffect(() => {
     if (!origem) return;
     setNome(`Cópia de ${origem.nome}`);
