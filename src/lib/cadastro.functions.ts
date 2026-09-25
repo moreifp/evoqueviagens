@@ -174,9 +174,7 @@ export const lerPassaporteAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000) }).parse(d))
   .handler(async ({ data, context }) => {
-    const email = String((context.claims as { email?: string }).email ?? "").toLowerCase();
-    const { data: adm } = await context.supabase.from("app_admin").select("email").ilike("email", email).maybeSingle();
-    if (!adm) throw new Error("NAO_ADMIN");
+    void context; // qualquer conta pode ler as próprias fotos
     return lerMrzDaImagem(data.imagem);
   });
 
@@ -201,9 +199,7 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000), tipo: z.string().max(30) }).parse(d))
   .handler(async ({ data, context }) => {
-    const email = String((context.claims as { email?: string }).email ?? "").toLowerCase();
-    const { data: adm } = await context.supabase.from("app_admin").select("email").ilike("email", email).maybeSingle();
-    if (!adm) throw new Error("NAO_ADMIN");
+    void context; // qualquer conta pode ler as próprias fotos
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { ok: false as const };
     const qual = NOMES_TIPO[data.tipo] ?? `travel document of type "${data.tipo}" (e.g. a visa)`;

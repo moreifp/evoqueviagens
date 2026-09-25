@@ -1,13 +1,15 @@
-import { cancelarLink, linkEstavel } from "./links.functions";
+import { cancelarLink } from "./links.functions";
+import { criarConvite } from "./compartilhar.functions";
 
-export function urlDoLink(token: string, secao?: string) {
-  const base = `${window.location.origin}/c/${token}`;
-  return secao ? `${base}?secao=${secao}` : base;
+export function urlDoLink(token: string, _secao?: string) {
+  return `${window.location.origin}/convite/${token}`;
 }
 
-/** Link estável da pessoa: o mesmo em qualquer aparelho; reenviar só estende a validade (30 dias). */
+/** Convite estável do pré-cadastro: a pessoa cria a conta, assume a ficha e escolhe o que compartilhar. */
 export async function linkDaPessoa(personId: string, _forcarNovo = false): Promise<string> {
-  const r = await linkEstavel({ data: { personId } });
+  const r = await criarConvite({
+    data: { direcao: "pedido", personId, blocos: ["basico", "documentos", "fidelidade", "preferencias", "dependentes", "viagens"] },
+  });
   return r.token;
 }
 
