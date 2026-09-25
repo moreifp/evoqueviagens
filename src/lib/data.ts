@@ -215,3 +215,23 @@ export async function buscarCotacao(de: string, para: string): Promise<number | 
     return null;
   }
 }
+
+/** Último status de cada voo da viagem (guardado no aparelho para funcionar offline). */
+export const flightStatusQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["flight_status", tripId],
+    queryFn: async () => {
+      const rows = await unwrap<(import("./voo").StatusVoo & { ticket: { trip_id: string } })[]>(
+        db.from("flight_status").select("id,ticket_id,consultado_em,status,partida_prevista_utc,partida_revista_utc,partida_real_utc,chegada_prevista_utc,chegada_revista_utc,chegada_real_utc,terminal_partida,portao_partida,terminal_chegada,portao_chegada,esteira,atraso_partida_min,atraso_chegada_min,origem,ticket:ticket!inner(trip_id)").eq("ticket.trip_id", tripId).order("consultado_em", { ascending: false }).limit(500),
+      );
+      const porTicket: Record<string, import("./voo").StatusVoo> = {};
+      for (const r of rows) if (!porTicket[r.ticket_id]) porTicket[r.ticket_id] = r;
+      return porTicket;
+    },
+  });
+
+export const apiAlertaQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["api_alerta", tripId],
+    queryFn: () => unwrap<{ id: string; mensagem: string; created_at: string }[]>(db.from("api_alerta").select("id,mensagem,created_at").eq("trip_id", tripId).order("created_at", { ascending: false }).limit(1)),
+  });

@@ -26,6 +26,7 @@ import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
+import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
 import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
 import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
 import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
@@ -123,6 +124,12 @@ const TripIdRevisaoRoute = TripIdRevisaoRouteImport.update({
   path: '/revisao',
   getParentRoute: () => TripIdRoute,
 } as any)
+const ApiPublicHooksStatusVoosRoute =
+  ApiPublicHooksStatusVoosRouteImport.update({
+    id: '/api/public/hooks/status-voos',
+    path: '/api/public/hooks/status-voos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
   id: '/pessoas/$pid/documentos/$did',
   path: '/pessoas/$pid/documentos/$did',
@@ -200,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -229,6 +237,7 @@ export interface FileRoutesByTo {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
+  '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
+  '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/api/public/hooks/status-voos'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid'
     | '/trip/$id'
+    | '/api/public/hooks/status-voos'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -351,6 +363,7 @@ export interface FileRouteTypes {
     | '/trip/$id/revisao'
     | '/pessoas/$pid/'
     | '/trip/$id/'
+    | '/api/public/hooks/status-voos'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -378,6 +391,7 @@ export interface RootRouteChildren {
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
+  ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
   PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
   PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
   PessoasPidFidelidadeFidRoute: typeof PessoasPidFidelidadeFidRoute
@@ -506,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdRevisaoRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/api/public/hooks/status-voos': {
+      id: '/api/public/hooks/status-voos'
+      path: '/api/public/hooks/status-voos'
+      fullPath: '/api/public/hooks/status-voos'
+      preLoaderRoute: typeof ApiPublicHooksStatusVoosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pessoas/$pid/documentos/$did': {
       id: '/pessoas/$pid/documentos/$did'
       path: '/pessoas/$pid/documentos/$did'
@@ -629,6 +650,7 @@ const rootRouteChildren: RootRouteChildren = {
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
+  ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
   PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
   PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
   PessoasPidFidelidadeFidRoute: PessoasPidFidelidadeFidRoute,
