@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, CalendarDays, UtensilsCrossed, CircleDollarSign, Plus, User, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
 import { useConexao } from "@/lib/outbox";
 
