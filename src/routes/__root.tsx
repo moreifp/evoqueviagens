@@ -197,11 +197,13 @@ function RootApp() {
         ]);
         if (cancelado) return;
         const [, restaurando] = persistQueryClient({
+          // Casts: bun resolve @tanstack/query-persist-client-core em duas cópias
+          // (direta e aninhada em react-query-persist-client); os tipos colidem.
           queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
           persister: createAsyncStoragePersister({
             storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
             key: "evoque-cache-v5",
-          }),
+          }) as unknown as Parameters<typeof persistQueryClient>[0]["persister"],
           maxAge: 1000 * 60 * 60 * 24 * 30,
           buster: "evoque-eu-v1",
         });
