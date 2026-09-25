@@ -23,7 +23,7 @@ const schema = {
     titulo: s, companhia: s, numero: s, localizador: s, origem_iata: s, destino_iata: s,
     origem_cidade: s, destino_cidade: s, inicio: s, fim: s, local: s, cidade: s,
     valor: { type: ["number", "null"] }, moeda: s, cancelamento_gratis_ate: s, politica_cancelamento: s,
-    categoria: { type: ["string", "null"], enum: ["alimentacao", "hospedagem", "transporte", "passeios", "compras", "outros", null] },
+    categoria: { type: ["string", "null"], enum: ["transporte", "hospedagem", "alimentacao", "mercado", "atracoes", "compras", "outros", null] },
     passageiros: {
       type: "array",
       items: { type: "object", additionalProperties: false, properties: { nome: { type: "string" }, assento: s, eticket: s }, required: ["nome", "assento", "eticket"] },

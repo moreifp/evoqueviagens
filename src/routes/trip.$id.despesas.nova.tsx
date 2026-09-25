@@ -124,7 +124,7 @@ function NovaDespesa() {
             onArquivo={(d) => setComprovante(d)}
             onLido={(r) => {
               if (r.valor != null) setDigitos(String(Math.round(r.valor * 100)));
-              if (r.moeda && MOEDAS.includes(r.moeda)) setMoeda(r.moeda);
+              if (r.moeda && (MOEDAS as readonly string[]).includes(r.moeda)) setMoeda(r.moeda);
               if (r.titulo) setDescricao(r.titulo);
               if (r.categoria && CATEGORIAS.some((c) => c.id === r.categoria)) setCategoria(r.categoria);
               if (soData(r.inicio)) setDataGasto(soData(r.inicio));

@@ -70,7 +70,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicial, tripId]);
   function aplicar(x: Leitura) {
-    setF((v) => ({ ...v, nome: x.titulo ?? v.nome, cidade: x.cidade ?? v.cidade, endereco: x.local ?? v.endereco, localizador: x.localizador ?? v.localizador, checkin: dataLocal(x.inicio) || v.checkin, checkout: dataLocal(x.fim) || v.checkout, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda && MOEDAS.includes(x.moeda) ? x.moeda : v.moeda, cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate) || v.cancelamento_gratis_ate, politica_cancelamento: x.politica_cancelamento ?? v.politica_cancelamento }));
+    setF((v) => ({ ...v, nome: x.titulo ?? v.nome, cidade: x.cidade ?? v.cidade, endereco: x.local ?? v.endereco, localizador: x.localizador ?? v.localizador, checkin: dataLocal(x.inicio) || v.checkin, checkout: dataLocal(x.fim) || v.checkout, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda && (MOEDAS as readonly string[]).includes(x.moeda) ? x.moeda : v.moeda, cancelamento_gratis_ate: soData(x.cancelamento_gratis_ate) || v.cancelamento_gratis_ate, politica_cancelamento: x.politica_cancelamento ?? v.politica_cancelamento }));
     const qs = (x.quartos ?? []).length ? x.quartos : (x.pessoas ?? []).length ? [{ nome: "Quarto 1", tipo: null, hospedes: x.pessoas }] : [];
     if (qs.length) setQuartos(qs.map((q) => ({ id: novoId(), nome: q.nome, tipo: q.tipo ?? "", hospedes: [...new Set(q.hospedes.map((n) => casarPessoa(n, ativos)).filter(Boolean) as string[])].map((pid) => ({ id: novoId(), person_id: pid })) })));
   }
