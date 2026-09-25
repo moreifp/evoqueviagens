@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
 });
 
 function MinhaConta() {
-  const { data, isLoading, error } = useQuery(minhaPessoaQuery());
+  const { data, isLoading, error } = useQuery({ ...minhaPessoaQuery(), retry: navigator.onLine ? 2 : 0 });
   if (isLoading) return <p className="p-6 text-lg text-muted-foreground">Preparando sua conta…</p>;
   if (error || !data) return <p className="p-6 text-lg text-danger">{error?.message ?? "Sua ficha ainda não está pronta."}</p>;
   return <EuDashboard personId={data.id} />;

@@ -30,7 +30,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         setPronto(true);
       }
     }
-    supabase.auth.getSession().then(({ data }) => aplicar(data.session));
+    supabase.auth.getSession().then(({ data }) => aplicar(data.session)).catch(() => aplicar(null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setTimeout(() => aplicar(s), 0);
     });
