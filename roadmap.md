@@ -96,3 +96,10 @@
 - [x] Isolar estilos, tema, fontes e fotos editoriais do aplicativo
 - [x] Preservar separação por host, autenticação, PWA, caches, MCP/OAuth e rotas privadas
 - [x] Validar build/tipos, desktop, tablet, celular, links e interações; não publicar
+
+## Cinco pedidos do Fausto (25/09)
+- [ ] 1. Seletor com todas as moedas ISO 4217 + busca + offline; cotação automática com fonte/data, manual se faltar
+- [ ] 2. Bagagem por passageiro no bilhete + linha compacta + leitura por IA
+- [ ] 3. Status do voo na data local; mensagem "a partir de DD/MM"; Google com data
+- [ ] 4. Ficha completa agrupada, obrigatórios só passaporte e emergência, "Não tenho"
+- [ ] 5. Colar e-mail da agência (novo, Adicionar e edição com merge), sem preços, anexo privado
