@@ -73,7 +73,7 @@ function Bilhetes() {
   );
 }
 
-function CartaoEmbarque({ b }: { b: Ticket }) {
+function CartaoEmbarque({ b, s }: { b: Ticket; s?: StatusVooT }) {
   const [aberto, setAberto] = useState(false);
   const Icone = ICONE[b.tipo] ?? Plane;
   const [hh, mm] = horaNoFuso(b.partida_utc, b.partida_tz).split(":");
@@ -104,6 +104,8 @@ function CartaoEmbarque({ b }: { b: Ticket }) {
           </p>
         </div>
       </div>
+
+      <StatusVoo b={b} s={s} />
 
       {b.anexo_url && (
         <a

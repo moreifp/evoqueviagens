@@ -1,6 +1,8 @@
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { findingsQuery, insertRow, lodgingsQuery, ticketsQuery, tripQuery } from "./data";
+import { useQuery } from "@tanstack/react-query";
+import { horariosEfetivos } from "./voo";
+import { findingsQuery, flightStatusQuery, insertRow, lodgingsQuery, ticketsQuery, tripQuery } from "./data";
 import { ordenar, rodarAuditor, type Achado } from "./audit";
 
 export function useAuditoria(tripId: string) {
@@ -13,7 +15,13 @@ export function useAuditoria(tripId: string) {
     findings.filter((f) => f.dispensado_em).map((f) => `${f.regra_id}:${f.hash_dos_dados}`),
   );
 
-  const todos = ordenar(rodarAuditor(trip, bilhetes, hospedagens));
+  const { data: status } = useQuery(flightStatusQuery(tripId));
+  // Auditor roda com o horário revisto quando houver (atraso que fura check-in/conexão vira achado).
+  const efetivos = bilhetes.map((b) => {
+    const h = horariosEfetivos(status?.[b.id]);
+    return h ? { ...b, partida_utc: h.partida ?? b.partida_utc, chegada_utc: h.chegada ?? b.chegada_utc } : b;
+  });
+  const todos = ordenar(rodarAuditor(trip, efetivos, hospedagens));
   const visiveis = todos.filter((a) => !dispensados.has(`${a.regra_id}:${a.hash_dos_dados}`));
 
   return { trip, visiveis, todos };
