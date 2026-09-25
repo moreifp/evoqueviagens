@@ -54,7 +54,7 @@ function Novo() {
     let id = editar;
     if (atual) {
       // Só envia o que mudou.
-      const mud = Object.fromEntries(Object.entries(valores).filter(([k, v]) => (atual as Record<string, unknown>)[k] !== v));
+      const mud: Partial<typeof valores> = Object.fromEntries(Object.entries(valores).filter(([k, v]) => (atual as Record<string, unknown>)[k] !== v));
       if (Object.keys(mud).length) { const { error } = await supabase.from("loyalty_account").update(mud).eq("id", atual.id); if (error) { toast.error("Não foi possível salvar."); setSaving(false); return; } }
     } else {
       id = crypto.randomUUID();
