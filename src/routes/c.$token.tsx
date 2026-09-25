@@ -15,7 +15,7 @@ import {
 } from "@/lib/cadastro-tipos";
 import { blobParaDataUrl, prepararArquivo, type Ext } from "@/lib/imagem";
 import { CampoData } from "@/components/FichaPartes";
-import { ACEITA_FOTO, DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
+import { ACEITA_FOTO, DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 
 export const Route = createFileRoute("/c/$token")({
   validateSearch: (s) => z.object({ secao: z.string().optional() }).parse(s),
@@ -153,6 +153,11 @@ function CadastroParticipante() {
   useEffect(() => {
     const atual = ++chamada.current;
     setErro(null);
+    // Token fora do formato (curto demais, caracteres inválidos) nem vai ao servidor.
+    if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) {
+      setErro("LINK_INVALIDO");
+      return;
+    }
     abrir({ data: { token } })
       .then((r) => {
         if (atual !== chamada.current) return;
@@ -162,8 +167,11 @@ function CadastroParticipante() {
           setContato(r.contato ?? null);
         }
       })
-      .catch(() => {
-        if (atual === chamada.current) setErro("REDE");
+      .catch((e) => {
+        if (atual !== chamada.current) return;
+        // Erro de validação do servidor (token malformado) vira "link inválido", não tela quebrada.
+        const msg = String(e?.message ?? e ?? "");
+        setErro(msg.includes("too_small") || msg.includes("ZodError") ? "LINK_INVALIDO" : "REDE");
       });
   }, [token, tentativa]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -533,19 +541,22 @@ function BotaoFoto({
   rotulo, onFoto, grande, previa, en,
 }: { rotulo: string; onFoto: (f: File) => void; grande?: boolean; previa?: string | null; en?: boolean }) {
   return (
-    <ZonaArquivo
-      colar={grande}
-      onArquivo={onFoto}
-      className={
-        grande
-          ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
-          : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
-      }
-    >
-      {previa && !grande ? <Miniatura src={previa} className="h-10 w-10 rounded" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
-      {rotulo}
-      {grande && <DicaArrastar en={en} />}
-    </ZonaArquivo>
+    <div className="flex flex-col gap-2">
+      <ZonaArquivo
+        colar={grande}
+        onArquivo={onFoto}
+        className={
+          grande
+            ? "flex min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-4 border-dashed border-accent bg-accent/5 text-xl font-bold text-accent"
+            : "tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
+        }
+      >
+        {previa && !grande ? <Miniatura src={previa} className="h-10 w-10 rounded" /> : <Camera size={grande ? 44 : 24} strokeWidth={2.2} />}
+        {rotulo}
+        {grande && <DicaArrastar en={en} />}
+      </ZonaArquivo>
+      <TirarFoto onFoto={onFoto} en={en} />
+    </div>
   );
 }
 
@@ -609,26 +620,28 @@ function PassoVoce({ c, t, token, ocupado, gravar }: PassoProps) {
   const upload = useUpload(token);
   const dados = () => ({ person: { ...v, foto_url: foto } });
   usePausa(() => gravar(dados(), "pausa"));
+  const escolherFoto = async (f: File) => {
+    setPrevia(URL.createObjectURL(f));
+    try {
+      const r = await upload(f, 800);
+      setFoto(r.path);
+    } catch {
+      toast.error(t("erro"));
+    }
+  };
   return (
     <>
       <div className="flex flex-col items-center gap-2">
         <ZonaArquivo
           aceita={ACEITA_FOTO}
           ariaLabel={t("foto")}
-          onArquivo={async (f) => {
-            setPrevia(URL.createObjectURL(f));
-            try {
-              const r = await upload(f, 800);
-              setFoto(r.path);
-            } catch {
-              toast.error(t("erro"));
-            }
-          }}
+          onArquivo={escolherFoto}
           className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-dashed border-accent bg-accent/5"
         >
           {previa ? <img src={previa} alt="" className="h-full w-full object-cover" /> : <Camera size={40} strokeWidth={2.2} className="text-accent" />}
         </ZonaArquivo>
         <span className="text-base font-bold text-foreground">{t("foto")}</span>
+        <TirarFoto onFoto={escolherFoto} en={p.idioma === "en"} className="w-full" />
       </div>
       <Campo rotulo={t("apelido")}>
         <input className={inp} value={v.apelido} onChange={(e) => setV({ ...v, apelido: e.target.value })} />
@@ -724,10 +737,13 @@ function PassoPassaporte({ c, t, L, token, ocupado, gravar }: PassoProps) {
               <span className="flex-1 text-base font-bold">
                 {d.lido === "lendo" ? t("lendo") : d.lido === "ok" ? t("lemos") : d.lido === "falhou" ? t("naoLemos") : NOME_SECAO.passaporte[L]}
               </span>
-              <ZonaArquivo colar onArquivo={(f) => foto(i, f)} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
-                <RotateCcw size={24} strokeWidth={2.2} />
-                <span className="text-sm font-bold">{t("refazer")}</span>
-              </ZonaArquivo>
+              <div className="flex flex-col gap-2">
+                <ZonaArquivo colar onArquivo={(f) => foto(i, f)} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
+                  <RotateCcw size={24} strokeWidth={2.2} />
+                  <span className="text-sm font-bold">{t("refazer")}</span>
+                </ZonaArquivo>
+                <TirarFoto onFoto={(f) => foto(i, f)} en={L === "en"} />
+              </div>
             </div>
           )}
           <Campo rotulo={t("nomePass")}>

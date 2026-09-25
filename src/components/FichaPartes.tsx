@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Camera, Eye, EyeOff, FileText, Image as ImageIcon, Loader2, Pencil, RefreshCw, Trash2, Check, X } from "lucide-react";
-import { DicaArrastar, Miniatura, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
+import { DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 import { toast } from "sonner";
 import { inputCls } from "@/components/Form";
 import { mascarar, urlAssinada } from "@/lib/pessoas";
@@ -269,7 +269,7 @@ export function Editor({
               )}
             </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <ZonaArquivo
               colar
               onArquivo={escolher}
@@ -281,6 +281,7 @@ export function Editor({
               </span>
               <DicaArrastar />
             </ZonaArquivo>
+            <TirarFoto onFoto={escolher} className="flex-1" />
             {(foto.path || novaFoto) && novaFoto !== null && (
               <button
                 type="button"

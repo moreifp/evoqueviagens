@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Topo } from "@/components/Chrome";
 import { AvatarPessoa, LinhaStatus } from "@/components/Pessoa";
 import { Cartao, Dado, Editor, NumeroOculto, VerFoto, dataBR, type CampoEd } from "@/components/FichaPartes";
-import { DicaArrastar, ZonaArquivo } from "@/components/ArquivoFoto";
+import { DicaArrastar, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
 import { AGUARDANDO, alertaDoc, demaisFaltando, fichaQuery, pessoasQuery, situacao, type Ficha } from "@/lib/pessoas";
 import { mutar } from "@/lib/outbox";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
@@ -339,7 +339,7 @@ function FichaPessoa() {
               </div>
             )}
             <VerFoto key={d.arquivo_path ?? "sem"} path={d.arquivo_path} />
-            <div className="mt-2">
+            <div className="mt-2 flex flex-col gap-2">
               <ZonaArquivo
                 onArquivo={(file) => {
                   setFotoPendente({ chave, file });
@@ -353,6 +353,12 @@ function FichaPessoa() {
                 </span>
                 <DicaArrastar />
               </ZonaArquivo>
+              <TirarFoto
+                onFoto={(file) => {
+                  setFotoPendente({ chave, file });
+                  setEditando(chave);
+                }}
+              />
             </div>
           </>
         )}
