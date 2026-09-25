@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FileText } from "lucide-react";
+import { Camera, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 
 /** Sem `capture`: no iPhone aparece o menu Tirar foto · Fototeca · Escolher arquivo. */
