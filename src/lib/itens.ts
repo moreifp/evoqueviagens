@@ -1,5 +1,5 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
-import { mutar, type Op } from "./outbox";
+import { enfileirar, mutar, type Op } from "./outbox";
 
 /**
  * Gravação de itens da viagem com linhas filhas (passageiros, quartos, hóspedes, pessoas da reserva).
@@ -14,18 +14,12 @@ export async function enviar(ops: Op[]): Promise<"salvo" | "fila"> {
   let resultado: "salvo" | "fila" = "salvo";
   for (const op of ops) {
     if (resultado === "fila") {
-      await mutarFila(op);
+      await enfileirar(op);
       continue;
     }
     resultado = await mutar(op);
   }
   return resultado;
-}
-
-async function mutarFila(op: Op) {
-  const { get, set } = await import("idb-keyval");
-  const atual = ((await get("evoque-outbox")) as Op[] | undefined) ?? [];
-  await set("evoque-outbox", [...atual, op]);
 }
 
 /** Diferença entre filhos antigos e novos → inserts, updates (só o que mudou) e soft deletes. */
