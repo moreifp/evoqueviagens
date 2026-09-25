@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Receipt, Ticket as TicketIcon, Users } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { expensesQuery, lodgingsQuery, membersQuery, ticketsQuery } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { cancelado, formatarAtraso } from "@/lib/voo";
+import { apiAlertaQuery, expensesQuery, flightStatusQuery, lodgingsQuery, membersQuery, ticketsQuery } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
@@ -36,7 +38,19 @@ function VisaoGeral() {
   const { data: despesas } = useSuspenseQuery(expensesQuery(id));
   const { data: membros } = useSuspenseQuery(membersQuery(id));
 
+  const { data: status } = useQuery(flightStatusQuery(id));
+  const { data: alertas } = useQuery(apiAlertaQuery(id));
   const agora = new Date().toISOString();
+  // Faixa: mudança de horário ou cancelamento de voos ainda relevantes.
+  const mudancas = bilhetes.flatMap((b) => {
+    const s = status?.[b.id]; if (!s || b.tipo !== "voo") return [];
+    const nome = [b.companhia, b.numero].filter(Boolean).join(" ");
+    if (cancelado(s)) return [`${nome} foi cancelado.`];
+    const nova = s.partida_real_utc ?? s.partida_revista_utc;
+    if ((s.atraso_partida_min ?? 0) >= 15 && nova && Date.parse(s.chegada_real_utc ?? s.chegada_revista_utc ?? b.chegada_utc) > Date.now())
+      return [`${nome} atrasou ${formatarAtraso(s.atraso_partida_min!)} · parte ${horaNoFuso(nova, b.partida_tz)}.`];
+    return [];
+  });
   const proximoBilhete = bilhetes.find((b) => b.partida_utc >= agora);
   const proximoHotel = hospedagens.find((h) => h.checkin >= agora);
   const usarBilhete =
@@ -50,6 +64,8 @@ function VisaoGeral() {
     <>
       <Topo titulo={trip.nome} voltarPara="/viagens" />
       <main className="space-y-4 px-4 pt-3">
+        {mudancas.map((m) => <Link key={m} to="/trip/$id/bilhetes" params={{ id }} className="tap flex items-center gap-3 rounded-2xl bg-warn px-4 py-3 text-warn-foreground"><Plane size={28} strokeWidth={2.2} className="shrink-0" /><span className="text-lg font-bold">{m}</span></Link>)}
+        {alertas?.[0] && <p className="rounded-2xl border-2 border-warn px-4 py-3 text-lg font-semibold">{alertas[0].mensagem}</p>}
         {usarBilhete && proximoBilhete ? (
           <CardProximo
             Icone={ICONE[proximoBilhete.tipo] ?? Plane}

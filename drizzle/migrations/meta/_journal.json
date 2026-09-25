@@ -71,6 +71,34 @@
       "when": 1790303688562,
       "tag": "0009_fix_attachment_policy_revoke_anon",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790304695156,
+      "tag": "0010_flight_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790304838268,
+      "tag": "0011_enable_cron_net",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790304866605,
+      "tag": "0012_cron_config_private",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790304887050,
+      "tag": "0013_cron_token_status_voos",
+      "breakpoints": true
     }
   ]
 }

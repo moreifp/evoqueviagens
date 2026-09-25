@@ -15,3 +15,4 @@
 - [ ] Substituir Compartilhamentos por "Quem vê seus dados"
 - [ ] Remover da interface o fluxo legado de links, aprovação e wizard pessoal
 - [ ] Testar segurança, compartilhamento seletivo e funcionamento offline; apagar testes e publicar
+- [ ] Status do voo (AeroDataBox): tabelas, server function, job 15 min, chip/faixa, auditor, 5 testes, apagar testes (não publicar)
