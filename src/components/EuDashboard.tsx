@@ -1,33 +1,68 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { AlertTriangle, Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento } from "@/lib/eu";
+import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
 import { dataBR } from "./FichaPartes";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
+import { EmOrdem } from "./EmOrdem";
+import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
+import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
+import { carregarAeroportos, porIata } from "@/lib/aeroportos";
+import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 
 const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
 
 export function EuDashboard({ personId, back = false }: { personId: string; back?: boolean }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
   const { data, isLoading, error } = useQuery(euQuery(personId));
-  const [addingDependent, setAddingDependent] = useState(false);
-  const [dependentName, setDependentName] = useState("");
   if (isLoading) return <p className="p-6 text-lg text-muted-foreground">Carregando seus dados…</p>;
   if (error || !data) return <p className="p-6 text-lg text-danger">{error?.message ?? "Não foi possível abrir seus dados."}</p>;
+  return <EuDashboardConteudo personId={personId} back={back} data={data} />;
+}
+
+function EuDashboardConteudo({ personId, back, data }: { personId: string; back: boolean; data: EuDados }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [addingDependent, setAddingDependent] = useState(false);
+  const [dependentName, setDependentName] = useState("");
+  const { data: viagens = [] } = useQuery(tripsQuery());
+  const { data: regras = [] } = useQuery(entryRulesQuery());
 
   const { pessoa: p } = data;
   const owner = p.account_id === data.uid;
   const self = owner && p.kind === "self";
   const progresso = progressoFicha(data);
   const faltas = progresso.itens.filter((item) => !item.done).slice(0, 3);
-  const proximoVencimento = data.documentos
-    .filter((doc) => statusDocumento(doc).tone === "warn")
-    .sort((a, b) => String(a.validade).localeCompare(String(b.validade)))[0];
   const quemVe = data.compartilhamentos.filter((grant) => grant.owner_id === data.uid);
+  const hoje = new Date().toISOString().slice(0, 10);
+  const limite90 = new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10);
+  const proxima = [...viagens].filter((v) => !v.arquivada_em && v.data_fim >= hoje && v.data_inicio <= limite90).sort((a, b) => a.data_inicio.localeCompare(b.data_inicio))[0] ?? null;
+  const { data: bilhetes = [] } = useQuery({ ...ticketsQuery(proxima?.id ?? ""), enabled: Boolean(proxima) });
+  const [paises, setPaises] = useState<string[]>([]);
+  useEffect(() => {
+    if (!proxima) { setPaises([]); return; }
+    void carregarAeroportos().then((aeroportos) => setPaises([...new Set(bilhetes.map((b) => b.destino_iata ? porIata(aeroportos, b.destino_iata)?.pais : null).filter((pais): pais is string => Boolean(pais) && pais !== "BR"))]));
+  }, [bilhetes, proxima?.id]);
+  const viagemResumo = useMemo(() => {
+    if (!proxima) return null;
+    const passaporte = data.documentos.filter((d) => d.tipo === "passaporte").sort((a, b) => String(b.validade).localeCompare(String(a.validade)))[0];
+    const c: Conferencia = {
+      member_id: personId, person_id: personId, nome: p.nome, kind: p.kind, status: "aceito", papel: "member", acesso: true, meu: true,
+      nacionalidades: p.nacionalidades, nome_documento: p.nome_como_no_documento,
+      passaporte: passaporte ? { validade: passaporte.validade, nome: passaporte.nome_no_documento, pais: passaporte.pais_emissor } : null,
+      vistos: data.documentos.filter((d) => (TIPOS_VISTO as readonly string[]).includes(d.tipo)).map((d) => ({ tipo: d.tipo, validade: d.validade })),
+      vacina: data.documentos.find((d) => d.tipo === "vacina")?.validade ?? null,
+      seguro: data.documentos.find((d) => d.tipo === "seguro")?.validade ?? null,
+      nomes_bilhete: bilhetes.flatMap((b) => b.passageiros.filter((x) => x.person_id === personId).map((x) => x.nome_no_bilhete).filter((x): x is string => Boolean(x))),
+      convite_telefone: null, convite_email: null, pedido_aberto: false, avisos_abertos: 0,
+    };
+    const ajuste = (proxima as unknown as { regra_passaporte?: { meses?: number; base?: string } | null }).regra_passaporte ?? null;
+    const resultado = conferir(c, proxima, proxima.destino || proxima.nome, paises, regraPassaporte(proxima, paises, ajuste), regras);
+    const campos = new Set(resultado.achados.filter((a) => a.nivel !== "ok" && a.campo).map((a) => a.campo));
+    return { id: proxima.id, destino: proxima.cidades?.[0] || proxima.destino || proxima.nome, data: proxima.data_inicio, atencao: campos.size };
+  }, [bilhetes, data.documentos, paises, p.kind, p.nacionalidades, p.nome, p.nome_como_no_documento, personId, proxima, regras]);
 
   async function sair() {
     await supabase.auth.signOut();
@@ -71,16 +106,10 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
           {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <Link key={item.label} to={item.href as never} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</Link>)}</div>}
         </section>
 
+        {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
+
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
-
-        {proximoVencimento && (
-          <Link to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: proximoVencimento.id }} className="tap flex items-center gap-3 rounded-lg border-2 border-warn bg-warn/10 p-4 text-warn">
-            <AlertTriangle size={28} strokeWidth={2.2} />
-            <span className="flex-1 text-lg font-bold">{nomeDocumento(proximoVencimento.tipo)} vence em breve. Toque para atualizar.</span>
-            <ChevronRight size={26} />
-          </Link>
-        )}
 
         <section>
           <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Documentos</h2>{owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Plus size={24} /> Adicionar</Link>}</div>

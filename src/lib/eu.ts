@@ -82,6 +82,7 @@ export type EuDados = {
   fidelidades: Fidelidade[];
   preferencias: Preferencias | null;
   dependentes: EuPessoa[];
+  documentosDependentes: Record<string, EuDocumento[]>;
   uid: string;
   compartilhamentos: { id: string; owner_id: string; grantee_id: string; owner_nome: string | null; grantee_nome: string | null; blocos: string[]; trip_ids: string[] | null; created_at: string }[];
 };
@@ -123,7 +124,11 @@ async function loadEu(personId: string): Promise<EuDados> {
           : Promise.resolve([]),
         rows<EuDados["compartilhamentos"]>(db.from("share_grant").select("*").eq("status", "ativo")),
       ]);
-  return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, uid, compartilhamentos };
+  const docsDependentes = dependentes.length
+    ? await rows<EuDocumento[]>(db.from("traveler_document").select("*").in("person_id", dependentes.map((d) => d.id)).is("deleted_at", null).order("created_at", { ascending: false }))
+    : [];
+  const documentosDependentes = Object.fromEntries(dependentes.map((d) => [d.id, docsDependentes.filter((doc) => doc.person_id === d.id)]));
+  return { pessoa, documentos, anexos, fidelidades, preferencias: prefs[0] ?? null, dependentes, documentosDependentes, uid, compartilhamentos };
 }
 
 export const euQuery = (personId: string) =>
