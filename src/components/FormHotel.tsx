@@ -11,6 +11,8 @@ import { achadosDoCache, avisarNovoAchado } from "@/lib/auditoria";
 import { Campo, inputCls } from "@/components/Form";
 import type { Op } from "@/lib/outbox";
 import { anexarImportado, dataLocal, soData } from "@/lib/importAnexo";
+import { CampoLugar } from "@/components/CampoLugar";
+import type { Lugar } from "@/lib/lugares.functions";
 
 type QuartoF = { id: string; nome: string; tipo: string; hospedes: { id: string; person_id: string }[] };
 
@@ -19,19 +21,29 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
   const ativos = membros.filter((m) => m.status !== "recusado" && m.status !== "saiu");
-  const tz = fusoLocal();
+  const tzIni = inicial?.tz ?? fusoLocal();
   const [f, setF] = useState(() => ({
     nome: inicial?.nome ?? "",
     endereco: inicial?.endereco ?? "",
     cidade: inicial?.cidade ?? "",
-    checkin: inicial ? utcParaLocal(inicial.checkin, tz) : "",
-    checkout: inicial ? utcParaLocal(inicial.checkout, tz) : "",
+    checkin: inicial ? utcParaLocal(inicial.checkin, tzIni) : "",
+    checkout: inicial ? utcParaLocal(inicial.checkout, tzIni) : "",
     localizador: inicial?.localizador ?? "",
     valor: inicial?.valor != null ? String(inicial.valor) : "",
     moeda: inicial?.moeda ?? "BRL",
     politica_cancelamento: inicial?.politica_cancelamento ?? "",
     cancelamento_gratis_ate: inicial?.cancelamento_gratis_ate ?? "",
   }));
+  const [geo, setGeo] = useState(() => ({ lat: inicial?.lat ?? null, lng: inicial?.lng ?? null, place_id: inicial?.place_id ?? null, site: inicial?.site ?? null, tz: tzIni }));
+  const tz = geo.tz;
+  const escolherLugar = (l: Lugar, manterNome: boolean) => {
+    setF((v) => ({ ...v, nome: manterNome && v.nome.trim() ? v.nome : l.nome, endereco: l.endereco, cidade: l.cidade ?? v.cidade }));
+    setGeo({ lat: l.lat, lng: l.lng, place_id: l.place_id, site: l.site, tz: l.tz ?? geo.tz });
+  };
+  const textoMudou = (k: "nome" | "endereco") => (v: string) => {
+    setF((x) => ({ ...x, [k]: v }));
+    if (k === "endereco") setGeo((g) => ({ ...g, lat: null, lng: null, place_id: null }));
+  };
   const [quartos, setQuartos] = useState<QuartoF[]>(() =>
     (inicial?.quartos ?? []).map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes.map((g) => ({ id: g.id, person_id: g.person_id })) })),
   );
@@ -67,6 +79,11 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       moeda: f.valor ? f.moeda : null,
       politica_cancelamento: f.politica_cancelamento.trim() || null,
       cancelamento_gratis_ate: f.cancelamento_gratis_ate || null,
+      lat: geo.lat,
+      lng: geo.lng,
+      place_id: geo.place_id,
+      site: geo.site,
+      tz: geo.tz,
     };
     const ops: Op[] = [];
     if (!inicial) ops.push({ tipo: "insert", tabela: "lodging", valores: { id, trip_id: tripId, ...valores } });
@@ -146,14 +163,15 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
       <Campo rotulo="Nome do hotel">
-        <input required value={f.nome} onChange={set("nome")} className={inputCls} />
+        <CampoLugar valor={f.nome} onTexto={textoMudou("nome")} onEscolher={(l) => escolherLugar(l, false)} perto={f.cidade} placeholder="Digite o nome para buscar" />
       </Campo>
       <Campo rotulo="Cidade">
         <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
       </Campo>
       <Campo rotulo="Endereço">
-        <input value={f.endereco} onChange={set("endereco")} className={inputCls} />
+        <CampoLugar valor={f.endereco} onTexto={textoMudou("endereco")} onEscolher={(l) => escolherLugar(l, true)} perto={f.cidade} placeholder="Rua, número" />
       </Campo>
+      {geo.lat != null && <p className="text-base text-muted-foreground">Endereço do mapa · horário local {geo.tz}</p>}
       <Campo rotulo="Entrada">
         <input type="datetime-local" required value={f.checkin} onChange={set("checkin")} className={inputCls} />
       </Campo>

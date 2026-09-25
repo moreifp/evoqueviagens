@@ -8,6 +8,8 @@ import type { StatusVoo as StatusVooT } from "@/lib/voo";
 import { useState } from "react";
 import { Plane, TrainFront, Bus, Car, Plus, ChevronDown } from "lucide-react";
 import { Topo } from "@/components/Chrome";
+import { Logo } from "@/components/Logo";
+import { logoCia } from "@/lib/logos";
 import { flightStatusQuery, membersQuery, roteiroQuery, ticketsQuery, type ItemRoteiro, type Ticket } from "@/lib/data";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
@@ -115,7 +117,8 @@ function CartaoEmbarque({ b, s, editar, nome }: { b: Ticket; s?: StatusVooT; edi
           <p className="mt-2 text-xl font-bold text-foreground">
             {b.origem_iata ?? b.origem_cidade ?? "?"} → {b.destino_iata ?? b.destino_cidade ?? "?"}
           </p>
-          <p className="mono-code mt-2 text-2xl font-bold text-foreground">
+          <p className="mono-code mt-2 flex items-center gap-3 text-2xl font-bold text-foreground">
+            {b.tipo === "voo" && <Logo url={logoCia(b.companhia, b.numero)} Icone={Plane} nome={b.companhia ?? "companhia"} tamanho={32} className="text-accent" />}
             {[b.companhia, b.numero].filter(Boolean).join(" ")}
           </p>
           {b.localizador && (

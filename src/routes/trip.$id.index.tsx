@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2 } from "lucide-react";
+import { Map as IconeMapa, Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VisaoParticipante } from "@/components/VisaoParticipante";
@@ -9,6 +9,11 @@ import { cancelado, formatarAtraso } from "@/lib/voo";
 import { tripQuery, apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
+import { pontosQuery } from "@/lib/data";
+import { carregarAeroportos, porIata, type Aeroporto } from "@/lib/aeroportos";
+import { rotaDoDia, type Ponto } from "@/lib/mapas";
+import { Logo } from "@/components/Logo";
+import { logoCia } from "@/lib/logos";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/")({
@@ -76,6 +81,17 @@ function VisaoOrganizador({ id }: { id: string }) {
 
   const grave = visiveis.find((a) => a.severidade === "resolver");
   const medio = visiveis.find((a) => a.severidade === "conferir");
+  const { data: pontos = [] } = useQuery(pontosQuery(id));
+  const [aeros, setAeros] = useState<Aeroporto[]>([]);
+  useEffect(() => { void carregarAeroportos().then(setAeros); }, []);
+  const pontosDoDia = (itens: ItemRoteiro[]): Ponto[] => itens.flatMap((it): Ponto[] => {
+    if (it.item_tipo === "ticket") {
+      const a = [it.origem_iata, it.destino_iata].map((c) => (c ? porIata(aeros, c) : null)).filter((x): x is Aeroporto => !!x);
+      return a.map((x) => ({ nome: `${x.iata} ${x.nome}`, lat: x.lat, lng: x.lng }));
+    }
+    const p = pontos.find((x) => x.item_id === it.item_id);
+    return p ? [{ nome: p.titulo, lat: p.lat, lng: p.lng, place_id: p.place_id }] : [];
+  });
   const porDia = roteiro.reduce<Record<string, ItemRoteiro[]>>((acc, item) => {
     const dia = chaveDia(item.inicio_utc, item.inicio_tz);
     (acc[dia] ??= []).push(item);
@@ -140,7 +156,7 @@ function VisaoOrganizador({ id }: { id: string }) {
         </Link>
 
         <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" /></div>
-        <section className="space-y-5 pb-28"><h2 className="text-2xl">Roteiro por dia</h2>{Object.entries(porDia).map(([dia,itens]) => <div key={dia}><h3 className="mb-2 text-lg font-extrabold uppercase">{dataBRCurta(dia)}</h3><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{itens.map((item) => <Link key={item.item_id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: item.item_tipo, itemId: item.item_id }} className="tap flex items-center gap-3 px-4"><strong className="num w-16 text-xl">{horaNoFuso(item.inicio_utc,item.inicio_tz)}</strong><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.titulo}</strong><span className="text-base text-muted-foreground">{item.pessoas.map(p=>p.nome).join(", ")}</span></span>{visiveis.some(a=>a.itens.some(x=>x.id===item.item_id))&&<span className="rounded-full bg-warn px-2 py-1 text-sm font-bold text-warn-foreground">Conferir</span>}</Link>)}</div></div>)}</section>
+        <section className="space-y-5 pb-28"><h2 className="text-2xl">Roteiro por dia</h2>{Object.entries(porDia).map(([dia,itens]) => <div key={dia}><div className="mb-2 flex items-center gap-2"><h3 className="flex-1 text-lg font-extrabold uppercase">{dataBRCurta(dia)}</h3>{(() => { const u = rotaDoDia(pontosDoDia(itens)); return u ? <a href={u} target="_blank" rel="noopener noreferrer" className="tap flex items-center gap-2 text-base font-bold text-accent"><IconeMapa size={22} /> Ver o dia no mapa</a> : null; })()}</div><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{itens.map((item) => <Link key={item.item_id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: item.item_tipo, itemId: item.item_id }} className="tap flex items-center gap-3 px-4"><strong className="num w-16 text-xl">{horaNoFuso(item.inicio_utc,item.inicio_tz)}</strong>{item.item_tipo === "ticket" && <Logo url={logoCia(item.companhia, item.numero)} Icone={ICONE[item.subtipo] ?? Plane} nome={item.companhia ?? "companhia"} tamanho={28} className="shrink-0 text-accent" />}<span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.titulo}</strong><span className="text-base text-muted-foreground">{item.pessoas.map(p=>p.nome).join(", ")}</span></span>{visiveis.some(a=>a.itens.some(x=>x.id===item.item_id))&&<span className="rounded-full bg-warn px-2 py-1 text-sm font-bold text-warn-foreground">Conferir</span>}</Link>)}</div></div>)}</section>
       </main>
     </>
   );

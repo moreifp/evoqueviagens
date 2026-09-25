@@ -11,6 +11,8 @@ import { Campo, inputCls } from "@/components/Form";
 import { TrocarFuso } from "@/components/TrocarFuso";
 import type { Op } from "@/lib/outbox";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
+import { CampoLugar } from "@/components/CampoLugar";
+import type { Lugar } from "@/lib/lugares.functions";
 
 export const TIPOS_RESERVA = [
   { v: "carro", r: "Carro" },
@@ -41,6 +43,17 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
   }));
   const [pessoas, setPessoas] = useState<PessoaF[]>(() => (inicial?.pessoas ?? []).map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel ?? "" })));
   const [salvando, setSalvando] = useState(false);
+  const [geo, setGeo] = useState(() => ({ lat: inicial?.lat ?? null, lng: inicial?.lng ?? null, place_id: inicial?.place_id ?? null, site: inicial?.site ?? null }));
+  function escolherLugar(l: Lugar) {
+    setF((v) => ({
+      ...v,
+      titulo: v.titulo.trim() ? v.titulo : l.nome,
+      local: l.nome && !l.endereco.startsWith(l.nome) ? `${l.nome} · ${l.endereco}` : l.endereco,
+      cidade: l.cidade ?? v.cidade,
+      ...(l.tz ? { inicio_tz: l.tz, fim_tz: l.tz } : {}),
+    }));
+    setGeo({ lat: l.lat, lng: l.lng, place_id: l.place_id, site: l.site });
+  }
   useEffect(() => {
     if (inicial) return;
     const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
@@ -76,6 +89,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       localizador: f.localizador.trim() || null,
       valor: f.valor ? Number(f.valor.replace(",", ".")) : null,
       moeda: f.valor ? f.moeda : null,
+      ...geo,
     };
     const rows = pessoas.map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel.trim() || null }));
     const ops: Op[] = [];
@@ -143,14 +157,22 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       <Campo rotulo="Fim (opcional)">
         <input type="datetime-local" value={f.fim} onChange={set("fim")} className={inputCls} />
       </Campo>
-      <div className="grid grid-cols-2 gap-3">
-        <Campo rotulo="Local">
-          <input value={f.local} onChange={set("local")} className={inputCls} />
-        </Campo>
-        <Campo rotulo="Cidade">
-          <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
-        </Campo>
-      </div>
+      <Campo rotulo={f.tipo === "restaurante" ? "Restaurante / local" : "Local"}>
+        <CampoLugar
+          valor={f.local}
+          onTexto={(v) => {
+            setF((x) => ({ ...x, local: v }));
+            setGeo((g) => ({ ...g, lat: null, lng: null, place_id: null }));
+          }}
+          onEscolher={escolherLugar}
+          perto={f.cidade}
+          placeholder="Digite o nome ou endereço para buscar"
+        />
+      </Campo>
+      {geo.lat != null && <p className="text-base text-muted-foreground">Local do mapa · horário local {f.inicio_tz}</p>}
+      <Campo rotulo="Cidade">
+        <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
+      </Campo>
       <Campo rotulo="Localizador">
         <input value={f.localizador} onChange={set("localizador")} className={`${inputCls} mono-code`} />
       </Campo>
