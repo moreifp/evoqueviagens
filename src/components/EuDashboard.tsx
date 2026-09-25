@@ -170,6 +170,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
         {self && <button onClick={sair} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive"><LogOut size={26} /> Sair da conta</button>}
         {owner && !self && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
+
+        {self && <AvisosPush />}
       </main>
     </div>
   );
