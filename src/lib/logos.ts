@@ -35,7 +35,8 @@ export function dominioDoSite(site: string | null | undefined) {
 }
 
 export function urlLogo(dominio: string | null | undefined, tamanho = 64) {
-  const token = import.meta.env["VITE_LOGO_DEV_TOKEN"] as string | undefined;
+  const token = (import.meta.env["VITE_LOVABLE_CONNECTOR_LOGO_DEV_API_KEY"] ??
+    import.meta.env["VITE_LOGO_DEV_TOKEN"]) as string | undefined;
   if (!dominio || !token) return null;
   return `https://img.logo.dev/${dominio}?token=${token}&size=${tamanho}&format=png&retina=true`;
 }
