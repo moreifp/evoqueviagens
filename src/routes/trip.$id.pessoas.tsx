@@ -1,20 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Plus, UserRound } from "lucide-react";
+import { Plus, UserRound, UserMinus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { insertRow, membersQuery, peopleQuery } from "@/lib/data";
-import { supabase } from "@/integrations/supabase/client";
-import { inputCls } from "@/components/Form";
+import { membersQuery, peopleQuery, type Membro } from "@/lib/data";
+import { mutar } from "@/lib/outbox";
+import { aviso, naTela, novoId } from "@/lib/itens";
 
 export const Route = createFileRoute("/trip/$id/pessoas")({
   head: () => ({
     meta: [
-      { title: "Pessoas — Evoque Viagens" },
-      { name: "description", content: "Quem viaja com você e o que já está cadastrado." },
-      { property: "og:title", content: "Pessoas" },
-      { property: "og:description", content: "Quem viaja com você e o que já está cadastrado." },
+      { title: "Pessoas da viagem — Evoque Viagens" },
+      { name: "description", content: "Quem viaja com você nesta viagem." },
+      { property: "og:title", content: "Pessoas da viagem — Evoque Viagens" },
+      { property: "og:description", content: "Quem viaja com você nesta viagem." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Pessoas,
@@ -22,37 +24,51 @@ export const Route = createFileRoute("/trip/$id/pessoas")({
   notFoundComponent: () => <div className="p-6 text-lg">Sem pessoas.</div>,
 });
 
+const STATUS: Record<string, string> = { aceito: "Na viagem", convidado: "Convidado · ainda não aceitou", recusado: "Recusou", saiu: "Saiu da viagem" };
+
 function Pessoas() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(id));
   const { data: pessoas } = useSuspenseQuery(peopleQuery());
-  const [busca, setBusca] = useState("");
   const [adicionando, setAdicionando] = useState(false);
+  const souDono = membros.some((m) => m.papel === "owner" && m.meu);
+  const key = membersQuery(id).queryKey;
 
-  const jaNaViagem = new Set(membros.map((m) => m.person?.id));
-  const candidatos = pessoas.filter(
-    (p) => !jaNaViagem.has(p.id) && p.nome.toLowerCase().includes(busca.toLowerCase()),
-  );
-  const existeIgual = pessoas.some((p) => p.nome.toLowerCase() === busca.trim().toLowerCase());
+  const naViagem = new Set(membros.map((m) => m.person_id));
+  const candidatos = pessoas.filter((p) => !naViagem.has(p.id) && p.kind !== "precadastro");
 
-  async function vincular(personId: string) {
-    await insertRow("trip_member", { trip_id: id, person_id: personId, papel: "membro" });
-    await qc.invalidateQueries({ queryKey: ["members", id] });
-    setBusca("");
+  async function adicionar(p: (typeof pessoas)[number]) {
+    const meu = !!p.account_id && membros.some((m) => m.meu) ? pessoas.find((x) => x.kind === "self")?.account_id === p.account_id : false;
+    const status = meu ? "aceito" : "convidado";
+    const row: Membro = { id: novoId(), person_id: p.id, papel: "membro", status, nome: p.nome, apelido: p.apelido ?? null, nome_como_no_documento: p.nome_como_no_documento, kind: p.kind ?? "self", meu };
+    naTela<Membro>(qc, key, (l) => [...l, row]);
     setAdicionando(false);
+    try {
+      const r = await mutar({ tipo: "insert", tabela: "trip_member", valores: { id: row.id, trip_id: id, person_id: p.id, papel: "membro", status } });
+      toast.success(aviso(r, status === "aceito" ? "Adicionado à viagem" : "Convite registrado"));
+    } catch (e) {
+      naTela<Membro>(qc, key, (l) => l.filter((x) => x.id !== row.id));
+      toast.error((e as Error).message);
+    }
   }
 
-  async function criarEvincular() {
+  async function tirar(m: Membro) {
+    naTela<Membro>(qc, key, (l) => l.filter((x) => x.id !== m.id));
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const p = (await insertRow("person", {
-        owner_id: auth.user?.id,
-        nome: busca.trim(),
-      })) as { id: string };
-      await qc.invalidateQueries({ queryKey: ["people"] });
-      await vincular(p.id);
+      const r = await mutar({ tipo: "update", tabela: "trip_member", id: m.id, valores: { deleted_at: new Date().toISOString() } });
+      toast(aviso(r, `${m.apelido || m.nome} saiu da viagem`), {
+        duration: 10_000,
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            naTela<Membro>(qc, key, (l) => [...l, m]);
+            void mutar({ tipo: "update", tabela: "trip_member", id: m.id, valores: { deleted_at: null } });
+          },
+        },
+      });
     } catch (e) {
+      naTela<Membro>(qc, key, (l) => [...l, m]);
       toast.error((e as Error).message);
     }
   }
@@ -62,64 +78,52 @@ function Pessoas() {
       <Topo titulo="Pessoas" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-4 px-4 pt-4">
         {membros.map((m) => (
-          <article key={m.id} className="shadow-soft flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <UserRound size={28} strokeWidth={2.2} className="text-accent" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xl font-bold text-foreground">{m.person?.nome}</p>
-              <p className="text-base font-semibold text-muted-foreground">
-                {m.person?.nome_como_no_documento ?? "Sem nome de documento"}
-              </p>
+          <article key={m.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="flex items-center gap-4 p-4">
+              <UserRound size={28} strokeWidth={2.2} className="text-accent" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xl font-bold text-foreground">
+                  {m.apelido || m.nome}
+                  {m.papel === "owner" ? " · organiza" : ""}
+                  {m.kind === "dependent" ? " · dependente" : ""}
+                </p>
+                <p className="text-base font-semibold text-muted-foreground">{STATUS[m.status] ?? m.status}</p>
+              </div>
             </div>
+            {souDono && m.papel !== "owner" && (
+              <button onClick={() => void tirar(m)} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive">
+                <UserMinus size={24} strokeWidth={2.2} /> Tirar da viagem
+              </button>
+            )}
           </article>
         ))}
 
-        {!adicionando ? (
-          <button
-            onClick={() => setAdicionando(true)}
-            className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-xl font-bold text-accent"
-          >
-            <Plus size={28} strokeWidth={2.2} />
-            Adicionar pessoa
-          </button>
-        ) : (
-          <section className="space-y-3">
-            <input
-              autoFocus
-              placeholder="Nome"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className={inputCls}
-            />
-            {candidatos.map((p) => (
-              <article key={p.id} className="shadow-soft rounded-2xl border-2 border-accent bg-card p-4">
-                <p className="text-xl font-bold text-foreground">{p.nome}</p>
-                <p className="text-base font-semibold text-muted-foreground">
-                  {p.nome_como_no_documento ?? "Documento não cadastrado"}
+        {souDono &&
+          (!adicionando ? (
+            <button onClick={() => setAdicionando(true)} className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-xl font-bold text-accent">
+              <Plus size={28} strokeWidth={2.2} />
+              Adicionar pessoa
+            </button>
+          ) : (
+            <section className="space-y-3">
+              {candidatos.length === 0 && (
+                <p className="text-lg">
+                  Todo mundo que você vê já está na viagem. Para incluir um filho, cadastre em{" "}
+                  <Link to="/" className="font-bold text-accent underline">
+                    Eu · Família
+                  </Link>
+                  .
                 </p>
-                {p.data_nascimento && (
-                  <p className="text-base font-semibold text-muted-foreground">
-                    Nasceu em {p.data_nascimento}
-                  </p>
-                )}
-                <button
-                  onClick={() => vincular(p.id)}
-                  className="gradient-hero tap mt-3 flex w-full items-center justify-center gap-3 rounded-xl text-lg font-bold"
-                >
-                  <Check size={28} strokeWidth={2.2} />
-                  Está tudo certo
+              )}
+              {candidatos.map((p) => (
+                <button key={p.id} onClick={() => void adicionar(p)} className="tap flex w-full items-center gap-3 rounded-2xl border-2 border-accent bg-card px-4 text-left text-xl font-bold">
+                  <Plus size={24} strokeWidth={2.2} className="text-accent" />
+                  {p.apelido || p.nome}
+                  {p.kind === "dependent" ? " · dependente" : ""}
                 </button>
-              </article>
-            ))}
-            {busca.trim().length > 1 && !existeIgual && (
-              <button
-                onClick={criarEvincular}
-                className="tap w-full rounded-2xl border-2 border-border text-lg font-bold text-foreground"
-              >
-                Cadastrar “{busca.trim()}”
-              </button>
-            )}
-          </section>
-        )}
+              ))}
+            </section>
+          ))}
       </main>
     </>
   );
