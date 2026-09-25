@@ -42,6 +42,17 @@ export function dataLocalPartida(partidaUtc: string, tz: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(partidaUtc));
 }
 
+/** Status só é consultado a partir de N dias antes da partida (antes disso a API devolve o voo de outro dia). */
+export const STATUS_DIAS_ANTES = 3;
+
+/** Data (YYYY-MM-DD, local da origem) a partir da qual o status fica disponível; null = já disponível. */
+export function statusDisponivelEm(partidaUtc: string, tz: string, agora = Date.now()): string | null {
+  const inicio = Date.parse(partidaUtc) - STATUS_DIAS_ANTES * 86_400_000;
+  return agora >= inicio ? null : dataLocalPartida(new Date(inicio).toISOString(), tz);
+}
+
+export const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+
 export function mesAtual(d = new Date()) {
   return d.toISOString().slice(0, 7);
 }
