@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { TETO_JOB, UNIDADES_POR_CHAMADA, ehAVez, mesAtual } from "@/lib/voo";
 import { atualizarTicket, type TicketVoo } from "@/lib/voo.server";
 
@@ -7,9 +6,11 @@ export const Route = createFileRoute("/api/public/hooks/status-voos")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const negado = await authenticateCronRequest(request);
-        if (negado) return negado;
+        const token = /^Bearer ([a-f0-9]{64})$/.exec(request.headers.get("authorization") ?? "")?.[1];
+        if (!token) return new Response("Unauthorized", { status: 401 });
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+        const { data: ok } = await db.rpc("verificar_cron_voos", { _t: token });
+        if (!ok) return new Response("Unauthorized", { status: 401 });
         const agora = Date.now();
         const { data: tickets } = await db
           .from("ticket")
