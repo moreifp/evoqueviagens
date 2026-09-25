@@ -109,7 +109,7 @@ export function DicaArrastar({ en = false }: { en?: boolean }) {
 }
 
 /** Botão "Tirar foto" com câmera ao vivo (computador e telefone). Painel inline, não modal. */
-export function TirarFoto({ onFoto, en = false, className = "" }: { onFoto: (f: File) => void; en?: boolean; className?: string }) {
+export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: { onFoto: (f: File) => void; en?: boolean; className?: string; rotulo?: string; sub?: string }) {
   const [aberta, setAberta] = useState(false);
   const [erro, setErro] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -182,9 +182,10 @@ export function TirarFoto({ onFoto, en = false, className = "" }: { onFoto: (f: 
       type="button"
       onClick={abrir}
       disabled={erro}
-      className={`tap flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-border px-5 text-lg text-foreground ${className}`}
+      className={`tap flex min-h-14 items-center justify-center gap-2 rounded-xl px-5 text-lg ${className.includes("gradient-hero") ? "" : "border-2 border-border text-foreground"} ${className}`}
     >
-      <Camera size={24} strokeWidth={2.2} aria-hidden /> {en ? "Take photo" : "Tirar foto"}
+      <Camera size={sub ? 32 : 24} strokeWidth={2.2} aria-hidden className="shrink-0" />
+      {sub ? <span className="text-left"><span className="block">{rotulo}</span><span className="block text-base font-medium">{sub}</span></span> : (rotulo ?? (en ? "Take photo" : "Tirar foto"))}
     </button>
   );
 }

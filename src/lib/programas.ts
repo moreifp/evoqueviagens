@@ -1,0 +1,18 @@
+export const PROGRAMAS_COMUNS: { nome: string; tipo: string; site: string }[] = [
+  { nome: "LATAM Pass", tipo: "aerea", site: "https://latampass.latam.com" },
+  { nome: "Smiles", tipo: "aerea", site: "https://www.smiles.com.br" },
+  { nome: "TudoAzul", tipo: "aerea", site: "https://www.voeazul.com.br/tudoazul" },
+  { nome: "TAP Miles&Go", tipo: "aerea", site: "https://www.flytap.com/miles-and-go" },
+  { nome: "Flying Blue", tipo: "aerea", site: "https://www.flyingblue.com" },
+  { nome: "AAdvantage", tipo: "aerea", site: "https://www.aa.com/aadvantage" },
+  { nome: "Iberia Plus", tipo: "aerea", site: "https://www.iberia.com/iberiaplus" },
+  { nome: "Marriott Bonvoy", tipo: "hotel", site: "https://www.marriott.com/loyalty.mi" },
+  { nome: "Hilton Honors", tipo: "hotel", site: "https://www.hilton.com/hilton-honors" },
+  { nome: "Accor ALL", tipo: "hotel", site: "https://all.accor.com" },
+  { nome: "IHG One Rewards", tipo: "hotel", site: "https://www.ihg.com/onerewards" },
+  { nome: "World of Hyatt", tipo: "hotel", site: "https://world.hyatt.com" },
+  { nome: "Localiza Fidelidade", tipo: "locadora", site: "https://www.localiza.com/fidelidade" },
+  { nome: "Hertz Gold", tipo: "locadora", site: "https://www.hertz.com/gold" },
+  { nome: "Priority Pass", tipo: "sala_vip", site: "https://www.prioritypass.com" },
+  { nome: "LoungeKey", tipo: "sala_vip", site: "https://www.loungekey.com" },
+];

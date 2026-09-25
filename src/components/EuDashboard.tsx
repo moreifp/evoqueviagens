@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
 import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento } from "@/lib/eu";
@@ -93,20 +93,20 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
               );
               return <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="tap flex items-center gap-3 border-b border-border py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-base font-bold">{doc.tipo.slice(0, 3).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block text-lg">{nomeDocumento(doc.tipo)}</strong><span className="block text-base text-muted-foreground">{mascararFinal(doc.numero)} · {count} {count === 1 ? "anexo" : "anexos"}</span></span><ChevronRight size={26} /></Link>;
             })}
-            {!data.documentos.length && <p className="text-lg text-muted-foreground">Nenhum documento adicionado.</p>}
+            {!data.documentos.length && (owner ? <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Camera size={28} /> Fotografar seu primeiro documento</Link> : <p className="text-lg text-muted-foreground">Nenhum documento.</p>)}
           </div>
         </section>
 
         <section>
           <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Fidelidade</h2><Link to="/pessoas/$pid/fidelidade" params={{ pid: p.id }} className="tap flex items-center text-lg font-bold text-accent">Ver todos ({data.fidelidades.length})</Link></div>
-          <div className="divide-y divide-border">{data.fidelidades.slice(0, 3).map((item) => <Link key={item.id} to="/pessoas/$pid/fidelidade/$fid" params={{ pid: p.id, fid: item.id }} className="tap flex items-center gap-3 py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-base font-bold">{item.programa.slice(0, 2).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.programa}</strong><span className="text-base text-muted-foreground">{mascararFinal(item.numero)}{item.categoria ? ` · ${item.categoria}` : ""}</span></span>{owner && <LockKeyhole size={22} className="text-muted-foreground" />}<ChevronRight size={26} /></Link>)}</div>
+          {!data.fidelidades.length && owner && <Link to="/pessoas/$pid/fidelidade/novo" params={{ pid: p.id }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Plus size={28} /> Adicionar programa de fidelidade</Link>}<div className="divide-y divide-border">{data.fidelidades.slice(0, 3).map((item) => <Link key={item.id} to="/pessoas/$pid/fidelidade/$fid" params={{ pid: p.id, fid: item.id }} className="tap flex items-center gap-3 py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-base font-bold">{item.programa.slice(0, 2).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.programa}</strong><span className="text-base text-muted-foreground">{mascararFinal(item.numero)}{item.categoria ? ` · ${item.categoria}` : ""}</span></span>{owner && <LockKeyhole size={22} className="text-muted-foreground" />}<ChevronRight size={26} /></Link>)}</div>
         </section>
 
         {owner && (
           <section>
             <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Família</h2><button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button></div>
             {addingDependent && <div className="mb-3 flex gap-2"><input value={dependentName} onChange={(event) => setDependentName(event.target.value)} placeholder="Nome do dependente" className="tap min-w-0 flex-1 rounded-lg border-2 border-input bg-card px-4 text-lg" /><button onClick={() => void addDependent()} className="tap rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">Adicionar</button></div>}
-            <div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>
+            {!data.dependentes.length && !addingDependent && <button onClick={() => setAddingDependent(true)} className="tap flex min-h-24 w-full items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><UserPlus size={28} /> Adicionar dependente</button>}<div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>
           </section>
         )}
 

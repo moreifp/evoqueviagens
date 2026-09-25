@@ -1,11 +1,22 @@
 import { del, get, set } from "idb-keyval";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { mutar } from "@/lib/outbox";
 
 const ITERATIONS = 600_000;
 const VERIFIER = "evoque-vault-ok-v1";
 const CACHE_PREFIX = "evoque-vault-cache:";
 let active: { accountId: string; key: CryptoKey; expiresAt: number } | null = null;
 let lockTimer: ReturnType<typeof setTimeout> | null = null;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((f) => f());
+
+/** Estado reativo: volta a false quando o cofre trava por tempo ou ao sair do app. */
+export function useVaultUnlocked(accountId: string | undefined) {
+  const [, force] = useState(0);
+  useEffect(() => { const f = () => force((n) => n + 1); listeners.add(f); return () => { listeners.delete(f); }; }, []);
+  return !!accountId && vaultIsUnlocked(accountId);
+}
 
 type VaultMeta = { account_id: string; kdf_salt: string; kdf_iterations: number; verifier_ciphertext: string; verifier_iv: string };
 export type VaultItem = { id: string; account_id: string; loyalty_account_id: string; encrypted_payload: string; iv: string; created_at: string; updated_at: string };
@@ -48,12 +59,15 @@ function remember(accountId: string, key: CryptoKey) {
   active = { accountId, key, expiresAt: Date.now() + 5 * 60_000 };
   if (lockTimer) clearTimeout(lockTimer);
   lockTimer = setTimeout(lockVault, 5 * 60_000);
+  notify();
 }
 
 export function lockVault() {
+  const was = !!active;
   active = null;
   if (lockTimer) clearTimeout(lockTimer);
   lockTimer = null;
+  if (was) notify();
 }
 
 export function vaultIsUnlocked(accountId: string) {
@@ -112,25 +126,32 @@ export async function saveVaultItem(accountId: string, loyaltyAccountId: string,
   if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
   const encrypted = await encryptText(active.key, JSON.stringify({ login, password }));
   const values = { account_id: accountId, loyalty_account_id: loyaltyAccountId, encrypted_payload: encrypted.ciphertext, iv: encrypted.iv, updated_at: new Date().toISOString() };
-  const cached = { ...values, id: crypto.randomUUID(), created_at: new Date().toISOString() } as VaultItem;
-  await set(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`, cached);
-  if (!navigator.onLine) return { localOnly: true as const };
-  const { data, error } = await supabase.from("vault_item").upsert(values, { onConflict: "account_id,loyalty_account_id" }).select("*").single();
-  if (error) throw new Error(error.message);
-  await set(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`, data);
-  return { localOnly: false as const };
+  const key = `${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`;
+  const prev = (await get(key)) as VaultItem | undefined;
+  const cached = { ...values, id: prev?.id ?? crypto.randomUUID(), created_at: prev?.created_at ?? new Date().toISOString() } as VaultItem;
+  await set(key, cached);
+  // Fila offline: o ciphertext já cifrado sobe quando a internet voltar.
+  const r = await mutar({ tipo: "upsert", tabela: "vault_item", valores: values, onConflict: "account_id,loyalty_account_id" });
+  return { localOnly: r === "fila" };
 }
 
 export async function readVaultItem(accountId: string, loyaltyAccountId: string) {
   if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
-  let item: VaultItem | null = null;
+  const key = `${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`;
+  const local = ((await get(key)) as VaultItem | undefined) ?? null;
+  let item: VaultItem | null = local;
   if (navigator.onLine) {
     const { data, error } = await supabase.from("vault_item").select("*").eq("account_id", accountId).eq("loyalty_account_id", loyaltyAccountId).maybeSingle();
     if (error) throw new Error(error.message);
-    item = data as VaultItem | null;
-    if (item) await set(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`, item);
-  } else {
-    item = ((await get(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`)) as VaultItem | undefined) ?? null;
+    const remote = data as VaultItem | null;
+    if (local && (!remote || Date.parse(local.updated_at) > Date.parse(remote.updated_at))) {
+      // O aparelho tem uma versão mais nova que não subiu: usa a local e reenvia.
+      const { account_id, loyalty_account_id, encrypted_payload, iv, updated_at } = local;
+      void mutar({ tipo: "upsert", tabela: "vault_item", valores: { account_id, loyalty_account_id, encrypted_payload, iv, updated_at }, onConflict: "account_id,loyalty_account_id" }).catch(() => {});
+    } else {
+      item = remote;
+      if (remote) await set(key, remote);
+    }
   }
   if (!item) return null;
   return JSON.parse(await decryptText(active.key, item.encrypted_payload, item.iv)) as { login: string; password: string };
