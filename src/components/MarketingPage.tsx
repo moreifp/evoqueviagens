@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import coastAsset from "@/assets/marketing/coast-editorial.webp.asset.json";
 import trainAsset from "@/assets/marketing/train-editorial.webp.asset.json";
 import { HOSTS_LANDING } from "@/lib/site";
@@ -54,24 +54,18 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
     };
   }, [isEnglish]);
 
-  useEffect(() => {
+  const closeMenu = () => {
     const root = rootRef.current;
     if (!root) return;
     const menu = root.querySelector<HTMLButtonElement>(".menu-toggle");
     const nav = root.querySelector<HTMLElement>(".mobile-nav");
+    nav?.classList.remove("open");
+    menu?.setAttribute("aria-expanded", "false");
+  };
 
-    const closeMenu = () => {
-      nav?.classList.remove("open");
-      menu?.setAttribute("aria-expanded", "false");
-    };
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMenu();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [html]);
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") closeMenu();
+  };
 
   const handleClick = async (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as Element;
@@ -86,10 +80,7 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
       nav?.classList.toggle("open", open);
       return;
     }
-    if (target.closest(".mobile-nav a")) {
-      menu?.setAttribute("aria-expanded", "false");
-      nav?.classList.remove("open");
-    }
+    if (target.closest(".mobile-nav a")) closeMenu();
     if (target.closest(".theme-toggle")) {
       setTheme((current) => {
         const next = current === "dark" ? "light" : "dark";
@@ -129,6 +120,7 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
       data-theme={theme}
       lang={isEnglish ? "en" : "pt-BR"}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

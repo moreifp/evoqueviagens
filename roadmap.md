@@ -91,8 +91,8 @@
 - [ ] Dono: ligar o conector Firebase Cloud Messaging com a conta de serviço
 
 ## Landing pública aprovada — Evoque Viagens / Travels
-- [ ] Integrar integralmente as 10 páginas PT/EN do pacote aprovado
-- [ ] Adicionar /landing-preview e manter toda a revisão noindex
-- [ ] Isolar estilos, tema, fontes e fotos editoriais do aplicativo
-- [ ] Preservar separação por host, autenticação, PWA, caches, MCP/OAuth e rotas privadas
-- [ ] Validar build/tipos, desktop, tablet, celular, links e interações; não publicar
+- [x] Integrar integralmente as 10 páginas PT/EN do pacote aprovado
+- [x] Adicionar /landing-preview e manter toda a revisão noindex
+- [x] Isolar estilos, tema, fontes e fotos editoriais do aplicativo
+- [x] Preservar separação por host, autenticação, PWA, caches, MCP/OAuth e rotas privadas
+- [x] Validar build/tipos, desktop, tablet, celular, links e interações; não publicar
