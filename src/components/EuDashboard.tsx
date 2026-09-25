@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
 import { euQuery, mascararFinal, nomeDocumento, progressoFicha, statusDocumento } from "@/lib/eu";
 import { dataBR } from "./FichaPartes";
+import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 
 const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
 
@@ -69,6 +70,9 @@ export function EuDashboard({ personId, back = false }: { personId: string; back
           <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de 10</p>
           {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <Link key={item.label} to={item.href as never} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</Link>)}</div>}
         </section>
+
+        {self && <AvisosMeus />}
+        {self && <PedidosRecebidos />}
 
         {proximoVencimento && (
           <Link to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: proximoVencimento.id }} className="tap flex items-center gap-3 rounded-lg border-2 border-warn bg-warn/10 p-4 text-warn">

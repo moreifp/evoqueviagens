@@ -1,3 +1,4 @@
+import { AvisosMeus } from "./AvisosPedidos";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -59,6 +60,7 @@ export function VisaoParticipante({ trip }: { trip: Trip }) {
         ) : <div className="gradient-hero shadow-medium rounded-3xl p-6"><h2 className="text-2xl">Nada no seu nome ainda</h2></div>}
         {localizador && <button onClick={() => { void navigator.clipboard.writeText(localizador); toast.success("Localizador copiado."); }} className="tap flex items-center gap-2 text-lg font-bold text-accent">Localizador {localizador} <Copy size={22} /></button>}
 
+        <AvisosMeus tripId={trip.id} />
         <section><h2 className="mb-2 text-2xl">O que é seu</h2>
           <div className="divide-y divide-border rounded-[18px] border border-border bg-card">
             {meusItens.length === 0 && <p className="p-4 text-lg">Nenhum voo, quarto ou reserva no seu nome.</p>}

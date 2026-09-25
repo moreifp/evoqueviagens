@@ -410,3 +410,34 @@ export const pedidosQuery = (tripId: string) =>
     queryKey: ["pedidos", tripId],
     queryFn: () => unwrap<Pedido[]>(db.from("trip_notice").select("id, trip_id, person_id, mensagem, enviado_em, resolvido_em").eq("trip_id", tripId).eq("tipo", "pedido_correcao").order("enviado_em", { ascending: false })),
   });
+
+export const conferirQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["conferir", tripId],
+    queryFn: async () => (await rpc<import("./conferencia").Conferencia[] | null>("conferir_viagem", { _tid: tripId })) ?? [],
+  });
+
+export const entryRulesQuery = () =>
+  queryOptions({
+    queryKey: ["entry_rule"],
+    queryFn: () => unwrap<import("./conferencia").EntryRule[]>(db.from("entry_rule").select("nacionalidade, pais_destino, exigencia, detalhe, validade_passaporte_min_meses, fonte_url, verificado_em")),
+  });
+
+export type AvisoMeu = { id: string; trip_id: string; person_id: string | null; mensagem: string; campo: string | null; enviado_em: string; trip: { nome: string } | null };
+/** Avisos abertos para mim ou meus dependentes (o banco filtra). */
+export const avisosMeusQuery = () =>
+  queryOptions({
+    queryKey: ["avisos_meus"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const l = await unwrap<(AvisoMeu & { enviado_por: string | null })[]>(db.from("trip_notice").select("id, trip_id, person_id, mensagem, campo, enviado_em, enviado_por, trip:trip(nome)").eq("tipo", "aviso").is("resolvido_em", null).order("enviado_em", { ascending: false }));
+      return l.filter((a) => a.enviado_por !== u.user?.id);
+    },
+  });
+
+export type PedidoRecebido = { id: string; from_id: string; from_nome: string | null; blocos: string[]; trip_id: string | null; viagem: string | null; ate: string | null; pessoa: string | null };
+export const pedidosRecebidosQuery = () =>
+  queryOptions({
+    queryKey: ["pedidos_recebidos"],
+    queryFn: async () => (await rpc<PedidoRecebido[] | null>("pedidos_recebidos")) ?? [],
+  });

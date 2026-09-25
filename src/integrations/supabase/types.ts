@@ -227,6 +227,48 @@ export type Database = {
           },
         ]
       }
+      entry_rule: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          estadia_max_dias: number | null
+          exigencia: string
+          fonte_url: string
+          id: string
+          lead_time_dias: number | null
+          nacionalidade: string
+          pais_destino: string
+          validade_passaporte_min_meses: number | null
+          verificado_em: string
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          estadia_max_dias?: number | null
+          exigencia: string
+          fonte_url: string
+          id?: string
+          lead_time_dias?: number | null
+          nacionalidade: string
+          pais_destino: string
+          validade_passaporte_min_meses?: number | null
+          verificado_em: string
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          estadia_max_dias?: number | null
+          exigencia?: string
+          fonte_url?: string
+          id?: string
+          lead_time_dias?: number | null
+          nacionalidade?: string
+          pais_destino?: string
+          validade_passaporte_min_meses?: number | null
+          verificado_em?: string
+        }
+        Relationships: []
+      }
       expense: {
         Row: {
           categoria: string
@@ -1048,8 +1090,11 @@ export type Database = {
           expira_em: string
           from_id: string
           from_nome: string | null
+          grant_expira_em: string | null
           id: string
+          para_account: string | null
           person_id: string | null
+          recusado_em: string | null
           token_cifrado: string | null
           token_hash: string
           trip_id: string | null
@@ -1064,8 +1109,11 @@ export type Database = {
           expira_em?: string
           from_id?: string
           from_nome?: string | null
+          grant_expira_em?: string | null
           id?: string
+          para_account?: string | null
           person_id?: string | null
+          recusado_em?: string | null
           token_cifrado?: string | null
           token_hash: string
           trip_id?: string | null
@@ -1080,8 +1128,11 @@ export type Database = {
           expira_em?: string
           from_id?: string
           from_nome?: string | null
+          grant_expira_em?: string | null
           id?: string
+          para_account?: string | null
           person_id?: string | null
+          recusado_em?: string | null
           token_cifrado?: string | null
           token_hash?: string
           trip_id?: string | null
@@ -1346,6 +1397,7 @@ export type Database = {
           moeda_base: string
           nome: string
           owner_id: string
+          regra_passaporte: Json | null
           status: string
         }
         Insert: {
@@ -1361,6 +1413,7 @@ export type Database = {
           moeda_base: string
           nome: string
           owner_id: string
+          regra_passaporte?: Json | null
           status?: string
         }
         Update: {
@@ -1376,6 +1429,7 @@ export type Database = {
           moeda_base?: string
           nome?: string
           owner_id?: string
+          regra_passaporte?: Json | null
           status?: string
         }
         Relationships: []
@@ -1448,6 +1502,7 @@ export type Database = {
       }
       trip_notice: {
         Row: {
+          campo: string | null
           canal: string | null
           enviado_em: string
           enviado_por: string | null
@@ -1461,6 +1516,7 @@ export type Database = {
           trip_id: string
         }
         Insert: {
+          campo?: string | null
           canal?: string | null
           enviado_em?: string
           enviado_por?: string | null
@@ -1474,6 +1530,7 @@ export type Database = {
           trip_id: string
         }
         Update: {
+          campo?: string | null
           canal?: string | null
           enviado_em?: string
           enviado_por?: string | null
@@ -1612,6 +1669,30 @@ export type Database = {
           person_id: string
         }[]
       }
+      conferir_viagem: {
+        Args: { _tid: string }
+        Returns: {
+          acesso: boolean
+          avisos_abertos: number
+          convite_email: string
+          convite_telefone: string
+          kind: string
+          member_id: string
+          meu: boolean
+          nacionalidades: string[]
+          nome: string
+          nome_documento: string
+          nomes_bilhete: string[]
+          papel: string
+          passaporte: Json
+          pedido_aberto: boolean
+          person_id: string
+          seguro: string
+          status: string
+          vacina: string
+          vistos: Json
+        }[]
+      }
       convidar_sem_conta: {
         Args: {
           _email: string
@@ -1671,7 +1752,34 @@ export type Database = {
           status: string
         }[]
       }
+      pedidos_recebidos: {
+        Args: never
+        Returns: {
+          ate: string
+          blocos: string[]
+          from_id: string
+          from_nome: string
+          id: string
+          pessoa: string
+          trip_id: string
+          viagem: string
+        }[]
+      }
+      pedir_dados: {
+        Args: {
+          _ate_fim: boolean
+          _blocos: string[]
+          _id: string
+          _person: string
+          _trip: string
+        }
+        Returns: string
+      }
       receber_convites_por_email: { Args: never; Returns: number }
+      responder_pedido: {
+        Args: { _aceitar: boolean; _blocos: string[]; _id: string }
+        Returns: boolean
+      }
       roteiro_viagem: {
         Args: { _tid: string }
         Returns: {
