@@ -33,8 +33,12 @@ function Dados() {
     setSaving(true);
     const fields = ["nome", "cpf", "data_nascimento", "sexo", "telefone", "email", "endereco", "emergencia_nome", "emergencia_parentesco", "emergencia_telefone"];
     const values: Record<string, unknown> = {};
-    for (const field of fields) if (form.has(field)) values[field] = String(form.get(field) ?? "").trim() || null;
-    if (form.has("nacionalidades")) values.nacionalidades = String(form.get("nacionalidades") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+    const atual = p as unknown as Record<string, unknown>;
+    for (const field of fields) if (form.has(field)) { const v = String(form.get(field) ?? "").trim() || null; if (v !== (atual[field] ?? null)) values[field] = v; }
+    if (form.has("nacionalidades")) { const n = String(form.get("nacionalidades") ?? "").split(",").map((x) => x.trim()).filter(Boolean); if (n.join(",") !== p.nacionalidades.join(",")) values.nacionalidades = n; }
+    if (form.has("visto_negado")) { const v = form.get("visto_negado") === "sim" ? true : form.get("visto_negado") === "nao" ? false : null; if (v !== p.visto_negado) values.visto_negado = v; }
+    if (form.has("visto_negado_detalhe")) { const v = String(form.get("visto_negado_detalhe") ?? "").trim() || null; if (v !== (p.visto_negado_detalhe ?? null)) values.visto_negado_detalhe = v; }
+    if (!Object.keys(values).length) { setSaving(false); toast("Nada mudou"); return; }
     await mutar({ tipo: "update", tabela: "person", id: pid, valores: values });
     await qc.invalidateQueries({ queryKey: ["eu", pid] });
     setSaving(false); toast.success("Dados salvos");
@@ -48,7 +52,7 @@ function Dados() {
     await qc.invalidateQueries({ queryKey: ["eu", pid] }); setSaving(false); toast.success("Preferências salvas");
   }
 
-  return <div className="min-h-screen bg-background pb-24"><Topo titulo={secao === "preferencias" ? "Preferências" : secao === "emergencia" ? "Contato de emergência" : "Dados pessoais"} voltarPara="/pessoas/$pid" voltarParams={{ pid }} /><main className="mx-auto max-w-xl px-4 pt-5">
+  return <div className="min-h-screen bg-background pb-24"><Topo titulo={secao === "preferencias" ? "Preferências" : secao === "emergencia" ? "Contato de emergência" : secao === "visto" ? "Visto negado ou em processo" : "Dados pessoais"} voltarPara="/pessoas/$pid" voltarParams={{ pid }} /><main className="mx-auto max-w-xl px-4 pt-5">
     {!owner && <p className="mb-4 rounded-lg border border-border p-3 text-lg">Somente leitura</p>}
     {secao === "preferencias" ? <form action={(fd) => void savePrefs(fd)} className="space-y-4">
       <Campo rotulo="Assento"><select name="assento" defaultValue={data.preferencias?.assento ?? ""} disabled={!owner} className={inputCls}><option value="">Escolha</option><option value="janela">Janela</option><option value="corredor">Corredor</option><option value="tanto_faz">Tanto faz</option></select></Campo>
@@ -56,6 +60,10 @@ function Dados() {
       <Campo rotulo="Restrições alimentares"><input name="restricoes" defaultValue={data.preferencias?.restricoes.join(", ") ?? ""} disabled={!owner} className={inputCls} /></Campo>
       <Campo rotulo="Refeição especial no voo"><input name="refeicao_voo" defaultValue={data.preferencias?.refeicao_voo ?? ""} disabled={!owner} className={inputCls} /></Campo>
       <Campo rotulo="Bebe álcool?"><select name="bebe_alcool" defaultValue={data.preferencias?.bebe_alcool == null ? "" : data.preferencias.bebe_alcool ? "sim" : "nao"} disabled={!owner} className={inputCls}><option value="">Não informado</option><option value="sim">Sim</option><option value="nao">Não</option></select></Campo>
+      {owner && <button disabled={saving} className="gradient-hero tap w-full rounded-lg text-lg font-bold">Salvar</button>}
+    </form> : secao === "visto" ? <form action={(fd) => void savePerson(fd)} className="space-y-4">
+      <Campo rotulo="Já teve visto negado ou tem algum em processo?"><select name="visto_negado" defaultValue={p.visto_negado == null ? "" : p.visto_negado ? "sim" : "nao"} disabled={!owner} className={inputCls}><option value="">Não informado</option><option value="nao">Não</option><option value="sim">Sim</option></select></Campo>
+      <Campo rotulo="Qual país, quando e situação"><textarea name="visto_negado_detalhe" defaultValue={p.visto_negado_detalhe ?? ""} disabled={!owner} rows={3} className={inputCls} /></Campo>
       {owner && <button disabled={saving} className="gradient-hero tap w-full rounded-lg text-lg font-bold">Salvar</button>}
     </form> : <form action={(fd) => void savePerson(fd)} className="space-y-4">
       {((secao === "emergencia" ? [["emergencia_nome", "Nome", "text"], ["emergencia_parentesco", "Parentesco", "text"], ["emergencia_telefone", "Telefone", "tel"]] : [["nome", "Nome completo", "text"], ["cpf", "CPF", "text"], ["data_nascimento", "Nascimento", "date"], ["sexo", "Sexo", "text"], ["nacionalidades", "Nacionalidades, separadas por vírgula", "text"], ["telefone", "Telefone", "tel"], ["email", "E-mail", "email"], ["endereco", "Endereço", "text"]]) as [string, string, string][]).map(([key, label, type]) => <Campo key={key} rotulo={label}><input name={key} type={type} defaultValue={key === "nacionalidades" ? p.nacionalidades.join(", ") : String(p[key as keyof typeof p] ?? "")} disabled={!owner} className={inputCls} /></Campo>)}

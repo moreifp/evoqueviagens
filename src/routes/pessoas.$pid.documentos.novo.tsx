@@ -62,8 +62,15 @@ function NovoDocumento() {
     {!tipo && <section><h2 className="mb-3 text-2xl">Ou escolha o tipo</h2><div className="grid grid-cols-3 gap-2">{TIPOS.map(([id, label]) => <button key={id} onClick={() => setTipo(id)} className="tap rounded-lg border-2 border-border p-2 text-base font-bold">{label}</button>)}</div></section>}
     {(file || editDoc) && <form action={(fd) => void save(fd)} className="space-y-4">{file && <div className="rounded-lg border border-border bg-card p-3"><Miniatura src={previaDe(file)} className="h-40 w-full rounded-lg" /><p className="mt-3 flex items-center gap-2 text-lg font-bold">{reading ? <><Camera size={24} /> Lendo a foto…</> : readState === "ok" ? <><CheckCircle2 size={24} className="text-ok" /> Lemos a foto · confira e salve</> : "Não conseguimos ler. Preencha manualmente."}</p><button type="button" onClick={() => { setFile(null); setReadState("idle"); }} className="tap text-lg font-bold text-accent">Tirar outra foto</button></div>}
       <Campo rotulo="Tipo"><select value={tipo} onChange={(e) => setTipo(e.target.value)} className={inputCls}>{TIPOS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></Campo>
-      {([['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']] as [string, string, string][]).map(([key,label,input]) => <Campo key={key} rotulo={label}><input name={key} type={input} value={fields[key] ?? ""} onChange={(e) => setFields((old) => ({ ...old, [key]: e.target.value }))} className={inputCls} /></Campo>)}
+      {([['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']] as [string, string, string][]).map(([key,label,input]) => <Campo key={key} rotulo={(ROTULOS[tipo] ?? {})[key] ?? label}><input name={key} type={input} value={fields[key] ?? ""} onChange={(e) => setFields((old) => ({ ...old, [key]: e.target.value }))} className={inputCls} /></Campo>)}
       <button disabled={saving || reading || !owner} className="gradient-hero tap w-full rounded-lg text-xl font-bold">Salvar {nomeDocumento(tipo)}</button>
     </form>}
   </main></div>;
 }
+/** Rótulos específicos por tipo de documento (mesmo formulário). */
+const ROTULOS: Record<string, Record<string, string>> = {
+  seguro: { nome_no_documento: "Seguradora", numero: "Apólice", detalhe: "Telefone de emergência da seguradora", emissao: "Início", validade: "Fim da cobertura" },
+  global_entry: { numero: "Known Traveler Number (KTN)", detalhe: "Programa (Global Entry / TSA PreCheck)" },
+  vacina: { detalhe: "Vacina e dose", emissao: "Data da vacina" },
+  outra_vacina: { detalhe: "Qual vacina", emissao: "Data da vacina" },
+};

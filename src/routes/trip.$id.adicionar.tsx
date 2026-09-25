@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { BedDouble, Camera, Car, FileText, Plane, Receipt, Sparkles, Ticket, TrainFront, Utensils, X } from "lucide-react";
+import { BedDouble, Camera, Mail, Car, FileText, Plane, Receipt, Sparkles, Ticket, TrainFront, Utensils, X } from "lucide-react";
 import { toast } from "sonner";
 import { extrairReserva } from "@/lib/reserva-ai.functions";
 
@@ -24,6 +24,7 @@ function Adicionar() {
   }
   return <div className="fixed inset-0 z-30 overflow-y-auto bg-background pb-8"><header className="flex items-center gap-3 p-4"><h1 className="flex-1 text-3xl">Adicionar</h1><Link to="/trip/$id" params={{ id }} aria-label="Fechar" className="tap flex items-center justify-center"><X size={34} /></Link></header><main className="mx-auto max-w-3xl space-y-6 px-4">
     <button disabled={lendo} onClick={() => file.current?.click()} className="gradient-hero min-h-32 w-full rounded-[18px] p-5 text-left"><Camera size={34} /><strong className="mt-3 block text-xl">{lendo ? "Lendo a reserva…" : "Foto ou PDF da reserva"}</strong><span className="text-lg">Bilhete, voucher ou print do WhatsApp</span></button><input ref={file} hidden type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e)=>{const f=e.target.files?.[0]; if(f) void analisar(f);}} />
+    <Link to="/trip/$id/bilhetes/email" params={{ id }} className="tap flex w-full items-center gap-3 rounded-[18px] border-2 border-accent bg-card px-4 text-lg font-bold text-accent"><Mail size={28} /> Colar e-mail da agência (voos)</Link>
     <button onClick={()=>setMostrarTexto((v)=>!v)} className="tap flex w-full items-center gap-3 rounded-[18px] border border-border bg-card px-4 text-lg font-bold"><FileText size={28} /> Colar texto</button>{mostrarTexto && <div className="space-y-2"><textarea value={texto} onChange={(e)=>setTexto(e.target.value)} rows={6} placeholder="Cole o e-mail ou mensagem" className="w-full rounded-[18px] border-2 border-input bg-card p-4 text-lg"/><button disabled={!texto.trim()||lendo} onClick={()=>void analisar()} className="tap w-full rounded-lg bg-primary text-lg font-bold text-primary-foreground">Ler texto</button></div>}
     <Link to="/trip/$id/claude" params={{ id }} className="tap block rounded-[18px] border border-border bg-card p-4"><p className="flex items-center gap-2 text-lg font-bold"><Sparkles size={24} /> Pelo Claude</p><p className="mt-1 text-base text-muted-foreground">Ver o que chegou pelo Claude e confirmar com um toque.</p></Link>
     <div className="grid grid-cols-2 gap-3">{TIPOS.map(([rotulo,Icone,path])=><Link key={rotulo} to={`/trip/$id/${path}` as never} params={{id} as never} className="tap flex min-h-28 flex-col items-start justify-between rounded-[18px] border border-border bg-card p-4"><Icone size={30} className="text-accent"/><strong className="text-lg">{rotulo}</strong></Link>)}</div>

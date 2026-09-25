@@ -3,8 +3,10 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Check, Delete, ChevronLeft } from "lucide-react";
-import { buscarCotacao, expensesQuery, tripQuery } from "@/lib/data";
-import { fmtMoney, MOEDAS } from "@/lib/format";
+import { buscarCotacaoDetalhe, expensesQuery, tripQuery, type Cotacao } from "@/lib/data";
+import { CampoMoeda } from "@/components/CampoMoeda";
+import { moedaValida } from "@/lib/moedas";
+import { fmtMoney } from "@/lib/format";
 import { CATEGORIAS } from "@/lib/categorias";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
@@ -47,6 +49,7 @@ function NovaDespesa() {
   const [descricao, setDescricao] = useState(origem.descricao);
   const [taxa, setTaxa] = useState("1");
   const [buscandoTaxa, setBuscandoTaxa] = useState(false);
+  const [fonte, setFonte] = useState<Cotacao | null>(null);
   const [comprovante, setComprovante] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [dataGasto, setDataGasto] = useState(origem.data || "");
@@ -57,13 +60,13 @@ function NovaDespesa() {
   useEffect(() => {
     if (passo !== 3) return;
     if (!diferente) {
-      setTaxa("1");
+      setTaxa("1"); setFonte(null);
       return;
     }
-    setBuscandoTaxa(true);
-    buscarCotacao(moeda, trip.moeda_base).then((c) => {
+    setBuscandoTaxa(true); setFonte(null);
+    buscarCotacaoDetalhe(moeda, trip.moeda_base).then((c) => {
       setBuscandoTaxa(false);
-      if (c) setTaxa(String(c));
+      if (c) { setTaxa(String(c.taxa)); setFonte(c); }
     });
   }, [passo, moeda, trip.moeda_base, diferente]);
 
@@ -88,6 +91,8 @@ function NovaDespesa() {
         valor_original: valor,
         moeda_original: moeda,
         taxa_cambio: Number(taxa || "1"),
+        taxa_fonte: diferente ? (fonte && String(fonte.taxa) === taxa ? fonte.fonte : "manual") : null,
+        taxa_data: diferente ? (fonte && String(fonte.taxa) === taxa ? fonte.data : new Date().toISOString().slice(0, 10)) : null,
         valor_moeda_base: Number(valorBase.toFixed(2)),
         comprovante_url: comprovante,
         criado_por: auth.user?.id,
@@ -124,7 +129,7 @@ function NovaDespesa() {
             onArquivo={(d) => setComprovante(d)}
             onLido={(r) => {
               if (r.valor != null) setDigitos(String(Math.round(r.valor * 100)));
-              if (r.moeda && (MOEDAS as readonly string[]).includes(r.moeda)) setMoeda(r.moeda);
+              if (moedaValida(r.moeda)) setMoeda(r.moeda.toUpperCase());
               if (r.titulo) setDescricao(r.titulo);
               if (r.categoria && CATEGORIAS.some((c) => c.id === r.categoria)) setCategoria(r.categoria);
               if (soData(r.inicio)) setDataGasto(soData(r.inicio));
@@ -134,18 +139,7 @@ function NovaDespesa() {
           <p className="num mt-2 text-center text-[42px] leading-none text-foreground">
             {fmtMoney(valor, moeda)}
           </p>
-          <select
-            aria-label="Moeda"
-            value={moeda}
-            onChange={(e) => setMoeda(e.target.value)}
-            className="tap mx-auto mt-3 block rounded-xl border-2 border-input bg-card px-4 text-lg font-bold text-foreground"
-          >
-            {MOEDAS.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <div className="mx-auto mt-3 max-w-sm"><CampoMoeda value={moeda} onChange={setMoeda} /></div>
 
           <div className="mt-4 grid grid-cols-3 gap-3">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "del"].map((t) => (
@@ -211,6 +205,7 @@ function NovaDespesa() {
               <p className="num mt-2 text-2xl text-foreground">
                 {buscandoTaxa ? "Buscando…" : fmtMoney(valorBase, trip.moeda_base)}
               </p>
+              {!buscandoTaxa && <p className="mt-1 text-base text-muted-foreground">{fonte && String(fonte.taxa) === taxa ? `${fonte.fonte} · ${fonte.data.slice(8, 10)}/${fonte.data.slice(5, 7)}` : fonte ? "Taxa manual" : "Cotação não encontrada · digite a taxa"}</p>}
             </div>
           )}
 

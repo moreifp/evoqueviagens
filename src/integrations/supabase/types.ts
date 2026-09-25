@@ -339,6 +339,8 @@ export type Database = {
           moeda_original: string
           pago_por: string | null
           taxa_cambio: number
+          taxa_data: string | null
+          taxa_fonte: string | null
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -356,6 +358,8 @@ export type Database = {
           moeda_original: string
           pago_por?: string | null
           taxa_cambio: number
+          taxa_data?: string | null
+          taxa_fonte?: string | null
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -373,6 +377,8 @@ export type Database = {
           moeda_original?: string
           pago_por?: string | null
           taxa_cambio?: number
+          taxa_data?: string | null
+          taxa_fonte?: string | null
           trip_id?: string
           valor_moeda_base?: number
           valor_original?: number
@@ -477,6 +483,7 @@ export type Database = {
           item_id: string
           item_tipo: string
           nome: string
+          privado: boolean
           size_bytes: number
           storage_path: string
         }
@@ -488,6 +495,7 @@ export type Database = {
           item_id: string
           item_tipo: string
           nome: string
+          privado?: boolean
           size_bytes?: number
           storage_path: string
         }
@@ -499,6 +507,7 @@ export type Database = {
           item_id?: string
           item_tipo?: string
           nome?: string
+          privado?: boolean
           size_bytes?: number
           storage_path?: string
         }
@@ -873,6 +882,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "person_change_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_item_dispensa: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          item: string
+          person_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item: string
+          person_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          item?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_item_dispensa_person_id_fkey"
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "person"
@@ -1346,6 +1387,10 @@ export type Database = {
         Row: {
           anexo_url: string | null
           assento: string | null
+          bag_desp_kg: number | null
+          bag_desp_qtd: number | null
+          bag_mao_kg: number | null
+          bag_mao_qtd: number | null
           chegada_tz: string
           chegada_utc: string
           companhia: string | null
@@ -1357,6 +1402,7 @@ export type Database = {
           expense_id: string | null
           grupo_reserva: string | null
           id: string
+          item_pessoal: boolean | null
           localizador: string | null
           nome_no_bilhete: string | null
           numero: string | null
@@ -1372,6 +1418,10 @@ export type Database = {
         Insert: {
           anexo_url?: string | null
           assento?: string | null
+          bag_desp_kg?: number | null
+          bag_desp_qtd?: number | null
+          bag_mao_kg?: number | null
+          bag_mao_qtd?: number | null
           chegada_tz: string
           chegada_utc: string
           companhia?: string | null
@@ -1383,6 +1433,7 @@ export type Database = {
           expense_id?: string | null
           grupo_reserva?: string | null
           id?: string
+          item_pessoal?: boolean | null
           localizador?: string | null
           nome_no_bilhete?: string | null
           numero?: string | null
@@ -1398,6 +1449,10 @@ export type Database = {
         Update: {
           anexo_url?: string | null
           assento?: string | null
+          bag_desp_kg?: number | null
+          bag_desp_qtd?: number | null
+          bag_mao_kg?: number | null
+          bag_mao_qtd?: number | null
           chegada_tz?: string
           chegada_utc?: string
           companhia?: string | null
@@ -1409,6 +1464,7 @@ export type Database = {
           expense_id?: string | null
           grupo_reserva?: string | null
           id?: string
+          item_pessoal?: boolean | null
           localizador?: string | null
           nome_no_bilhete?: string | null
           numero?: string | null
@@ -1448,10 +1504,15 @@ export type Database = {
       ticket_passenger: {
         Row: {
           assento: string | null
+          bag_desp_kg: number | null
+          bag_desp_qtd: number | null
+          bag_mao_kg: number | null
+          bag_mao_qtd: number | null
           created_at: string
           deleted_at: string | null
           eticket: string | null
           id: string
+          item_pessoal: boolean | null
           loyalty_account_id: string | null
           nome_no_bilhete: string | null
           person_id: string
@@ -1459,10 +1520,15 @@ export type Database = {
         }
         Insert: {
           assento?: string | null
+          bag_desp_kg?: number | null
+          bag_desp_qtd?: number | null
+          bag_mao_kg?: number | null
+          bag_mao_qtd?: number | null
           created_at?: string
           deleted_at?: string | null
           eticket?: string | null
           id?: string
+          item_pessoal?: boolean | null
           loyalty_account_id?: string | null
           nome_no_bilhete?: string | null
           person_id: string
@@ -1470,10 +1536,15 @@ export type Database = {
         }
         Update: {
           assento?: string | null
+          bag_desp_kg?: number | null
+          bag_desp_qtd?: number | null
+          bag_mao_kg?: number | null
+          bag_mao_qtd?: number | null
           created_at?: string
           deleted_at?: string | null
           eticket?: string | null
           id?: string
+          item_pessoal?: boolean | null
           loyalty_account_id?: string | null
           nome_no_bilhete?: string | null
           person_id?: string

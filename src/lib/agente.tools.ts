@@ -1,3 +1,4 @@
+import { CODIGOS_MOEDA } from "./moedas";
 /**
  * Contrato das ferramentas do agente (Claude via MCP). Texto e esquemas puros,
  * usados pelas funções de servidor agora e pelo servidor MCP quando o dono ligar.
@@ -9,7 +10,7 @@ const isoComOffset = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/, "Use ISO 8601 COM offset, ex.: 2026-11-10T22:35:00-03:00");
 const iata = z.string().trim().regex(/^[A-Za-z]{3}$/, "Código IATA de 3 letras, ex.: GRU").transform((s) => s.toUpperCase());
-const moeda = z.string().trim().regex(/^[A-Za-z]{3}$/, "Moeda ISO 4217, ex.: EUR").transform((s) => s.toUpperCase());
+const moeda = z.string().trim().regex(/^[A-Za-z]{3}$/, "Moeda ISO 4217, ex.: EUR").transform((s) => s.toUpperCase()).refine((c) => CODIGOS_MOEDA.has(c), "Moeda ISO 4217 desconhecida");
 const fuso = z.string().trim().min(3).max(64).optional().describe("Fuso IANA do local, ex.: Europe/Lisbon (opcional)");
 
 const pessoa = z.object({

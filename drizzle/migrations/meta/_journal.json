@@ -197,6 +197,13 @@
       "when": 1790337944551,
       "tag": "0027_0027_push_gatilhos",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790371306246,
+      "tag": "0028_0028_bagagem_ficha_anexo_privado",
+      "breakpoints": true
     }
   ]
 }

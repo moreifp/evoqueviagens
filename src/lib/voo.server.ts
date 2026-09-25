@@ -1,4 +1,4 @@
-import { CACHE_MIN, UNIDADES_POR_CHAMADA, dataLocalPartida, mesAtual, numeroVoo, type StatusVoo } from "./voo";
+import { CACHE_MIN, UNIDADES_POR_CHAMADA, dataLocalPartida, ddmm, mesAtual, numeroVoo, statusDisponivelEm, type StatusVoo } from "./voo";
 
 export type TicketVoo = {
   id: string; trip_id: string; tipo: string; companhia: string | null; numero: string | null;
@@ -44,6 +44,8 @@ export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", f
   const numero = numeroVoo(t.companhia, t.numero);
   if (!numero) return { status: ultimo, aviso: "Não consegui identificar a companhia e o número deste voo.", numero };
   const data = dataLocalPartida(t.partida_utc, t.partida_tz);
+  const aPartir = statusDisponivelEm(t.partida_utc, t.partida_tz);
+  if (aPartir) return { status: null, aviso: `O status aparece perto do voo (a partir de ${ddmm(aPartir)}).`, numero };
   const key = process.env["AERODATABOX_KEY"];
   if (!key) return { status: ultimo, aviso: "Não consegui atualizar agora.", numero };
 
@@ -65,7 +67,10 @@ export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", f
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lista = (await res.json().catch(() => [])) as any[];
-  const f = Array.isArray(lista) ? escolherTrecho(lista, t) : null;
+  // Só aceita trechos cuja partida prevista cai na data local do bilhete (nunca o voo de outro dia).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doDia = Array.isArray(lista) ? lista.filter((x: any) => { const u = utc(x.departure?.scheduledTime); return !u || dataLocalPartida(u, t.partida_tz) === data; }) : [];
+  const f = doDia.length ? escolherTrecho(doDia, t) : null;
   if (!f) return { status: ultimo, aviso: `Não encontrei o voo ${numero} nesta data.`, numero };
 
   const dep = f.departure ?? {}, arr = f.arrival ?? {};

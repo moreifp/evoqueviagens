@@ -9,6 +9,7 @@ import { dataBR } from "./FichaPartes";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
 import { EmOrdem } from "./EmOrdem";
+import { FichaCompleta } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
@@ -36,7 +37,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const owner = p.account_id === data.uid;
   const self = owner && p.kind === "self";
   const progresso = progressoFicha(data);
-  const faltas = progresso.itens.filter((item) => !item.done).slice(0, 3);
+  const faltas = progresso.itens.filter((item) => !item.done && !item.dispensado).sort((a, b) => Number(b.obrigatorio) - Number(a.obrigatorio));
   const quemVe = data.compartilhamentos.filter((grant) => grant.owner_id === data.uid);
   const hoje = new Date().toISOString().slice(0, 10);
   const limite90 = new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10);
@@ -116,11 +117,13 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
             </div>
           </div>
           <progress value={progresso.percentual} max={100} aria-label={`Ficha ${progresso.percentual}% completa`} className="mt-5 h-3 w-full overflow-hidden rounded-full accent-current" />
-          <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de 10</p>
-          {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <Link key={item.label} to={item.href as never} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</Link>)}</div>}
+          <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de {progresso.total}</p>
+          {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</button>)}</div>}
         </section>
 
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
+
+        <FichaCompleta personId={p.id} itens={progresso.itens} owner={owner} />
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}

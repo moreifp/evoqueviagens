@@ -15,6 +15,14 @@ const input = z.object({
 const TIPOS = ["voo", "trem", "onibus", "hotel", "carro", "passeio", "restaurante", "outro", "despesa"] as const;
 const s = { type: ["string", "null"] };
 
+const n = { type: ["number", "null"] };
+const BAG_SCHEMA = {
+  type: ["object", "null"], additionalProperties: false,
+  properties: { bag_mao_qtd: n, bag_mao_kg: n, item_pessoal: { type: ["boolean", "null"] }, bag_desp_qtd: n, bag_desp_kg: n },
+  required: ["bag_mao_qtd", "bag_mao_kg", "item_pessoal", "bag_desp_qtd", "bag_desp_kg"],
+};
+const bagZ = z.object({ bag_mao_qtd: z.number().nullable(), bag_mao_kg: z.number().nullable(), item_pessoal: z.boolean().nullable(), bag_desp_qtd: z.number().nullable(), bag_desp_kg: z.number().nullable() }).nullable();
+
 const schema = {
   type: "object",
   additionalProperties: false,
@@ -33,8 +41,9 @@ const schema = {
       items: { type: "object", additionalProperties: false, properties: { nome: { type: "string" }, tipo: s, hospedes: { type: "array", items: { type: "string" } } }, required: ["nome", "tipo", "hospedes"] },
     },
     pessoas: { type: "array", items: { type: "string" } },
+    bagagem: BAG_SCHEMA,
   },
-  required: ["tipo", "titulo", "companhia", "numero", "localizador", "origem_iata", "destino_iata", "origem_cidade", "destino_cidade", "inicio", "fim", "local", "cidade", "valor", "moeda", "cancelamento_gratis_ate", "politica_cancelamento", "categoria", "passageiros", "quartos", "pessoas"],
+  required: ["bagagem", "tipo", "titulo", "companhia", "numero", "localizador", "origem_iata", "destino_iata", "origem_cidade", "destino_cidade", "inicio", "fim", "local", "cidade", "valor", "moeda", "cancelamento_gratis_ate", "politica_cancelamento", "categoria", "passageiros", "quartos", "pessoas"],
 };
 
 const saida = z.object({
@@ -46,11 +55,12 @@ const saida = z.object({
   passageiros: z.array(z.object({ nome: z.string(), assento: z.string().nullable(), eticket: z.string().nullable() })),
   quartos: z.array(z.object({ nome: z.string(), tipo: z.string().nullable(), hospedes: z.array(z.string()) })),
   pessoas: z.array(z.string()),
+  bagagem: bagZ.optional().default(null),
 });
 export type Leitura = z.infer<typeof saida>;
 
 const FOCO: Record<string, string> = {
-  voo: "O usuário está cadastrando um voo/trem/ônibus: foque em companhia, número, IATA, horários e passageiros (nome como no bilhete, assento, e-ticket).",
+  voo: "O usuário está cadastrando um voo/trem/ônibus: foque em companhia, número, IATA, horários, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem (mão: quantidade e kg; item pessoal; despachada: quantidade e kg por mala) se estiver escrita.",
   hotel: "O usuário está cadastrando uma hospedagem: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out, quartos com hóspedes.",
   reserva: "O usuário está cadastrando uma reserva (carro, passeio, restaurante ou outro): titulo, local, início, fim e pessoas.",
   despesa: "O usuário está lançando uma despesa (recibo/nota): tipo = despesa, titulo = descrição curta, valor total, moeda, inicio = data, categoria.",
@@ -78,6 +88,11 @@ export const extrairReserva = createServerFn({ method: "POST" })
     if (data.texto?.trim()) content.push({ type: "input_text", text: data.texto.trim() });
     if (data.arquivo && data.mime?.startsWith("image/")) content.push({ type: "input_image", image_url: data.arquivo });
     if (data.arquivo && data.mime === "application/pdf") content.push({ type: "input_file", filename: data.nome ?? "reserva.pdf", file_data: data.arquivo });
+    const output = await chamarIA(key, content, "reserva_viagem", schema);
+    return saida.parse(JSON.parse(output));
+  });
+
+async function chamarIA(key: string, content: Record<string, unknown>[], nome: string, sch: unknown): Promise<string> {
     const run = gatewayFetch();
     const response = await run.fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
@@ -86,7 +101,7 @@ export const extrairReserva = createServerFn({ method: "POST" })
         model: "openai/gpt-6-astra", stream: true,
         input: [{ role: "user", content }],
         reasoning: { effort: "low", summary: "auto" }, store: false, include: ["reasoning.encrypted_content"],
-        text: { format: { type: "json_schema", name: "reserva_viagem", strict: true, schema } },
+        text: { format: { type: "json_schema", name: nome, strict: true, schema: sch } },
       }),
     });
     if (!response.ok) {
@@ -109,5 +124,58 @@ export const extrairReserva = createServerFn({ method: "POST" })
       }
     }
     if (!output.trim()) throw new Error("Não deu para ler · preencha.");
-    return saida.parse(JSON.parse(output));
+    return output;
+}
+
+// ---------- E-mail da agência: só o que o app precisa, nunca preços/pagamento ----------
+const segSchema = {
+  type: "object", additionalProperties: false,
+  properties: {
+    tipo: { type: "string", enum: ["voo", "trem", "onibus"] }, companhia: s, numero: s, localizador: s,
+    origem_iata: s, destino_iata: s, origem_cidade: s, destino_cidade: s, inicio: s, fim: s,
+    bagagem: BAG_SCHEMA,
+    passageiros: { type: "array", items: { type: "object", additionalProperties: false, properties: { nome: { type: "string" }, assento: s, eticket: s }, required: ["nome", "assento", "eticket"] } },
+  },
+  required: ["tipo", "companhia", "numero", "localizador", "origem_iata", "destino_iata", "origem_cidade", "destino_cidade", "inicio", "fim", "bagagem", "passageiros"],
+};
+const emailSchema = { type: "object", additionalProperties: false, properties: { trechos: { type: "array", items: segSchema } }, required: ["trechos"] };
+const trechoZ = z.object({
+  tipo: z.enum(["voo", "trem", "onibus"]), companhia: z.string().nullable(), numero: z.string().nullable(), localizador: z.string().nullable(),
+  origem_iata: z.string().nullable(), destino_iata: z.string().nullable(), origem_cidade: z.string().nullable(), destino_cidade: z.string().nullable(),
+  inicio: z.string().nullable(), fim: z.string().nullable(), bagagem: bagZ,
+  passageiros: z.array(z.object({ nome: z.string(), assento: z.string().nullable(), eticket: z.string().nullable() })),
+});
+export type Trecho = z.infer<typeof trechoZ>;
+
+/** Remove qualquer coisa com cara de dinheiro ou cartão que tenha escapado num campo de texto. */
+function limpar(v: string | null): string | null {
+  if (!v) return v;
+  if (/(R\$|US\$|€|£|\b(BRL|USD|EUR|GBP)\s?\d)|\b\d{4}[ -]?\d{4}[ -]?\d{4}[ -]?\d{4}\b|tarifa|taxa|comiss|parcela|cart[aã]o/i.test(v)) return null;
+  return v;
+}
+
+export const lerEmailAgencia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => input.parse(d))
+  .handler(async ({ data }): Promise<{ trechos: Trecho[] }> => {
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) throw new Error("A leitura automática não está configurada.");
+    if (!data.texto?.trim() && !data.arquivo) throw new Error("Cole o e-mail ou escolha um arquivo.");
+    const instr = [
+      "Este é um e-mail/bilhete de agência de viagens. Liste TODOS os trechos (ida, volta e conexões), um item por voo/trem.",
+      "Extraia SOMENTE: companhia, número, localizador, aeroportos IATA, cidades, partida e chegada, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem.",
+      "IGNORE totalmente preços, tarifas, taxas, impostos, comissão da agência, formas de pagamento, cartões e parcelas: não copie nada disso para nenhum campo.",
+      "Datas: ISO local YYYY-MM-DDTHH:mm na hora do aeroporto. Não adivinhe: ausente = null. Nomes como 'Nome Sobrenome'.",
+    ].join(" ");
+    const content: Record<string, unknown>[] = [{ type: "input_text", text: instr }];
+    if (data.texto?.trim()) content.push({ type: "input_text", text: data.texto.trim() });
+    if (data.arquivo && data.mime?.startsWith("image/")) content.push({ type: "input_image", image_url: data.arquivo });
+    if (data.arquivo && data.mime === "application/pdf") content.push({ type: "input_file", filename: data.nome ?? "email.pdf", file_data: data.arquivo });
+    const out = z.object({ trechos: z.array(trechoZ) }).parse(JSON.parse(await chamarIA(key, content, "email_agencia", emailSchema)));
+    return {
+      trechos: out.trechos.map((t) => ({
+        ...t, companhia: limpar(t.companhia), origem_cidade: limpar(t.origem_cidade), destino_cidade: limpar(t.destino_cidade),
+        passageiros: t.passageiros.map((p) => ({ ...p, nome: limpar(p.nome) ?? "" })).filter((p) => p.nome),
+      })),
+    };
   });
