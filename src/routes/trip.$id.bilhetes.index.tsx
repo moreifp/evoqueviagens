@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { StatusVoo } from "@/components/StatusVoo";
+import type { StatusVoo as StatusVooT } from "@/lib/voo";
 import { useState } from "react";
 import { Plane, TrainFront, Bus, Car, FileText, Plus, ChevronDown } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { ticketsQuery, type Ticket } from "@/lib/data";
+import { flightStatusQuery, ticketsQuery, type Ticket } from "@/lib/data";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/bilhetes/")({
@@ -31,6 +33,7 @@ const ICONE: Record<string, typeof Plane> = {
 function Bilhetes() {
   const { id } = Route.useParams();
   const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
+  const { data: status } = useQuery(flightStatusQuery(id));
 
   const grupos = new Map<string, Ticket[]>();
   for (const b of bilhetes) {
@@ -54,7 +57,7 @@ function Bilhetes() {
             </h2>
             <div className="mt-2 space-y-3">
               {itens.map((b) => (
-                <CartaoEmbarque key={b.id} b={b} />
+                <CartaoEmbarque key={b.id} b={b} s={status?.[b.id]} />
               ))}
             </div>
           </section>
