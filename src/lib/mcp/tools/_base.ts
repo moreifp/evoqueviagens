@@ -2,7 +2,9 @@ import { ToolError, type ToolContext } from "@lovable.dev/mcp-js";
 import { supabaseForUser } from "../supabase";
 import type { Ctx } from "../../agente.server";
 
-const ORIGEM = "https://evoqueviagens.lovable.app";
+import { APP_URL } from "../../site";
+
+const ORIGEM = APP_URL;
 
 export function ctxAgente(ctx: ToolContext): Ctx {
   const userId = ctx.getUserId();

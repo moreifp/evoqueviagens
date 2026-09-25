@@ -8,6 +8,7 @@ import { conferirQuery, tripQuery } from "@/lib/data";
 import { mutar } from "@/lib/outbox";
 import { abrirWhatsApp } from "@/lib/links";
 import { br } from "@/lib/conferencia";
+import { origemApp } from "@/lib/site";
 
 export const Route = createFileRoute("/trip/$id/pedir/$pid")({
   head: () => ({
@@ -49,7 +50,7 @@ function Pedir() {
     setEnviando(true);
     try {
       const r = await mutar({ tipo: "rpc", funcao: "pedir_dados", args: { _id: crypto.randomUUID(), _trip: id, _person: pid, _blocos: blocos, _ate_fim: ateFim } });
-      if (whats) abrirWhatsApp(pessoa?.convite_telefone ?? null, `Oi, ${nome}! Para ${trip.nome} preciso conferir seus dados de viagem. Abra o Evoque e toque em "Escolher e aceitar": ${location.origin}/viagens`);
+      if (whats) abrirWhatsApp(pessoa?.convite_telefone ?? null, `Oi, ${nome}! Para ${trip.nome} preciso conferir seus dados de viagem. Abra o Evoque e toque em "Escolher e aceitar": ${origemApp()}/viagens`);
       toast.success(r === "fila" ? "Guardado. Envia quando a internet voltar." : `Pedido enviado para ${nome}.`);
       await qc.invalidateQueries({ queryKey: ["conferir", id] });
       navigate({ to: "/trip/$id/revisao", params: { id } });
