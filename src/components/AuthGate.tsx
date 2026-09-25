@@ -18,25 +18,41 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let vivo = true;
     let garantido = false;
-    async function aplicar(s: Session | null) {
-      if (s && !garantido) {
+    async function aplicar(s: Session | null, evento?: string) {
+      // Sem internet, nunca derruba para a tela de login: usa a sessão guardada no aparelho.
+      if (!s && !navigator.onLine) s = sessaoGuardada();
+      if (!s && evento && evento !== "SIGNED_OUT" && !navigator.onLine) return;
+      if (s && !garantido && navigator.onLine) {
         garantido = true;
         garantir()
           .then(() => qc.invalidateQueries({ queryKey: ["pessoas"] }))
-          .catch((e) => console.error(e));
+          .catch((e) => {
+            garantido = false;
+            console.error(e);
+          });
       }
       if (vivo) {
         setSession(s);
         setPronto(true);
       }
     }
+    const semRede = setTimeout(() => {
+      if (!navigator.onLine) void aplicar(sessaoGuardada());
+    }, 1500);
     supabase.auth.getSession().then(({ data }) => aplicar(data.session)).catch(() => aplicar(null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setTimeout(() => aplicar(s), 0);
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
+      setTimeout(() => aplicar(s, e), 0);
     });
+    // Internet voltou: renova a sessão (se não der, aí sim pede login).
+    const voltou = () => {
+      void supabase.auth.getSession().then(({ data }) => aplicar(data.session));
+    };
+    window.addEventListener("online", voltou);
     return () => {
       vivo = false;
+      clearTimeout(semRede);
       sub.subscription.unsubscribe();
+      window.removeEventListener("online", voltou);
     };
   }, []);
 
@@ -45,6 +61,22 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
   if (!session) return <Entrar />;
   return <>{children}</>;
+}
+
+/** Sessão salva pelo login no aparelho (mesmo vencida), para o modo leitura sem internet. */
+function sessaoGuardada(): Session | null {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i) ?? "";
+      if (!/^sb-.+-auth-token$/.test(k)) continue;
+      const v = JSON.parse(localStorage.getItem(k) ?? "null") as Session | { currentSession?: Session } | null;
+      const s = (v && "access_token" in v ? v : (v as { currentSession?: Session } | null)?.currentSession) ?? null;
+      if (s?.user) return s as Session;
+    }
+  } catch {
+    /* sem storage */
+  }
+  return null;
 }
 
 function traduzErro(msg: string): { texto: string; espera?: number } {
