@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRightLeft, CalendarDays, Copy, Map, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AcoesItem } from "@/components/AcoesItem";
@@ -29,7 +29,7 @@ function Voo({ tripId, itemId }: { tripId: string; itemId: string }) {
   const { data: lista } = useSuspenseQuery(ticketsQuery(tripId));
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
   const { data: status } = useSuspenseQuery(flightStatusQuery(tripId));
-  const { data: conferencia } = useSuspenseQuery(conferenciaNomesQuery(itemId));
+  const { data: conferencia = [] } = useQuery({ ...conferenciaNomesQuery(itemId), retry: 1 });
   const item = lista.find((x) => x.id === itemId);
   if (!item) return <p className="p-6">Voo não encontrado.</p>;
   const partidaDia = chaveDia(item.partida_utc, item.partida_tz);
