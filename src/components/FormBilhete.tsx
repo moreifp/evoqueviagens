@@ -61,6 +61,12 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const p0 = (inicial ?? copiarDe)?.passageiros?.[0];
     return p0 ? pegarBagagem(p0) : BAGAGEM_VAZIA;
   });
+  // Modo da bagagem: "todos" (uma regra para o voo inteiro) ou "individual" (cada passageiro tem a sua, ex.: executiva × econômica).
+  const [modoBag, setModoBag] = useState<"todos" | "individual">(() => {
+    const src = (inicial ?? copiarDe)?.passageiros ?? [];
+    const base = pegarBagagem(inicial ?? copiarDe);
+    return src.some((q) => { const b = pegarBagagem(q); return temBagagem(b) && !mesmaBagagem(b, base); }) ? "individual" : "todos";
+  });
   // Passageiros com bagagem diferente do padrão do bilhete ficam com ajuste próprio.
   useEffect(() => {
     const src = inicial?.passageiros ?? copiarDe?.passageiros ?? [];
@@ -293,7 +299,31 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
         <TrocarFuso valor={f.chegada_tz} onChange={(tz) => setF((v) => ({ ...v, chegada_tz: tz }))} />
       </div>
 
-      <CamposBagagem titulo="Bagagem (vale para todos)" valor={bag} onChange={setBag} />
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Regra de bagagem">
+          <button
+            type="button"
+            aria-pressed={modoBag === "todos"}
+            onClick={() => setModoBag("todos")}
+            className={`tap rounded-xl border-2 text-lg font-bold ${modoBag === "todos" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+          >
+            Vale para todos
+          </button>
+          <button
+            type="button"
+            aria-pressed={modoBag === "individual"}
+            onClick={() => setModoBag("individual")}
+            className={`tap rounded-xl border-2 text-lg font-bold ${modoBag === "individual" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+          >
+            Individual por pessoa
+          </button>
+        </div>
+        {modoBag === "individual" && (
+          <p className="text-base text-muted-foreground">Cada passageiro tem a própria bagagem — útil quando uns vão de executiva e outros de econômica. Preencha em cada pessoa abaixo.</p>
+        )}
+      </div>
+
+      {modoBag === "todos" && <CamposBagagem titulo="Bagagem (vale para todos)" valor={bag} onChange={setBag} />}
 
       <section className="space-y-3">
         <h2 className="text-xl">Passageiros</h2>
@@ -328,7 +358,9 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
                 <input value={p.eticket} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, eticket: e.target.value } : x)))} className={`${inputCls} mono-code`} />
               </Campo>
             </div>
-            {p.bag ? (
+            {modoBag === "individual" ? (
+              <CamposBagagem titulo="Bagagem desta pessoa" valor={p.bag ?? bag} onChange={(b) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: b } : x)))} />
+            ) : p.bag ? (
               <div className="space-y-2">
                 <CamposBagagem titulo="Bagagem desta pessoa" valor={p.bag} onChange={(b) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: b } : x)))} />
                 <button type="button" onClick={() => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, bag: null } : x)))} className="tap w-full rounded-xl border-2 border-border text-lg font-bold">Usar a bagagem padrão</button>
