@@ -192,6 +192,9 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
         />
       </Campo>
       {geo.lat != null && <p className="text-base text-muted-foreground">Local do mapa · horário local {f.inicio_tz}</p>}
+      <Campo rotulo="Telefone" dica="Telefone do local (opcional)">
+        <input type="tel" value={f.telefone} onChange={set("telefone")} placeholder="+27 21 123 4567" className={`${inputCls} mono-code`} />
+      </Campo>
       <Campo rotulo="Cidade">
         <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
       </Campo>
