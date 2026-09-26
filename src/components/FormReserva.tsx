@@ -109,6 +109,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       fim_utc: f.fim ? localParaUtc(f.fim, f.fim_tz) : null,
       fim_tz: f.fim ? f.fim_tz : null,
       local: f.local.trim() || null,
+      telefone: f.telefone.trim() || null,
       cidade: f.cidade.trim() || null,
       localizador: f.localizador.trim() || null,
       valor: f.valor ? Number(f.valor.replace(",", ".")) : null,
