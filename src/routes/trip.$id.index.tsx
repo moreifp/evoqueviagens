@@ -10,6 +10,7 @@ import { cancelado, formatarAtraso } from "@/lib/voo";
 import { tripQuery, apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
+import { CartaoEmergencia } from "@/components/CartaoEmergencia";
 import { pontosQuery } from "@/lib/data";
 import { carregarAeroportos, porIata, type Aeroporto } from "@/lib/aeroportos";
 import { rotaDoDia, type Ponto } from "@/lib/mapas";

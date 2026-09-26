@@ -41,6 +41,7 @@ import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados
 import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdAdicionarRouteImport } from './routes/trip.$id.adicionar'
 import { Route as TripIdClaudeRouteImport } from './routes/trip.$id.claude'
+import { Route as TripIdEmergenciaRouteImport } from './routes/trip.$id.emergencia'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
@@ -228,6 +229,11 @@ const TripIdClaudeRoute = TripIdClaudeRouteImport.update({
   path: '/claude',
   getParentRoute: () => TripIdRoute,
 } as any)
+const TripIdEmergenciaRoute = TripIdEmergenciaRouteImport.update({
+  id: '/emergencia',
+  path: '/emergencia',
+  getParentRoute: () => TripIdRoute,
+} as any)
 const TripIdPessoasRoute = TripIdPessoasRouteImport.update({
   id: '/pessoas',
   path: '/pessoas',
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
+  '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -449,6 +456,7 @@ export interface FileRoutesByTo {
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
+  '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -509,6 +517,7 @@ export interface FileRoutesById {
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
+  '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
+    | '/trip/$id/emergencia'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -627,6 +637,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
+    | '/trip/$id/emergencia'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -686,6 +697,7 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
+    | '/trip/$id/emergencia'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -979,6 +991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdClaudeRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/trip/$id/emergencia': {
+      id: '/trip/$id/emergencia'
+      path: '/emergencia'
+      fullPath: '/trip/$id/emergencia'
+      preLoaderRoute: typeof TripIdEmergenciaRouteImport
+      parentRoute: typeof TripIdRoute
+    }
     '/trip/$id/pessoas': {
       id: '/trip/$id/pessoas'
       path: '/pessoas'
@@ -1178,6 +1197,7 @@ const EnRouteWithChildren = EnRoute._addFileChildren(EnRouteChildren)
 interface TripIdRouteChildren {
   TripIdAdicionarRoute: typeof TripIdAdicionarRoute
   TripIdClaudeRoute: typeof TripIdClaudeRoute
+  TripIdEmergenciaRoute: typeof TripIdEmergenciaRoute
   TripIdPessoasRoute: typeof TripIdPessoasRoute
   TripIdRestaurantesRoute: typeof TripIdRestaurantesRoute
   TripIdRevisaoRoute: typeof TripIdRevisaoRoute
@@ -1198,6 +1218,7 @@ interface TripIdRouteChildren {
 const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdAdicionarRoute: TripIdAdicionarRoute,
   TripIdClaudeRoute: TripIdClaudeRoute,
+  TripIdEmergenciaRoute: TripIdEmergenciaRoute,
   TripIdPessoasRoute: TripIdPessoasRoute,
   TripIdRestaurantesRoute: TripIdRestaurantesRoute,
   TripIdRevisaoRoute: TripIdRevisaoRoute,
