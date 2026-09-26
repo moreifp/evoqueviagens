@@ -96,13 +96,16 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <header className="flex items-center gap-3 px-4 py-3">
+      <header className="flex flex-wrap items-center gap-3 px-4 py-3">
         {back && <Link to="/" className="tap flex items-center text-lg font-bold text-foreground">Voltar</Link>}
         <h1 className="min-w-0 flex-1 truncate text-3xl">{self ? "Minha conta" : p.apelido || p.nome}</h1>
         {self && (
-          <Link to="/compartilhamentos" className="tap flex items-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">
-            <Share2 size={26} strokeWidth={2.2} /> Compartilhar
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/compartilhamentos" className="tap flex items-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">
+              <Share2 size={26} strokeWidth={2.2} /> Compartilhar
+            </Link>
+            <ConvidarApp />
+          </div>
         )}
       </header>
 
