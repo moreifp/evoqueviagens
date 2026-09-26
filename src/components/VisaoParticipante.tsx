@@ -8,6 +8,7 @@ import { membersQuery, roteiroQuery, ticketsQuery, pedidosQuery, type Trip, type
 import { chaveDia, dataBRCurta, horaNoFuso } from "@/lib/format";
 import { AvatarGrupo } from "@/components/AvatarGrupo";
 import { SeloOffline } from "@/components/SeloOffline";
+import { CartaoEmergencia } from "@/components/CartaoEmergencia";
 import { mutar } from "@/lib/outbox";
 import { aviso, naTela, novoId } from "@/lib/itens";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,7 @@ export function VisaoParticipante({ trip }: { trip: Trip }) {
       <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {dono?.nome ?? "Outra pessoa"} organiza</p></div></header>
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-3 pb-28">
         <SeloOffline tripId={id} />
+        <CartaoEmergencia trip={trip} editavel={false} />
         {proximo ? (
           <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: proximo.item_tipo, itemId: proximo.item_id }} className="gradient-hero shadow-medium block rounded-3xl p-6">
             <p className="text-sm font-bold uppercase tracking-wide">Seu próximo</p>
