@@ -333,6 +333,8 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
           </p>
         </div>
       )}
+        </>
+      )}
 
       {aba === "fotos" && (
       <section className="space-y-3">
