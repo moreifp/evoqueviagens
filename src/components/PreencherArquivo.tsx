@@ -68,16 +68,20 @@ export function PreencherArquivo({ tripId, esperado, onLido, onArquivo }: {
     if (ocupado.current) return;
     ocupado.current = true; setLendo(true); setLido(null);
     let dado: string | null = null, mime: string = f.type, nome = f.name || "documento";
+    const ehEml = /\.eml$/i.test(nome) || f.type === "message/rfc822";
     try {
-      if (f.type.startsWith("image/") && !ACEITOS.includes(f.type as Mime)) { dado = await lerDataUrl(await paraJpeg(f)); mime = "image/jpeg"; nome = nome.replace(/\.\w+$/, "") + ".jpg"; }
+      if (ehEml) { dado = await lerDataUrl(f); mime = "message/rfc822"; }
+      else if (f.type.startsWith("image/") && !ACEITOS.includes(f.type as Mime)) { dado = await lerDataUrl(await paraJpeg(f)); mime = "image/jpeg"; nome = nome.replace(/\.\w+$/, "") + ".jpg"; }
       else if (ACEITOS.includes(f.type as Mime)) dado = await lerDataUrl(f);
-      else throw new Error("Use foto (JPG, PNG, WebP) ou PDF.");
+      else throw new Error("Use foto (JPG, PNG, WebP), PDF ou e-mail (.eml).");
       if (dado.length > 14_000_000) throw new Error("Arquivo grande demais (máx. 10 MB).");
       // Anexa mesmo se a leitura falhar.
       if (onArquivo) onArquivo(dado, nome, mime);
       else sessionStorage.setItem(`evoque-anexo-${tripId}`, JSON.stringify({ nome, mime, data: dado }));
       if (!navigator.onLine) throw new Error("Sem internet · não deu para ler agora.");
-      const r = await extrair({ data: { texto: null, arquivo: dado, nome, mime: mime as Mime, esperado } });
+      const r = ehEml
+        ? await extrair({ data: { texto: (await f.text()).slice(0, 100_000), arquivo: null, nome, mime: null, esperado } })
+        : await extrair({ data: { texto: null, arquivo: dado, nome, mime: mime as Mime, esperado } });
       if (!r.titulo && !r.numero && !r.inicio && !r.localizador && !r.valor && !r.origem_iata) throw new Error("vazio");
       onLido(r);
       setLido("ok");
@@ -112,7 +116,7 @@ export function PreencherArquivo({ tripId, esperado, onLido, onArquivo }: {
     >
       <p className="flex items-center gap-2 text-xl font-bold">
         {lendo ? <Loader2 size={26} className="animate-spin" /> : <Sparkles size={26} className="text-accent" />}
-        {lendo ? "Lendo o documento…" : "Preencher com foto ou PDF"}
+        {lendo ? "Lendo o documento…" : "Preencher com foto, PDF ou e-mail"}
       </p>
       {lido === "ok" && <p className="mt-1 text-lg font-bold text-ok">Lemos o documento · confira os campos e salve.</p>}
       {lido === "falhou" && <p className="mt-1 text-lg font-bold text-warn-foreground">Não deu para ler · preencha. O arquivo já vai anexado.</p>}
@@ -124,7 +128,7 @@ export function PreencherArquivo({ tripId, esperado, onLido, onArquivo }: {
       <p className="mt-2 hidden text-base text-muted-foreground md:block">No computador: arraste o arquivo aqui ou cole (Ctrl/⌘ + V).</p>
       <input ref={foto} type="file" accept="image/*" capture="environment" className="hidden" onChange={escolher} />
       <input ref={galeria} type="file" accept="image/*" className="hidden" onChange={escolher} />
-      <input ref={arquivo} type="file" accept="application/pdf,image/*" className="hidden" onChange={escolher} aria-label="Arquivo para ler" />
+      <input ref={arquivo} type="file" accept="application/pdf,image/*,.eml,message/rfc822" className="hidden" onChange={escolher} aria-label="Arquivo para ler" />
     </section>
   );
 }
