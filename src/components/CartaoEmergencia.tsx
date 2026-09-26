@@ -49,7 +49,7 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
   const base = "tap shadow-soft flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left";
 
   if (e && e.paises.length) {
-    const p = e.paises[0];
+    const p = e.paises[0]!;
     const n = numeroPrincipal(p);
     const cid = cidadesDosConsulados(e);
     return (
