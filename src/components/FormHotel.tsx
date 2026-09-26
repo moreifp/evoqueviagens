@@ -59,6 +59,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   const [salvando, setSalvando] = useState(false);
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   const [fotos, setFotos] = useState<{ f: File; url: string }[]>([]);
+  const [aba, setAba] = useState<"dados" | "fotos">("dados");
   const addFoto = (f: File) => setFotos((l) => [...l, { f, url: URL.createObjectURL(f) }]);
   const tirarFoto = (i: number) =>
     setFotos((l) => {
@@ -194,6 +195,28 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
 
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
+      <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="O que preencher">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={aba === "dados"}
+          onClick={() => setAba("dados")}
+          className={`tap flex min-h-14 items-center justify-center rounded-xl border-2 text-lg font-bold ${aba === "dados" ? "border-accent bg-accent text-accent-foreground" : "border-border text-foreground"}`}
+        >
+          Dados da reserva
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={aba === "fotos"}
+          onClick={() => setAba("fotos")}
+          className={`tap flex min-h-14 items-center justify-center rounded-xl border-2 text-lg font-bold ${aba === "fotos" ? "border-accent bg-accent text-accent-foreground" : "border-border text-foreground"}`}
+        >
+          Fotos do hotel
+        </button>
+      </div>
+      {aba === "dados" && (
+        <>
       {!inicial && <PreencherArquivo tripId={tripId} esperado="hotel" onLido={aplicar} />}
       <Campo rotulo="Nome do hotel">
         <CampoLugar valor={f.nome} onTexto={textoMudou("nome")} onEscolher={(l) => escolherLugar(l, false)} perto={f.cidade} placeholder="Digite o nome para buscar" />
@@ -281,7 +304,10 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
           <Plus size={26} strokeWidth={2.2} /> Adicionar quarto
         </button>
       </section>
+        </>
+      )}
 
+      {aba === "fotos" && (
       <section className="space-y-3">
         <h2 className="text-xl">Fotos do hotel</h2>
         {fotos.length > 0 && (
@@ -309,6 +335,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
         </div>
         <p className="text-base text-muted-foreground">As fotos ficam guardadas nos anexos da hospedagem.</p>
       </section>
+      )}
 
       <button type="submit" disabled={salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold">
         <Check size={28} strokeWidth={2.2} />
