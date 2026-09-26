@@ -158,7 +158,16 @@ export const listarCompartilhamentos = createServerFn({ method: "GET" })
       const { data } = await context.supabase.from("trip").select("id,nome").in("id", ids);
       trips = data ?? [];
     }
-    return { grants: grants ?? [], trips, uid: context.userId };
+    // Ficha de quem compartilhou comigo (para o botão "Abrir dados").
+    const donos = [...new Set((grants ?? []).filter((g) => g.grantee_id === context.userId).map((g) => g.owner_id))];
+    const fichaDe = new Map<string, string>();
+    if (donos.length) {
+      const db = await adminClient();
+      const { data: ps } = await db.from("person").select("id,user_id").in("user_id", donos).is("deleted_at", null);
+      for (const p of ps ?? []) if (p.user_id && !fichaDe.has(p.user_id)) fichaDe.set(p.user_id, p.id);
+    }
+    const lista = (grants ?? []).map((g) => ({ ...g, owner_person_id: fichaDe.get(g.owner_id) ?? null }));
+    return { grants: lista, trips, uid: context.userId };
   });
 
 export const aceitarConvite = createServerFn({ method: "POST" })
