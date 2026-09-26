@@ -3,7 +3,7 @@ import { AcoesItem } from "@/components/AcoesItem";
 import { AnexosItem } from "@/components/AnexosItem";
 import { CartaoResumo } from "@/components/CartaoResumo";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { BedDouble, Plus } from "lucide-react";
+import { BedDouble, Phone, Plus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { lodgingsQuery, membersQuery, roteiroQuery } from "@/lib/data";
 import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal } from "@/lib/format";
@@ -56,7 +56,7 @@ function Hospedagem() {
               <BedDouble size={28} strokeWidth={2.2} className="mt-1 text-accent" />
               <div className="min-w-0 flex-1">
                 <h2 className="text-xl leading-tight text-foreground">{h.nome}</h2>
-                <p className="text-base font-semibold text-muted-foreground">{h.cidade ?? h.endereco}</p>
+                <p className="text-base font-semibold text-muted-foreground">{h.cidade ?? h.endereco}</p>{h.telefone && <a href={`tel:${h.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 inline-flex items-center gap-2 text-lg font-bold text-accent"><Phone size={20} strokeWidth={2.2} aria-hidden /> {h.telefone}</a>}
 
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div>
