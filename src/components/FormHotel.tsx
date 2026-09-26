@@ -325,6 +325,14 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       </section>
         </>
       )}
+      {!dadosAbertos && (
+        <div className="rounded-xl border-2 border-border bg-card p-4">
+          <p className="text-lg font-bold">{f.nome.trim() || "Hotel sem nome"}</p>
+          <p className="text-base text-muted-foreground">
+            {f.checkin ? `Entrada ${fmtCurto(f.checkin)}` : "Sem entrada"} · {f.checkout ? `saída ${fmtCurto(f.checkout)}` : "sem saída"}
+          </p>
+        </div>
+      )}
 
       {aba === "fotos" && (
       <section className="space-y-3">
