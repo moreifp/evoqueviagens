@@ -119,6 +119,7 @@ export type Lodging = {
   checkin: string;
   checkout: string;
   localizador: string | null;
+  telefone?: string | null;
   valor: number | null;
   moeda: string | null;
   politica_cancelamento: string | null;

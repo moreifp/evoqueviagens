@@ -64,6 +64,7 @@ export const esquemaHospedagem = z.object({
     nome: z.string().trim().min(1).max(160),
     endereco: z.string().trim().max(300).optional(),
     cidade: z.string().trim().max(80).optional(),
+    telefone: z.string().trim().max(40).optional(),
     checkin: isoComOffset,
     checkout: isoComOffset,
     fuso,
