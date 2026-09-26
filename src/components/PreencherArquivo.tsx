@@ -128,7 +128,7 @@ export function PreencherArquivo({ tripId, esperado, onLido, onArquivo }: {
       <p className="mt-2 hidden text-base text-muted-foreground md:block">No computador: arraste o arquivo aqui ou cole (Ctrl/⌘ + V).</p>
       <input ref={foto} type="file" accept="image/*" capture="environment" className="hidden" onChange={escolher} />
       <input ref={galeria} type="file" accept="image/*" className="hidden" onChange={escolher} />
-      <input ref={arquivo} type="file" accept="application/pdf,image/*,.eml,message/rfc822" className="hidden" onChange={escolher} aria-label="Arquivo para ler" />
+      <input ref={arquivo} type="file" className="hidden" onChange={escolher} aria-label="Arquivo para ler: foto, PDF ou e-mail EML" />
     </section>
   );
 }
