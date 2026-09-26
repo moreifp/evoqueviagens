@@ -60,6 +60,14 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   const [fotos, setFotos] = useState<{ f: File; url: string }[]>([]);
   const [aba, setAba] = useState<"dados" | "fotos">("dados");
+  const [dadosAbertos, setDadosAbertos] = useState(!inicial);
+  const fmtCurto = (s: string) => {
+    if (!s) return "";
+    const [d, t] = s.split("T");
+    const [y, m, day] = (d ?? "").split("-");
+    if (!y || !m || !day) return s;
+    return `${day}/${m}${t ? ` ${t}` : ""}`;
+  };
   const addFoto = (f: File) => setFotos((l) => [...l, { f, url: URL.createObjectURL(f) }]);
   const tirarFoto = (i: number) =>
     setFotos((l) => {
