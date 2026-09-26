@@ -225,6 +225,17 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       </div>
       {aba === "dados" && (
         <>
+      <button
+        type="button"
+        onClick={() => setDadosAbertos((v) => !v)}
+        aria-expanded={dadosAbertos}
+        className="tap flex min-h-14 w-full items-center justify-between rounded-xl border-2 border-border px-4 text-lg font-bold"
+      >
+        <span>{dadosAbertos ? "Esconder dados da reserva" : "Mostrar dados da reserva"}</span>
+        {dadosAbertos ? <ChevronUp size={26} strokeWidth={2.2} aria-hidden /> : <ChevronDown size={26} strokeWidth={2.2} aria-hidden />}
+      </button>
+      {dadosAbertos && (
+        <>
       {!inicial && <PreencherArquivo tripId={tripId} esperado="hotel" onLido={aplicar} />}
       <Campo rotulo="Nome do hotel">
         <CampoLugar valor={f.nome} onTexto={textoMudou("nome")} onEscolher={(l) => escolherLugar(l, false)} perto={f.cidade} placeholder="Digite o nome para buscar" />
