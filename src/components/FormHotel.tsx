@@ -37,6 +37,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     nome: inicial?.nome ?? "",
     endereco: inicial?.endereco ?? "",
     cidade: inicial?.cidade ?? "",
+    telefone: inicial?.telefone ?? "",
     checkin: inicial ? utcParaLocal(inicial.checkin, tzIni) : "",
     checkout: inicial ? utcParaLocal(inicial.checkout, tzIni) : "",
     localizador: inicial?.localizador ?? "",
@@ -83,7 +84,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       const p = ed.payload as unknown as { id: string; valores: Lodging & { tz: string }; quartos: QuartoF[] };
       const v = p.valores;
       setClaude({ inboxId: ed.inboxId, id: p.id });
-      setF({ nome: v.nome, endereco: v.endereco ?? "", cidade: v.cidade ?? "", checkin: utcParaLocal(v.checkin, v.tz), checkout: utcParaLocal(v.checkout, v.tz), localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao, politica_cancelamento: v.politica_cancelamento ?? "", cancelamento_gratis_ate: v.cancelamento_gratis_ate ?? "" });
+      setF({ nome: v.nome, endereco: v.endereco ?? "", cidade: v.cidade ?? "", telefone: v.telefone ?? "", checkin: utcParaLocal(v.checkin, v.tz), checkout: utcParaLocal(v.checkout, v.tz), localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao, politica_cancelamento: v.politica_cancelamento ?? "", cancelamento_gratis_ate: v.cancelamento_gratis_ate ?? "" });
       setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null, tz: v.tz });
       setQuartos(p.quartos.map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes })));
       return;
@@ -115,6 +116,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       nome: f.nome.trim(),
       endereco: f.endereco.trim() || null,
       cidade: f.cidade.trim() || null,
+      telefone: f.telefone.trim() || null,
       checkin: localParaUtc(f.checkin, tz),
       checkout: localParaUtc(f.checkout, tz),
       localizador: f.localizador.trim() || null,
@@ -247,6 +249,9 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       </Campo>
       <Campo rotulo="Endereço">
         <CampoLugar valor={f.endereco} onTexto={textoMudou("endereco")} onEscolher={(l) => escolherLugar(l, true)} perto={f.cidade} placeholder="Rua, número" />
+      </Campo>
+      <Campo rotulo="Telefone">
+        <input type="tel" value={f.telefone} onChange={set("telefone")} placeholder="+27 21 123 4567" className={`${inputCls} mono-code`} />
       </Campo>
       {geo.lat != null && <p className="text-base text-muted-foreground">Endereço do mapa · horário local {geo.tz}</p>}
       <Campo rotulo="Entrada">
