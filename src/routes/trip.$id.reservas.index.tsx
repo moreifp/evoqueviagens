@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Car, Map as MapIcon, Plus, Ticket, Utensils } from "lucide-react";
+import { Car, Map as MapIcon, Phone, Plus, Ticket, Utensils } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { AcoesItem } from "@/components/AcoesItem";
 import { AnexosItem } from "@/components/AnexosItem";
