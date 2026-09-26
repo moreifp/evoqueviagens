@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Plus, Trash2, X } from "lucide-react";
+import { Check, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { mutar } from "@/lib/outbox";
+import { comprimir } from "@/lib/imagem";
+import { ACEITA_FOTO, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
 import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { CampoMoeda } from "@/components/CampoMoeda";
@@ -54,6 +58,13 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   );
   const [salvando, setSalvando] = useState(false);
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
+  const [fotos, setFotos] = useState<{ f: File; url: string }[]>([]);
+  const addFoto = (f: File) => setFotos((l) => [...l, { f, url: URL.createObjectURL(f) }]);
+  const tirarFoto = (i: number) =>
+    setFotos((l) => {
+      URL.revokeObjectURL(l[i]!.url);
+      return l.filter((_, x) => x !== i);
+    });
   useEffect(() => {
     if (inicial) return;
     const ed = lerEdicao(tripId, "hotel");
@@ -147,6 +158,25 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     try {
       const r = await enviar(ops);
       await anexarImportado(tripId, "lodging", id).catch((e: Error) => toast.error(`Hotel salvo, mas o anexo não subiu: ${e.message}`));
+      if (fotos.length) {
+        try {
+          for (const [i, foto] of fotos.entries()) {
+            const blob = await comprimir(foto.f);
+            const aid = novoId();
+            const path = `trip/${tripId}/${id}/${aid}-hotel-${i + 1}.jpg`;
+            const up = await supabase.storage.from("documentos").upload(path, blob, { contentType: "image/jpeg" });
+            if (up.error) throw new Error(up.error.message);
+            await mutar({
+              tipo: "insert",
+              tabela: "item_attachment",
+              valores: { id: aid, item_tipo: "lodging", item_id: id, storage_path: path, nome: foto.f.name || `Foto do hotel ${i + 1}.jpg`, content_type: "image/jpeg", size_bytes: blob.size },
+            });
+          }
+          void qc.invalidateQueries({ queryKey: ["anexos", tripId] });
+        } catch (e) {
+          toast.error(`Hotel salvo, mas uma foto não subiu: ${(e as Error).message}`);
+        }
+      }
       toast.success(aviso(r, "Hospedagem salva"));
       avisarNovoAchado(antesAchados, achadosDoCache(qc, tripId), () => navigate({ to: "/trip/$id/revisao", params: { id: tripId } }));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
@@ -250,6 +280,34 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
         >
           <Plus size={26} strokeWidth={2.2} /> Adicionar quarto
         </button>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl">Fotos do hotel</h2>
+        {fotos.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {fotos.map((foto, i) => (
+              <div key={foto.url} className="relative">
+                <img src={foto.url} alt={`Foto do hotel ${i + 1}`} className="h-24 w-full rounded-xl object-cover" />
+                <button
+                  type="button"
+                  onClick={() => tirarFoto(i)}
+                  aria-label={`Tirar foto ${i + 1}`}
+                  className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                >
+                  <X size={18} strokeWidth={2.4} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <TirarFoto rotulo="Tirar foto" onFoto={addFoto} />
+          <ZonaArquivo aceita={ACEITA_FOTO} onArquivo={addFoto} ariaLabel="Escolher foto da galeria" className="tap flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-border px-5 text-lg text-foreground">
+            <ImagePlus size={24} strokeWidth={2.2} aria-hidden /> Galeria
+          </ZonaArquivo>
+        </div>
+        <p className="text-base text-muted-foreground">As fotos ficam guardadas nos anexos da hospedagem.</p>
       </section>
 
       <button type="submit" disabled={salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold">
