@@ -97,7 +97,7 @@ export function montarOpsVoo(a: { tripId: string; id: string; valores: VooValore
 }
 
 export type HotelValores = {
-  nome: string; endereco: string | null; cidade: string | null; checkin: string; checkout: string; localizador: string | null;
+  nome: string; endereco: string | null; cidade: string | null; checkin: string; checkout: string; localizador: string | null; telefone: string | null;
   valor: number | null; moeda: string | null; politica_cancelamento: string | null; cancelamento_gratis_ate: string | null;
   lat: number | null; lng: number | null; place_id: string | null; site: string | null; tz: string;
 };
