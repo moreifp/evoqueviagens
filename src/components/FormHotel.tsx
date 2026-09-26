@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ImagePlus, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { comprimir } from "@/lib/imagem";
@@ -60,6 +60,14 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
   const [fotos, setFotos] = useState<{ f: File; url: string }[]>([]);
   const [aba, setAba] = useState<"dados" | "fotos">("dados");
+  const [dadosAbertos, setDadosAbertos] = useState(!inicial);
+  const fmtCurto = (s: string) => {
+    if (!s) return "";
+    const [d, t] = s.split("T");
+    const [y, m, day] = (d ?? "").split("-");
+    if (!y || !m || !day) return s;
+    return `${day}/${m}${t ? ` ${t}` : ""}`;
+  };
   const addFoto = (f: File) => setFotos((l) => [...l, { f, url: URL.createObjectURL(f) }]);
   const tirarFoto = (i: number) =>
     setFotos((l) => {
@@ -217,6 +225,17 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       </div>
       {aba === "dados" && (
         <>
+      <button
+        type="button"
+        onClick={() => setDadosAbertos((v) => !v)}
+        aria-expanded={dadosAbertos}
+        className="tap flex min-h-14 w-full items-center justify-between rounded-xl border-2 border-border px-4 text-lg font-bold"
+      >
+        <span>{dadosAbertos ? "Esconder dados da reserva" : "Mostrar dados da reserva"}</span>
+        {dadosAbertos ? <ChevronUp size={26} strokeWidth={2.2} aria-hidden /> : <ChevronDown size={26} strokeWidth={2.2} aria-hidden />}
+      </button>
+      {dadosAbertos && (
+        <>
       {!inicial && <PreencherArquivo tripId={tripId} esperado="hotel" onLido={aplicar} />}
       <Campo rotulo="Nome do hotel">
         <CampoLugar valor={f.nome} onTexto={textoMudou("nome")} onEscolher={(l) => escolherLugar(l, false)} perto={f.cidade} placeholder="Digite o nome para buscar" />
@@ -304,6 +323,16 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
           <Plus size={26} strokeWidth={2.2} /> Adicionar quarto
         </button>
       </section>
+        </>
+      )}
+      {!dadosAbertos && (
+        <div className="rounded-xl border-2 border-border bg-card p-4">
+          <p className="text-lg font-bold">{f.nome.trim() || "Hotel sem nome"}</p>
+          <p className="text-base text-muted-foreground">
+            {f.checkin ? `Entrada ${fmtCurto(f.checkin)}` : "Sem entrada"} · {f.checkout ? `saída ${fmtCurto(f.checkout)}` : "sem saída"}
+          </p>
+        </div>
+      )}
         </>
       )}
 
