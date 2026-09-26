@@ -335,6 +335,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
         </div>
         <p className="text-base text-muted-foreground">As fotos ficam guardadas nos anexos da hospedagem.</p>
       </section>
+      )}
 
       <button type="submit" disabled={salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold">
         <Check size={28} strokeWidth={2.2} />
