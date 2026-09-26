@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
-import { membersQuery, reservasQuery, type Reserva } from "@/lib/data";
+import { membersQuery, reservasQuery, tripQuery, type Reserva } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { moedaValida } from "@/lib/moedas";
@@ -32,6 +32,8 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
+  const { data: trip } = useSuspenseQuery(tripQuery(tripId));
+  const moedaPadrao = trip.moeda_base || "BRL";
   const ativos = membros.filter((m) => m.status !== "recusado" && m.status !== "saiu");
   const [f, setF] = useState(() => ({
     tipo: inicial?.tipo ?? "carro",
@@ -44,7 +46,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     cidade: inicial?.cidade ?? "",
     localizador: inicial?.localizador ?? "",
     valor: inicial?.valor != null ? String(inicial.valor) : "",
-    moeda: inicial?.moeda ?? "BRL",
+    moeda: inicial?.moeda ?? moedaPadrao,
   }));
   const [pessoas, setPessoas] = useState<PessoaF[]>(() => (inicial?.pessoas ?? []).map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel ?? "" })));
   const [salvando, setSalvando] = useState(false);
@@ -67,7 +69,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       const p = ed.payload as unknown as { id: string; valores: Reserva; pessoas: PessoaF[] };
       const v = p.valores;
       setClaude({ inboxId: ed.inboxId, id: p.id });
-      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? "BRL" });
+      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao });
       setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null });
       setPessoas(p.pessoas.map((x) => ({ id: x.id, person_id: x.person_id, papel: x.papel ?? "" })));
       return;

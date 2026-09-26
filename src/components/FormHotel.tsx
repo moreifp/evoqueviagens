@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { comprimir } from "@/lib/imagem";
 import { ACEITA_FOTO, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
-import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
+import { lodgingsQuery, membersQuery, tripQuery, type Lodging, type Quarto } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { moedaValida } from "@/lib/moedas";
@@ -29,6 +29,8 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
+  const { data: trip } = useSuspenseQuery(tripQuery(tripId));
+  const moedaPadrao = trip.moeda_base || "BRL";
   const ativos = membros.filter((m) => m.status !== "recusado" && m.status !== "saiu");
   const tzIni = inicial?.tz ?? fusoLocal();
   const [f, setF] = useState(() => ({
@@ -39,7 +41,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
     checkout: inicial ? utcParaLocal(inicial.checkout, tzIni) : "",
     localizador: inicial?.localizador ?? "",
     valor: inicial?.valor != null ? String(inicial.valor) : "",
-    moeda: inicial?.moeda ?? "BRL",
+    moeda: inicial?.moeda ?? moedaPadrao,
     politica_cancelamento: inicial?.politica_cancelamento ?? "",
     cancelamento_gratis_ate: inicial?.cancelamento_gratis_ate ?? "",
   }));
@@ -81,7 +83,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
       const p = ed.payload as unknown as { id: string; valores: Lodging & { tz: string }; quartos: QuartoF[] };
       const v = p.valores;
       setClaude({ inboxId: ed.inboxId, id: p.id });
-      setF({ nome: v.nome, endereco: v.endereco ?? "", cidade: v.cidade ?? "", checkin: utcParaLocal(v.checkin, v.tz), checkout: utcParaLocal(v.checkout, v.tz), localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? "BRL", politica_cancelamento: v.politica_cancelamento ?? "", cancelamento_gratis_ate: v.cancelamento_gratis_ate ?? "" });
+      setF({ nome: v.nome, endereco: v.endereco ?? "", cidade: v.cidade ?? "", checkin: utcParaLocal(v.checkin, v.tz), checkout: utcParaLocal(v.checkout, v.tz), localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao, politica_cancelamento: v.politica_cancelamento ?? "", cancelamento_gratis_ate: v.cancelamento_gratis_ate ?? "" });
       setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null, tz: v.tz });
       setQuartos(p.quartos.map((q) => ({ id: q.id, nome: q.nome, tipo: q.tipo ?? "", hospedes: q.hospedes })));
       return;
