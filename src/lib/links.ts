@@ -35,6 +35,20 @@ export function abrirWhatsApp(telefone: string | null, texto: string) {
   window.open(url, "_blank", "noopener");
 }
 
+/** Convite para conhecer/usar o app (link geral, sem token). */
+export function mensagemConviteApp(idioma: "pt" | "en") {
+  const link = origemApp();
+  return idioma === "en"
+    ? {
+        assunto: "Let's organize our trip on Evoque",
+        texto: `Hi! To organize our trip better, open the Evoque Viagens app and fill in your details. That way we make sure the whole trip is organized. Just open: ${link}`,
+      }
+    : {
+        assunto: "Vamos organizar nossa viagem no Evoque",
+        texto: `Olá! Para organizarmos melhor a nossa viagem, entre no aplicativo Evoque Viagens e cadastre seus dados. Assim garantimos que toda a viagem fique organizada. É só abrir: ${link}`,
+      };
+}
+
 export function mensagemConvite(idioma: "pt" | "en", nome: string, link: string) {
   return idioma === "en"
     ? `Hi ${nome}! Could you fill in your travel profile? It's essential for organizing our trips. It takes 5 minutes and you only do it once. Have your passport at hand. ${link}`
