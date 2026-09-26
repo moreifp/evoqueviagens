@@ -254,6 +254,7 @@ export async function proporHospedagem(c: Ctx, e: z.infer<typeof esquemaHospedag
     nome: h.nome,
     endereco: h.endereco || null,
     cidade: h.cidade || null,
+    telefone: h.telefone || null,
     checkin: utc(h.checkin),
     checkout: utc(h.checkout),
     localizador: h.localizador?.toUpperCase() || null,
