@@ -55,7 +55,14 @@ function Programa() {
       toast.success(r.localOnly ? "Sem internet · salvo no aparelho. Sobe quando a conexão voltar." : "Cofre atualizado");
     } catch (e) { toast.error((e as Error).message); } finally { setSaving(false); }
   }
-  async function addCard(file: File) { try { const prep = await prepararArquivo(file); if (prep.ext === "pdf") throw new Error(); const path = `${pid}/loyalty/${fid}/${crypto.randomUUID()}.${prep.ext}`; const up = await supabase.storage.from("documentos").upload(path, prep.blob, { contentType: prep.contentType }); if (up.error) throw up.error; await supabase.from("loyalty_account").update({ cartao_path: path }).eq("id", fid); await qc.invalidateQueries({ queryKey: ["eu", pid] }); toast.success("Foto do cartão salva"); } catch { toast.error("Não foi possível salvar a foto."); } }
+  async function addCard(file: File) { try { const prep = await prepararArquivo(file); if (prep.ext === "pdf") throw new Error(); const path = `${pid}/loyalty/${fid}/${crypto.randomUUID()}.${prep.ext}`; const up = await supabase.storage.from("documentos").upload(path, prep.blob, { contentType: prep.contentType }); if (up.error) throw up.error; const u = await supabase.from("loyalty_account").update({ cartao_path: path }).eq("id", fid); if (u.error) throw u.error; setCardUrl(null); await qc.invalidateQueries({ queryKey: ["eu", pid] }); toast.success(item?.cartao_path ? "Foto do cartão trocada" : "Foto do cartão salva"); } catch { toast.error("Não foi possível salvar a foto."); } }
+  async function removeCard() {
+    const antigo = item?.cartao_path; if (!antigo) return;
+    const { error } = await supabase.from("loyalty_account").update({ cartao_path: null }).eq("id", fid);
+    if (error) return toast.error("Não foi possível tirar a foto.");
+    setCardUrl(null); await qc.invalidateQueries({ queryKey: ["eu", pid] });
+    toast("Foto do cartão removida", { duration: 10_000, action: { label: "Desfazer", onClick: async () => { await supabase.from("loyalty_account").update({ cartao_path: antigo }).eq("id", fid); await qc.invalidateQueries({ queryKey: ["eu", pid] }); } } });
+  }
   async function remove() {
     if (!data) return; const uid = data.uid;
     const { error } = await supabase.from("loyalty_account").update({ deleted_at: new Date().toISOString() }).eq("id", fid);
@@ -72,7 +79,8 @@ function Programa() {
 
   return <div className="min-h-screen bg-background pb-20"><Topo titulo={item.programa} voltarPara="/pessoas/$pid/fidelidade" voltarParams={{ pid }} /><main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
     <section className="rounded-lg bg-primary p-5 text-primary-foreground shadow-medium"><div className="flex justify-between text-base font-bold"><span>CARTÃO FIDELIDADE</span>{item.categoria && <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">{item.categoria}</span>}</div><h2 className="mt-6 text-2xl">{item.programa}</h2><div className="mt-4 flex items-center gap-2"><span className="mono-code min-w-0 flex-1 break-all text-xl">{item.numero || "Sem número"}</span><button onClick={() => copy(item.numero)} aria-label="Copiar número" className="tap"><Copy size={25} /></button></div><p className="mt-3 text-base">{item.titular || data.pessoa.nome}</p></section>
-    {cardUrl && <img src={cardUrl} alt="Foto do cartão" className="max-h-64 w-full rounded-lg object-contain" />}
+    {item.cartao_path && cardUrl && <img src={cardUrl} alt="Foto do cartão" className="max-h-64 w-full rounded-lg object-contain" />}
+    {owner && item.cartao_path && <button onClick={() => void removeCard()} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"><Trash2 size={24} /> Tirar foto do cartão</button>}
     {item.site_url && <a href={item.site_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold">Abrir o site do programa <ExternalLink size={24} /></a>}
     {owner && <section className="rounded-lg border-2 border-border bg-card p-4"><h2 className="flex items-center gap-2 text-2xl"><LockKeyhole size={28} /> Cofre · acesso ao site</h2>
       {!unlocked && <DestravarCofre uid={data.uid} />}
