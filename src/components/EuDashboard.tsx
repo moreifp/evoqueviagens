@@ -8,6 +8,7 @@ import { euQuery, mascararFinal, nomeDocumento, paisPt, progressoFicha, statusDo
 import { dataBR } from "./FichaPartes";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
+import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
 import { FichaCompleta } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
