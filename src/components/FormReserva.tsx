@@ -43,6 +43,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     inicio: inicial ? utcParaLocal(inicial.inicio_utc, inicial.inicio_tz) : "",
     fim: inicial?.fim_utc ? utcParaLocal(inicial.fim_utc, inicial.fim_tz ?? inicial.inicio_tz) : "",
     local: inicial?.local ?? "",
+    telefone: inicial?.telefone ?? "",
     cidade: inicial?.cidade ?? "",
     localizador: inicial?.localizador ?? "",
     valor: inicial?.valor != null ? String(inicial.valor) : "",
