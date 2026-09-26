@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
-import { membersQuery, reservasQuery, type Reserva } from "@/lib/data";
+import { membersQuery, reservasQuery, tripQuery, type Reserva } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { moedaValida } from "@/lib/moedas";
@@ -32,6 +32,8 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
+  const { data: trip } = useSuspenseQuery(tripQuery(tripId));
+  const moedaPadrao = trip.moeda_base || "BRL";
   const ativos = membros.filter((m) => m.status !== "recusado" && m.status !== "saiu");
   const [f, setF] = useState(() => ({
     tipo: inicial?.tipo ?? "carro",
