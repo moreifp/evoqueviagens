@@ -535,6 +535,7 @@ export type Database = {
           place_id: string | null
           politica_cancelamento: string | null
           site: string | null
+          telefone: string | null
           traveler_person_id: string | null
           trip_id: string
           tz: string | null
@@ -561,6 +562,7 @@ export type Database = {
           place_id?: string | null
           politica_cancelamento?: string | null
           site?: string | null
+          telefone?: string | null
           traveler_person_id?: string | null
           trip_id: string
           tz?: string | null
@@ -587,6 +589,7 @@ export type Database = {
           place_id?: string | null
           politica_cancelamento?: string | null
           site?: string | null
+          telefone?: string | null
           traveler_person_id?: string | null
           trip_id?: string
           tz?: string | null
