@@ -295,6 +295,7 @@ export async function proporReserva(c: Ctx, e: z.infer<typeof esquemaReserva>) {
     fim_utc: e.fim ? utc(e.fim) : null,
     fim_tz: e.fim ? tz : null,
     local: e.local || null,
+    telefone: null,
     cidade: e.cidade || null,
     localizador: e.localizador || null,
     valor: e.valor ?? null,
