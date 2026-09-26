@@ -121,7 +121,7 @@ export function montarOpsHotel(a: { tripId: string; id: string; valores: HotelVa
 
 export type ReservaValores = {
   tipo: string; titulo: string; inicio_utc: string; inicio_tz: string; fim_utc: string | null; fim_tz: string | null;
-  local: string | null; cidade: string | null; localizador: string | null; valor: number | null; moeda: string | null;
+  local: string | null; telefone: string | null; cidade: string | null; localizador: string | null; valor: number | null; moeda: string | null;
   lat: number | null; lng: number | null; place_id: string | null; site: string | null;
 };
 export type PessoaReservaLinha = { id: string; person_id: string; papel: string | null };

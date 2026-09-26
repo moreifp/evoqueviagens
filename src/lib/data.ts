@@ -67,6 +67,7 @@ export type Reserva = {
   fim_utc: string | null;
   fim_tz: string | null;
   local: string | null;
+  telefone: string | null;
   cidade: string | null;
   localizador: string | null;
   valor: number | null;
