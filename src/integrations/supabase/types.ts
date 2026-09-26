@@ -229,6 +229,62 @@ export type Database = {
           },
         ]
       }
+      consular_post: {
+        Row: {
+          cidade: string
+          cidade_en: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          id: string
+          iso2: string
+          lat: number | null
+          lng: number | null
+          plantao: string | null
+          site: string | null
+          telefone: string | null
+          tipo: string
+        }
+        Insert: {
+          cidade: string
+          cidade_en?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          iso2: string
+          lat?: number | null
+          lng?: number | null
+          plantao?: string | null
+          site?: string | null
+          telefone?: string | null
+          tipo: string
+        }
+        Update: {
+          cidade?: string
+          cidade_en?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          iso2?: string
+          lat?: number | null
+          lng?: number | null
+          plantao?: string | null
+          site?: string | null
+          telefone?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consular_post_iso2_fkey"
+            columns: ["iso2"]
+            isOneToOne: false
+            referencedRelation: "emergency_country"
+            referencedColumns: ["iso2"]
+          },
+        ]
+      }
       document_attachment: {
         Row: {
           content_type: string
@@ -282,6 +338,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      emergency_country: {
+        Row: {
+          ambulancia: string | null
+          bombeiros: string | null
+          cobertura_sem_posto: string | null
+          confianca: string | null
+          created_at: string
+          fonte_url: string | null
+          fontes_postos: string[] | null
+          geral: string | null
+          iso2: string
+          notas: string | null
+          obs: string | null
+          pais: string
+          policia: string | null
+          verificado_em: string
+        }
+        Insert: {
+          ambulancia?: string | null
+          bombeiros?: string | null
+          cobertura_sem_posto?: string | null
+          confianca?: string | null
+          created_at?: string
+          fonte_url?: string | null
+          fontes_postos?: string[] | null
+          geral?: string | null
+          iso2: string
+          notas?: string | null
+          obs?: string | null
+          pais: string
+          policia?: string | null
+          verificado_em?: string
+        }
+        Update: {
+          ambulancia?: string | null
+          bombeiros?: string | null
+          cobertura_sem_posto?: string | null
+          confianca?: string | null
+          created_at?: string
+          fonte_url?: string | null
+          fontes_postos?: string[] | null
+          geral?: string | null
+          iso2?: string
+          notas?: string | null
+          obs?: string | null
+          pais?: string
+          policia?: string | null
+          verificado_em?: string
+        }
+        Relationships: []
       }
       entry_rule: {
         Row: {
@@ -1655,6 +1762,7 @@ export type Database = {
           data_inicio: string
           deleted_at: string | null
           destino: string | null
+          emergencia: Json | null
           id: string
           moeda_base: string
           nome: string
@@ -1671,6 +1779,7 @@ export type Database = {
           data_inicio: string
           deleted_at?: string | null
           destino?: string | null
+          emergencia?: Json | null
           id?: string
           moeda_base: string
           nome: string
@@ -1687,6 +1796,7 @@ export type Database = {
           data_inicio?: string
           deleted_at?: string | null
           destino?: string | null
+          emergencia?: Json | null
           id?: string
           moeda_base?: string
           nome?: string
