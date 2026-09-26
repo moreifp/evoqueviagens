@@ -27,7 +27,7 @@ export function ConvidarApp() {
       <button
         type="button"
         onClick={() => setAberto(true)}
-        className="tap flex items-center gap-2 rounded-lg border-2 border-primary bg-transparent px-4 text-lg font-bold text-foreground"
+        className="tap flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-primary bg-transparent px-4 text-lg font-bold text-foreground sm:flex-none"
       >
         <UserPlus size={26} strokeWidth={2.2} /> Convidar
       </button>
