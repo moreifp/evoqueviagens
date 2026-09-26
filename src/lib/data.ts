@@ -15,6 +15,7 @@ export type Trip = {
   arquivada_em: string | null;
   created_at: string;
   deleted_at: string | null;
+  emergencia?: import("./emergencia").Emergencia | null;
 };
 
 export type Ticket = {
