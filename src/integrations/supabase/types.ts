@@ -1143,6 +1143,7 @@ export type Database = {
           origem: string
           place_id: string | null
           site: string | null
+          telefone: string | null
           tipo: string
           titulo: string
           trip_id: string
@@ -1167,6 +1168,7 @@ export type Database = {
           origem?: string
           place_id?: string | null
           site?: string | null
+          telefone?: string | null
           tipo: string
           titulo: string
           trip_id: string
@@ -1191,6 +1193,7 @@ export type Database = {
           origem?: string
           place_id?: string | null
           site?: string | null
+          telefone?: string | null
           tipo?: string
           titulo?: string
           trip_id?: string

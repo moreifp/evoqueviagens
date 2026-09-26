@@ -1,0 +1,1 @@
+ALTER TABLE public.reservation ADD COLUMN telefone text;
