@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Car, Map as MapIcon, Plus, Ticket, Utensils } from "lucide-react";
+import { Car, Map as MapIcon, Phone, Plus, Ticket, Utensils } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { AcoesItem } from "@/components/AcoesItem";
 import { AnexosItem } from "@/components/AnexosItem";
@@ -64,6 +64,11 @@ function Reservas() {
                     {d.fim_utc ? ` até ${dataBRCurta(chaveDia(d.fim_utc, d.fim_tz ?? d.inicio_tz))} ${horaNoFuso(d.fim_utc, d.fim_tz ?? d.inicio_tz)}` : ""}
                   </p>
                   {(d.local || d.cidade) && <p className="text-lg text-foreground">{[d.local, d.cidade].filter(Boolean).join(" · ")}</p>}
+                  {d.telefone && (
+                    <a href={`tel:${d.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 flex items-center gap-2 text-lg font-bold text-accent">
+                      <Phone size={20} strokeWidth={2.2} aria-hidden /> {d.telefone}
+                    </a>
+                  )}
                   {d.localizador && <p className="mono-code mt-2 text-2xl font-bold text-accent">{d.localizador}</p>}
                   {d.valor != null && <p className="num mt-2 text-[36px] leading-none text-foreground">{fmtMoney(Number(d.valor), d.moeda ?? "BRL")}</p>}
                   {d.pessoas.length > 0 && (

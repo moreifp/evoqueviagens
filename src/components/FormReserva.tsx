@@ -43,6 +43,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     inicio: inicial ? utcParaLocal(inicial.inicio_utc, inicial.inicio_tz) : "",
     fim: inicial?.fim_utc ? utcParaLocal(inicial.fim_utc, inicial.fim_tz ?? inicial.inicio_tz) : "",
     local: inicial?.local ?? "",
+    telefone: inicial?.telefone ?? "",
     cidade: inicial?.cidade ?? "",
     localizador: inicial?.localizador ?? "",
     valor: inicial?.valor != null ? String(inicial.valor) : "",
@@ -69,7 +70,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       const p = ed.payload as unknown as { id: string; valores: Reserva; pessoas: PessoaF[] };
       const v = p.valores;
       setClaude({ inboxId: ed.inboxId, id: p.id });
-      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao });
+      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", telefone: v.telefone ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao });
       setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null });
       setPessoas(p.pessoas.map((x) => ({ id: x.id, person_id: x.person_id, papel: x.papel ?? "" })));
       return;
@@ -108,6 +109,7 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       fim_utc: f.fim ? localParaUtc(f.fim, f.fim_tz) : null,
       fim_tz: f.fim ? f.fim_tz : null,
       local: f.local.trim() || null,
+      telefone: f.telefone.trim() || null,
       cidade: f.cidade.trim() || null,
       localizador: f.localizador.trim() || null,
       valor: f.valor ? Number(f.valor.replace(",", ".")) : null,
@@ -190,6 +192,9 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
         />
       </Campo>
       {geo.lat != null && <p className="text-base text-muted-foreground">Local do mapa · horário local {f.inicio_tz}</p>}
+      <Campo rotulo="Telefone">
+        <input type="tel" value={f.telefone} onChange={set("telefone")} placeholder="+27 21 123 4567" className={`${inputCls} mono-code`} />
+      </Campo>
       <Campo rotulo="Cidade">
         <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
       </Campo>
