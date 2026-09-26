@@ -229,7 +229,8 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
       {!inicial && <PreencherArquivo tripId={tripId} esperado="voo" onLido={aplicar} />}
-      {!inicial && <Link to="/trip/$id/bilhetes/email" params={{ id: tripId }} className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-lg font-bold text-accent"><Mail size={26} strokeWidth={2.2} /> Colar e-mail da agência</Link>}
+      {!inicial && <p className="text-base text-muted-foreground">A foto acima lê um voo só. Ida e volta ou vários voos? Use o botão abaixo: ele lê todos os trechos da foto, PDF ou e-mail de uma vez.</p>}
+      {!inicial && <Link to="/trip/$id/bilhetes/email" params={{ id: tripId }} className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-lg font-bold text-accent"><Mail size={26} strokeWidth={2.2} /> Ida e volta · foto, PDF ou e-mail</Link>}
       {inicial && <ColarEmailAgencia compacto onLido={mesclar} />}
       {proposta && (
         <div role="status" className="space-y-3 rounded-2xl border-2 border-accent bg-card p-4">
