@@ -50,7 +50,9 @@ function Novo() {
     if (!data || data.pessoa.account_id !== data.uid) return;
     if (!f.programa.trim()) return toast.error("Digite o nome do programa.");
     setSaving(true);
-    const valores = { programa: f.programa.trim(), tipo: f.tipo, numero: f.numero.trim() || null, categoria: f.categoria.trim() || null, titular: f.titular.trim() || null, site_url: f.site_url.trim() || null };
+    let site = f.site_url.trim();
+    if (site && !/^https?:\/\//i.test(site)) site = `https://${site}`;
+    const valores = { programa: f.programa.trim(), tipo: f.tipo, numero: f.numero.trim() || null, categoria: f.categoria.trim() || null, titular: f.titular.trim() || null, site_url: site || null };
     let id = editar;
     if (atual) {
       // Só envia o que mudou.
@@ -78,7 +80,7 @@ function Novo() {
       <Campo rotulo="Número"><input value={f.numero} onChange={set("numero")} className={`${inputCls} mono-code`} /></Campo>
       <Campo rotulo="Categoria"><input value={f.categoria} onChange={set("categoria")} placeholder="Gold, Platinum…" className={inputCls} /></Campo>
       <Campo rotulo="Nome do titular"><input value={f.titular} onChange={set("titular")} className={inputCls} /></Campo>
-      <Campo rotulo="Site do programa"><input type="url" value={f.site_url} onChange={set("site_url")} className={inputCls} /></Campo>
+      <Campo rotulo="Site do programa"><input type="text" inputMode="url" autoComplete="url" placeholder="www.exemplo.com" value={f.site_url} onChange={set("site_url")} className={inputCls} /></Campo>
       {!atual && <section className="rounded-lg border-2 border-border bg-card p-4">
         <label className="tap flex items-center gap-3 text-lg font-bold"><input type="checkbox" checked={cofre} onChange={(e) => setCofre(e.target.checked)} className="h-7 w-7" /><LockKeyhole size={26} /> Guardar login e senha no cofre (opcional)</label>
         {cofre && !unlocked && <DestravarCofre uid={data.uid} />}
