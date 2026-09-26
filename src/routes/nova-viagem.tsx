@@ -114,10 +114,10 @@ function NovaViagem() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Campo rotulo="Início">
-            <input type="date" required value={inicio} min={minInicio} onChange={(e) => mudarInicio(e.target.value)} className={inputCls} />
+            <input type="date" required value={inicio} min={minInicio} max="2099-12-31" onChange={(e) => mudarInicio(e.target.value)} className={inputCls} />
           </Campo>
           <Campo rotulo="Fim">
-            <input type="date" required value={fim} min={minFim} onChange={(e) => setFim(e.target.value)} className={inputCls} />
+            <input type="date" required value={fim} min={minFim} max="2099-12-31" onChange={(e) => setFim(e.target.value)} className={inputCls} />
           </Campo>
         </div>
         <CampoMoeda rotulo="Moeda da viagem" value={moeda} onChange={setMoeda} />
