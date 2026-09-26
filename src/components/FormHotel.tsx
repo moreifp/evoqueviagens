@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Plus, Trash2, X } from "lucide-react";
+import { Check, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { mutar } from "@/lib/outbox";
+import { comprimir } from "@/lib/imagem";
+import { ACEITA_FOTO, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
 import { lodgingsQuery, membersQuery, type Lodging, type Quarto } from "@/lib/data";
 import { fusoLocal } from "@/lib/format";
 import { CampoMoeda } from "@/components/CampoMoeda";
@@ -54,6 +58,13 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
   );
   const [salvando, setSalvando] = useState(false);
   const [claude, setClaude] = useState<{ inboxId: string; id: string } | null>(null);
+  const [fotos, setFotos] = useState<{ f: File; url: string }[]>([]);
+  const addFoto = (f: File) => setFotos((l) => [...l, { f, url: URL.createObjectURL(f) }]);
+  const tirarFoto = (i: number) =>
+    setFotos((l) => {
+      URL.revokeObjectURL(l[i]!.url);
+      return l.filter((_, x) => x !== i);
+    });
   useEffect(() => {
     if (inicial) return;
     const ed = lerEdicao(tripId, "hotel");
