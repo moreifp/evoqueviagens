@@ -304,7 +304,10 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
           <Plus size={26} strokeWidth={2.2} /> Adicionar quarto
         </button>
       </section>
+        </>
+      )}
 
+      {aba === "fotos" && (
       <section className="space-y-3">
         <h2 className="text-xl">Fotos do hotel</h2>
         {fotos.length > 0 && (
