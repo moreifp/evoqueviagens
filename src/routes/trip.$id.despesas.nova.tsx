@@ -126,6 +126,7 @@ function NovaDespesa() {
     qc.setQueryData<Membro[]>(membersQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", nome, apelido: nome.split(/\s+/)[0] ?? nome, nome_como_no_documento: null, kind: "precadastro", meu: false }]);
     qc.setQueryData<MembroTrip[]>(tripMembrosQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", entrou_em: entrou, created_at: agora, deleted_at: null }]);
     if (divisao?.modo === "igual") setDivisao({ ...divisao, incluidos: [...divisao.incluidos, person] });
+    if (participantes) setParticipantes([...participantes, person]);
     setNovaPessoa(null);
     try {
       await mutar({ tipo: "rpc", funcao: "adicionar_pessoa_so_nome", args: { _trip: id, _member: member, _person: person, _nome: nome } });
