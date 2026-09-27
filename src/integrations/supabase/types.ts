@@ -138,6 +138,39 @@ export type Database = {
         }
         Relationships: []
       }
+      aviso_escondido: {
+        Row: {
+          account_id: string
+          chave: string
+          contexto: string | null
+          deleted_at: string | null
+          escondido_em: string
+          id: string
+          impressao: string
+          rotulo: string
+        }
+        Insert: {
+          account_id?: string
+          chave: string
+          contexto?: string | null
+          deleted_at?: string | null
+          escondido_em?: string
+          id?: string
+          impressao: string
+          rotulo?: string
+        }
+        Update: {
+          account_id?: string
+          chave?: string
+          contexto?: string | null
+          deleted_at?: string | null
+          escondido_em?: string
+          id?: string
+          impressao?: string
+          rotulo?: string
+        }
+        Relationships: []
+      }
       cadastro_link: {
         Row: {
           created_at: string
@@ -2378,6 +2411,7 @@ export type Database = {
           status: string
         }[]
       }
+      nivel_nome: { Args: { _bil: string; _doc: string }; Returns: string }
       pedidos_recebidos: {
         Args: never
         Returns: {
@@ -2452,6 +2486,7 @@ export type Database = {
           telefone: string
         }[]
       }
+      tokens_nome: { Args: { _s: string }; Returns: string[] }
       verificar_cron_voos: { Args: { _t: string }; Returns: boolean }
     }
     Enums: {
