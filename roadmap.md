@@ -108,3 +108,5 @@
 
 - [x] Despesas: exportar planilha Excel (formato Splitwise)
 - [x] Despesas: exportar a mesma planilha em PDF
+- [ ] Leitura de PDF (passaporte/CNH) com testes
+- [ ] ETA com .eml aparece como passaporte e "Não deu para ler"
