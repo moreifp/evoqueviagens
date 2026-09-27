@@ -225,6 +225,13 @@
       "when": 1790520296772,
       "tag": "0031_cnh_campos",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790523846949,
+      "tag": "0032_despesas_divisao",
+      "breakpoints": true
     }
   ]
 }

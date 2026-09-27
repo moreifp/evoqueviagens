@@ -1,20 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Topo } from "@/components/Chrome";
-import { expensesQuery, membersQuery, tripQuery } from "@/lib/data";
-import { dataBRCurta, fmtMoney } from "@/lib/format";
-import { CATEGORIAS } from "@/lib/categorias";
-import { EditarItem } from "@/components/EditarItem";
-import { EditarMoedaDespesa } from "@/components/EditarMoedaDespesa";
+import { ArrowLeftRight, ChevronLeft, Eye, Plus, User } from "lucide-react";
+import { expensesQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
+import { fmtMoney } from "@/lib/format";
+import { acharMoeda } from "@/lib/moedas";
+import { nomeCurto, useUid } from "@/lib/despesas";
+import { LinhaDespesa } from "@/components/LinhaDespesa";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
     meta: [
-      { title: "Dinheiro — Evoque Viagens" },
-      { name: "description", content: "Gastos da viagem por dia, na moeda da viagem." },
-      { property: "og:title", content: "Dinheiro" },
-      { property: "og:description", content: "Gastos da viagem por dia, na moeda da viagem." },
+      { title: "Despesas da viagem — Evoque Viagens" },
+      { name: "description", content: "Gastos da viagem divididos entre os participantes, na moeda da viagem." },
+      { property: "og:title", content: "Despesas da viagem — Evoque Viagens" },
+      { property: "og:description", content: "Gastos da viagem divididos entre os participantes, na moeda da viagem." },
     ],
   }),
   component: Lista,
@@ -22,107 +22,104 @@ export const Route = createFileRoute("/trip/$id/despesas/")({
   notFoundComponent: () => <div className="p-6 text-lg">Sem despesas.</div>,
 });
 
+const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+const diaCab = (d: string) => `${DIAS[new Date(`${d}T12:00:00Z`).getUTCDay()]} ${d.slice(8, 10)}/${d.slice(5, 7)}`;
 
 function Lista() {
   const { id } = Route.useParams();
+  const uid = useUid();
   const { data: trip } = useSuspenseQuery(tripQuery(id));
   const { data: despesas } = useSuspenseQuery(expensesQuery(id));
   const { data: membros } = useSuspenseQuery(membersQuery(id));
-  const [cat, setCat] = useState("todas");
-  const [quem, setQuem] = useState("todos");
+  const [aba, setAba] = useState<"todas" | "pessoais">("todas");
+  const org = uid === trip.owner_id;
+  const moeda = trip.moeda_base;
+  const nomeMoeda = (acharMoeda(moeda)?.nome ?? moeda).toLowerCase();
 
-  const filtradas = despesas.filter(
-    (d) => (cat === "todas" || d.categoria === cat) && (quem === "todos" || d.pago_por === quem),
-  );
-  const total = filtradas.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
+  const divididas = despesas.filter((d) => !d.pessoal);
+  const pessoais = despesas.filter((d) => d.pessoal);
+  const soma = (l: Expense[]) => l.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
+  const nPessoas = new Set(divididas.flatMap((d) => d.partes.map((p) => p.person_id))).size || membros.length;
 
-  const dias = new Map<string, typeof filtradas>();
-  for (const d of filtradas) dias.set(d.data, [...(dias.get(d.data) ?? []), d]);
+  const dias = new Map<string, Expense[]>();
+  for (const d of despesas) dias.set(d.data, [...(dias.get(d.data) ?? []), d]);
+  const porPessoa = new Map<string, Expense[]>();
+  for (const d of pessoais) porPessoa.set(d.pessoal_de ?? "", [...(porPessoa.get(d.pessoal_de ?? "") ?? []), d]);
 
   return (
-    <>
-      <Topo titulo="Dinheiro" voltarPara="/trip/$id" voltarParams={{ id }} />
-      <main className="space-y-5 px-4 pt-4">
-        <section className="gradient-hero shadow-medium rounded-3xl p-5">
-          <p className="text-sm font-bold uppercase tracking-wide opacity-90">Total da viagem</p>
-          <p className="num mt-1 text-[42px] leading-none">{fmtMoney(total, trip.moeda_base)}</p>
+    <div className="min-h-screen bg-background pb-36">
+      <header className="flex items-start gap-2 px-3 pt-3">
+        <Link to="/trip/$id" params={{ id }} aria-label="Voltar" className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
+          <ChevronLeft size={28} strokeWidth={2.2} /><span className="text-xs font-semibold">Voltar</span>
+        </Link>
+        <div className="min-w-0 flex-1 pt-1">
+          <h1 className="text-3xl">Despesas</h1>
+          <p className="truncate text-base text-muted-foreground">{trip.nome} · {nomeMoeda}{org ? " · você organiza" : ""}</p>
+        </div>
+        <Link to="/despesas" className="tap flex flex-col items-center justify-center rounded-xl px-2 text-foreground">
+          <ArrowLeftRight size={24} strokeWidth={2.2} /><span className="text-xs font-semibold">Viagem</span>
+        </Link>
+      </header>
+
+      <main className="space-y-4 px-4 pt-3">
+        {!org && uid !== undefined && (
+          <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-bold text-foreground"><Eye size={18} strokeWidth={2.2} /> Só leitura</p>
+        )}
+        {/* Espaço reservado para os cartões de saldo (parte 2). */}
+
+        <section className="rounded-3xl bg-navy p-5 text-primary-foreground shadow-medium">
+          <p className="text-sm font-bold uppercase tracking-wide opacity-80">Total dividido</p>
+          <p className="num mt-1 text-[42px] leading-none">{fmtMoney(soma(divididas), moeda)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-base opacity-90">{nPessoas} pessoas · {divididas.length} {divididas.length === 1 ? "despesa" : "despesas"}</span>
+            {pessoais.length > 0 && <span className="rounded-full bg-pessoal-chip px-3 py-1 text-sm font-bold text-pessoal-foreground">+ {fmtMoney(soma(pessoais), moeda)} pessoais</span>}
+          </div>
         </section>
 
-        <div className="flex gap-3">
-          <select
-            aria-label="Categoria"
-            value={cat}
-            onChange={(e) => setCat(e.target.value)}
-            className="tap flex-1 rounded-xl border-2 border-input bg-card px-3 text-base font-bold text-foreground"
-          >
-            <option value="todas">Toda categoria</option>
-            {CATEGORIAS.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.rotulo}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Pessoa"
-            value={quem}
-            onChange={(e) => setQuem(e.target.value)}
-            className="tap flex-1 rounded-xl border-2 border-input bg-card px-3 text-base font-bold text-foreground"
-          >
-            <option value="todos">Todas pessoas</option>
-            {membros.map((m) => (
-              <option key={m.person_id} value={m.person_id}>
-                {m.apelido || m.nome}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
+          {(["todas", "pessoais"] as const).map((a) => (
+            <button key={a} onClick={() => setAba(a)} aria-pressed={aba === a} className={`min-h-12 rounded-xl text-base font-bold ${aba === a ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}>
+              {a === "todas" ? "Todas" : `Pessoais (${pessoais.length})`}
+            </button>
+          ))}
         </div>
 
-        {filtradas.length === 0 && (
-          <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">
-            Nenhum gasto ainda
-          </p>
+        {aba === "todas" && (
+          despesas.length === 0
+            ? <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma despesa ainda</p>
+            : [...dias.entries()].map(([dia, itens]) => (
+              <section key={dia}>
+                <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{diaCab(dia)}</h2>
+                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+              </section>
+            ))
         )}
 
-        {[...dias.entries()].map(([dia, itens]) => (
-          <section key={dia}>
-            <h2 className="text-base font-bold uppercase tracking-wide text-muted-foreground">
-              {dataBRCurta(dia)}
-            </h2>
-            <ul className="mt-2 space-y-2">
-              {itens.map((d) => {
-                const c = CATEGORIAS.find((x) => x.id === d.categoria);
-                const Icone = c?.Icone;
-                return (
-                  <li key={d.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-                  <div className="flex items-center gap-3 p-3">
-                    {Icone && <Icone size={28} strokeWidth={2.2} className="text-accent" />}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-lg font-bold text-foreground">{d.descricao}</p>
-                      {d.moeda_original !== trip.moeda_base && (
-                        <p className="text-sm font-semibold text-muted-foreground">
-                          {fmtMoney(Number(d.valor_original), d.moeda_original)} · taxa {String(d.taxa_cambio).replace(".", ",")}{(d as { taxa_fonte?: string | null }).taxa_fonte ? ` · ${(d as { taxa_fonte?: string }).taxa_fonte}${(d as { taxa_data?: string | null }).taxa_data ? ` · ${dataBRCurta(String((d as { taxa_data?: string | null }).taxa_data))}` : ""}` : ""}
-                        </p>
-                      )}
-                    </div>
-                    <p className="num shrink-0 text-2xl text-foreground">
-                      {fmtMoney(Number(d.valor_moeda_base), trip.moeda_base)}
-                    </p>
-                  </div>
-                  <EditarItem
-                    tabela="expense"
-                    item={d as unknown as { id: string } & Record<string, unknown>}
-                    queryKey={expensesQuery(id).queryKey}
-                    campos={[{ chave: "descricao", rotulo: "Descrição" }, { chave: "valor_original", rotulo: `Valor (${d.moeda_original})`, tipo: "number" }]}
-                    ajustar={(v, it) => (v.valor_original != null ? { ...v, valor_moeda_base: Math.round(Number(v.valor_original) * Number(it.taxa_cambio) * 100) / 100, editado_em: new Date().toISOString() } : { ...v, editado_em: new Date().toISOString() })}
-                  />
-                  <EditarMoedaDespesa d={d as never} moedaBase={trip.moeda_base} queryKey={expensesQuery(id).queryKey} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+        {aba === "pessoais" && (
+          <>
+            <section className="rounded-3xl border-2 border-pessoal-border bg-pessoal p-5">
+              <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-pessoal-foreground"><User size={20} strokeWidth={2.2} /> Pessoais</p>
+              <p className="num mt-1 text-[36px] leading-none text-pessoal-foreground">{fmtMoney(soma(pessoais), moeda)}</p>
+              <p className="mt-2 text-base text-foreground">Não entram na divisão nem no saldo</p>
+            </section>
+            {[...porPessoa.entries()].map(([pid, itens]) => (
+              <section key={pid}>
+                <h2 className="flex items-baseline justify-between text-base font-bold text-foreground">
+                  <span>{nomeCurto(membros, pid)}</span><span className="num text-lg text-pessoal-foreground">{fmtMoney(soma(itens), moeda)}</span>
+                </h2>
+                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+              </section>
+            ))}
+          </>
+        )}
       </main>
-    </>
+
+      {org && (
+        <Link to="/trip/$id/despesas/nova" params={{ id }} search={{ editar: "", itemTipo: "", itemId: "", descricao: "", valor: "", moeda: "", data: "", categoria: "", pessoas: "", origemNome: "" }}
+          className="fixed bottom-24 right-4 z-30 flex min-h-14 items-center gap-2 rounded-full bg-navy px-5 text-lg font-bold text-primary-foreground shadow-medium">
+          <Plus size={26} strokeWidth={2.4} /> Despesa
+        </Link>
+      )}
+    </div>
   );
 }
