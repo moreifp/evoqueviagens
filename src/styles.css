@@ -85,6 +85,9 @@
   --color-pessoal-border: var(--pessoal-border);
   --color-pessoal-foreground: var(--pessoal-foreground);
   --color-pessoal-chip: var(--pessoal-chip);
+  --color-recebe: var(--recebe);
+  --color-deve: var(--deve);
+  --color-emdia: var(--emdia);
 }
 
 :root {
@@ -92,6 +95,9 @@
   --pessoal-border: #e9cf9f;
   --pessoal-foreground: #7a4506;
   --pessoal-chip: #f7ead6;
+  --recebe: #1a5731;
+  --deve: #8f2323;
+  --emdia: #3d5064;
   --navy: hsl(210 56% 11%);
   /* Landing institucional (evoque.global) */
   --ld-navy: #0c1c2c;
@@ -153,6 +159,9 @@
   --pessoal-border: #7a5a2a;
   --pessoal-foreground: #f3d9a8;
   --pessoal-chip: #4a3518;
+  --recebe: #8fd6a4;
+  --deve: #f2a3a3;
+  --emdia: #b7c4d1;
   --background: hsl(210 56% 8%);
   --card: hsl(210 50% 12%);
   --card-foreground: hsl(40 40% 95%);

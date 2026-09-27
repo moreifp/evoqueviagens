@@ -87,10 +87,10 @@ function NovaDespesa() {
 
   // Câmbio: busca com internet; sem internet usa a última taxa guardada e marca provisória.
   useEffect(() => {
-    if (!diferente || (editando && editando.moeda_original === moeda)) return;
+    if (!diferente || (editando && editando.moeda_original === moeda && editando.data === data)) return;
     let vivo = true;
     (async () => {
-      const c = navigator.onLine ? await buscarCotacaoDetalhe(moeda, trip.moeda_base) : null;
+      const c = navigator.onLine ? await buscarCotacaoDetalhe(moeda, trip.moeda_base, data) : null;
       if (!vivo) return;
       if (c) { setTaxaTxt(String(c.taxa)); setFonte(c); setProvisoria(false); guardarTaxa(moeda, trip.moeda_base, c.taxa, c.data); return; }
       const u = ultimaTaxa(moeda, trip.moeda_base);
@@ -98,7 +98,7 @@ function NovaDespesa() {
       if (u) { setTaxaTxt(String(u.taxa)); setProvisoria(true); } else setTaxaTxt("");
     })();
     return () => { vivo = false; };
-  }, [moeda, trip.moeda_base, diferente]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [moeda, trip.moeda_base, diferente, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const idsPag = Object.keys(pagadores);
   const variosPag = idsPag.length > 1;
