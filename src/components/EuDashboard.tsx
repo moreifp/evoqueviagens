@@ -1,24 +1,22 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus2, LogOut, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, mascararFinal, nomeDocumento, paisPt, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
-import { dataBR } from "./FichaPartes";
+import { euQuery, progressoFicha, type EuDados } from "@/lib/eu";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
 import { BarraPessoas } from "./BarraPessoas";
-import { FichaCompleta } from "./FichaCompleta";
+import { FichaCompleta, useGrupoAberto } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
 
-const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
 const LISTA_VAZIA: never[] = [];
 
 export function EuDashboard({ personId, back = false }: { personId: string; back?: boolean }) {
@@ -33,6 +31,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const qc = useQueryClient();
   const [addingDependent, setAddingDependent] = useState(false);
   const [dependentName, setDependentName] = useState("");
+  const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Família", true);
+  const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
 
