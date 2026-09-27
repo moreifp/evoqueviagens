@@ -253,6 +253,13 @@
       "when": 1790545330236,
       "tag": "0035_pessoa_so_nome_despesa",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790549803047,
+      "tag": "0036_dependents_per_person",
+      "breakpoints": true
     }
   ]
 }
