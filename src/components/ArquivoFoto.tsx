@@ -5,7 +5,7 @@ import { toast } from "sonner";
 /** Sem `capture`: no iPhone aparece o menu Tirar foto · Fototeca · Escolher arquivo. */
 export const ACEITA_FOTO = "image/*,.heic,.heif";
 export const ACEITA_DOC = "image/*,.heic,.heif,application/pdf,.eml,message/rfc822";
-/** Qualquer arquivo (anexo simples, sem leitura). Vazio = sem restrição; no iPhone, "*/*" esconde arquivos como .eml. */
+/** Qualquer arquivo (anexo simples, sem leitura). Vazio = sem restrição; no iPhone, o accept universal esconde arquivos como .eml. */
 export const ACEITA_QUALQUER = "";
 
 export function aceitavel(f: File, aceita: string) {
