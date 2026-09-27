@@ -2265,6 +2265,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adicionar_pessoa_so_nome: {
+        Args: { _member: string; _nome: string; _person: string; _trip: string }
+        Returns: string
+      }
       autoria_item: {
         Args: { _id: string; _tipo: string }
         Returns: {

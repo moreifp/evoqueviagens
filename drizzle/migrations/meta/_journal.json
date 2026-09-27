@@ -246,6 +246,13 @@
       "when": 1790544605317,
       "tag": "0034_loyalty_expira_em",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790545330236,
+      "tag": "0035_pessoa_so_nome_despesa",
+      "breakpoints": true
     }
   ]
 }
