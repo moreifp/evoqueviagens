@@ -315,6 +315,15 @@ export const expensesQuery = (tripId: string) =>
       ).then((l) => l.map((e) => ({ ...e, pagadores: (e.pagadores ?? []).filter((p) => !p.deleted_at), partes: (e.partes ?? []).filter((p) => !p.deleted_at) }))),
   });
 
+export type Acerto = { id: string; trip_id: string; de_person_id: string; para_person_id: string; valor_moeda_base: number; data: string; nota: string | null; registrado_por: string | null; created_at: string; deleted_at: string | null };
+
+export const settlementsQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["settlements", tripId],
+    queryFn: () =>
+      unwrap<Acerto[]>(db.from("settlement").select("*").eq("trip_id", tripId).is("deleted_at", null).order("data", { ascending: false }).order("created_at", { ascending: false })),
+  });
+
 /** Participantes com data de entrada e ordem estável, para a divisão. */
 export const tripMembrosQuery = (tripId: string) =>
   queryOptions({
