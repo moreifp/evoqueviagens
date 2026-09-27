@@ -74,7 +74,7 @@ export function ZonaArquivo({
       <input
         ref={ref}
         type="file"
-        accept={aceita}
+        {...(aceita ? { accept: aceita } : {})}
         className="hidden"
         onChange={(e) => {
           receber(e.target.files?.[0]);
