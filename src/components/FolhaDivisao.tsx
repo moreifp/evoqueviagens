@@ -27,9 +27,26 @@ export function FolhaDivisao({ aberta, onFechar, totalC, moeda, pessoas, valor, 
   aberta: boolean; onFechar: () => void; totalC: number; moeda: string; pessoas: PessoaDiv[]; valor: Divisao; onPronto: (d: Divisao) => void;
 }) {
   const [d, setD] = useState<Divisao>(valor);
-  useEffect(() => { if (aberta) setD(valor); }, [aberta]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [fixos, setFixos] = useState<Set<string>>(new Set());
+  useEffect(() => { if (aberta) { setD(valor); setFixos(new Set(Object.keys(valor.pesos).filter((k) => valor.pesos[k]))); } }, [aberta]); // eslint-disable-line react-hooks/exhaustive-deps
   const r = calcularDivisao(totalC, pessoas, d);
   const fecha = r.fecha && r.lista.length > 0;
+
+  /** Aba Valor: ao fixar o valor de uma pessoa, divide o resto igual entre as demais. */
+  function mudarValor(pid: string, txt: string) {
+    const pesos = { ...d.pesos, [pid]: txt };
+    const novosFixos = new Set(fixos);
+    if (txt.trim()) novosFixos.add(pid); else novosFixos.delete(pid);
+    const somaFixos = [...novosFixos].reduce((a, p) => a + Math.round((Number((pesos[p] ?? "").replace(",", ".")) || 0) * 100), 0);
+    const livres = pessoas.map((p) => p.id).filter((x) => !novosFixos.has(x));
+    if (livres.length > 0) {
+      const resto = Math.max(0, totalC - somaFixos);
+      const base = Math.floor(resto / livres.length);
+      livres.forEach((x, i) => { pesos[x] = ((base + (i < resto % livres.length ? 1 : 0)) / 100).toFixed(2); });
+    }
+    setFixos(novosFixos);
+    setD({ ...d, pesos });
+  }
 
   return (
     <Drawer open={aberta} onOpenChange={(o) => !o && onFechar()}>
