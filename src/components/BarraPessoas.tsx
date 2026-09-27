@@ -16,6 +16,7 @@ const VAZIO: never[] = [];
 /** Participantes da viagem em andamento (ou a próxima). Some sem viagem. */
 export function BarraPessoas({ atualId }: { atualId: string }) {
   const { data: viagens = VAZIO } = useQuery(tripsQuery());
+  const { oculto } = useEscondidos();
   const hoje = new Date().toISOString().slice(0, 10);
   const trip = useMemo(() => {
     const ativas = viagens.filter((v) => !v.arquivada_em && v.data_fim >= hoje);
