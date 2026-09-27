@@ -108,6 +108,7 @@ function NovoDocumento() {
 }
 /** Rótulos específicos por tipo de documento (mesmo formulário). */
 const ROTULOS: Record<string, Record<string, string>> = {
+  cnh: { numero: "Nº de registro", detalhe: "Categoria (CAT. HAB.)", emissao: "Data de emissão", validade: "Validade" },
   seguro: { nome_no_documento: "Seguradora", numero: "Apólice", detalhe: "Telefone de emergência da seguradora", emissao: "Início", validade: "Fim da cobertura" },
   global_entry: { numero: "Known Traveler Number (KTN)", detalhe: "Programa (Global Entry / TSA PreCheck)" },
   vacina: { detalhe: "Vacina e dose", emissao: "Data da vacina" },
