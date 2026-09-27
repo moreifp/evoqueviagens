@@ -1,5 +1,6 @@
 /** "Está tudo certo?" por pessoa. Regras puras: avisam, não garantem, nunca bloqueiam. */
 import type { Trip } from "./data";
+import { compararNomes } from "./nomes";
 
 export const SCHENGEN = ["AT","BE","BG","HR","CZ","DK","EE","FI","FR","DE","GR","HU","IS","IT","LV","LI","LT","LU","MT","NL","NO","PL","PT","RO","SK","SI","ES","SE","CH"];
 
@@ -15,7 +16,7 @@ export type Conferencia = {
 };
 
 export type Nivel = "resolver" | "esperando" | "conferir" | "ok";
-export type Achado = { nivel: Nivel; texto: string; campo?: "passaporte" | "visto" | "vacina" | "seguro"; aviso?: string };
+export type Achado = { id?: string; nivel: Nivel; texto: string; campo?: "passaporte" | "visto" | "vacina" | "seguro"; aviso?: string };
 export type Cartao = { c: Conferencia; nivel: Nivel; titulo: string; achados: Achado[]; semAcesso: boolean; semConta: boolean };
 
 export function regraPassaporte(trip: Pick<Trip, "data_inicio">, paises: string[], ajuste?: { meses?: number; base?: string } | null): RegraPassaporte {
@@ -33,7 +34,6 @@ export function somarMeses(iso: string, meses: number) {
 }
 
 export const br = (iso: string) => iso.split("-").reverse().join("/");
-const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z ]/g, "").replace(/\s+/g, " ").trim();
 const ORDEM: Record<Nivel, number> = { resolver: 0, esperando: 1, conferir: 2, ok: 3 };
 
 export function conferir(c: Conferencia, trip: Trip, destinoNome: string, paises: string[], regra: RegraPassaporte, regras: EntryRule[], hoje = new Date().toISOString().slice(0, 10)): Cartao {
@@ -45,36 +45,50 @@ export function conferir(c: Conferencia, trip: Trip, destinoNome: string, paises
   const limite = somarMeses(regra.base === "saida" ? trip.data_fim : trip.data_inicio, regra.meses);
   const regraTxt = `${regra.meses} meses após a ${regra.base === "saida" ? "saída" : "chegada"}${regra.geral ? " · regra geral · confirme" : " · ajustado por você"}`;
   const pv = c.passaporte?.validade;
-  if (!c.passaporte) achados.push({ nivel: "resolver", campo: "passaporte", texto: "Sem passaporte cadastrado", aviso: `Oi, ${primeiro}! Não achei seu passaporte no app. Para ${destinoNome} ele precisa valer até ${br(limite)}. Pode cadastrar?` });
-  else if (!pv) achados.push({ nivel: "conferir", campo: "passaporte", texto: "Passaporte sem validade registrada", aviso: `Oi, ${primeiro}! Seu passaporte está sem validade no app. Para ${destinoNome} ele precisa valer até ${br(limite)}. Pode conferir?` });
-  else if (pv < limite) achados.push({ nivel: "resolver", campo: "passaporte", texto: `Passaporte vence ${br(pv)} · precisa valer até ${br(limite)} (${regraTxt})`, aviso: `Seu passaporte vence ${br(pv)}. Para ${destinoNome} ele precisa valer até ${br(limite)}. Dá para renovar antes?` });
+  if (!c.passaporte) achados.push({ id: "passaporte", nivel: "resolver", campo: "passaporte", texto: "Sem passaporte cadastrado", aviso: `Oi, ${primeiro}! Não achei seu passaporte no app. Para ${destinoNome} ele precisa valer até ${br(limite)}. Pode cadastrar?` });
+  else if (!pv) achados.push({ id: "passaporte", nivel: "conferir", campo: "passaporte", texto: "Passaporte sem validade registrada", aviso: `Oi, ${primeiro}! Seu passaporte está sem validade no app. Para ${destinoNome} ele precisa valer até ${br(limite)}. Pode conferir?` });
+  else if (pv < limite) achados.push({ id: "passaporte", nivel: "resolver", campo: "passaporte", texto: `Passaporte vence ${br(pv)} · precisa valer até ${br(limite)} (${regraTxt})`, aviso: `Seu passaporte vence ${br(pv)}. Para ${destinoNome} ele precisa valer até ${br(limite)}. Dá para renovar antes?` });
   else achados.push({ nivel: "ok", texto: `Passaporte vale até ${br(pv)} · limite ${br(limite)} (${regraTxt})` });
 
   const doc = c.passaporte?.nome || c.nome_documento;
-  for (const nb of c.nomes_bilhete) {
-    if (!doc) achados.push({ nivel: "conferir", texto: `Bilhete "${nb}" · sem nome do passaporte para comparar` });
-    else if (norm(doc) !== norm(nb)) achados.push({ nivel: "conferir", campo: "passaporte", texto: `Nome no bilhete "${nb}" difere do passaporte "${doc}"`, aviso: `Oi, ${primeiro}! O nome no bilhete está "${nb}" e no passaporte "${doc}". Confere para mim?` });
-    else achados.push({ nivel: "ok", texto: `Nome no bilhete confere com o passaporte` });
+  for (const nb of new Set(c.nomes_bilhete)) {
+    const id = `nome:${nb}`;
+    if (!doc) { achados.push({ id, nivel: "conferir", texto: `Bilhete "${nb}" · sem nome do passaporte para comparar` }); continue; }
+    const n = compararNomes(doc, nb);
+    if (n === "ok") achados.push({ nivel: "ok", texto: `Nome no bilhete confere com o passaporte` });
+    else achados.push({ id, nivel: n, campo: "passaporte", texto: n === "resolver" ? `Nome no bilhete "${nb}" não bate com o passaporte "${doc}"` : `Nome no bilhete "${nb}" difere do passaporte "${doc}"`, aviso: `Oi, ${primeiro}! O nome no bilhete está "${nb}" e no passaporte "${doc}". Confere para mim?` });
   }
 
   for (const pais of paises) {
     const regrasP = (c.nacionalidades.length ? c.nacionalidades : ["?"]).map((n) => regras.find((r) => r.nacionalidade === n && r.pais_destino === pais));
     const r = regrasP.find(Boolean);
-    if (!r) { achados.push({ nivel: "conferir", texto: `Sem regra cadastrada para ${pais} · confira no consulado` }); continue; }
+    if (!r) { achados.push({ id: `pais:${pais}`, nivel: "conferir", texto: `Sem regra cadastrada para ${pais} · confira no consulado` }); continue; }
     const velha = (Date.parse(hoje) - Date.parse(r.verificado_em)) / 864e5 > 180;
     const fonte = `fonte: ${r.fonte_url}`;
-    if (r.exigencia === "nenhuma") achados.push({ nivel: velha ? "conferir" : "ok", texto: `${pais}: sem exigência registrada em ${br(r.verificado_em)} · confirme no consulado · ${fonte}${velha ? " · não verificado" : ""}` });
+    if (r.exigencia === "nenhuma") achados.push({ id: `pais:${pais}`, nivel: velha ? "conferir" : "ok", texto: `${pais}: sem exigência registrada em ${br(r.verificado_em)} · confirme no consulado · ${fonte}${velha ? " · não verificado" : ""}` });
     else {
       const tem = c.vistos.some((v) => !v.validade || v.validade >= trip.data_fim);
-      achados.push({ nivel: tem ? (velha ? "conferir" : "ok") : "resolver", campo: "visto", texto: `${pais}: ${r.exigencia} registrado em ${br(r.verificado_em)}${tem ? " · há visto/autorização cadastrado" : " · nenhum cadastrado"} · ${fonte}${velha ? " · não verificado" : ""}`, aviso: tem ? undefined : `Oi, ${primeiro}! Para ${destinoNome} há registro de ${r.exigencia}. Você já tem? Confirme no consulado.` });
+      achados.push({ id: `pais:${pais}`, nivel: tem ? (velha ? "conferir" : "ok") : "resolver", campo: "visto", texto: `${pais}: ${r.exigencia} registrado em ${br(r.verificado_em)}${tem ? " · há visto/autorização cadastrado" : " · nenhum cadastrado"} · ${fonte}${velha ? " · não verificado" : ""}`, aviso: tem ? undefined : `Oi, ${primeiro}! Para ${destinoNome} há registro de ${r.exigencia}. Você já tem? Confirme no consulado.` });
     }
   }
-  if (c.vacina) achados.push(c.vacina < trip.data_fim && c.vacina >= "1900" ? { nivel: "conferir", campo: "vacina", texto: `Vacina cadastrada vence ${br(c.vacina)}`, aviso: `Oi, ${primeiro}! Sua vacina cadastrada vence ${br(c.vacina)}. Confere?` } : { nivel: "ok", texto: "Vacina cadastrada" });
-  if (c.seguro) achados.push(c.seguro < trip.data_fim ? { nivel: "conferir", campo: "seguro", texto: `Seguro-viagem vence ${br(c.seguro)}, antes do fim da viagem`, aviso: `Oi, ${primeiro}! Seu seguro-viagem vence ${br(c.seguro)} e a viagem vai até ${br(trip.data_fim)}. Dá para estender?` } : { nivel: "ok", texto: "Seguro-viagem cobre a viagem" });
+  if (c.vacina) achados.push(c.vacina < trip.data_fim && c.vacina >= "1900" ? { id: "vacina", nivel: "conferir", campo: "vacina", texto: `Vacina cadastrada vence ${br(c.vacina)}`, aviso: `Oi, ${primeiro}! Sua vacina cadastrada vence ${br(c.vacina)}. Confere?` } : { nivel: "ok", texto: "Vacina cadastrada" });
+  if (c.seguro) achados.push(c.seguro < trip.data_fim ? { id: "seguro", nivel: "conferir", campo: "seguro", texto: `Seguro-viagem vence ${br(c.seguro)}, antes do fim da viagem`, aviso: `Oi, ${primeiro}! Seu seguro-viagem vence ${br(c.seguro)} e a viagem vai até ${br(trip.data_fim)}. Dá para estender?` } : { nivel: "ok", texto: "Seguro-viagem cobre a viagem" });
 
   const nivel = achados.reduce<Nivel>((n, a) => (ORDEM[a.nivel] < ORDEM[n] ? a.nivel : n), "ok");
   const titulo = nivel === "ok" ? "Tudo certo" : nivel === "resolver" ? "Resolver" : "Conferir";
   return { c, nivel, titulo, achados, semAcesso: false, semConta };
+}
+
+/** Chave e impressão para "Não mostrar mais" de um achado. */
+export const chaveAchado = (tripId: string, personId: string, a: Achado) => `conf:${tripId}:${personId}:${a.id ?? a.campo ?? a.texto}`;
+export const criticoAchado = (a: Achado) => a.nivel === "resolver" && (a.campo === "passaporte" || a.campo === "visto");
+
+/** Tira os achados escondidos e recalcula o nível do cartão. */
+export function semEscondidos(k: Cartao, tripId: string, oculto: (chave: string, impressao: string) => boolean): Cartao {
+  if (k.semAcesso || k.semConta) return k;
+  const achados = k.achados.filter((a) => a.nivel === "ok" || !oculto(chaveAchado(tripId, k.c.person_id, a), a.texto));
+  const nivel = achados.reduce<Nivel>((n, a) => (ORDEM[a.nivel] < ORDEM[n] ? a.nivel : n), "ok");
+  return { ...k, achados, nivel, titulo: nivel === "ok" ? "Tudo certo" : nivel === "resolver" ? "Resolver" : "Conferir" };
 }
 
 export function ordenar(cs: Cartao[]) {

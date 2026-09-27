@@ -12,7 +12,8 @@ import { EmOrdem } from "./EmOrdem";
 import { BarraPessoas } from "./BarraPessoas";
 import { FichaCompleta, useGrupoAberto } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
-import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
+import { conferir, regraPassaporte, semEscondidos, type Conferencia } from "@/lib/conferencia";
+import { AvisosEscondidos, useEscondidos } from "@/lib/escondidos";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
@@ -35,6 +36,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
+  const { oculto } = useEscondidos();
 
   const { pessoa: p } = data;
   const owner = p.account_id === data.uid;
@@ -65,10 +67,10 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
       convite_telefone: null, convite_email: null, pedido_aberto: false, avisos_abertos: 0,
     };
     const ajuste = (proxima as unknown as { regra_passaporte?: { meses?: number; base?: string } | null }).regra_passaporte ?? null;
-    const resultado = conferir(c, proxima, proxima.destino || proxima.nome, paises, regraPassaporte(proxima, paises, ajuste), regras);
+    const resultado = semEscondidos(conferir(c, proxima, proxima.destino || proxima.nome, paises, regraPassaporte(proxima, paises, ajuste), regras), proxima.id, oculto);
     const campos = new Set(resultado.achados.filter((a) => a.nivel !== "ok" && a.campo).map((a) => a.campo));
     return { id: proxima.id, destino: proxima.cidades?.[0] || proxima.destino || proxima.nome, data: proxima.data_inicio, atencao: campos.size };
-  }, [bilhetes, data.documentos, paises, p.kind, p.nacionalidades, p.nome, p.nome_como_no_documento, personId, proxima, regras]);
+  }, [bilhetes, data.documentos, paises, p.kind, p.nacionalidades, p.nome, p.nome_como_no_documento, personId, proxima, regras, oculto]);
 
   async function sair() {
     // Apaga o token de avisos deste aparelho antes de sair.
@@ -170,6 +172,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {owner && !self && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
 
         {self && <AvisosPush />}
+        <AvisosEscondidos contextos={[p.id, ...(proxima ? [proxima.id] : [])]} />
         {versaoBuild() && <p className="pt-2 pb-4 text-center text-xs text-muted-foreground/70">Versão {versaoBuild()}</p>}
       </main>
     </div>

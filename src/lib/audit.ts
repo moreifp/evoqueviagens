@@ -1,3 +1,4 @@
+import { compararNomes } from "./nomes";
 /**
  * Auditor de consistência — determinístico, funções puras, sem IA.
  * Roda local (offline) a cada gravação e ao abrir a viagem.
@@ -129,8 +130,6 @@ export type PessoasCtx = {
   hospedes: Record<string, string[]>;
 };
 
-const normNome = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z ]/g, " ").replace(/\s+/g, " ").trim();
 
 export function rodarAuditor(
   trip: TripLite,
@@ -289,10 +288,11 @@ export function rodarAuditor(
       for (const p of ctx.passageiros[t.id] ?? []) {
         const m = ctx.membros.find((x) => x.person_id === p.person_id);
         if (!p.nome_no_bilhete || !m?.nome_como_no_documento) continue;
-        if (normNome(p.nome_no_bilhete) === normNome(m.nome_como_no_documento)) continue;
+        const nivelNome = compararNomes(m.nome_como_no_documento, p.nome_no_bilhete);
+        if (nivelNome === "ok") continue;
         achados.push({
           regra_id: "P2",
-          severidade: "conferir",
+          severidade: nivelNome,
           mensagem: `No bilhete está “${p.nome_no_bilhete}” e no documento de ${m.nome} está “${m.nome_como_no_documento}”.`,
           itens_envolvidos: [t.id, p.person_id],
           itens: [refBilhete(t)],
