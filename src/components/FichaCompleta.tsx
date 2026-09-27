@@ -60,7 +60,7 @@ export function FichaCompleta({ personId, itens, owner }: { personId: string; it
   );
 }
 
-function useGrupoAberto(personId: string, grupo: string, temPendente: boolean) {
+export function useGrupoAberto(personId: string, grupo: string, temPendente: boolean) {
   const chave = `evoque-ficha-aberta-${personId}-${grupo}`;
   const [aberto, setAberto] = useState(temPendente);
   useEffect(() => {

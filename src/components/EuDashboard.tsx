@@ -1,24 +1,22 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Camera, ChevronRight, FilePlus2, LockKeyhole, LogOut, Plus, Share2, UserPlus, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus2, LogOut, Share2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, mascararFinal, nomeDocumento, paisPt, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
-import { dataBR } from "./FichaPartes";
+import { euQuery, progressoFicha, type EuDados } from "@/lib/eu";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
 import { BarraPessoas } from "./BarraPessoas";
-import { FichaCompleta } from "./FichaCompleta";
+import { FichaCompleta, useGrupoAberto } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
 
-const STATUS = { ok: "bg-ok text-ok-foreground", warn: "bg-warn text-warn-foreground", danger: "bg-danger text-danger-foreground", muted: "bg-muted text-muted-foreground" } as const;
 const LISTA_VAZIA: never[] = [];
 
 export function EuDashboard({ personId, back = false }: { personId: string; back?: boolean }) {
@@ -33,6 +31,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const qc = useQueryClient();
   const [addingDependent, setAddingDependent] = useState(false);
   const [dependentName, setDependentName] = useState("");
+  const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Família", true);
+  const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
 
@@ -136,43 +136,33 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
 
-        <section>
-          <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Documentos</h2>{owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Plus size={24} /> Adicionar</Link>}</div>
-          <div className="space-y-3">
-            {data.documentos.map((doc) => {
-              const st = statusDocumento(doc);
-              const count = data.anexos.filter((a) => a.document_id === doc.id).length || (doc.arquivo_path ? 1 : 0);
-              if (doc.tipo === "passaporte") return (
-                <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="block rounded-lg bg-primary p-5 text-primary-foreground shadow-medium">
-                  <div className="flex items-center justify-between"><span className="text-base font-bold">PASSAPORTE · {(paisPt(doc.pais_emissor) || "PAÍS").toUpperCase()}</span><span className={`rounded-full px-3 py-1 text-sm font-bold ${STATUS[st.tone]}`}>{st.label}</span></div>
-                  <p className="mono-code mt-5 text-2xl">{mascararFinal(doc.numero)}</p>
-                  <div className="mt-4 flex justify-between text-base"><span>Validade {dataBR(doc.validade)}</span><span>{count} {count === 1 ? "anexo" : "anexos"}</span></div>
-                </Link>
-              );
-              return <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="tap flex items-center gap-3 border-b border-border py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-base font-bold">{doc.tipo.slice(0, 3).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block text-lg">{nomeDocumento(doc.tipo)}{paisPt(doc.pais_emissor) ? ` · ${paisPt(doc.pais_emissor)}` : ""}</strong><span className="block text-base text-muted-foreground">{mascararFinal(doc.numero)} · {count} {count === 1 ? "anexo" : "anexos"}</span></span><ChevronRight size={26} /></Link>;
-            })}
-            {!data.documentos.length && (owner ? <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Camera size={28} /> Fotografar seu primeiro documento</Link> : <p className="text-lg text-muted-foreground">Nenhum documento.</p>)}
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Fidelidade</h2><Link to="/pessoas/$pid/fidelidade" params={{ pid: p.id }} className="tap flex items-center text-lg font-bold text-accent">Ver todos ({data.fidelidades.length})</Link></div>
-          {!data.fidelidades.length && owner && <Link to="/pessoas/$pid/fidelidade/novo" params={{ pid: p.id }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Plus size={28} /> Adicionar programa de fidelidade</Link>}<div className="divide-y divide-border">{data.fidelidades.slice(0, 3).map((item) => <Link key={item.id} to="/pessoas/$pid/fidelidade/$fid" params={{ pid: p.id, fid: item.id }} className="tap flex items-center gap-3 py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-base font-bold">{item.programa.slice(0, 2).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.programa}</strong><span className="text-base text-muted-foreground">{mascararFinal(item.numero)}{item.categoria ? ` · ${item.categoria}` : ""}</span></span>{owner && <LockKeyhole size={22} className="text-muted-foreground" />}<ChevronRight size={26} /></Link>)}</div>
-        </section>
 
         {owner && (
           <section id="familia">
-            <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Família</h2><button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button></div>
-            {addingDependent && <div className="mb-3 flex gap-2"><input value={dependentName} onChange={(event) => setDependentName(event.target.value)} placeholder="Nome do dependente" className="tap min-w-0 flex-1 rounded-lg border-2 border-input bg-card px-4 text-lg" /><button onClick={() => void addDependent()} className="tap rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">Adicionar</button></div>}
-            {!data.dependentes.length && !addingDependent && <button onClick={() => setAddingDependent(true)} className="tap flex min-h-24 w-full items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><UserPlus size={28} /> Adicionar dependente</button>}<div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <button type="button" onClick={alternarFamilia} aria-expanded={familiaAberta} className="tap flex min-h-14 flex-1 items-center justify-between gap-3 text-left">
+                <h2 className="text-2xl">Família</h2>
+                <ChevronDown size={26} className={`text-muted-foreground transition-transform ${familiaAberta ? "rotate-180" : ""}`} aria-hidden />
+              </button>
+              <button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button>
+            </div>
+            {familiaAberta && <>
+              {addingDependent && <div className="mb-3 flex gap-2"><input value={dependentName} onChange={(event) => setDependentName(event.target.value)} placeholder="Nome do dependente" className="tap min-w-0 flex-1 rounded-lg border-2 border-input bg-card px-4 text-lg" /><button onClick={() => void addDependent()} className="tap rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">Adicionar</button></div>}
+              {!data.dependentes.length && !addingDependent && <button onClick={() => setAddingDependent(true)} className="tap flex min-h-24 w-full items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><UserPlus size={28} /> Adicionar dependente</button>}<div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>
+            </>}
           </section>
         )}
 
-        <section><h2 className="mb-3 text-2xl">Mais sobre você</h2><div className="divide-y divide-border rounded-lg border border-border bg-card px-4">
+        <section>
+          <button type="button" onClick={alternarMais} aria-expanded={maisAberta} className="tap mb-3 flex min-h-14 w-full items-center justify-between gap-3 text-left">
+            <h2 className="text-2xl">Mais sobre você</h2>
+            <ChevronDown size={26} className={`text-muted-foreground transition-transform ${maisAberta ? "rotate-180" : ""}`} aria-hidden />
+          </button>
+          {maisAberta && <div className="divide-y divide-border rounded-lg border border-border bg-card px-4">
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "preferencias" }} className="tap flex items-center py-3"><span className="flex-1"><strong className="block text-lg">Preferências</strong><span className="text-base text-muted-foreground">{data.preferencias ? [data.preferencias.assento, data.preferencias.quarto, data.preferencias.restricoes.length ? data.preferencias.restricoes.join(", ") : "sem restrição"].filter(Boolean).join(" · ") : "Falta preencher"}</span></span><ChevronRight size={26} /></Link>
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "emergencia" }} className="tap flex items-center py-3"><span className="flex-1"><strong className="block text-lg">Contato de emergência</strong><span className={`text-base ${p.emergencia_nome ? "text-muted-foreground" : "text-warn"}`}>{p.emergencia_nome ? `${p.emergencia_nome} · ${p.emergencia_telefone ?? "sem telefone"}` : "Falta preencher"}</span></span><ChevronRight size={26} /></Link>
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "pessoais" }} className="tap flex items-center py-3"><span className="flex-1"><strong className="block text-lg">Dados pessoais</strong><span className="text-base text-muted-foreground">Nome, CPF, nascimento, contato e endereço</span></span><ChevronRight size={26} /></Link>
-        </div></section>
+        </div>}</section>
 
         {self && <Link to="/compartilhamentos" className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-4"><Users size={28} /><span className="flex-1"><strong className="block text-lg">Quem vê seus dados</strong><span className="text-base text-muted-foreground">Você compartilha com {quemVe.length} {quemVe.length === 1 ? "pessoa" : "pessoas"}</span></span><ChevronRight size={26} /></Link>}
 
