@@ -49,7 +49,7 @@ function DeOndeVem() {
     <div className="min-h-screen bg-background pb-16">
       <header className="flex items-center gap-2 px-3 py-2">
         <Link to="/trip/$id/despesas" params={{ id }} aria-label="Voltar" className="tap flex flex-col items-center justify-center rounded-xl text-foreground"><ChevronLeft size={28} strokeWidth={2.2} /><span className="text-xs font-semibold">Voltar</span></Link>
-        <span className="shrink-0"><AvatarPessoa nome={nomeCurto(membros, pid)} foto={null} tamanho={44} /></span>
+        <span className="shrink-0"><AvatarPessoa nome={nomeCompleto(membros, pid)} foto={null} tamanho={44} /></span>
         <h1 className="min-w-0 flex-1 truncate text-2xl">{nome}{saiu(pid) ? " · saiu" : ""}</h1>
       </header>
       <main className="space-y-4 px-4">

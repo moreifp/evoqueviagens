@@ -17,6 +17,12 @@ export const nomeCurto = (membros: Membro[], pid: string | null | undefined) => 
   return m ? (m.apelido || m.nome.split(/\s+/)[0] || m.nome) : "Alguém";
 };
 
+/** Nome completo (para as iniciais do avatar: 1º nome + sobrenome). */
+export const nomeCompleto = (membros: Membro[], pid: string | null | undefined) => {
+  const m = membros.find((x) => x.person_id === pid);
+  return m?.nome ?? "Alguém";
+};
+
 const CHAVE_TAXA = (de: string, para: string) => `evoque-taxa-${de}-${para}`;
 export function guardarTaxa(de: string, para: string, taxa: number, data: string) {
   try { localStorage.setItem(CHAVE_TAXA(de, para), JSON.stringify({ taxa, data })); } catch { /* sem espaço */ }

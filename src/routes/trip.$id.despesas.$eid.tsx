@@ -108,7 +108,7 @@ function Detalhe() {
           <h2 className="text-lg font-bold">Quem pagou</h2>
           <ul className="mt-2 space-y-2">
             {d.pagadores.map((p) => (
-              <li key={p.id} className="flex items-center gap-3"><AvatarPessoa nome={nomeCurto(membros, p.person_id)} foto={null} tamanho={44} /><span className="flex-1 text-lg">{nomeCurto(membros, p.person_id)}</span><span className="num text-lg">{fmtMoney(Number(p.valor_moeda_base), moeda)}</span></li>
+              <li key={p.id} className="flex items-center gap-3"><AvatarPessoa nome={nomeCompleto(membros, p.person_id)} foto={null} tamanho={44} /><span className="flex-1 text-lg">{nomeCurto(membros, p.person_id)}</span><span className="num text-lg">{fmtMoney(Number(p.valor_moeda_base), moeda)}</span></li>
             ))}
           </ul>
         </section>
