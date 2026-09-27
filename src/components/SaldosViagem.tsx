@@ -69,9 +69,9 @@ export function SaldosViagem({ tripId, despesas, acertos, membros, moeda, org }:
   return (
     <div className="space-y-3">
       {eu && (
-        <section className={`rounded-3xl border-2 p-5 ${meuSaldo < 0 ? "border-destructive/40 bg-destructive/5" : meuSaldo > 0 ? "border-success/40 bg-success/10" : "border-border bg-card"}`}>
+        <section className={`rounded-3xl border-2 p-5 ${meuSaldo < 0 ? "border-destructive/40 bg-destructive/5" : meuSaldo > 0 ? "border-ok/40 bg-ok/10" : "border-border bg-card"}`}>
           <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Seu saldo</p>
-          <p className={`num mt-1 text-[40px] leading-none ${meuSaldo < 0 ? "text-destructive" : meuSaldo > 0 ? "text-success" : "text-foreground"}`}>{$(Math.abs(meuSaldo))}</p>
+          <p className={`num mt-1 text-[40px] leading-none ${meuSaldo < 0 ? "text-destructive" : meuSaldo > 0 ? "text-ok" : "text-foreground"}`}>{$(Math.abs(meuSaldo))}</p>
           <p className="mt-2 text-lg font-semibold text-foreground">{meuSaldo < 0 ? "Você deve" : meuSaldo > 0 ? "Você tem a receber" : "Você está quite"}</p>
           {dividas.filter((d) => d.de === eu || d.para === eu).map((d) => (
             <p key={`${d.de}-${d.para}`} className="text-base text-foreground">{d.de === eu ? `Pague ${$(d.centavos)} a ${nome(d.para)}` : `${nome(d.de)} paga ${$(d.centavos)} a você`}</p>
@@ -82,7 +82,7 @@ export function SaldosViagem({ tripId, despesas, acertos, membros, moeda, org }:
       <section className="rounded-3xl bg-card p-4 shadow-soft">
         <h2 className="flex items-center gap-2 text-lg font-bold text-foreground"><HandCoins size={24} strokeWidth={2.2} /> Quem paga a quem</h2>
         {dividas.length === 0
-          ? <p className="mt-3 flex items-center gap-2 text-lg font-semibold text-success"><Check size={24} strokeWidth={2.4} /> Tudo acertado</p>
+          ? <p className="mt-3 flex items-center gap-2 text-lg font-semibold text-ok"><Check size={24} strokeWidth={2.4} /> Tudo acertado</p>
           : <ul className="mt-3 space-y-2">
             {dividas.map((d) => {
               const k = `${d.de}-${d.para}`;
@@ -112,7 +112,7 @@ export function SaldosViagem({ tripId, despesas, acertos, membros, moeda, org }:
               return (
                 <li key={p} className="flex min-h-14 items-center justify-between text-lg">
                   <span className="font-semibold text-foreground">{nome(p)}</span>
-                  <span className={`num ${v < 0 ? "text-destructive" : v > 0 ? "text-success" : "text-muted-foreground"}`}>{v === 0 ? "quite" : `${v < 0 ? "deve " : "recebe "}${$(Math.abs(v))}`}</span>
+                  <span className={`num ${v < 0 ? "text-destructive" : v > 0 ? "text-ok" : "text-muted-foreground"}`}>{v === 0 ? "quite" : `${v < 0 ? "deve " : "recebe "}${$(Math.abs(v))}`}</span>
                 </li>
               );
             })}
