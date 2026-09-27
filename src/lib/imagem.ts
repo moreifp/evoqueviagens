@@ -70,15 +70,25 @@ export async function melhorarDocumentoParaOcr(arquivo: Blob): Promise<Blob> {
   return await new Promise<Blob>((ok) => c.toBlob((b) => ok(b ?? arquivo), "image/jpeg", 0.92));
 }
 
-export type Ext = "jpg" | "pdf" | "heic";
+export type Ext = string;
 
 export function ehPdf(f: File) {
   return f.type === "application/pdf" || /\.pdf$/i.test(f.name);
 }
 
-/** Foto → JPEG comprimido; PDF vai como está; HEIC que o navegador não abre vai original. */
+function ehImagem(f: File) {
+  return f.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name);
+}
+
+function extensaoDe(nome: string): string {
+  const m = /\.([A-Za-z0-9]{1,10})$/.exec(nome);
+  return m ? m[1]!.toLowerCase() : "bin";
+}
+
+/** Foto → JPEG comprimido; PDF e qualquer outro arquivo (eml, doc, xls…) vão como estão. */
 export async function prepararArquivo(f: File, max = 1600): Promise<{ blob: Blob; ext: Ext; contentType: string }> {
   if (ehPdf(f)) return { blob: f, ext: "pdf", contentType: "application/pdf" };
+  if (!ehImagem(f)) return { blob: f, ext: extensaoDe(f.name), contentType: f.type || "application/octet-stream" };
   try {
     return { blob: await comprimir(f, max), ext: "jpg", contentType: "image/jpeg" };
   } catch {
