@@ -256,7 +256,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           {b.passageiros.map((p) => (
             <li key={p.id} className="flex items-baseline justify-between gap-3 text-lg">
               <span className="font-bold text-foreground">{nome(p.person_id)}</span>
-              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}</span>
+              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}{p.classe ? ` · ${p.classe}` : ""}</span>
             </li>
           ))}
         </ul>
