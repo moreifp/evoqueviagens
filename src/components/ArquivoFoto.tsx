@@ -5,8 +5,11 @@ import { toast } from "sonner";
 /** Sem `capture`: no iPhone aparece o menu Tirar foto · Fototeca · Escolher arquivo. */
 export const ACEITA_FOTO = "image/*,.heic,.heif";
 export const ACEITA_DOC = "image/*,.heic,.heif,application/pdf";
+/** Qualquer arquivo (anexo simples, sem leitura). */
+export const ACEITA_QUALQUER = "*/*";
 
 export function aceitavel(f: File, aceita: string) {
+  if (aceita.includes("*")) return true;
   const img = f.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name);
   const pdf = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
   return img || (pdf && aceita.includes("pdf"));
@@ -191,7 +194,9 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
 }
 
 export function previaDe(f: File): string {
-  return f.type === "application/pdf" || /\.pdf$/i.test(f.name) ? "pdf" : URL.createObjectURL(f);
+  if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) return "pdf";
+  if (!f.type.startsWith("image/") && !/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name)) return "arquivo";
+  return URL.createObjectURL(f);
 }
 
 export function Miniatura({ src, className = "" }: { src: string | null | undefined; className?: string }) {
@@ -200,6 +205,12 @@ export function Miniatura({ src, className = "" }: { src: string | null | undefi
     return (
       <span className={`flex items-center justify-center bg-muted text-foreground ${className}`}>
         <FileText size={28} strokeWidth={2.2} aria-label="PDF" />
+      </span>
+    );
+  if (src === "arquivo")
+    return (
+      <span className={`flex items-center justify-center bg-muted text-foreground ${className}`}>
+        <FileText size={28} strokeWidth={2.2} aria-label="Arquivo" />
       </span>
     );
   return <img src={src} alt="" className={`object-cover ${className}`} />;
