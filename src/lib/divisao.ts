@@ -91,3 +91,33 @@ export function simplificarDividas(saldos: Record<string, number>) {
   }
   return out;
 }
+
+/** Quantas dívidas existiriam sem simplificar: cada parte deve a cada pagador (proporcional), líquido por par. */
+export function dividasCruzadas(despesas: DespesaSaldo[], acertos: AcertoSaldo[] = []) {
+  const par: Record<string, number> = {};
+  const add = (de: string, para: string, c: number) => {
+    if (de === para || !c) return;
+    const [a, b, s] = de < para ? [de, para, 1] : [para, de, -1];
+    par[`${a}|${b}`] = (par[`${a}|${b}`] ?? 0) + s * c;
+  };
+  for (const d of despesas) {
+    if (d.pessoal) continue;
+    const tot = d.pagadores.reduce((s, p) => s + centavos(p.valor_moeda_base), 0);
+    if (!tot) continue;
+    for (const sh of d.partes) for (const p of d.pagadores) add(sh.person_id, p.person_id, Math.round(centavos(sh.valor_moeda_base) * centavos(p.valor_moeda_base) / tot));
+  }
+  for (const a of acertos) add(a.para_person_id, a.de_person_id, centavos(a.valor_moeda_base));
+  return Object.values(par).filter((v) => Math.abs(v) > 0).length;
+}
+
+/** De onde vem o saldo de uma pessoa (centavos). */
+export function origemSaldo(pid: string, despesas: (DespesaSaldo & { id: string })[], acertos: (AcertoSaldo & { id: string })[]) {
+  const divid = despesas.filter((d) => !d.pessoal);
+  const pagou = divid.flatMap((d) => d.pagadores.filter((p) => p.person_id === pid).map((p) => ({ id: d.id, c: centavos(p.valor_moeda_base) })));
+  const parte = divid.flatMap((d) => d.partes.filter((p) => p.person_id === pid).map((p) => ({ id: d.id, c: centavos(p.valor_moeda_base) })));
+  const meus = acertos.filter((a) => a.de_person_id === pid || a.para_person_id === pid);
+  const acertosC = meus.reduce((s, a) => s + (a.de_person_id === pid ? 1 : -1) * centavos(a.valor_moeda_base), 0);
+  const pagouC = pagou.reduce((s, x) => s + x.c, 0);
+  const parteC = parte.reduce((s, x) => s + x.c, 0);
+  return { pagou, parte, acertos: meus, pagouC, parteC, acertosC, saldoC: pagouC - parteC + acertosC };
+}

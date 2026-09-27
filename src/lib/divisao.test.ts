@@ -70,3 +70,21 @@ describe("saldosDaViagem + simplificarDividas", () => {
     expect(t.length).toBeLessThanOrEqual(Object.keys(s).length - 1);
   });
 });
+
+describe("caso Portugal", () => {
+  it("4 pagamentos e depois todos em 0", () => {
+    const s = { fausto: 61200, diego: 15800, gabriela: -32000, marcos: -23600, lisiane: -21400, marina: 0 };
+    const t = simplificarDividas(s);
+    expect(t).toEqual([
+      { de: "gabriela", para: "fausto", centavos: 32000 },
+      { de: "marcos", para: "fausto", centavos: 23600 },
+      { de: "lisiane", para: "fausto", centavos: 5600 },
+      { de: "lisiane", para: "diego", centavos: 15800 },
+    ]);
+    const despesas: DespesaSaldo[] = [{ pagadores: [{ person_id: "fausto", valor_moeda_base: 612 }, { person_id: "diego", valor_moeda_base: 158 }], partes: [{ person_id: "gabriela", valor_moeda_base: 320 }, { person_id: "marcos", valor_moeda_base: 236 }, { person_id: "lisiane", valor_moeda_base: 214 }, { person_id: "marina", valor_moeda_base: 0 }] }];
+    const antes = saldosDaViagem(despesas);
+    expect(antes).toMatchObject(s);
+    const acertos = t.map((x) => ({ de_person_id: x.de, para_person_id: x.para, valor_moeda_base: x.centavos / 100 }));
+    expect(Object.values(saldosDaViagem(despesas, acertos)).every((v) => v === 0)).toBe(true);
+  });
+});
