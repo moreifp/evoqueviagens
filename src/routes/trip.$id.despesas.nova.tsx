@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Camera, Check, ChevronLeft, ChevronRight, User, CalendarDays, Link2 } from "lucide-react";
-import { buscarCotacaoDetalhe, expensesQuery, membersQuery, tripMembrosQuery, tripQuery, type Cotacao, type Expense } from "@/lib/data";
+import { Camera, Check, ChevronLeft, ChevronRight, User, UserPlus, CalendarDays, Link2 } from "lucide-react";
+import { buscarCotacaoDetalhe, expensesQuery, membersQuery, tripMembrosQuery, tripQuery, type Cotacao, type Expense, type Membro, type MembroTrip } from "@/lib/data";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { AvatarPessoa } from "@/components/Pessoa";
 import { FolhaDivisao, calcularDivisao, fraseCentavos, type Divisao, type PessoaDiv } from "@/components/FolhaDivisao";
@@ -104,6 +104,23 @@ function NovaDespesa() {
   const variosPag = idsPag.length > 1;
   const somaPag = variosPag ? idsPag.reduce((a, p) => a + (Number((pagadores[p] ?? "").replace(",", ".")) || 0), 0) : valor;
   const pagFecha = idsPag.length > 0 && Math.round(somaPag * 100) === Math.round(valor * 100);
+
+  const [novaPessoa, setNovaPessoa] = useState<string | null>(null);
+  /** Pessoa só com o nome: entra na viagem desde o início e já na divisão igual. */
+  async function adicionarPessoa() {
+    const nome = (novaPessoa ?? "").trim();
+    if (!nome) return;
+    const person = novoId(), member = novoId(), agora = new Date().toISOString();
+    const entrou = trip.data_inicio < hoje() ? trip.data_inicio : hoje();
+    qc.setQueryData<Membro[]>(membersQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", nome, apelido: nome.split(/\s+/)[0] ?? nome, nome_como_no_documento: null, kind: "precadastro", meu: false }]);
+    qc.setQueryData<MembroTrip[]>(tripMembrosQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", entrou_em: entrou, created_at: agora, deleted_at: null }]);
+    if (divisao?.modo === "igual") setDivisao({ ...divisao, incluidos: [...divisao.incluidos, person] });
+    setNovaPessoa(null);
+    try {
+      await mutar({ tipo: "rpc", funcao: "adicionar_pessoa_so_nome", args: { _trip: id, _member: member, _person: person, _nome: nome } });
+      toast.success(`${nome} entrou nas despesas`);
+    } catch (e) { toast.error((e as Error).message); void qc.invalidateQueries({ queryKey: membersQuery(id).queryKey }); void qc.invalidateQueries({ queryKey: tripMembrosQuery(id).queryKey }); }
+  }
 
   function tocarPagador(pid: string) {
     setPagadores((p) => {
@@ -212,7 +229,19 @@ function NovaDespesa() {
                 </button>
               );
             })}
+            {uid === trip.owner_id && (
+              <button onClick={() => setNovaPessoa(novaPessoa === null ? "" : null)} aria-label="Adicionar pessoa só com o nome" className="flex w-[68px] shrink-0 flex-col items-center gap-1">
+                <span className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-dashed border-border text-foreground"><UserPlus size={26} strokeWidth={2.2} /></span>
+                <span className="w-full truncate text-center text-sm text-muted-foreground">Pessoa</span>
+              </button>
+            )}
           </div>
+          {novaPessoa !== null && (
+            <div className="mt-2 flex gap-2">
+              <input autoFocus value={novaPessoa} onChange={(e) => setNovaPessoa(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void adicionarPessoa()} placeholder="Nome, ex.: Gabriela Helito" aria-label="Nome da pessoa" className="h-14 min-w-0 flex-1 rounded-2xl border-2 border-input bg-background px-3 text-lg" />
+              <button disabled={!novaPessoa.trim()} onClick={() => void adicionarPessoa()} className="tap flex items-center justify-center gap-1 rounded-2xl bg-navy px-4 text-lg font-bold text-primary-foreground disabled:opacity-40"><Check size={24} strokeWidth={2.2} /> Pôr</button>
+            </div>
+          )}
           {variosPag && (
             <div className="mt-2 space-y-2">
               {idsPag.map((pid) => (
