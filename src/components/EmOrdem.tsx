@@ -4,6 +4,10 @@ import { AlertTriangle, Check, ChevronDown, Plane } from "lucide-react";
 import { Button } from "./ui/button";
 import { mesAno, resumirValidades, type ItemValidade, type TomValidade } from "@/lib/validades";
 import type { EuDocumento, EuPessoa } from "@/lib/eu";
+import { NaoMostrar, useEscondidos } from "@/lib/escondidos";
+
+const chaveDoc = (item: ItemValidade) => `doc:${item.doc.id}`;
+const impressaoDoc = (item: ItemValidade) => `${item.doc.validade ?? ""}|${item.tom}`;
 
 type ViagemResumo = { id: string; destino: string; data: string; atencao: number };
 type DependenteResumo = { pessoa: EuPessoa; documentos: EuDocumento[] };
@@ -21,9 +25,9 @@ function dataCurta(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(Date.UTC(ano, mes - 1, dia)));
 }
 
-function LinhaDocumento({ item, personId }: { item: ItemValidade; personId: string }) {
+function LinhaDocumento({ item, personId, escondivel }: { item: ItemValidade; personId: string; escondivel: boolean }) {
   const t = tons[item.tom];
-  return <Link to="/pessoas/$pid/documentos/$did" params={{ pid: personId, did: item.doc.id }} className="tap grid grid-cols-[12px_1fr_auto] items-center gap-x-3 border-b border-border py-3 last:border-0">
+  return <div className="border-b border-border last:border-0"><Link to="/pessoas/$pid/documentos/$did" params={{ pid: personId, did: item.doc.id }} className="tap grid grid-cols-[12px_1fr_auto] items-center gap-x-3 py-3">
     <span className={`h-3 w-3 rounded-full ${t.ponto}`} aria-hidden />
     <span className="min-w-0">
       <strong className="block truncate text-lg text-foreground">{item.nome}</strong>
@@ -33,11 +37,15 @@ function LinhaDocumento({ item, personId }: { item: ItemValidade; personId: stri
       </span>
     </span>
     <span className="max-w-24 text-right text-base font-bold text-foreground">{item.prazo}</span>
-  </Link>;
+  </Link>{escondivel && <NaoMostrar className="-mt-2 mb-1 ml-6" chave={chaveDoc(item)} impressao={impressaoDoc(item)} rotulo={`${item.nome}: ${item.dataTexto}`} contexto={personId} critico={item.tom === "danger" && item.doc.tipo === "passaporte"} />}</div>;
 }
 
 export function EmOrdem({ personId, documentos, owner, viagem, dependentes = [] }: Props) {
-  const resumo = resumirValidades(documentos);
+  const bruto = resumirValidades(documentos);
+  const { oculto } = useEscondidos();
+  const escondido = (i: ItemValidade) => oculto(chaveDoc(i), impressaoDoc(i));
+  const alertasVis = bruto.alertas.filter((i) => !escondido(i));
+  const resumo = { ...bruto, alertas: alertasVis, tom: (alertasVis.some((i) => i.tom === "danger") ? "danger" : alertasVis.length ? "warn" : "ok") as TomValidade };
   const chave = `evoque-em-ordem-aberto-${personId}`;
   const temAlerta = resumo.alertas.length > 0;
   const [aberto, setAberto] = useState(temAlerta);
@@ -70,7 +78,7 @@ export function EmOrdem({ personId, documentos, owner, viagem, dependentes = [] 
 
     {aberto && <div className="shadow-soft overflow-hidden rounded-[20px] border border-border bg-card px-4">
       {temAlerta && <div className="flex gap-2 overflow-x-auto border-b border-border py-3">{resumo.itens.filter((i) => i.tom === "ok").map((i) => <span key={i.doc.id} className="shrink-0 rounded-full bg-muted px-3 py-1 text-base font-bold text-foreground"><span className="text-ok">●</span> {i.nome} {i.doc.validade ? i.doc.validade.slice(0, 4) : "ok"}</span>)}</div>}
-      {resumo.itens.map((item) => <LinhaDocumento key={item.doc.id} item={item} personId={personId} />)}
+      {resumo.itens.map((item) => <LinhaDocumento key={item.doc.id} item={item} personId={personId} escondivel={owner && (item.tom === "danger" || item.tom === "warn") && !escondido(item)} />)}
       {owner && principal && <Button asChild className="my-4 min-h-14 w-full text-lg"><Link to="/pessoas/$pid/documentos/$did" params={{ pid: personId, did: principal.doc.id }}>Atualizar {principal.nome}</Link></Button>}
       {viagem && <Link to="/trip/$id/revisao" params={{ id: viagem.id }} className="tap flex items-center gap-3 border-t border-border py-3"><Plane size={25} className="shrink-0 text-accent" /><span className="min-w-0 flex-1 text-base text-foreground"><strong>{viagem.destino} · {dataCurta(viagem.data)}</strong> — {viagem.atencao ? `${viagem.atencao} ${viagem.atencao === 1 ? "documento pede" : "documentos pedem"} atenção` : "seus documentos servem para essa viagem"}</span><ChevronDown size={24} className="-rotate-90" /></Link>}
       {dependentes.map(({ pessoa, documentos: docs }) => {
