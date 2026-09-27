@@ -118,7 +118,7 @@ function Detalhe() {
             <h2 className="text-lg font-bold">Parte de cada um · {d.divisao === "valor" ? "por valor" : d.divisao === "pct" ? "por %" : d.divisao === "cotas" ? "por cotas" : "igual"}</h2>
             <ul className="mt-2 space-y-2">
               {d.partes.map((p) => (
-                <li key={p.id} className="flex items-center gap-3"><AvatarPessoa nome={nomeCurto(membros, p.person_id)} foto={null} tamanho={44} /><span className="flex-1 text-lg">{nomeCurto(membros, p.person_id)}</span><span className="num text-lg">{fmtMoney(Number(p.valor_moeda_base), moeda)}</span></li>
+                <li key={p.id} className="flex items-center gap-3"><AvatarPessoa nome={nomeCompleto(membros, p.person_id)} foto={null} tamanho={44} /><span className="flex-1 text-lg">{nomeCurto(membros, p.person_id)}</span><span className="num text-lg">{fmtMoney(Number(p.valor_moeda_base), moeda)}</span></li>
               ))}
             </ul>
           </section>
