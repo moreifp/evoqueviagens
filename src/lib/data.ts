@@ -51,6 +51,8 @@ export type Passageiro = {
   assento: string | null;
   eticket: string | null;
   loyalty_account_id: string | null;
+  localizador?: string | null;
+  classe?: string | null;
   bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null;
   deleted_at?: string | null;
 };

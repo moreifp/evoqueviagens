@@ -83,7 +83,7 @@ export type VooValores = {
   partida_utc: string; partida_tz: string; chegada_utc: string; chegada_tz: string;
   bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null;
 };
-export type PaxLinha = { id: string; person_id: string; nome_no_bilhete: string | null; assento: string | null; eticket: string | null; bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null };
+export type PaxLinha = { id: string; person_id: string; nome_no_bilhete: string | null; assento: string | null; eticket: string | null; localizador?: string | null; classe?: string | null; loyalty_account_id?: string | null; bag_mao_qtd?: number | null; bag_mao_kg?: number | null; item_pessoal?: boolean | null; bag_desp_qtd?: number | null; bag_desp_kg?: number | null };
 
 export function montarOpsVoo(a: { tripId: string; id: string; valores: VooValores; passageiros: PaxLinha[]; inicial?: Antes<{ passageiros?: unknown[] }> }): Op[] {
   const ops: Op[] = [];
@@ -92,7 +92,8 @@ export function montarOpsVoo(a: { tripId: string; id: string; valores: VooValore
     const mud = diffCampos(a.inicial as unknown as Record<string, unknown>, a.valores);
     if (Object.keys(mud).length) ops.push({ tipo: "update", tabela: "ticket", id: a.id, valores: mud });
   }
-  ops.push(...diffFilhos("ticket_passenger", (a.inicial?.passageiros ?? []) as Filho[], a.passageiros, ["person_id", "nome_no_bilhete", "assento", "eticket", ...(a.passageiros.some((p) => "bag_mao_qtd" in p) ? ["bag_mao_qtd", "bag_mao_kg", "item_pessoal", "bag_desp_qtd", "bag_desp_kg"] : [])], { ticket_id: a.id }));
+  const tem = (k: string) => a.passageiros.some((p) => k in p);
+  ops.push(...diffFilhos("ticket_passenger", (a.inicial?.passageiros ?? []) as Filho[], a.passageiros, ["person_id", "nome_no_bilhete", "assento", "eticket", ...(tem("localizador") ? ["localizador"] : []), ...(tem("classe") ? ["classe"] : []), ...(tem("bag_mao_qtd") ? ["bag_mao_qtd", "bag_mao_kg", "item_pessoal", "bag_desp_qtd", "bag_desp_kg"] : [])], { ticket_id: a.id }));
   return ops;
 }
 
