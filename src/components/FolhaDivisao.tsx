@@ -80,7 +80,7 @@ export function FolhaDivisao({ aberta, onFechar, totalC, moeda, pessoas, valor, 
             return (
               <li key={p.id} className="flex min-h-14 items-center gap-3 rounded-2xl border-2 border-border bg-card px-3">
                 <span className="flex-1 text-lg font-bold text-foreground">{p.nome}{p.fora && <span className="ml-2 text-sm text-muted-foreground">entrou depois</span>}</span>
-                <input inputMode="decimal" aria-label={`${d.modo === "valor" ? "Valor" : d.modo === "pct" ? "Porcentagem" : "Cotas"} de ${p.nome}`} value={d.pesos[p.id] ?? ""} onChange={(e) => setD({ ...d, pesos: { ...d.pesos, [p.id]: e.target.value } })} placeholder={d.modo === "valor" ? moeda : d.modo === "pct" ? "%" : "cotas"} className="h-12 w-24 rounded-xl border-2 border-input bg-background px-2 text-right text-lg font-bold text-foreground" />
+                <input inputMode="decimal" aria-label={`${d.modo === "valor" ? "Valor" : d.modo === "pct" ? "Porcentagem" : "Cotas"} de ${p.nome}`} value={d.pesos[p.id] ?? ""} onChange={(e) => d.modo === "valor" ? mudarValor(p.id, e.target.value) : setD({ ...d, pesos: { ...d.pesos, [p.id]: e.target.value } })} placeholder={d.modo === "valor" ? moeda : d.modo === "pct" ? "%" : "cotas"} className="h-12 w-24 rounded-xl border-2 border-input bg-background px-2 text-right text-lg font-bold text-foreground" />
                 {d.modo !== "valor" && <span className="num w-24 text-right text-base text-muted-foreground">{parte != null ? fmtMoney(parte / 100, moeda) : ""}</span>}
               </li>
             );
