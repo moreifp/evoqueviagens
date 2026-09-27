@@ -969,6 +969,7 @@ export type Database = {
           categoria: string | null
           created_at: string
           deleted_at: string | null
+          expira_em: string | null
           id: string
           numero: string | null
           owner_id: string | null
@@ -983,6 +984,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           deleted_at?: string | null
+          expira_em?: string | null
           id?: string
           numero?: string | null
           owner_id?: string | null
@@ -997,6 +999,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           deleted_at?: string | null
+          expira_em?: string | null
           id?: string
           numero?: string | null
           owner_id?: string | null

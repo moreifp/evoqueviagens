@@ -25,7 +25,7 @@ function Novo() {
   const { pid } = Route.useParams(); const { editar } = Route.useSearch();
   const nav = useNavigate(); const qc = useQueryClient(); const { data } = useQuery(euQuery(pid));
   const atual = editar ? data?.fidelidades.find((x) => x.id === editar) : undefined;
-  const [f, setF] = useState({ programa: "", tipo: Route.useSearch().tipo ?? "aerea", numero: "", categoria: "", titular: "", site_url: "" });
+  const [f, setF] = useState({ programa: "", tipo: Route.useSearch().tipo ?? "aerea", numero: "", categoria: "", titular: "", site_url: "", expira_em: "" });
   const [loaded, setLoaded] = useState(!editar);
   const [cofre, setCofre] = useState(false); const [login, setLogin] = useState(""); const [senha, setSenha] = useState("");
   const [saving, setSaving] = useState(false);
@@ -33,7 +33,7 @@ function Novo() {
 
   useEffect(() => {
     if (atual && !loaded) {
-      setF({ programa: atual.programa, tipo: atual.tipo, numero: atual.numero ?? "", categoria: atual.categoria ?? "", titular: atual.titular ?? "", site_url: atual.site_url ?? "" });
+      setF({ programa: atual.programa, tipo: atual.tipo, numero: atual.numero ?? "", categoria: atual.categoria ?? "", titular: atual.titular ?? "", site_url: atual.site_url ?? "", expira_em: atual.expira_em ?? "" });
       setLoaded(true);
     }
   }, [atual, loaded]);
@@ -52,7 +52,7 @@ function Novo() {
     setSaving(true);
     let site = f.site_url.trim();
     if (site && !/^https?:\/\//i.test(site)) site = `https://${site}`;
-    const valores = { programa: f.programa.trim(), tipo: f.tipo, numero: f.numero.trim() || null, categoria: f.categoria.trim() || null, titular: f.titular.trim() || null, site_url: site || null };
+    const valores = { programa: f.programa.trim(), tipo: f.tipo, numero: f.numero.trim() || null, categoria: f.categoria.trim() || null, titular: f.titular.trim() || null, site_url: site || null, expira_em: f.expira_em || null };
     let id = editar;
     if (atual) {
       // Só envia o que mudou.
@@ -81,6 +81,7 @@ function Novo() {
       <Campo rotulo="Categoria"><input value={f.categoria} onChange={set("categoria")} placeholder="Gold, Platinum…" className={inputCls} /></Campo>
       <Campo rotulo="Nome do titular"><input value={f.titular} onChange={set("titular")} className={inputCls} /></Campo>
       <Campo rotulo="Site do programa"><input type="text" inputMode="url" autoComplete="url" placeholder="www.exemplo.com" value={f.site_url} onChange={set("site_url")} className={inputCls} /></Campo>
+      <Campo rotulo="Vencimento dos pontos ou da categoria (opcional)"><input type="date" value={f.expira_em} onChange={set("expira_em")} className={inputCls} /></Campo>
       {!atual && <section className="rounded-lg border-2 border-border bg-card p-4">
         <label className="tap flex items-center gap-3 text-lg font-bold"><input type="checkbox" checked={cofre} onChange={(e) => setCofre(e.target.checked)} className="h-7 w-7" /><LockKeyhole size={26} /> Guardar login e senha no cofre (opcional)</label>
         {cofre && !unlocked && <DestravarCofre uid={data.uid} />}

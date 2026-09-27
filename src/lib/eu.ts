@@ -68,6 +68,7 @@ export type Fidelidade = {
   titular: string | null;
   site_url: string | null;
   cartao_path: string | null;
+  expira_em: string | null;
 };
 
 export type Preferencias = {
