@@ -37,7 +37,7 @@ export function AnexosItem({
       const up = await supabase.storage.from("documentos").upload(path, arq, { contentType: arq.type || "application/octet-stream" });
       if (up.error) throw new Error(up.error.message);
       const row: Anexo = { id, item_tipo: itemTipo, item_id: itemId, storage_path: path, nome: arq.name, content_type: arq.type || "application/octet-stream", size_bytes: arq.size };
-      await mutar({ tipo: "insert", tabela: "item_attachment", valores: row });
+      try { await mutar({ tipo: "insert", tabela: "item_attachment", valores: row }); } catch (e) { await supabase.storage.from("documentos").remove([path]); throw e; }
       naTela<Anexo>(qc, key, (l) => [...l, row]);
       void guardarAnexo(path);
       toast.success("Anexo guardado");
