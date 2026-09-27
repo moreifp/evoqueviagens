@@ -232,7 +232,7 @@ function NovaDespesa() {
         <section>
           <h2 className="text-lg font-bold text-foreground">Quem pagou</h2>
           <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
-            {pessoasDiv.map((p) => {
+            {todosAtivos.map((p) => {
               const on = p.id in pagadores;
               return (
                 <button key={p.id} onClick={() => tocarPagador(p.id)} aria-pressed={on} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
