@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { adminClient, contatoDoLink, validarToken, type Admin } from "./cadastro.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { extrairLinhas, lerMrz } from "./mrz";
+import { extrairLinhas, lerMrz, type MrzResultado } from "./mrz";
 import type { CadastroDTO, Secao } from "./cadastro-tipos";
 
 const tokenSchema = z.string().min(20).max(100);
@@ -124,9 +124,45 @@ function dataEmissao(texto: string, nasc: string | null, validade: string | null
   return iso;
 }
 
+/** Sem MRZ legível: lê a zona visual do passaporte (nome, número, datas) para a pessoa conferir. */
+async function lerPassaporteVisual(imagem: string, key: string): Promise<MrzResultado | null> {
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        response_format: { type: "json_object" },
+        messages: [{ role: "user", content: [
+          { type: "text", text: 'This is a passport data page. Read the VISUAL zone by printed labels. Return ONLY JSON with keys (null if not clearly legible, never guess): "sobrenome", "nomes", "numero", "pais" (issuing country ISO 3-letter), "nacionalidade" (ISO 3-letter), "nascimento" (YYYY-MM-DD), "validade" (YYYY-MM-DD), "sexo" ("M","F" or null).' },
+          { type: "image_url", image_url: { url: imagem } },
+        ] }],
+      }),
+    });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
+    const m = /\{[\s\S]*\}/.exec(j.choices?.[0]?.message?.content ?? "");
+    if (!m) return null;
+    const o = JSON.parse(m[0]) as Record<string, unknown>;
+    const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().toUpperCase().slice(0, 100) : "");
+    const numero = t(o.numero).replace(/\s/g, "");
+    if (!numero && !t(o.sobrenome)) return null;
+    const sobrenome = t(o.sobrenome); const nomes = t(o.nomes);
+    return {
+      ok: false, sobrenome, nomes, nomeCompleto: [nomes, sobrenome].filter(Boolean).join(" "),
+      paisEmissor: t(o.pais).slice(0, 3), nacionalidade: t(o.nacionalidade).slice(0, 3), numero,
+      nascimento: dataOk(o.nascimento), validade: dataOk(o.validade),
+      sexo: o.sexo === "M" || o.sexo === "F" ? o.sexo : null,
+      checks: { numero: false, nascimento: false, validade: false, final: false },
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function lerMrzDaImagem(imagem: string) {
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) return { ok: false as const };
+  if (!key) return { ok: false as const, motivo: "A leitura automática está indisponível" };
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -147,15 +183,22 @@ async function lerMrzDaImagem(imagem: string) {
         ],
       }),
     });
-    if (!r.ok) return { ok: false as const };
+    if (!r.ok) {
+      console.error("LER_PASSAPORTE_IA", r.status);
+      return { ok: false as const, motivo: r.status === 429 ? "Muitas leituras agora · tente em 1 minuto" : "A leitura automática falhou" };
+    }
     const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-    const linhas = extrairLinhas(j.choices?.[0]?.message?.content ?? "");
-    if (!linhas) return { ok: false as const };
-    const res = lerMrz(linhas[0], linhas[1]);
-    if (!res) return { ok: false as const };
-    return { ok: true as const, mrz: res, emissao: dataEmissao(j.choices?.[0]?.message?.content ?? "", res.nascimento, res.validade) };
-  } catch {
-    return { ok: false as const };
+    const texto = j.choices?.[0]?.message?.content ?? "";
+    const linhas = extrairLinhas(texto);
+    const res = linhas ? lerMrz(linhas[0], linhas[1]) : null;
+    if (res) return { ok: true as const, mrz: res, conferir: !res.ok, emissao: dataEmissao(texto, res.nascimento, res.validade) };
+    // MRZ não achada: ainda preenche o que a página mostra, com "confira".
+    const visual = await lerPassaporteVisual(imagem, key);
+    if (visual) return { ok: true as const, mrz: visual, conferir: true, emissao: dataEmissao(texto, visual.nascimento, visual.validade) };
+    return { ok: false as const, motivo: "Não achamos as linhas de baixo do passaporte" };
+  } catch (e) {
+    console.error("LER_PASSAPORTE_ERRO", e);
+    return { ok: false as const, motivo: "A leitura automática falhou" };
   }
 }
 
