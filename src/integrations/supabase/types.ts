@@ -1697,11 +1697,13 @@ export type Database = {
           detalhe: string | null
           emissao: string | null
           id: string
+          local_expedicao: string | null
           nome_no_documento: string | null
           numero: string | null
           owner_id: string | null
           pais_emissor: string | null
           person_id: string
+          primeira_habilitacao: string | null
           sexo: string | null
           tipo: string
           validade: string | null
@@ -1715,11 +1717,13 @@ export type Database = {
           detalhe?: string | null
           emissao?: string | null
           id?: string
+          local_expedicao?: string | null
           nome_no_documento?: string | null
           numero?: string | null
           owner_id?: string | null
           pais_emissor?: string | null
           person_id: string
+          primeira_habilitacao?: string | null
           sexo?: string | null
           tipo: string
           validade?: string | null
@@ -1733,11 +1737,13 @@ export type Database = {
           detalhe?: string | null
           emissao?: string | null
           id?: string
+          local_expedicao?: string | null
           nome_no_documento?: string | null
           numero?: string | null
           owner_id?: string | null
           pais_emissor?: string | null
           person_id?: string
+          primeira_habilitacao?: string | null
           sexo?: string | null
           tipo?: string
           validade?: string | null

@@ -218,6 +218,13 @@
       "when": 1790463092469,
       "tag": "0030_emergencia",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790520296772,
+      "tag": "0031_cnh_campos",
+      "breakpoints": true
     }
   ]
 }
