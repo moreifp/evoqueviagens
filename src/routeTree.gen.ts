@@ -67,6 +67,7 @@ import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hosp
 import { Route as TripIdPedirPidRouteImport } from './routes/trip.$id.pedir.$pid'
 import { Route as TripIdReservasIndexRouteImport } from './routes/trip.$id.reservas.index'
 import { Route as TripIdReservasNovaRouteImport } from './routes/trip.$id.reservas.nova'
+import { Route as TripIdDespesasSaldoPidRouteImport } from './routes/trip.$id.despesas.saldo.$pid'
 import { Route as TripIdItemTipoItemIdRouteImport } from './routes/trip.$id.item.$tipo.$itemId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -367,6 +368,11 @@ const TripIdReservasNovaRoute = TripIdReservasNovaRouteImport.update({
   path: '/reservas/nova',
   getParentRoute: () => TripIdRoute,
 } as any)
+const TripIdDespesasSaldoPidRoute = TripIdDespesasSaldoPidRouteImport.update({
+  id: '/despesas/saldo/$pid',
+  path: '/despesas/saldo/$pid',
+  getParentRoute: () => TripIdRoute,
+} as any)
 const TripIdItemTipoItemIdRoute = TripIdItemTipoItemIdRouteImport.update({
   id: '/item/$tipo/$itemId',
   path: '/item/$tipo/$itemId',
@@ -432,6 +438,7 @@ export interface FileRoutesByFullPath {
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
   '/trip/$id/reservas/': typeof TripIdReservasIndexRoute
+  '/trip/$id/despesas/saldo/$pid': typeof TripIdDespesasSaldoPidRoute
   '/trip/$id/item/$tipo/$itemId': typeof TripIdItemTipoItemIdRoute
 }
 export interface FileRoutesByTo {
@@ -491,6 +498,7 @@ export interface FileRoutesByTo {
   '/trip/$id/despesas': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem': typeof TripIdHospedagemIndexRoute
   '/trip/$id/reservas': typeof TripIdReservasIndexRoute
+  '/trip/$id/despesas/saldo/$pid': typeof TripIdDespesasSaldoPidRoute
   '/trip/$id/item/$tipo/$itemId': typeof TripIdItemTipoItemIdRoute
 }
 export interface FileRoutesById {
@@ -553,6 +561,7 @@ export interface FileRoutesById {
   '/trip/$id/despesas/': typeof TripIdDespesasIndexRoute
   '/trip/$id/hospedagem/': typeof TripIdHospedagemIndexRoute
   '/trip/$id/reservas/': typeof TripIdReservasIndexRoute
+  '/trip/$id/despesas/saldo/$pid': typeof TripIdDespesasSaldoPidRoute
   '/trip/$id/item/$tipo/$itemId': typeof TripIdItemTipoItemIdRoute
 }
 export interface FileRouteTypes {
@@ -616,6 +625,7 @@ export interface FileRouteTypes {
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
     | '/trip/$id/reservas/'
+    | '/trip/$id/despesas/saldo/$pid'
     | '/trip/$id/item/$tipo/$itemId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -675,6 +685,7 @@ export interface FileRouteTypes {
     | '/trip/$id/despesas'
     | '/trip/$id/hospedagem'
     | '/trip/$id/reservas'
+    | '/trip/$id/despesas/saldo/$pid'
     | '/trip/$id/item/$tipo/$itemId'
   id:
     | '__root__'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/trip/$id/despesas/'
     | '/trip/$id/hospedagem/'
     | '/trip/$id/reservas/'
+    | '/trip/$id/despesas/saldo/$pid'
     | '/trip/$id/item/$tipo/$itemId'
   fileRoutesById: FileRoutesById
 }
@@ -1185,6 +1197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdReservasNovaRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/trip/$id/despesas/saldo/$pid': {
+      id: '/trip/$id/despesas/saldo/$pid'
+      path: '/despesas/saldo/$pid'
+      fullPath: '/trip/$id/despesas/saldo/$pid'
+      preLoaderRoute: typeof TripIdDespesasSaldoPidRouteImport
+      parentRoute: typeof TripIdRoute
+    }
     '/trip/$id/item/$tipo/$itemId': {
       id: '/trip/$id/item/$tipo/$itemId'
       path: '/item/$tipo/$itemId'
@@ -1232,6 +1251,7 @@ interface TripIdRouteChildren {
   TripIdDespesasIndexRoute: typeof TripIdDespesasIndexRoute
   TripIdHospedagemIndexRoute: typeof TripIdHospedagemIndexRoute
   TripIdReservasIndexRoute: typeof TripIdReservasIndexRoute
+  TripIdDespesasSaldoPidRoute: typeof TripIdDespesasSaldoPidRoute
   TripIdItemTipoItemIdRoute: typeof TripIdItemTipoItemIdRoute
 }
 
@@ -1254,6 +1274,7 @@ const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdDespesasIndexRoute: TripIdDespesasIndexRoute,
   TripIdHospedagemIndexRoute: TripIdHospedagemIndexRoute,
   TripIdReservasIndexRoute: TripIdReservasIndexRoute,
+  TripIdDespesasSaldoPidRoute: TripIdDespesasSaldoPidRoute,
   TripIdItemTipoItemIdRoute: TripIdItemTipoItemIdRoute,
 }
 
