@@ -273,7 +273,7 @@ function dataOk(v: unknown): string | null {
 /** Lê documentos que não são passaporte (RG, CNH, vistos, vacina…). Só devolve o que estiver legível. */
 export const lerDocumentoAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000), tipo: z.string().max(30) }).parse(d))
+  .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000), tipo: z.string().max(30), texto: z.string().max(60_000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     void context; // qualquer conta pode ler as próprias fotos
     const key = process.env["LOVABLE_API_KEY"];
@@ -295,10 +295,12 @@ All dates as DD/MM/YYYY. NEVER put 1ª HABILITAÇÃO or DATA NASCIMENTO into val
           messages: [
             {
               role: "user",
-              content: [
-                { type: "text", text: prompt },
-                { type: "image_url", image_url: { url: data.imagem } },
-              ],
+              content: data.texto
+                ? [{ type: "text", text: `${prompt.replace("This image is", "The e-mail below is about")}\n\nIgnore prices and payment data.\n\n---\n${data.texto}` }]
+                : [
+                    { type: "text", text: prompt },
+                    { type: "image_url", image_url: { url: data.imagem } },
+                  ],
             },
           ],
         }),
