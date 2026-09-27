@@ -1845,11 +1845,13 @@ export type Database = {
           bag_desp_qtd: number | null
           bag_mao_kg: number | null
           bag_mao_qtd: number | null
+          classe: string | null
           created_at: string
           deleted_at: string | null
           eticket: string | null
           id: string
           item_pessoal: boolean | null
+          localizador: string | null
           loyalty_account_id: string | null
           nome_no_bilhete: string | null
           person_id: string
@@ -1861,11 +1863,13 @@ export type Database = {
           bag_desp_qtd?: number | null
           bag_mao_kg?: number | null
           bag_mao_qtd?: number | null
+          classe?: string | null
           created_at?: string
           deleted_at?: string | null
           eticket?: string | null
           id?: string
           item_pessoal?: boolean | null
+          localizador?: string | null
           loyalty_account_id?: string | null
           nome_no_bilhete?: string | null
           person_id: string
@@ -1877,11 +1881,13 @@ export type Database = {
           bag_desp_qtd?: number | null
           bag_mao_kg?: number | null
           bag_mao_qtd?: number | null
+          classe?: string | null
           created_at?: string
           deleted_at?: string | null
           eticket?: string | null
           id?: string
           item_pessoal?: boolean | null
+          localizador?: string | null
           loyalty_account_id?: string | null
           nome_no_bilhete?: string | null
           person_id?: string
