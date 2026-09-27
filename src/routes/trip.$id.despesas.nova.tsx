@@ -74,6 +74,8 @@ function NovaDespesa() {
   const [divisao, setDivisao] = useState<Divisao | null>(() => editando && !editando.pessoal
     ? { modo: editando.divisao ?? "igual", incluidos: editando.partes.map((p) => p.person_id), pesos: Object.fromEntries(editando.partes.map((p) => [p.person_id, String(editando.divisao === "valor" ? p.valor_moeda_base : p.peso)])) }
     : null);
+  // Quem participa da despesa: quem sai daqui não aparece na divisão.
+  const [participantes, setParticipantes] = useState<string[] | null>(editando && !editando.pessoal ? editando.partes.map((p) => p.person_id) : null);
   // Sem escolha manual, a divisão segue a data: igual entre quem já estava na viagem.
   const div: Divisao = divisao ?? { modo: "igual", incluidos: doItem.length ? doItem : padrao.map((m) => m.person_id), pesos: {} };
 
@@ -82,8 +84,17 @@ function NovaDespesa() {
   const taxa = diferente ? Number(taxaTxt.replace(",", ".")) || 0 : 1;
   const totalC = Math.round(valor * taxa * 100);
   const nomes = (pid: string) => nomeCurto(membros, pid);
-  const pessoasDiv: PessoaDiv[] = tripMembros.filter((m) => m.status !== "recusado" && m.status !== "saiu").map((m) => ({ id: m.person_id, nome: nomes(m.person_id), fora: !padrao.some((p) => p.person_id === m.person_id) }));
-  const r = calcularDivisao(totalC, pessoasDiv, div);
+  const todosAtivos: PessoaDiv[] = tripMembros.filter((m) => m.status !== "recusado" && m.status !== "saiu").map((m) => ({ id: m.person_id, nome: nomes(m.person_id), fora: !padrao.some((p) => p.person_id === m.person_id) }));
+  const partIds = participantes ?? div.incluidos;
+  const pessoasDiv: PessoaDiv[] = todosAtivos.filter((p) => partIds.includes(p.id));
+  const r = calcularDivisao(totalC, pessoasDiv, { ...div, incluidos: div.incluidos.filter((x) => partIds.includes(x)) });
+
+  function tocarParticipante(pid: string) {
+    const atuais = partIds;
+    const novos = atuais.includes(pid) ? atuais.filter((x) => x !== pid) : [...todosAtivos.map((p) => p.id).filter((x) => atuais.includes(x) || x === pid)];
+    setParticipantes(novos);
+    if (divisao) setDivisao({ ...divisao, incluidos: divisao.incluidos.filter((x) => novos.includes(x)), pesos: Object.fromEntries(Object.entries(divisao.pesos).filter(([k]) => novos.includes(k))) });
+  }
 
   // Câmbio: busca com internet; sem internet usa a última taxa guardada e marca provisória.
   useEffect(() => {
@@ -115,6 +126,7 @@ function NovaDespesa() {
     qc.setQueryData<Membro[]>(membersQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", nome, apelido: nome.split(/\s+/)[0] ?? nome, nome_como_no_documento: null, kind: "precadastro", meu: false }]);
     qc.setQueryData<MembroTrip[]>(tripMembrosQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", entrou_em: entrou, created_at: agora, deleted_at: null }]);
     if (divisao?.modo === "igual") setDivisao({ ...divisao, incluidos: [...divisao.incluidos, person] });
+    if (participantes) setParticipantes([...participantes, person]);
     setNovaPessoa(null);
     try {
       await mutar({ tipo: "rpc", funcao: "adicionar_pessoa_so_nome", args: { _trip: id, _member: member, _person: person, _nome: nome } });
@@ -254,6 +266,24 @@ function NovaDespesa() {
             </div>
           )}
         </section>
+
+        {!pessoal && (
+          <section>
+            <h2 className="text-lg font-bold text-foreground">Quem participa</h2>
+            <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+              {todosAtivos.map((p) => {
+                const on = partIds.includes(p.id);
+                return (
+                  <button key={p.id} onClick={() => tocarParticipante(p.id)} aria-pressed={on} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
+                    <span className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : "opacity-40"}`}><AvatarPessoa nome={p.nome} foto={null} tamanho={56} /></span>
+                    <span className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}>{p.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">Quem não participa não aparece na divisão.</p>
+          </section>
+        )}
 
         <button onClick={() => setPessoal(!pessoal)} role="switch" aria-checked={pessoal}
           className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 text-left ${pessoal ? "border-pessoal-border bg-pessoal" : "border-border bg-card"}`}>
