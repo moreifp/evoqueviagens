@@ -74,6 +74,7 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
           qc.fetchQuery({ ...tripQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...lodgingsQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...expensesQuery(t.id), staleTime: 0 }),
+          qc.fetchQuery({ ...settlementsQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...tripMembrosQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...membersQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...findingsQuery(t.id), staleTime: 0 }),
