@@ -266,6 +266,24 @@ function NovaDespesa() {
           )}
         </section>
 
+        {!pessoal && (
+          <section>
+            <h2 className="text-lg font-bold text-foreground">Quem participa</h2>
+            <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+              {todosAtivos.map((p) => {
+                const on = partIds.includes(p.id);
+                return (
+                  <button key={p.id} onClick={() => tocarParticipante(p.id)} aria-pressed={on} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
+                    <span className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : "opacity-40"}`}><AvatarPessoa nome={p.nome} foto={null} tamanho={56} /></span>
+                    <span className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}>{p.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">Quem não participa não aparece na divisão.</p>
+          </section>
+        )}
+
         <button onClick={() => setPessoal(!pessoal)} role="switch" aria-checked={pessoal}
           className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 text-left ${pessoal ? "border-pessoal-border bg-pessoal" : "border-border bg-card"}`}>
           <User size={26} strokeWidth={2.2} className={pessoal ? "text-pessoal-foreground" : "text-foreground"} />
