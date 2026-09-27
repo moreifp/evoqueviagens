@@ -9,7 +9,9 @@ import { Campo, inputCls } from "@/components/Form";
 import { ACEITA_QUALQUER, DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 import { euQuery, nomeDocumento } from "@/lib/eu";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
-import { pdfParaImagem } from "@/lib/pdf";
+import { ErroLeitura, pdfPagina } from "@/lib/pdf";
+import { textoDoEml } from "@/lib/emailAgencia";
+import { NOME_DOC } from "@/lib/cadastro-tipos";
 import { conferirDatasCNH, escolherRegistro, validaRegistroCNH } from "@/lib/cnh";
 import { identificarDocumentoAdmin, lerDocumentoAdmin, lerPassaporteAdmin } from "@/lib/cadastro.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +19,8 @@ import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
 
 const TIPOS = [["passaporte", "Passaporte"], ["rg", "RG"], ["cnh", "CNH e PID"], ["visto", "Visto ou ESTA"], ["vacina", "Vacina"], ["seguro", "Seguro"], ["global_entry", "Global Entry"], ["outro", "Outro"]] as const;
+/** Lista completa do seletor (inclui ETA, eTA, ETIAS…), para o tipo escolhido nunca virar "Passaporte". */
+const TODOS_TIPOS: [string, string][] = [...Object.entries(NOME_DOC), ["outro", "Outro"]];
 
 export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
   validateSearch: (search: Record<string, unknown>) => ({ tipo: typeof search.tipo === "string" ? search.tipo : "", did: typeof search.did === "string" ? search.did : "" }),
@@ -29,7 +33,7 @@ export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
 function NovoDocumento() {
   const { pid } = Route.useParams(); const search = Route.useSearch(); const nav = useNavigate(); const qc = useQueryClient();
   const { data } = useQuery(euQuery(pid)); const identify = useServerFn(identificarDocumentoAdmin); const readDoc = useServerFn(lerDocumentoAdmin); const readPassport = useServerFn(lerPassaporteAdmin);
-  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
+  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail" | "anexo">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const [motivo, setMotivo] = useState(""); const [conferir, setConferir] = useState(false); const [previa, setPrevia] = useState<string | null>(null); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
   useEffect(() => { if (!editDoc) return; setTipo(editDoc.tipo); setFields((old) => ({ ...old, nome_no_documento: editDoc.nome_no_documento ?? "", numero: editDoc.numero ?? "", pais_emissor: editDoc.pais_emissor ?? "", sexo: editDoc.sexo ?? "", detalhe: editDoc.detalhe ?? "", emissao: editDoc.emissao ?? "", validade: editDoc.validade ?? "", primeira_habilitacao: editDoc.primeira_habilitacao ?? "", local_expedicao: editDoc.local_expedicao ?? "" })); }, [editDoc?.id]);
   useEffect(() => { if (!data) return; setFields((old) => ({ ...old, nascimento: old.nascimento || data.pessoa.data_nascimento || "", nacionalidade: old.nacionalidade || data.pessoa.nacionalidades[0] || "" })); }, [data?.pessoa.id]);
   if (!data) return <p className="p-6 text-lg">Carregando…</p>;
