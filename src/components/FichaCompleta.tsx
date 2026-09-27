@@ -24,7 +24,7 @@ export function FichaCompleta({ personId, itens, owner }: { personId: string; it
       ? await db.from("person_item_dispensa").insert({ person_id: personId, item: item.id })
       : await db.from("person_item_dispensa").update({ deleted_at: new Date().toISOString() }).eq("person_id", personId).eq("item", item.id).is("deleted_at", null);
     setOcupado(null);
-    if (error) return toast.error("Não consegui salvar. Tente de novo.");
+    if (error) { toast.error("Não consegui salvar. Tente de novo."); return; }
     await qc.invalidateQueries({ queryKey: ["eu", personId] });
   }
 
