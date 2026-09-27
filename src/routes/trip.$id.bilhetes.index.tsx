@@ -215,6 +215,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           {(minha?.localizador || b.localizador) && (
             <p className="mono-code text-2xl font-bold text-accent">{minha?.localizador || b.localizador}</p>
           )}
+          {minha?.classe && <p className="text-lg font-bold text-foreground">Classe {minha.classe}</p>}
           <p className="mt-2 text-base font-semibold text-muted-foreground">
             Chega {horaNoFuso(b.chegada_utc, b.chegada_tz)} · {dataBRCurta(chaveDia(b.chegada_utc, b.chegada_tz))}
           </p>
@@ -255,7 +256,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           {b.passageiros.map((p) => (
             <li key={p.id} className="flex items-baseline justify-between gap-3 text-lg">
               <span className="font-bold text-foreground">{nome(p.person_id)}</span>
-              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}</span>
+              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}{p.classe ? ` · ${p.classe}` : ""}</span>
             </li>
           ))}
         </ul>
