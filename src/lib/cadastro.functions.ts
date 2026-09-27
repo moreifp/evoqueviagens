@@ -236,6 +236,12 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { ok: false as const };
     const qual = NOMES_TIPO[data.tipo] ?? `travel document of type "${data.tipo}" (e.g. a visa)`;
+    const cnh = data.tipo === "cnh";
+    const prompt = cnh
+      ? `This image is a Brazilian driver's license (CNH). It may be the digital CNH-e from gov.br with FRONT and BACK side by side on the same page, possibly two pages stacked — read BOTH sides. Map every field ONLY by its PRINTED LABEL, never by position. Return ONLY a JSON object, null for anything not clearly legible (never guess):
+"nome" (NOME), "registro" (the number under the label "Nº REGISTRO" — front, bottom-left, 11 digits; new model field 5; keep leading zeros), "validade" (label "VALIDADE"; new model 4b), "emissao" (label "DATA EMISSÃO", on the back next to LOCAL; new model 4a), "primeira_habilitacao" (label "1ª HABILITAÇÃO"), "nascimento" (label "DATA NASCIMENTO"), "local" (label "LOCAL", e.g. "SÃO PAULO, SP"), "categoria" (label "CAT. HAB."), "cpf" (label CPF), "numeros_11" (array with EVERY 11-digit number visible anywhere on the page, as strings).
+All dates as DD/MM/YYYY. NEVER put 1ª HABILITAÇÃO or DATA NASCIMENTO into validade or emissao. NEVER use the CPF, the RG / DOC. IDENTIDADE, the vertical 10-digit number on the border, or the codes on the back as "registro". If only one expiry-like date exists, it is validade and emissao is null.`
+      : `This image is a ${qual}. Return ONLY a JSON object with these keys, using null for anything not clearly legible (never guess): "nome" (full name as printed), "numero" (main document number: for RG the "Registro Geral"/RG number, for visas the visa/control number, for insurance the policy number), "pais" (issuing country, ISO 3-letter code if possible), "emissao" (date of issue / vaccination date, YYYY-MM-DD), "validade" (expiry date, YYYY-MM-DD), "nascimento" (date of birth, YYYY-MM-DD), "sexo" ("M","F" or null), "detalhe" (visa category like "B1/B2", vaccine name, insurer name; else null). Brazilian dates are DD/MM/YYYY — convert carefully.`;
     try {
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -247,10 +253,7 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
             {
               role: "user",
               content: [
-                {
-                  type: "text",
-                  text: `This image is a ${qual}. Return ONLY a JSON object with these keys, using null for anything not clearly legible (never guess): "nome" (full name as printed), "numero" (main document number: for RG the "Registro Geral"/RG number, for CNH the "Nº Registro", for visas the visa/control number, for insurance the policy number), "pais" (issuing country, ISO 3-letter code if possible), "emissao" (date of issue / vaccination date, YYYY-MM-DD), "validade" (expiry date, YYYY-MM-DD), "nascimento" (date of birth, YYYY-MM-DD), "sexo" ("M","F" or null), "detalhe" (visa category like "B1/B2", vaccine name, insurer name, or CNH category; else null). Brazilian dates are DD/MM/YYYY — convert carefully.`,
-                },
+                { type: "text", text: prompt },
                 { type: "image_url", image_url: { url: data.imagem } },
               ],
             },
@@ -263,6 +266,28 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
       const m = /\{[\s\S]*\}/.exec(txt);
       if (!m) return { ok: false as const };
       const o = JSON.parse(m[0]) as Record<string, unknown>;
+      const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().slice(0, 200) : null);
+      if (cnh) {
+        const br = (v: unknown) => { const s = t(v); const mm = s && /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s); return mm ? dataOk(`${mm[3]}-${mm[2]}-${mm[1]}`) : dataOk(s); };
+        const nums = Array.isArray(o.numeros_11) ? o.numeros_11.map((x) => String(x).replace(/\D/g, "")).filter((x) => x.length === 11).slice(0, 20) : [];
+        return {
+          ok: true as const,
+          campos: {
+            nome_no_documento: t(o.nome),
+            numero: t(o.registro)?.replace(/\D/g, "") || null,
+            pais_emissor: "BRA",
+            emissao: br(o.emissao),
+            validade: br(o.validade),
+            data_nascimento: br(o.nascimento),
+            sexo: null,
+            detalhe: t(o.categoria),
+            primeira_habilitacao: br(o.primeira_habilitacao),
+            local_expedicao: t(o.local),
+          },
+          cnh: { numeros_11: nums, cpf: t(o.cpf)?.replace(/\D/g, "") || null },
+        };
+      }
+
       const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().slice(0, 200) : null);
       return {
         ok: true as const,
