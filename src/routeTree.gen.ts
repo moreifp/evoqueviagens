@@ -61,6 +61,7 @@ import { Route as TripIdBilhetesEmailRouteImport } from './routes/trip.$id.bilhe
 import { Route as TripIdBilhetesNovoRouteImport } from './routes/trip.$id.bilhetes.novo'
 import { Route as TripIdDespesasIndexRouteImport } from './routes/trip.$id.despesas.index'
 import { Route as TripIdDespesasEidRouteImport } from './routes/trip.$id.despesas.$eid'
+import { Route as TripIdDespesasAcertarRouteImport } from './routes/trip.$id.despesas.acertar'
 import { Route as TripIdDespesasNovaRouteImport } from './routes/trip.$id.despesas.nova'
 import { Route as TripIdHospedagemIndexRouteImport } from './routes/trip.$id.hospedagem.index'
 import { Route as TripIdHospedagemNovaRouteImport } from './routes/trip.$id.hospedagem.nova'
@@ -338,6 +339,11 @@ const TripIdDespesasEidRoute = TripIdDespesasEidRouteImport.update({
   path: '/despesas/$eid',
   getParentRoute: () => TripIdRoute,
 } as any)
+const TripIdDespesasAcertarRoute = TripIdDespesasAcertarRouteImport.update({
+  id: '/despesas/acertar',
+  path: '/despesas/acertar',
+  getParentRoute: () => TripIdRoute,
+} as any)
 const TripIdDespesasNovaRoute = TripIdDespesasNovaRouteImport.update({
   id: '/despesas/nova',
   path: '/despesas/nova',
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/trip/$id/bilhetes/email': typeof TripIdBilhetesEmailRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/$eid': typeof TripIdDespesasEidRoute
+  '/trip/$id/despesas/acertar': typeof TripIdDespesasAcertarRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/pedir/$pid': typeof TripIdPedirPidRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/trip/$id/bilhetes/email': typeof TripIdBilhetesEmailRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/$eid': typeof TripIdDespesasEidRoute
+  '/trip/$id/despesas/acertar': typeof TripIdDespesasAcertarRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/pedir/$pid': typeof TripIdPedirPidRoute
@@ -552,6 +560,7 @@ export interface FileRoutesById {
   '/trip/$id/bilhetes/email': typeof TripIdBilhetesEmailRoute
   '/trip/$id/bilhetes/novo': typeof TripIdBilhetesNovoRoute
   '/trip/$id/despesas/$eid': typeof TripIdDespesasEidRoute
+  '/trip/$id/despesas/acertar': typeof TripIdDespesasAcertarRoute
   '/trip/$id/despesas/nova': typeof TripIdDespesasNovaRoute
   '/trip/$id/hospedagem/nova': typeof TripIdHospedagemNovaRoute
   '/trip/$id/pedir/$pid': typeof TripIdPedirPidRoute
@@ -616,6 +625,7 @@ export interface FileRouteTypes {
     | '/trip/$id/bilhetes/email'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/$eid'
+    | '/trip/$id/despesas/acertar'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
     | '/trip/$id/pedir/$pid'
@@ -676,6 +686,7 @@ export interface FileRouteTypes {
     | '/trip/$id/bilhetes/email'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/$eid'
+    | '/trip/$id/despesas/acertar'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
     | '/trip/$id/pedir/$pid'
@@ -738,6 +749,7 @@ export interface FileRouteTypes {
     | '/trip/$id/bilhetes/email'
     | '/trip/$id/bilhetes/novo'
     | '/trip/$id/despesas/$eid'
+    | '/trip/$id/despesas/acertar'
     | '/trip/$id/despesas/nova'
     | '/trip/$id/hospedagem/nova'
     | '/trip/$id/pedir/$pid'
@@ -1155,6 +1167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripIdDespesasEidRouteImport
       parentRoute: typeof TripIdRoute
     }
+    '/trip/$id/despesas/acertar': {
+      id: '/trip/$id/despesas/acertar'
+      path: '/despesas/acertar'
+      fullPath: '/trip/$id/despesas/acertar'
+      preLoaderRoute: typeof TripIdDespesasAcertarRouteImport
+      parentRoute: typeof TripIdRoute
+    }
     '/trip/$id/despesas/nova': {
       id: '/trip/$id/despesas/nova'
       path: '/despesas/nova'
@@ -1243,6 +1262,7 @@ interface TripIdRouteChildren {
   TripIdBilhetesEmailRoute: typeof TripIdBilhetesEmailRoute
   TripIdBilhetesNovoRoute: typeof TripIdBilhetesNovoRoute
   TripIdDespesasEidRoute: typeof TripIdDespesasEidRoute
+  TripIdDespesasAcertarRoute: typeof TripIdDespesasAcertarRoute
   TripIdDespesasNovaRoute: typeof TripIdDespesasNovaRoute
   TripIdHospedagemNovaRoute: typeof TripIdHospedagemNovaRoute
   TripIdPedirPidRoute: typeof TripIdPedirPidRoute
@@ -1266,6 +1286,7 @@ const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdBilhetesEmailRoute: TripIdBilhetesEmailRoute,
   TripIdBilhetesNovoRoute: TripIdBilhetesNovoRoute,
   TripIdDespesasEidRoute: TripIdDespesasEidRoute,
+  TripIdDespesasAcertarRoute: TripIdDespesasAcertarRoute,
   TripIdDespesasNovaRoute: TripIdDespesasNovaRoute,
   TripIdHospedagemNovaRoute: TripIdHospedagemNovaRoute,
   TripIdPedirPidRoute: TripIdPedirPidRoute,

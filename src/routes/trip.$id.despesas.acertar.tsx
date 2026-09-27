@@ -36,6 +36,7 @@ function Acertar() {
   const { dividas, pessoas } = resumoSaldos(despesas, acertos, membros);
   const cruzadas = dividasCruzadas(despesas, acertos);
   const nome = (p: string) => nomeCurto(membros, p);
+  const dono = membros.find((m) => m.papel === "owner");
 
   const [outro, setOutro] = useState(false);
   const [de, setDe] = useState("");
@@ -108,7 +109,7 @@ function Acertar() {
               <li key={a.id} className="flex min-h-16 items-center gap-2 text-base">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{nome(a.de_person_id)} → {nome(a.para_person_id)}</span>
-                  <span className="block text-sm text-muted-foreground">{dataBRCurta(a.data)} · registrado por {a.registrado_por && a.registrado_por !== trip.owner_id ? "outra pessoa" : "organizador"}</span>
+                  <span className="block text-sm text-muted-foreground">{dataBRCurta(a.data)} · registrado por {dono ? nome(dono.person_id) : "organizador"}</span>
                 </span>
                 <span className="num text-lg">{fmtMoney(Number(a.valor_moeda_base), moeda)}</span>
                 {org && <button onClick={() => void apagar(a)} aria-label="Apagar acerto" className="tap flex items-center justify-center rounded-xl text-destructive"><Trash2 size={22} strokeWidth={2.2} /></button>}

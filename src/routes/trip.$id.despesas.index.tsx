@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeftRight, ChevronLeft, Eye, FileSpreadsheet, FileText, Plus, User } from "lucide-react";
+import { ArrowLeftRight, ChevronLeft, HandCoins, Eye, FileSpreadsheet, FileText, Plus, User } from "lucide-react";
 import { expensesQuery, settlementsQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
 import { fmtMoney } from "@/lib/format";
 import { acharMoeda } from "@/lib/moedas";
@@ -78,7 +78,7 @@ function Lista() {
             </button>
           </div>
         )}
-        <SaldosViagem tripId={id} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
+        <SaldosViagem tripId={id} tripNome={trip.nome} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
 
         <section className="rounded-3xl bg-navy p-5 text-primary-foreground shadow-medium">
           <p className="text-sm font-bold uppercase tracking-wide opacity-80">Total dividido</p>
@@ -87,6 +87,11 @@ function Lista() {
             <span className="text-base opacity-90">{nPessoas} pessoas · {divididas.length} {divididas.length === 1 ? "despesa" : "despesas"}</span>
             {pessoais.length > 0 && <span className="rounded-full bg-pessoal-chip px-3 py-1 text-sm font-bold text-pessoal-foreground">+ {fmtMoney(soma(pessoais), moeda)} pessoais</span>}
           </div>
+          {acertos.length + divididas.length > 0 && (
+            <Link to="/trip/$id/despesas/acertar" params={{ id }} className="tap mt-4 flex items-center justify-center gap-2 rounded-2xl bg-primary-foreground text-lg font-bold text-navy">
+              <HandCoins size={24} strokeWidth={2.2} /> {org ? "Simplificar e acertar" : "Quem paga a quem"}
+            </Link>
+          )}
         </section>
 
         <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
@@ -103,7 +108,7 @@ function Lista() {
             : [...dias.entries()].map(([dia, itens]) => (
               <section key={dia}>
                 <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{diaCab(dia)}</h2>
-                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
             ))
         )}
@@ -120,7 +125,7 @@ function Lista() {
                 <h2 className="flex items-baseline justify-between text-base font-bold text-foreground">
                   <span>{nomeCurto(membros, pid)}</span><span className="num text-lg text-pessoal-foreground">{fmtMoney(soma(itens), moeda)}</span>
                 </h2>
-                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
             ))}
           </>
