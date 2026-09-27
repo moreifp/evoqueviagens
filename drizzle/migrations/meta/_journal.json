@@ -239,6 +239,13 @@
       "when": 1790539854201,
       "tag": "0033_ticket_passenger_dados_pessoais",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790544605317,
+      "tag": "0034_loyalty_expira_em",
+      "breakpoints": true
     }
   ]
 }
