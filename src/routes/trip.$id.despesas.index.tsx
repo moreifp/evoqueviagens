@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowLeftRight, ChevronLeft, Eye, Plus, User } from "lucide-react";
-import { expensesQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
+import { expensesQuery, settlementsQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
 import { fmtMoney } from "@/lib/format";
 import { acharMoeda } from "@/lib/moedas";
 import { nomeCurto, useUid } from "@/lib/despesas";
 import { LinhaDespesa } from "@/components/LinhaDespesa";
+import { SaldosViagem } from "@/components/SaldosViagem";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
@@ -31,6 +32,7 @@ function Lista() {
   const { data: trip } = useSuspenseQuery(tripQuery(id));
   const { data: despesas } = useSuspenseQuery(expensesQuery(id));
   const { data: membros } = useSuspenseQuery(membersQuery(id));
+  const { data: acertos } = useSuspenseQuery(settlementsQuery(id));
   const [aba, setAba] = useState<"todas" | "pessoais">("todas");
   const org = uid === trip.owner_id;
   const moeda = trip.moeda_base;
@@ -65,7 +67,7 @@ function Lista() {
         {!org && uid !== undefined && (
           <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-bold text-foreground"><Eye size={18} strokeWidth={2.2} /> Só leitura</p>
         )}
-        {/* Espaço reservado para os cartões de saldo (parte 2). */}
+        <SaldosViagem tripId={id} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
 
         <section className="rounded-3xl bg-navy p-5 text-primary-foreground shadow-medium">
           <p className="text-sm font-bold uppercase tracking-wide opacity-80">Total dividido</p>
