@@ -136,29 +136,6 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
 
-        <section>
-          <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Documentos</h2>{owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex items-center gap-2 text-lg font-bold text-accent"><Plus size={24} /> Adicionar</Link>}</div>
-          <div className="space-y-3">
-            {data.documentos.map((doc) => {
-              const st = statusDocumento(doc);
-              const count = data.anexos.filter((a) => a.document_id === doc.id).length || (doc.arquivo_path ? 1 : 0);
-              if (doc.tipo === "passaporte") return (
-                <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="block rounded-lg bg-primary p-5 text-primary-foreground shadow-medium">
-                  <div className="flex items-center justify-between"><span className="text-base font-bold">PASSAPORTE · {(paisPt(doc.pais_emissor) || "PAÍS").toUpperCase()}</span><span className={`rounded-full px-3 py-1 text-sm font-bold ${STATUS[st.tone]}`}>{st.label}</span></div>
-                  <p className="mono-code mt-5 text-2xl">{mascararFinal(doc.numero)}</p>
-                  <div className="mt-4 flex justify-between text-base"><span>Validade {dataBR(doc.validade)}</span><span>{count} {count === 1 ? "anexo" : "anexos"}</span></div>
-                </Link>
-              );
-              return <Link key={doc.id} to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: doc.id }} className="tap flex items-center gap-3 border-b border-border py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-base font-bold">{doc.tipo.slice(0, 3).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block text-lg">{nomeDocumento(doc.tipo)}{paisPt(doc.pais_emissor) ? ` · ${paisPt(doc.pais_emissor)}` : ""}</strong><span className="block text-base text-muted-foreground">{mascararFinal(doc.numero)} · {count} {count === 1 ? "anexo" : "anexos"}</span></span><ChevronRight size={26} /></Link>;
-            })}
-            {!data.documentos.length && (owner ? <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Camera size={28} /> Fotografar seu primeiro documento</Link> : <p className="text-lg text-muted-foreground">Nenhum documento.</p>)}
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Fidelidade</h2><Link to="/pessoas/$pid/fidelidade" params={{ pid: p.id }} className="tap flex items-center text-lg font-bold text-accent">Ver todos ({data.fidelidades.length})</Link></div>
-          {!data.fidelidades.length && owner && <Link to="/pessoas/$pid/fidelidade/novo" params={{ pid: p.id }} className="tap flex min-h-24 items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><Plus size={28} /> Adicionar programa de fidelidade</Link>}<div className="divide-y divide-border">{data.fidelidades.slice(0, 3).map((item) => <Link key={item.id} to="/pessoas/$pid/fidelidade/$fid" params={{ pid: p.id, fid: item.id }} className="tap flex items-center gap-3 py-3"><span className="flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-base font-bold">{item.programa.slice(0, 2).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.programa}</strong><span className="text-base text-muted-foreground">{mascararFinal(item.numero)}{item.categoria ? ` · ${item.categoria}` : ""}</span></span>{owner && <LockKeyhole size={22} className="text-muted-foreground" />}<ChevronRight size={26} /></Link>)}</div>
-        </section>
 
         {owner && (
           <section id="familia">
