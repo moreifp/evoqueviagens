@@ -106,5 +106,5 @@
 
 - [x] Corrigido: seção "Avisos no celular" agora aparece também na prévia ("Ligue no app instalado")
 
-- [ ] Despesas: exportar planilha Excel (formato Splitwise)
-- [ ] Despesas: exportar a mesma planilha em PDF
+- [x] Despesas: exportar planilha Excel (formato Splitwise)
+- [x] Despesas: exportar a mesma planilha em PDF
