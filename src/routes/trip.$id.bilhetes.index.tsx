@@ -215,6 +215,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           {(minha?.localizador || b.localizador) && (
             <p className="mono-code text-2xl font-bold text-accent">{minha?.localizador || b.localizador}</p>
           )}
+          {minha?.classe && <p className="text-lg font-bold text-foreground">Classe {minha.classe}</p>}
           <p className="mt-2 text-base font-semibold text-muted-foreground">
             Chega {horaNoFuso(b.chegada_utc, b.chegada_tz)} · {dataBRCurta(chaveDia(b.chegada_utc, b.chegada_tz))}
           </p>
