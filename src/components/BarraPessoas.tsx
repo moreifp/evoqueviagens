@@ -1,62 +1,83 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, minhaPessoaQuery, statusDocumento, type EuDocumento, type EuPessoa } from "@/lib/eu";
+import { conferirQuery, entryRulesQuery, membersQuery, ticketsQuery, tripsQuery } from "@/lib/data";
+import { conferir, regraPassaporte } from "@/lib/conferencia";
+import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
+const VAZIO: never[] = [];
 
-type Item = { id: string; nome: string; foto: string | null; self: boolean; alerta: "danger" | "warn" | null };
-
-function alertaDe(docs: EuDocumento[] | undefined): Item["alerta"] {
-  const tons = (docs ?? []).map((d) => statusDocumento(d).tone);
-  return tons.includes("danger") ? "danger" : tons.includes("warn") ? "warn" : null;
-}
-
-export function BarraPessoas({ atualId, onAdicionar }: { atualId: string; onAdicionar: () => void }) {
-  const { data: eu } = useQuery(minhaPessoaQuery());
-  const { data: meus } = useQuery({ ...euQuery(eu?.id ?? ""), enabled: Boolean(eu) });
-  const donos = [...new Set((meus?.compartilhamentos ?? []).filter((g) => g.grantee_id === meus?.uid).map((g) => g.owner_id))];
-  const { data: comigo = [] } = useQuery({
-    queryKey: ["barra-pessoas", donos.join(",")],
+/** Participantes da viagem em andamento (ou a próxima). Some sem viagem. */
+export function BarraPessoas({ atualId }: { atualId: string }) {
+  const { data: viagens = VAZIO } = useQuery(tripsQuery());
+  const hoje = new Date().toISOString().slice(0, 10);
+  const trip = useMemo(() => {
+    const ativas = viagens.filter((v) => !v.arquivada_em && v.data_fim >= hoje);
+    return ativas.find((v) => v.data_inicio <= hoje) ?? [...ativas].sort((a, b) => a.data_inicio.localeCompare(b.data_inicio))[0] ?? null;
+  }, [viagens, hoje]);
+  const tid = trip?.id ?? "";
+  const { data: membros = VAZIO } = useQuery({ ...membersQuery(tid), enabled: Boolean(trip) });
+  const { data: lista = VAZIO } = useQuery({ ...conferirQuery(tid), enabled: Boolean(trip) });
+  const { data: regras = VAZIO } = useQuery(entryRulesQuery());
+  const { data: bilhetes = VAZIO } = useQuery({ ...ticketsQuery(tid), enabled: Boolean(trip) });
+  const [paises, setPaises] = useState<string[]>([]);
+  useEffect(() => {
+    void carregarAeroportos().then((a) => setPaises([...new Set(bilhetes.map((b) => (b.destino_iata ? porIata(a, b.destino_iata)?.pais : null)).filter((x): x is string => Boolean(x) && x !== "BR"))]));
+  }, [bilhetes]);
+  const ids = membros.map((m) => m.person_id);
+  const { data: fotos = {} } = useQuery({
+    queryKey: ["barra-fotos", ids.join(",")],
     networkMode: "offlineFirst",
-    enabled: donos.length > 0,
+    enabled: ids.length > 0,
     queryFn: async () => {
-      const { data } = await db.from("person").select("id,nome,apelido,foto_url,account_id").in("account_id", donos).eq("kind", "self").is("deleted_at", null);
-      return (data ?? []) as EuPessoa[];
+      const { data } = await db.from("person").select("id,foto_url").in("id", ids);
+      return Object.fromEntries(((data ?? []) as { id: string; foto_url: string | null }[]).map((p) => [p.id, p.foto_url])) as Record<string, string | null>;
     },
   });
-  if (!eu || !meus) return null;
-  const itens: Item[] = [
-    { id: eu.id, nome: "Eu", foto: eu.foto_url, self: true, alerta: alertaDe(meus.documentos) },
-    ...meus.dependentes.map((d) => ({ id: d.id, nome: d.apelido || d.nome, foto: d.foto_url, self: false, alerta: alertaDe(meus.documentosDependentes[d.id]) })),
-    ...[...comigo].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((d) => ({ id: d.id, nome: d.apelido || d.nome, foto: d.foto_url, self: false, alerta: null })),
-  ];
-  if (itens.length < 2) return null;
+
+  if (!trip) return null;
+  const ativos = membros.filter((m) => m.status !== "recusado" && m.status !== "saiu");
+  if (!ativos.length) return null;
+  const eu = ativos.find((m) => m.meu && m.kind === "self");
+  const ordem = eu ? [eu, ...ativos.filter((m) => m !== eu)] : ativos;
+  const ajuste = (trip as unknown as { regra_passaporte?: { meses?: number; base?: string } | null }).regra_passaporte ?? null;
+  const regra = regraPassaporte(trip, paises, ajuste);
+  const destino = trip.cidades?.[0] || trip.destino || trip.nome;
+
   return (
-    <nav aria-label="Pessoas" className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-      {itens.map((it) => {
-        const ativo = it.id === atualId;
-        const corpo = (
-          <>
-            <span className={`relative rounded-full p-0.5 ${ativo ? "ring-4 ring-ok" : ""}`}>
-              <AvatarPessoa nome={it.self ? eu.nome : it.nome} foto={it.foto} tamanho={56} />
-              {it.alerta && <span aria-label={it.alerta === "danger" ? "Documento vencido" : "Documento vencendo"} className={`absolute right-0 top-0 h-4 w-4 rounded-full border-2 border-background ${it.alerta === "danger" ? "bg-danger" : "bg-warn"}`} />}
-            </span>
-            <span className={`max-w-[72px] truncate text-sm ${ativo ? "font-bold" : ""}`}>{it.nome.split(" ")[0]}</span>
-          </>
-        );
-        const cls = "flex shrink-0 flex-col items-center gap-1";
-        return it.self
-          ? <Link key={it.id} to="/" className={cls} aria-current={ativo ? "page" : undefined}>{corpo}</Link>
-          : <Link key={it.id} to="/pessoas/$pid" params={{ pid: it.id }} className={cls} aria-current={ativo ? "page" : undefined}>{corpo}</Link>;
-      })}
-      <button onClick={onAdicionar} aria-label="Adicionar dependente" className="flex shrink-0 flex-col items-center gap-1">
-        <span className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-dashed border-border"><Plus size={24} strokeWidth={2.2} /></span>
-        <span className="text-sm text-muted-foreground">Dependente</span>
-      </button>
-    </nav>
+    <div>
+      <Link to="/trip/$id" params={{ id: trip.id }} className="mb-1 inline-block text-sm font-semibold text-muted-foreground">
+        {destino} · {trip.data_inicio.slice(8, 10)}/{trip.data_inicio.slice(5, 7)}
+      </Link>
+      <nav aria-label="Participantes da viagem" className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        {ordem.map((m) => {
+          const c = lista.find((x) => x.person_id === m.person_id);
+          const podeVer = m.meu || Boolean(c?.acesso);
+          const k = c ? conferir(c, trip, destino, paises, regra, regras) : null;
+          const alerta = k?.nivel === "resolver" ? "danger" : k?.nivel === "conferir" ? "warn" : null;
+          const ativo = m.person_id === atualId;
+          const nome = m === eu ? "Eu" : (m.apelido || m.nome).split(" ")[0];
+          const corpo = (
+            <>
+              <span className={`relative rounded-full p-0.5 ${ativo ? "ring-4 ring-ok" : ""}`}>
+                <AvatarPessoa nome={m.nome} foto={fotos[m.person_id] ?? null} tamanho={56} />
+                {alerta && <span aria-label={alerta === "danger" ? "Precisa resolver" : "Conferir"} className={`absolute right-0 top-0 h-4 w-4 rounded-full border-2 border-background ${alerta === "danger" ? "bg-danger" : "bg-warn"}`} />}
+                {!podeVer && <span aria-label="Sem acesso à ficha" className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-muted text-foreground"><Lock size={11} strokeWidth={2.6} /></span>}
+              </span>
+              <span className={`max-w-[72px] truncate text-sm ${ativo ? "font-bold" : ""}`}>{nome}</span>
+            </>
+          );
+          const cls = "flex shrink-0 flex-col items-center gap-1";
+          if (m === eu) return <Link key={m.id} to="/" className={cls} aria-current={ativo ? "page" : undefined}>{corpo}</Link>;
+          if (podeVer) return <Link key={m.id} to="/pessoas/$pid" params={{ pid: m.person_id }} className={cls} aria-current={ativo ? "page" : undefined}>{corpo}</Link>;
+          return <Link key={m.id} to="/trip/$id/revisao" params={{ id: trip.id }} hash={`p-${m.person_id}`} className={cls}>{corpo}</Link>;
+        })}
+      </nav>
+    </div>
   );
 }

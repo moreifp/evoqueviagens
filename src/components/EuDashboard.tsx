@@ -114,7 +114,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
       <main className="mx-auto max-w-3xl space-y-7 px-4">
         {!owner && <p className="rounded-lg border-2 border-accent bg-card p-3 text-lg font-semibold">Compartilhado com você · só leitura</p>}
 
-        <BarraPessoas atualId={p.id} onAdicionar={() => { if (owner) { setAddingDependent(true); document.getElementById("familia")?.scrollIntoView({ behavior: "smooth" }); } else void navigate({ to: "/" }); }} />
+        <BarraPessoas atualId={p.id} />
 
         <section className="gradient-hero shadow-medium rounded-lg p-5">
           <div className="flex items-center gap-4">
