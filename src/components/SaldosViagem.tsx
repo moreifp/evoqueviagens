@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ListTree, Share2 } from "lucide-react";
 import type { Acerto, Expense, Membro } from "@/lib/data";
-import { nomeCurto } from "@/lib/despesas";
+import { nomeCompleto, nomeCurto } from "@/lib/despesas";
 import { fmtMoney } from "@/lib/format";
 import { fraseSaldo, resumoSaldos, textoCompartilhar } from "@/lib/saldos";
 import { AvatarPessoa } from "./Pessoa";
@@ -49,7 +49,7 @@ export function SaldosViagem({ tripId, tripNome, despesas, acertos, membros, moe
               <li key={p}>
                 <Link to="/trip/$id/despesas/saldo/$pid" params={{ id: tripId, pid: p }} className={`flex h-full min-h-28 flex-col gap-1 rounded-2xl border bg-card p-3 shadow-soft ${voce && !org ? "border-2 border-teal" : "border-border"}`}>
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0"><AvatarPessoa nome={nome} foto={null} tamanho={40} /></span>
+                    <span className="shrink-0"><AvatarPessoa nome={nomeCompleto(membros, p)} foto={null} tamanho={40} /></span>
                     <span className="min-w-0 flex-1 truncate text-base font-bold text-foreground">{voce ? "Você" : nome}</span>
                   </span>
                   <span className={`text-sm font-bold ${corSaldo(v)}`}>{rotuloSaldo(v)}{saiu(p) ? " · saiu" : ""}</span>
