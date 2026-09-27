@@ -110,3 +110,8 @@
 - [x] Despesas: exportar a mesma planilha em PDF
 - [x] Leitura de PDF (passaporte/CNH) com testes
 - [x] ETA com .eml aparece como passaporte e "Não deu para ler"
+
+## Dependentes na tela Eu
+- [x] Renomear Família para Dependentes e mostrar somente dependentes ligados à pessoa aberta
+- [x] Associar novos dependentes à pessoa aberta e preservar os antigos na ficha do titular
+- [x] Incluir dependentes de dependentes no download offline
