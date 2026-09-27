@@ -66,14 +66,14 @@ export function lerMrz(linha1: string, linha2: string): MrzResultado | null {
   const l1 = normaliza(linha1);
   const l2 = normaliza(linha2);
   if (!l1.startsWith("P")) return null;
-  const paisEmissor = l1.slice(2, 5).replace(/</g, "");
+  const paisEmissor = l1.slice(2, 5).replace(/</g, "").replace(/0/g, "O");
   const nomesParte = l1.slice(5);
   const [sob = "", ...resto] = nomesParte.split("<<");
   const sobrenome = limpaNome(sob);
   const nomes = limpaNome(resto.join(" "));
 
   const numeroCampo = l2.slice(0, 9);
-  const nac = l2.slice(10, 13).replace(/</g, "");
+  const nac = l2.slice(10, 13).replace(/</g, "").replace(/0/g, "O");
   const nasc = l2.slice(13, 19);
   const sexoC = l2[20];
   const val = l2.slice(21, 27);

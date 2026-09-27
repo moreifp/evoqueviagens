@@ -26,9 +26,9 @@ export async function comprimir(arquivo: File, max = 1600, qualidade = 0.85): Pr
 }
 
 /** Melhora contraste e nitidez de documentos fotografados antes da leitura OCR. */
-export async function melhorarDocumentoParaOcr(arquivo: Blob): Promise<Blob> {
+export async function melhorarDocumentoParaOcr(arquivo: Blob, maxLado = 2200): Promise<Blob> {
   const img = await decodificar(arquivo);
-  const escala = Math.min(1.6, 2200 / Math.max(img.width, img.height));
+  const escala = Math.min(1.6, maxLado / Math.max(img.width, img.height));
   const c = document.createElement("canvas");
   c.width = Math.max(1, Math.round(img.width * escala));
   c.height = Math.max(1, Math.round(img.height * escala));

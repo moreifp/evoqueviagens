@@ -9,7 +9,9 @@ import { Campo, inputCls } from "@/components/Form";
 import { ACEITA_QUALQUER, DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 import { euQuery, nomeDocumento } from "@/lib/eu";
 import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
-import { pdfParaImagem } from "@/lib/pdf";
+import { ErroLeitura, pdfPagina } from "@/lib/pdf";
+import { textoDoEml } from "@/lib/emailAgencia";
+import { NOME_DOC } from "@/lib/cadastro-tipos";
 import { conferirDatasCNH, escolherRegistro, validaRegistroCNH } from "@/lib/cnh";
 import { identificarDocumentoAdmin, lerDocumentoAdmin, lerPassaporteAdmin } from "@/lib/cadastro.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +19,8 @@ import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
 
 const TIPOS = [["passaporte", "Passaporte"], ["rg", "RG"], ["cnh", "CNH e PID"], ["visto", "Visto ou ESTA"], ["vacina", "Vacina"], ["seguro", "Seguro"], ["global_entry", "Global Entry"], ["outro", "Outro"]] as const;
+/** Lista completa do seletor (inclui ETA, eTA, ETIAS…), para o tipo escolhido nunca virar "Passaporte". */
+const TODOS_TIPOS: [string, string][] = [...Object.entries(NOME_DOC), ["outro", "Outro"]];
 
 export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
   validateSearch: (search: Record<string, unknown>) => ({ tipo: typeof search.tipo === "string" ? search.tipo : "", did: typeof search.did === "string" ? search.did : "" }),
@@ -29,7 +33,7 @@ export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
 function NovoDocumento() {
   const { pid } = Route.useParams(); const search = Route.useSearch(); const nav = useNavigate(); const qc = useQueryClient();
   const { data } = useQuery(euQuery(pid)); const identify = useServerFn(identificarDocumentoAdmin); const readDoc = useServerFn(lerDocumentoAdmin); const readPassport = useServerFn(lerPassaporteAdmin);
-  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
+  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail" | "anexo">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const [motivo, setMotivo] = useState(""); const [conferir, setConferir] = useState(false); const [previa, setPrevia] = useState<string | null>(null); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
   useEffect(() => { if (!editDoc) return; setTipo(editDoc.tipo); setFields((old) => ({ ...old, nome_no_documento: editDoc.nome_no_documento ?? "", numero: editDoc.numero ?? "", pais_emissor: editDoc.pais_emissor ?? "", sexo: editDoc.sexo ?? "", detalhe: editDoc.detalhe ?? "", emissao: editDoc.emissao ?? "", validade: editDoc.validade ?? "", primeira_habilitacao: editDoc.primeira_habilitacao ?? "", local_expedicao: editDoc.local_expedicao ?? "" })); }, [editDoc?.id]);
   useEffect(() => { if (!data) return; setFields((old) => ({ ...old, nascimento: old.nascimento || data.pessoa.data_nascimento || "", nacionalidade: old.nacionalidade || data.pessoa.nacionalidades[0] || "" })); }, [data?.pessoa.id]);
   if (!data) return <p className="p-6 text-lg">Carregando…</p>;
@@ -40,31 +44,68 @@ function NovoDocumento() {
   if (numeroCnhInvalido || (ehCnh && regFalhou && !fields.numero)) suspeitos.add("numero");
   const precisaConfirmar = readState === "ok" && suspeitos.size > 0;
 
+  function aplicarPassaporte(r: { mrz: { numero?: string; paisEmissor?: string; nacionalidade?: string; nomeCompleto?: string; sexo?: string | null; validade?: string | null; nascimento?: string | null }; emissao?: string | null }) {
+    const lido: Record<string, string> = { numero: r.mrz.numero ?? "", pais_emissor: r.mrz.paisEmissor || r.mrz.nacionalidade || "", nome_no_documento: r.mrz.nomeCompleto ?? "", sexo: r.mrz.sexo ?? "", validade: r.mrz.validade ?? "", emissao: r.emissao ?? "", nascimento: r.mrz.nascimento ?? "", nacionalidade: r.mrz.nacionalidade ?? "" };
+    setFields((old) => { const n = { ...old }; for (const [k, v] of Object.entries(lido)) if (v && !n[k]) n[k] = v; return n; });
+  }
+
+  async function aplicarOutro(r: Awaited<ReturnType<typeof readDoc>>, detected: string) {
+    if (!r.ok) throw new ErroLeitura("chamada da IA", "Não achamos os dados nesse documento");
+    const { data_nascimento, ...resto } = r.campos;
+    const lido: Record<string, string> = Object.fromEntries(Object.entries(resto).filter(([, v]) => v).map(([k, v]) => [k, String(v)]));
+    if (detected === "cnh") {
+      const reg = escolherRegistro(r.campos.numero, r.cnh?.numeros_11 ?? [], data!.pessoa.cpf || r.cnh?.cpf);
+      lido.numero = reg ?? ""; setRegFalhou(!reg);
+      // Sem data de emissão: fica vazia (nunca copiar a 1ª habilitação).
+      if (!r.campos.emissao) lido.emissao = "";
+    }
+    setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
+  }
+
+  async function lerImagem(origem: Blob, forced: string | undefined, pdf: boolean) {
+    let image: string;
+    try { image = await blobParaDataUrl(await melhorarDocumentoParaOcr(origem, pdf ? 3000 : 2200)); }
+    catch (e) { throw new ErroLeitura("melhorar imagem", "Não deu para preparar a imagem", e); }
+    let detected = forced || tipo;
+    if (!detected) { const r = await identify({ data: { imagem: image } }); detected = r.ok ? r.tipo : "outro"; setTipo(detected); }
+    if (detected === "passaporte") {
+      const r = await readPassport({ data: { imagem: image } });
+      if (!r.ok) throw new ErroLeitura("MRZ", ("motivo" in r && r.motivo) || "Não achamos as linhas de baixo do passaporte");
+      aplicarPassaporte(r); if (r.conferir) setConferir(true);
+    } else await aplicarOutro(await readDoc({ data: { imagem: image, tipo: detected } }), detected);
+  }
+
   async function receive(next: File, forced?: string) {
-    setFile(next); setReading(true); setReadState("idle"); setRegFalhou(false);
+    setFile(next); setReading(true); setReadState("idle"); setRegFalhou(false); setMotivo(""); setConferir(false); setPrevia(null);
+    const alvo = forced || tipo;
     try {
-      const prepared = await prepararArquivo(next, 2200);
-      // Arquivos que não são foto nem PDF (eml, doc, xls…) só anexam, sem leitura.
-      if (prepared.ext !== "jpg" && prepared.ext !== "heic" && prepared.ext !== "pdf") { setTipo(forced || tipo || "outro"); setReadState("fail"); return; }
-      // PDF: as 2 primeiras páginas viram imagem no aparelho; o PDF original é o anexo.
-      const origem = prepared.ext === "pdf" ? await pdfParaImagem(next) : prepared.blob;
-      const enhanced = await melhorarDocumentoParaOcr(origem); const image = await blobParaDataUrl(enhanced);
-      let detected = forced || tipo; if (!detected) { const r = await identify({ data: { imagem: image } }); detected = r.ok ? r.tipo : "outro"; setTipo(detected); }
-      if (detected === "passaporte") { const r = await readPassport({ data: { imagem: image } }); if (r.ok) { const lido: Record<string, string> = { numero: r.mrz.numero ?? "", pais_emissor: r.mrz.paisEmissor || r.mrz.nacionalidade || "", nome_no_documento: r.mrz.nomeCompleto ?? "", sexo: r.mrz.sexo ?? "", validade: r.mrz.validade ?? "", emissao: r.emissao ?? "", nascimento: r.mrz.nascimento ?? "", nacionalidade: r.mrz.nacionalidade ?? "" }; setFields((old) => { const n = { ...old }; for (const [k, v] of Object.entries(lido)) if (v && !n[k]) n[k] = v; return n; }); } else throw new Error(); }
-      else {
-        const r = await readDoc({ data: { imagem: image, tipo: detected } }); if (!r.ok) throw new Error();
-        const { data_nascimento, ...resto } = r.campos;
-        const lido: Record<string, string> = Object.fromEntries(Object.entries(resto).filter(([, v]) => v).map(([k, v]) => [k, String(v)]));
-        if (detected === "cnh") {
-          const reg = escolherRegistro(r.campos.numero, r.cnh?.numeros_11 ?? [], data!.pessoa.cpf || r.cnh?.cpf);
-          lido.numero = reg ?? ""; setRegFalhou(!reg);
-          // Sem data de emissão: fica vazia (nunca copiar a 1ª habilitação).
-          if (!r.campos.emissao) lido.emissao = "";
-        }
-        setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
+      // E-mail (.eml): lê o texto; o arquivo fica como anexo.
+      if (/\.eml$/i.test(next.name) || next.type === "message/rfc822") {
+        const tipoDoc = alvo && alvo !== "passaporte" ? alvo : "outro";
+        setTipo(tipoDoc);
+        const texto = textoDoEml(await next.text()).slice(0, 55_000);
+        if (!texto) throw new ErroLeitura("ler e-mail", "O e-mail está vazio");
+        await aplicarOutro(await readDoc({ data: { imagem: "", tipo: tipoDoc, texto } }), tipoDoc);
+        setConferir(true); setReadState("ok"); return;
       }
-      setReadState("ok");
-    } catch { setReadState("fail"); } finally { setReading(false); }
+      const prepared = await prepararArquivo(next, 2200);
+      // Arquivos que não são foto nem PDF (doc, xls…) só anexam, sem leitura.
+      if (prepared.ext !== "jpg" && prepared.ext !== "heic" && prepared.ext !== "pdf") { setTipo(alvo || "outro"); setReadState("anexo"); return; }
+      if (prepared.ext !== "pdf") { await lerImagem(prepared.blob, forced, false); setReadState("ok"); return; }
+      // PDF: uma página por vez (1ª; se falhar, 2ª), sem empilhar. O PDF original é o anexo.
+      let ultimo: unknown = null;
+      for (let n = 1; n <= 2; n++) {
+        const pg = await pdfPagina(next, n);
+        setPrevia(URL.createObjectURL(pg.imagem));
+        try { await lerImagem(pg.imagem, forced, true); setReadState("ok"); return; }
+        catch (e) { ultimo = e; console.warn(`LEITURA_PDF pagina ${n}`, e); if (n >= pg.total) break; }
+      }
+      throw ultimo;
+    } catch (e) {
+      const er = e instanceof ErroLeitura ? e : new ErroLeitura("chamada da IA", "A leitura automática falhou", e);
+      console.error(`LEITURA_DOCUMENTO falhou no passo: ${er.passo}`, er.causa ?? er);
+      setMotivo(er.motivo); setReadState("fail");
+    } finally { setReading(false); }
   }
 
   async function save(form: FormData) {
@@ -97,8 +138,8 @@ function NovoDocumento() {
   return <div className="min-h-screen bg-background pb-20"><Topo titulo={editDoc ? `Editar ${nomeDocumento(editDoc.tipo)}` : "Adicionar documento"} voltarPara="/pessoas/$pid" voltarParams={{ pid }} /><main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
     {!file && !manual && <><TirarFoto onFoto={(f) => void receive(f)} rotulo={editDoc ? "Tirar nova foto" : "Fotografar documento"} sub={editDoc ? "A foto atual permanece se você não escolher outra." : "Foto ou PDF. A gente lê os dados, você só confere."} className="gradient-hero shadow-medium min-h-24 w-full py-6 text-xl font-bold" /><div className="grid grid-cols-2 gap-3"><ZonaArquivo aceita="image/*,.heic,.heif" onArquivo={(f) => void receive(f)} className="tap flex flex-col items-center justify-center rounded-lg border-2 border-border text-lg font-bold"><FileImage size={28} /> Foto da galeria</ZonaArquivo><ZonaArquivo aceita={ACEITA_QUALQUER} colar onArquivo={(f) => void receive(f)} className="tap flex flex-col items-center justify-center rounded-lg border-2 border-border text-lg font-bold"><FileUp size={28} /> Arquivo ou PDF</ZonaArquivo></div><DicaArrastar />{!editDoc && <button type="button" onClick={() => { setManual(true); if (!tipo) setTipo("outro"); }} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><Keyboard size={26} /> Não tenho foto · digitar os dados</button>}</>}
     {!tipo && <section><h2 className="mb-3 text-2xl">Ou escolha o tipo</h2><div className="grid grid-cols-3 gap-2">{TIPOS.map(([id, label]) => <button key={id} onClick={() => setTipo(id)} className="tap rounded-lg border-2 border-border p-2 text-base font-bold">{label}</button>)}</div></section>}
-    {(file || editDoc || manual) && <form action={(fd) => void save(fd)} className="space-y-4">{file && <div className="rounded-lg border border-border bg-card p-3"><Miniatura src={previaDe(file)} className="h-40 w-full rounded-lg" /><p className="mt-3 flex items-center gap-2 text-lg font-bold">{reading ? <><Loader2 size={24} className="animate-spin" /> Lendo…</> : readState === "ok" ? precisaConfirmar ? <><AlertTriangle size={24} className="text-warn" /> Lemos a foto · confira os campos em destaque</> : <><CheckCircle2 size={24} className="text-ok" /> Lemos a foto · confira</> : readState === "fail" ? "Não deu para ler" : null}</p><div className="flex flex-wrap gap-4">{readState === "fail" && !reading && <button type="button" onClick={() => void receive(file, tipo || undefined)} className="tap inline-flex items-center gap-2 text-lg font-bold text-accent"><RotateCw size={22} /> Tentar ler de novo</button>}<button type="button" onClick={() => { setFile(null); setReadState("idle"); }} className="tap text-lg font-bold text-accent">Trocar arquivo</button></div></div>}{manual && !file && <button type="button" onClick={() => setManual(false)} className="tap text-lg font-bold text-accent">Usar foto em vez de digitar</button>}
-      <Campo rotulo="Tipo"><select value={tipo} onChange={(e) => setTipo(e.target.value)} className={inputCls}>{TIPOS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></Campo>
+    {(file || editDoc || manual) && <form action={(fd) => void save(fd)} className="space-y-4">{file && <div className="rounded-lg border border-border bg-card p-3">{previa ? <img src={previa} alt="Página do PDF que está sendo lida" className="h-40 w-full rounded-lg bg-muted object-contain" /> : <Miniatura src={previaDe(file)} className="h-40 w-full rounded-lg" />}<p className="mt-3 flex items-center gap-2 text-lg font-bold">{reading ? <><Loader2 size={24} className="animate-spin" /> Lendo…</> : readState === "ok" ? precisaConfirmar || conferir ? <><AlertTriangle size={24} className="text-warn" /> Lemos o documento · confira os campos</> : <><CheckCircle2 size={24} className="text-ok" /> Lemos a foto · confira</> : readState === "fail" ? "Não deu para ler" : readState === "anexo" ? "Arquivo anexado · digite os dados" : null}</p>{readState === "fail" && motivo && <p className="text-base text-muted-foreground">{motivo}</p>}<div className="flex flex-wrap gap-4">{readState === "fail" && !reading && <button type="button" onClick={() => void receive(file, tipo || undefined)} className="tap inline-flex items-center gap-2 text-lg font-bold text-accent"><RotateCw size={22} /> Tentar ler de novo</button>}<button type="button" onClick={() => { setFile(null); setReadState("idle"); setPrevia(null); }} className="tap text-lg font-bold text-accent">Trocar arquivo</button></div></div>}{manual && !file && <button type="button" onClick={() => setManual(false)} className="tap text-lg font-bold text-accent">Usar foto em vez de digitar</button>}
+      <Campo rotulo="Tipo"><select value={tipo} onChange={(e) => setTipo(e.target.value)} className={inputCls}>{TODOS_TIPOS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></Campo>
       {campos.map(([key,label,input]) => <Campo key={key} rotulo={(ROTULOS[tipo] ?? {})[key] ?? label}><input name={key} type={input} max={input === "date" ? "2099-12-31" : undefined} inputMode={ehCnh && key === "numero" ? "numeric" : undefined} maxLength={ehCnh && key === "numero" ? 11 : undefined} placeholder={ehCnh && key === "numero" && regFalhou && !fields.numero ? "Não deu para ler o nº de registro · digite" : undefined} value={fields[key] ?? ""} onChange={(e) => setFields((old) => ({ ...old, [key]: ehCnh && key === "numero" ? e.target.value.replace(/\D/g, "") : e.target.value }))} className={inputCls + ambar(key)} />{ehCnh && key === "numero" && fields.numero && <p className={`mt-1 text-base font-bold ${numeroCnhInvalido ? "text-warn" : "text-ok"}`}>{numeroCnhInvalido ? (fields.numero.length < 11 ? `${fields.numero.length} de 11 dígitos` : "Número não confere · verifique") : "Número confere"}</p>}</Campo>)}
       {tipo === "passaporte" && <><Campo rotulo="Data de nascimento"><input name="nascimento" type="date" max="2099-12-31" value={fields.nascimento ?? ""} onChange={(e) => setFields((o) => ({ ...o, nascimento: e.target.value }))} className={inputCls} /></Campo><Campo rotulo={`Nacionalidade${fields.nacionalidade ? ` · ${nomePais3(fields.nacionalidade)}` : ""}`}><input name="nacionalidade" type="text" maxLength={3} placeholder="BRA" autoCapitalize="characters" value={fields.nacionalidade ?? ""} onChange={(e) => setFields((o) => ({ ...o, nacionalidade: e.target.value.toUpperCase() }))} className={inputCls} /></Campo></>}
       {precisaConfirmar && <p className="rounded-lg border-2 border-warn p-3 text-lg">Algumas datas ou o número não conferem. Confira os campos em destaque antes de confirmar.</p>}
