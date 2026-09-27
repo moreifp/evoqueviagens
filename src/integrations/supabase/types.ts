@@ -441,13 +441,19 @@ export type Database = {
           data: string
           deleted_at: string | null
           descricao: string
+          divisao: string
           editado_em: string | null
           id: string
+          item_id: string | null
+          item_tipo: string | null
           moeda_original: string
           pago_por: string | null
+          pessoal: boolean
+          pessoal_de: string | null
           taxa_cambio: number
           taxa_data: string | null
           taxa_fonte: string | null
+          taxa_provisoria: boolean
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -460,13 +466,19 @@ export type Database = {
           data: string
           deleted_at?: string | null
           descricao: string
+          divisao?: string
           editado_em?: string | null
           id?: string
+          item_id?: string | null
+          item_tipo?: string | null
           moeda_original: string
           pago_por?: string | null
+          pessoal?: boolean
+          pessoal_de?: string | null
           taxa_cambio: number
           taxa_data?: string | null
           taxa_fonte?: string | null
+          taxa_provisoria?: boolean
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -479,13 +491,19 @@ export type Database = {
           data?: string
           deleted_at?: string | null
           descricao?: string
+          divisao?: string
           editado_em?: string | null
           id?: string
+          item_id?: string | null
+          item_tipo?: string | null
           moeda_original?: string
           pago_por?: string | null
+          pessoal?: boolean
+          pessoal_de?: string | null
           taxa_cambio?: number
           taxa_data?: string | null
           taxa_fonte?: string | null
+          taxa_provisoria?: boolean
           trip_id?: string
           valor_moeda_base?: number
           valor_original?: number
@@ -499,10 +517,155 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "expense_pessoal_de_fkey"
+            columns: ["pessoal_de"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "expense_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_log: {
+        Row: {
+          acao: string
+          antes: Json | null
+          depois: Json | null
+          em: string
+          expense_id: string | null
+          id: string
+          por: string | null
+          settlement_id: string | null
+        }
+        Insert: {
+          acao: string
+          antes?: Json | null
+          depois?: Json | null
+          em?: string
+          expense_id?: string | null
+          id?: string
+          por?: string | null
+          settlement_id?: string | null
+        }
+        Update: {
+          acao?: string
+          antes?: Json | null
+          depois?: Json | null
+          em?: string
+          expense_id?: string | null
+          id?: string
+          por?: string | null
+          settlement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_log_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_log_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_payer: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          expense_id: string
+          id: string
+          person_id: string
+          valor_moeda_base: number
+          valor_original: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          expense_id: string
+          id?: string
+          person_id: string
+          valor_moeda_base: number
+          valor_original: number
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          expense_id?: string
+          id?: string
+          person_id?: string
+          valor_moeda_base?: number
+          valor_original?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_payer_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_payer_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_share: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          expense_id: string
+          id: string
+          person_id: string
+          peso: number
+          valor_moeda_base: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          expense_id: string
+          id?: string
+          person_id: string
+          peso?: number
+          valor_moeda_base: number
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          expense_id?: string
+          id?: string
+          person_id?: string
+          peso?: number
+          valor_moeda_base?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_share_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_share_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
             referencedColumns: ["id"]
           },
         ]
@@ -1368,6 +1531,67 @@ export type Database = {
           },
         ]
       }
+      settlement: {
+        Row: {
+          created_at: string
+          data: string
+          de_person_id: string
+          deleted_at: string | null
+          id: string
+          nota: string | null
+          para_person_id: string
+          registrado_por: string | null
+          trip_id: string
+          valor_moeda_base: number
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          de_person_id: string
+          deleted_at?: string | null
+          id?: string
+          nota?: string | null
+          para_person_id: string
+          registrado_por?: string | null
+          trip_id: string
+          valor_moeda_base: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          de_person_id?: string
+          deleted_at?: string | null
+          id?: string
+          nota?: string | null
+          para_person_id?: string
+          registrado_por?: string | null
+          trip_id?: string
+          valor_moeda_base?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_de_person_id_fkey"
+            columns: ["de_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_para_person_id_fkey"
+            columns: ["para_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_grant: {
         Row: {
           blocos: string[]
@@ -2191,6 +2415,10 @@ export type Database = {
           subtipo: string
           titulo: string
         }[]
+      }
+      salvar_despesa: {
+        Args: { _d: Json; _pagadores: Json; _partes: Json }
+        Returns: string
       }
       somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
       telefones_viagem: {
