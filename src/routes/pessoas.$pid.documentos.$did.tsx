@@ -42,7 +42,7 @@ function Documento() {
     if (!navigator.onLine) return toast.error("Precisa de internet para ler a foto.");
     setRelendo(true); setPropostas(null);
     try {
-      const blob = await (await fetch(url)).blob(); const fonte = blob.type === "application/pdf" || /\.pdf$/i.test(primary?.storage_path ?? "") ? await pdfParaImagem(blob) : blob; const r = await readPassport({ data: { imagem: await blobParaDataUrl(await melhorarDocumentoParaOcr(fonte)) } }); if (!r.ok) throw new Error();
+      const blob = await (await fetch(url)).blob(); const ehPdfArq = blob.type === "application/pdf" || /\.pdf$/i.test(primary?.storage_path ?? ""); const fonte = ehPdfArq ? await pdfParaImagem(blob) : blob; const r = await readPassport({ data: { imagem: await blobParaDataUrl(await melhorarDocumentoParaOcr(fonte, ehPdfArq ? 3000 : 2200)) } }); if (!r.ok) throw new Error();
       const p = data!.pessoa; const m = r.mrz; const out: Proposta[] = [];
       const add = (chave: string, rotulo: string, atual: string | null | undefined, valor: string | null | undefined, mostrar?: string) => { if (!atual && valor) out.push({ chave, rotulo, valor, mostrar: mostrar ?? valor }); };
       add("nome_no_documento", "Nome no documento", doc.nome_no_documento, m.nomeCompleto);
