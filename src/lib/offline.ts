@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, caixaClaudeQuery, avisosMeusQuery, pedidosRecebidosQuery, pontosQuery } from "./data";
+import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, tripMembrosQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, caixaClaudeQuery, avisosMeusQuery, pedidosRecebidosQuery, pontosQuery } from "./data";
 import { logoCia, logoSite } from "./logos";
 import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
@@ -74,6 +74,7 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
           qc.fetchQuery({ ...tripQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...lodgingsQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...expensesQuery(t.id), staleTime: 0 }),
+          qc.fetchQuery({ ...tripMembrosQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...membersQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...findingsQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...flightStatusQuery(t.id), staleTime: 0 }),

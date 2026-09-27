@@ -148,7 +148,22 @@ export type Expense = {
   valor_moeda_base: number;
   pago_por: string | null;
   comprovante_url: string | null;
+  criado_por?: string | null;
+  created_at?: string;
+  editado_em?: string | null;
+  taxa_fonte?: string | null;
+  taxa_data?: string | null;
+  pessoal?: boolean;
+  pessoal_de?: string | null;
+  divisao?: "igual" | "valor" | "pct" | "cotas";
+  taxa_provisoria?: boolean;
+  item_tipo?: string | null;
+  item_id?: string | null;
+  pagadores: { id: string; person_id: string; valor_original: number; valor_moeda_base: number; deleted_at: string | null }[];
+  partes: { id: string; person_id: string; peso: number; valor_moeda_base: number; deleted_at: string | null }[];
 };
+
+export type MembroTrip = { id: string; person_id: string; papel: string; status: string; entrou_em: string; created_at: string; deleted_at: string | null };
 
 export type ConferenciaNome = { person_id: string; estado: "confere" | "sem_passaporte" | "sem_acesso" | "conferir" };
 
@@ -292,10 +307,21 @@ export const expensesQuery = (tripId: string) =>
       unwrap<Expense[]>(
         db
           .from("expense")
-          .select("*")
+          .select("*, pagadores:expense_payer(*), partes:expense_share(*)")
           .eq("trip_id", tripId)
           .is("deleted_at", null)
-          .order("data", { ascending: false }),
+          .order("data", { ascending: false })
+          .order("created_at", { ascending: false }),
+      ).then((l) => l.map((e) => ({ ...e, pagadores: (e.pagadores ?? []).filter((p) => !p.deleted_at), partes: (e.partes ?? []).filter((p) => !p.deleted_at) }))),
+  });
+
+/** Participantes com data de entrada e ordem estável, para a divisão. */
+export const tripMembrosQuery = (tripId: string) =>
+  queryOptions({
+    queryKey: ["trip_membros", tripId],
+    queryFn: () =>
+      unwrap<MembroTrip[]>(
+        db.from("trip_member").select("id, person_id, papel, status, entrou_em, created_at, deleted_at").eq("trip_id", tripId).is("deleted_at", null).order("created_at"),
       ),
   });
 
