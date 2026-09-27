@@ -1,4 +1,4 @@
-import { urlDoAnexo } from "@/lib/anexosOffline";
+import { abrirAnexo, urlDoAnexo } from "@/lib/anexosOffline";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
