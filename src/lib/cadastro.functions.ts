@@ -287,8 +287,6 @@ All dates as DD/MM/YYYY. NEVER put 1ª HABILITAÇÃO or DATA NASCIMENTO into val
           cnh: { numeros_11: nums, cpf: t(o.cpf)?.replace(/\D/g, "") || null },
         };
       }
-
-      const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().slice(0, 200) : null);
       return {
         ok: true as const,
         campos: {
@@ -300,7 +298,10 @@ All dates as DD/MM/YYYY. NEVER put 1ª HABILITAÇÃO or DATA NASCIMENTO into val
           data_nascimento: dataOk(o.nascimento),
           sexo: o.sexo === "M" || o.sexo === "F" ? o.sexo : null,
           detalhe: t(o.detalhe),
+          primeira_habilitacao: null as string | null,
+          local_expedicao: null as string | null,
         },
+        cnh: null,
       };
     } catch {
       return { ok: false as const };
