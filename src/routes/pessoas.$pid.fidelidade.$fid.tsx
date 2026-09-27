@@ -5,6 +5,7 @@ import { Copy, ExternalLink, Eye, EyeOff, ImagePlus, LockKeyhole, Pencil, Trash2
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { Campo, inputCls } from "@/components/Form";
+import { dataBR } from "@/components/FichaPartes";
 import { ACEITA_FOTO, TirarFoto, ZonaArquivo } from "@/components/ArquivoFoto";
 import { DestravarCofre } from "@/components/Cofre";
 import { euQuery } from "@/lib/eu";
@@ -79,6 +80,7 @@ function Programa() {
 
   return <div className="min-h-screen bg-background pb-20"><Topo titulo={item.programa} voltarPara="/pessoas/$pid/fidelidade" voltarParams={{ pid }} /><main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
     <section className="rounded-lg bg-primary p-5 text-primary-foreground shadow-medium"><div className="flex justify-between text-base font-bold"><span>CARTÃO FIDELIDADE</span>{item.categoria && <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">{item.categoria}</span>}</div><h2 className="mt-6 text-2xl">{item.programa}</h2><div className="mt-4 flex items-center gap-2"><span className="mono-code min-w-0 flex-1 break-all text-xl">{item.numero || "Sem número"}</span><button onClick={() => copy(item.numero)} aria-label="Copiar número" className="tap"><Copy size={25} /></button></div><p className="mt-3 text-base">{item.titular || data.pessoa.nome}</p></section>
+    {item.expira_em && (() => { const hoje = new Date().toISOString().slice(0, 10); const vencido = item.expira_em < hoje; const perto = !vencido && item.expira_em <= new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10); return <p className={`rounded-lg border-2 p-4 text-lg font-bold ${vencido ? "border-danger text-danger" : perto ? "border-warn text-warn" : "border-border text-muted-foreground"}`}>{vencido ? "Venceu em " : "Vence em "}{dataBR(item.expira_em)}{vencido ? " · renove ou use os pontos" : perto ? " · está perto" : ""}</p>; })()}
     {item.cartao_path && cardUrl && <img src={cardUrl} alt="Foto do cartão" className="max-h-64 w-full rounded-lg object-contain" />}
     {owner && item.cartao_path && <button onClick={() => void removeCard()} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"><Trash2 size={24} /> Tirar foto do cartão</button>}
     {item.site_url && <a href={item.site_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold">Abrir o site do programa <ExternalLink size={24} /></a>}
