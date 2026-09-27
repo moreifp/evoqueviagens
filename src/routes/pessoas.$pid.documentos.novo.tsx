@@ -47,18 +47,25 @@ function NovoDocumento() {
 
   async function save(form: FormData) {
     if (!owner || !tipo) return; setSaving(true);
+    let passo = "Não deu para salvar os dados do documento.";
     try {
       const id = editDoc?.id ?? crypto.randomUUID(); const values = { person_id: pid, tipo, numero: String(form.get("numero") || "") || null, nome_no_documento: String(form.get("nome_no_documento") || "") || null, pais_emissor: String(form.get("pais_emissor") || "") || null, sexo: String(form.get("sexo") || "") || null, detalhe: String(form.get("detalhe") || "") || null, emissao: String(form.get("emissao") || "") || null, validade: String(form.get("validade") || "") || null };
       if (editDoc) { const changed = Object.fromEntries(Object.entries(values).filter(([key, value]) => key !== "person_id" && value !== editDoc[key as keyof typeof editDoc])) as Partial<typeof values>; if (Object.keys(changed).length) { const updated = await supabase.from("traveler_document").update(changed).eq("id", id); if (updated.error) throw updated.error; } } else { const inserted = await supabase.from("traveler_document").insert({ id, ...values }); if (inserted.error) throw inserted.error; }
+      passo = "Os dados foram salvos, mas não deu para atualizar a ficha (nascimento/nacionalidade).";
       if (tipo === "passaporte") await salvarDadosPessoaPassaporte(data!.pessoa, { nascimento: String(form.get("nascimento") || ""), nacionalidade: String(form.get("nacionalidade") || ""), nome: values.nome_no_documento });
       if (file) {
+        passo = "Os dados foram salvos, mas não deu para enviar a foto.";
         const prepared = await prepararArquivo(file); const path = `${pid}/docs/${id}/${crypto.randomUUID()}.${prepared.ext}`;
         const uploaded = await supabase.storage.from("documentos").upload(path, prepared.blob, { contentType: prepared.contentType }); if (uploaded.error) throw uploaded.error;
-        const attachment = await supabase.from("document_attachment").insert({ document_id: id, person_id: pid, storage_path: path, file_name: file.name || `documento.${prepared.ext}`, content_type: prepared.contentType, size_bytes: prepared.blob.size, is_primary: true }); if (attachment.error) throw attachment.error;
+        try {
+          // A foto anterior continua como anexo, só deixa de ser a principal.
+          const demote = await supabase.from("document_attachment").update({ is_primary: false }).eq("document_id", id).eq("is_primary", true).is("deleted_at", null); if (demote.error) throw demote.error;
+          const attachment = await supabase.from("document_attachment").insert({ document_id: id, person_id: pid, storage_path: path, file_name: file.name || `documento.${prepared.ext}`, content_type: prepared.contentType, size_bytes: prepared.blob.size, is_primary: true }); if (attachment.error) throw attachment.error;
+        } catch (e) { await supabase.storage.from("documentos").remove([path]); throw e; }
         await supabase.from("traveler_document").update({ arquivo_path: path }).eq("id", id);
       }
       await qc.invalidateQueries({ queryKey: ["eu", pid] }); await qc.invalidateQueries({ queryKey: ["documento", pid, id] }); toast.success(`${nomeDocumento(tipo)} salvo`); nav({ to: "/pessoas/$pid/documentos/$did", params: { pid, did: id } });
-    } catch { toast.error("Não foi possível salvar agora. Tente novamente com segurança."); setSaving(false); }
+    } catch { toast.error(passo); setSaving(false); }
   }
 
   return <div className="min-h-screen bg-background pb-20"><Topo titulo={editDoc ? `Editar ${nomeDocumento(editDoc.tipo)}` : "Adicionar documento"} voltarPara="/pessoas/$pid" voltarParams={{ pid }} /><main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
