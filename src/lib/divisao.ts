@@ -111,7 +111,7 @@ export function dividasCruzadas(despesas: DespesaSaldo[], acertos: AcertoSaldo[]
 }
 
 /** De onde vem o saldo de uma pessoa (centavos). */
-export function origemSaldo(pid: string, despesas: (DespesaSaldo & { id: string })[], acertos: (AcertoSaldo & { id: string })[]) {
+export function origemSaldo<A extends AcertoSaldo & { id: string }>(pid: string, despesas: (DespesaSaldo & { id: string })[], acertos: A[]) {
   const divid = despesas.filter((d) => !d.pessoal);
   const pagou = divid.flatMap((d) => d.pagadores.filter((p) => p.person_id === pid).map((p) => ({ id: d.id, c: centavos(p.valor_moeda_base) })));
   const parte = divid.flatMap((d) => d.partes.filter((p) => p.person_id === pid).map((p) => ({ id: d.id, c: centavos(p.valor_moeda_base) })));

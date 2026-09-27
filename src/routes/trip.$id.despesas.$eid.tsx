@@ -70,7 +70,7 @@ function Detalhe() {
       const { pagadores: _p, partes: _s, ...resto } = d;
       const nd = { ...resto, taxa_cambio: c.taxa, valor_moeda_base: totalC / 100, taxa_fonte: c.fonte, taxa_data: c.data, taxa_provisoria: false };
       const pagadoresJ = pags.map((p) => ({ person_id: p.person_id, valor_original: p.valor_original, valor_moeda_base: p.c / 100 }));
-      const partesJ = d.pessoal ? [] : d.partes.map((p) => ({ person_id: p.person_id, peso: Number(p.peso ?? 1), valor_moeda_base: (partes.get(p.person_id) ?? 0) / 100 }));
+      const partesJ = d.pessoal ? [] : d.partes.map((p) => ({ person_id: p.person_id, peso: d.divisao === "valor" ? (partes.get(p.person_id) ?? 0) / 100 : Number(p.peso ?? 1), valor_moeda_base: (partes.get(p.person_id) ?? 0) / 100 }));
       await mutar({ tipo: "rpc", funcao: "salvar_despesa", args: { _d: nd, _pagadores: pagadoresJ, _partes: partesJ } });
       await qc.invalidateQueries({ queryKey: key });
       toast.success(`Taxa atualizada · ${c.fonte} · ${dataBRCurta(c.data)}`);
