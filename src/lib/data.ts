@@ -167,7 +167,7 @@ export type Expense = {
 
 export type MembroTrip = { id: string; person_id: string; papel: string; status: string; entrou_em: string; created_at: string; deleted_at: string | null };
 
-export type ConferenciaNome = { person_id: string; estado: "confere" | "sem_passaporte" | "sem_acesso" | "conferir" };
+export type ConferenciaNome = { person_id: string; estado: "confere" | "sem_passaporte" | "sem_acesso" | "conferir" | "diferente" };
 
 export type Person = {
   id: string;
