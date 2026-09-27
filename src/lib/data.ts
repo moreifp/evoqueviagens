@@ -392,11 +392,13 @@ export async function softDelete(tabela: string, id: string) {
 export type Cotacao = { taxa: number; fonte: string; data: string };
 
 /** Cotação para qualquer código ISO: Frankfurter (BCE) e depois open.er-api. Null = taxa manual. */
-export async function buscarCotacaoDetalhe(de: string, para: string): Promise<Cotacao | null> {
+export async function buscarCotacaoDetalhe(de: string, para: string, dia?: string): Promise<Cotacao | null> {
   const hoje = new Date().toISOString().slice(0, 10);
   if (de === para) return { taxa: 1, fonte: "mesma moeda", data: hoje };
+  // Data passada: taxa histórica daquele dia. Hoje ou futuro: a mais recente.
+  const caminho = dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) && dia < hoje ? dia : "latest";
   try {
-    const r = await fetch(`https://api.frankfurter.dev/v1/latest?base=${encodeURIComponent(de)}&symbols=${encodeURIComponent(para)}`);
+    const r = await fetch(`https://api.frankfurter.dev/v1/${caminho}?base=${encodeURIComponent(de)}&symbols=${encodeURIComponent(para)}`);
     if (r.ok) {
       const j = (await r.json()) as { date?: string; rates?: Record<string, number> };
       const t = j.rates?.[para];
