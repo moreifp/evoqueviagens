@@ -40,31 +40,68 @@ function NovoDocumento() {
   if (numeroCnhInvalido || (ehCnh && regFalhou && !fields.numero)) suspeitos.add("numero");
   const precisaConfirmar = readState === "ok" && suspeitos.size > 0;
 
+  function aplicarPassaporte(r: { mrz: { numero?: string; paisEmissor?: string; nacionalidade?: string; nomeCompleto?: string; sexo?: string | null; validade?: string | null; nascimento?: string | null }; emissao?: string | null }) {
+    const lido: Record<string, string> = { numero: r.mrz.numero ?? "", pais_emissor: r.mrz.paisEmissor || r.mrz.nacionalidade || "", nome_no_documento: r.mrz.nomeCompleto ?? "", sexo: r.mrz.sexo ?? "", validade: r.mrz.validade ?? "", emissao: r.emissao ?? "", nascimento: r.mrz.nascimento ?? "", nacionalidade: r.mrz.nacionalidade ?? "" };
+    setFields((old) => { const n = { ...old }; for (const [k, v] of Object.entries(lido)) if (v && !n[k]) n[k] = v; return n; });
+  }
+
+  async function aplicarOutro(r: Awaited<ReturnType<typeof readDoc>>, detected: string) {
+    if (!r.ok) throw new ErroLeitura("chamada da IA", "Não achamos os dados nesse documento");
+    const { data_nascimento, ...resto } = r.campos;
+    const lido: Record<string, string> = Object.fromEntries(Object.entries(resto).filter(([, v]) => v).map(([k, v]) => [k, String(v)]));
+    if (detected === "cnh") {
+      const reg = escolherRegistro(r.campos.numero, r.cnh?.numeros_11 ?? [], data!.pessoa.cpf || r.cnh?.cpf);
+      lido.numero = reg ?? ""; setRegFalhou(!reg);
+      // Sem data de emissão: fica vazia (nunca copiar a 1ª habilitação).
+      if (!r.campos.emissao) lido.emissao = "";
+    }
+    setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
+  }
+
+  async function lerImagem(origem: Blob, forced: string | undefined, pdf: boolean) {
+    let image: string;
+    try { image = await blobParaDataUrl(await melhorarDocumentoParaOcr(origem, pdf ? 3000 : 2200)); }
+    catch (e) { throw new ErroLeitura("melhorar imagem", "Não deu para preparar a imagem", e); }
+    let detected = forced || tipo;
+    if (!detected) { const r = await identify({ data: { imagem: image } }); detected = r.ok ? r.tipo : "outro"; setTipo(detected); }
+    if (detected === "passaporte") {
+      const r = await readPassport({ data: { imagem: image } });
+      if (!r.ok) throw new ErroLeitura("MRZ", ("motivo" in r && r.motivo) || "Não achamos as linhas de baixo do passaporte");
+      aplicarPassaporte(r); if (r.conferir) setConferir(true);
+    } else await aplicarOutro(await readDoc({ data: { imagem: image, tipo: detected } }), detected);
+  }
+
   async function receive(next: File, forced?: string) {
-    setFile(next); setReading(true); setReadState("idle"); setRegFalhou(false);
+    setFile(next); setReading(true); setReadState("idle"); setRegFalhou(false); setMotivo(""); setConferir(false); setPrevia(null);
+    const alvo = forced || tipo;
     try {
-      const prepared = await prepararArquivo(next, 2200);
-      // Arquivos que não são foto nem PDF (eml, doc, xls…) só anexam, sem leitura.
-      if (prepared.ext !== "jpg" && prepared.ext !== "heic" && prepared.ext !== "pdf") { setTipo(forced || tipo || "outro"); setReadState("fail"); return; }
-      // PDF: as 2 primeiras páginas viram imagem no aparelho; o PDF original é o anexo.
-      const origem = prepared.ext === "pdf" ? await pdfParaImagem(next) : prepared.blob;
-      const enhanced = await melhorarDocumentoParaOcr(origem); const image = await blobParaDataUrl(enhanced);
-      let detected = forced || tipo; if (!detected) { const r = await identify({ data: { imagem: image } }); detected = r.ok ? r.tipo : "outro"; setTipo(detected); }
-      if (detected === "passaporte") { const r = await readPassport({ data: { imagem: image } }); if (r.ok) { const lido: Record<string, string> = { numero: r.mrz.numero ?? "", pais_emissor: r.mrz.paisEmissor || r.mrz.nacionalidade || "", nome_no_documento: r.mrz.nomeCompleto ?? "", sexo: r.mrz.sexo ?? "", validade: r.mrz.validade ?? "", emissao: r.emissao ?? "", nascimento: r.mrz.nascimento ?? "", nacionalidade: r.mrz.nacionalidade ?? "" }; setFields((old) => { const n = { ...old }; for (const [k, v] of Object.entries(lido)) if (v && !n[k]) n[k] = v; return n; }); } else throw new Error(); }
-      else {
-        const r = await readDoc({ data: { imagem: image, tipo: detected } }); if (!r.ok) throw new Error();
-        const { data_nascimento, ...resto } = r.campos;
-        const lido: Record<string, string> = Object.fromEntries(Object.entries(resto).filter(([, v]) => v).map(([k, v]) => [k, String(v)]));
-        if (detected === "cnh") {
-          const reg = escolherRegistro(r.campos.numero, r.cnh?.numeros_11 ?? [], data!.pessoa.cpf || r.cnh?.cpf);
-          lido.numero = reg ?? ""; setRegFalhou(!reg);
-          // Sem data de emissão: fica vazia (nunca copiar a 1ª habilitação).
-          if (!r.campos.emissao) lido.emissao = "";
-        }
-        setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
+      // E-mail (.eml): lê o texto; o arquivo fica como anexo.
+      if (/\.eml$/i.test(next.name) || next.type === "message/rfc822") {
+        const tipoDoc = alvo && alvo !== "passaporte" ? alvo : "outro";
+        setTipo(tipoDoc);
+        const texto = textoDoEml(await next.text()).slice(0, 55_000);
+        if (!texto) throw new ErroLeitura("ler e-mail", "O e-mail está vazio");
+        await aplicarOutro(await readDoc({ data: { imagem: "", tipo: tipoDoc, texto } }), tipoDoc);
+        setConferir(true); setReadState("ok"); return;
       }
-      setReadState("ok");
-    } catch { setReadState("fail"); } finally { setReading(false); }
+      const prepared = await prepararArquivo(next, 2200);
+      // Arquivos que não são foto nem PDF (doc, xls…) só anexam, sem leitura.
+      if (prepared.ext !== "jpg" && prepared.ext !== "heic" && prepared.ext !== "pdf") { setTipo(alvo || "outro"); setReadState("anexo"); return; }
+      if (prepared.ext !== "pdf") { await lerImagem(prepared.blob, forced, false); setReadState("ok"); return; }
+      // PDF: uma página por vez (1ª; se falhar, 2ª), sem empilhar. O PDF original é o anexo.
+      let ultimo: unknown = null;
+      for (let n = 1; n <= 2; n++) {
+        const pg = await pdfPagina(next, n);
+        setPrevia(URL.createObjectURL(pg.imagem));
+        try { await lerImagem(pg.imagem, forced, true); setReadState("ok"); return; }
+        catch (e) { ultimo = e; console.warn(`LEITURA_PDF pagina ${n}`, e); if (n >= pg.total) break; }
+      }
+      throw ultimo;
+    } catch (e) {
+      const er = e instanceof ErroLeitura ? e : new ErroLeitura("chamada da IA", "A leitura automática falhou", e);
+      console.error(`LEITURA_DOCUMENTO falhou no passo: ${er.passo}`, er.causa ?? er);
+      setMotivo(er.motivo); setReadState("fail");
+    } finally { setReading(false); }
   }
 
   async function save(form: FormData) {
