@@ -65,7 +65,7 @@ function Bilhetes() {
   const pessoa = sel ? membros.find((m) => m.person_id === sel) : undefined;
   if (pessoa) {
     const meus = new Set(detalhes.filter((b) => b.passageiros.some((q) => q.person_id === pessoa.person_id)).map((b) => b.id));
-    for (let i = itens.length - 1; i >= 0; i--) if (!meus.has(itens[i].item_id)) itens.splice(i, 1);
+    for (let i = itens.length - 1; i >= 0; i--) if (!meus.has(itens[i]!.item_id)) itens.splice(i, 1);
   }
   const bilhetes = itens;
   const nome = (pid: string) => {
