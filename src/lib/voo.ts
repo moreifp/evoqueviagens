@@ -108,3 +108,25 @@ export function ehAVez(partidaMs: number, chegadaMs: number, ultimaMs: number | 
   if (agora >= partidaMs - 24 * H) return desde(partidaMs - 24 * H);
   return false;
 }
+
+/**
+ * Identidade do VOO (não do registro): companhia IATA + número só dígitos + dia local da partida.
+ * "LATAM Airlines" + "LA 8060" = "LA" + "8060". Sem número → null (não agrupa).
+ */
+export function chaveVoo(b: { companhia: string | null; numero: string | null; partida_utc: string; partida_tz: string }): string | null {
+  const bruto = (b.numero ?? "").toUpperCase().replace(/[\s-]+/g, "");
+  const digitos = bruto.replace(/^([A-Z]{2}|[A-Z]\d|\d[A-Z])(?=\d)/, "").replace(/\D/g, "").replace(/^0+/, "");
+  if (!digitos) return null;
+  const embutido = /^([A-Z]{2}|[A-Z]\d|\d[A-Z])\d/.exec(bruto)?.[1];
+  const cod = codigoCompanhia(b.companhia) ?? embutido ?? (b.companhia ?? "").trim().toUpperCase();
+  return `${cod}|${digitos}|${dataLocalPartida(b.partida_utc, b.partida_tz)}`;
+}
+
+/** Mesmo voo: mesma chave; localizador igual reforça quando falta companhia. */
+export function mesmoVoo(a: Parameters<typeof chaveVoo>[0] & { grupo_reserva?: string | null }, b: Parameters<typeof chaveVoo>[0] & { grupo_reserva?: string | null }) {
+  const ka = chaveVoo(a), kb = chaveVoo(b);
+  if (ka && ka === kb) return true;
+  if (!ka || !kb) return false;
+  const [ca, na, da] = ka.split("|"), [cb, nb, db] = kb.split("|");
+  return na === nb && da === db && (!ca || !cb) && !!a.grupo_reserva && a.grupo_reserva === b.grupo_reserva;
+}

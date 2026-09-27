@@ -10,7 +10,7 @@ import { mutar } from "@/lib/outbox";
 import { aviso, naTela } from "@/lib/itens";
 import { textoBagagem, pegarBagagem } from "@/lib/bagagem";
 import { StatusVoo } from "@/components/StatusVoo";
-import type { StatusVoo as StatusVooT } from "@/lib/voo";
+import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
 import { useState } from "react";
 import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
@@ -67,6 +67,16 @@ function Bilhetes() {
     const meus = new Set(detalhes.filter((b) => b.passageiros.some((q) => q.person_id === pessoa.person_id)).map((b) => b.id));
     for (let i = itens.length - 1; i >= 0; i--) if (!meus.has(itens[i]!.item_id)) itens.splice(i, 1);
   }
+  // Mesmo voo em registros diferentes (um por pessoa) = um cartão só na visão "Todos".
+  const grupoDe = (b: Ticket) => { const k = chaveVoo(b); return k ? detalhes.filter((x) => chaveVoo(x) === k) : [b]; };
+  if (!pessoa) {
+    const vistos = new Set<string>();
+    for (let i = 0; i < itens.length; i++) {
+      const b = porId.get(itens[i]!.item_id); const k = b && chaveVoo(b);
+      if (!k) continue;
+      if (vistos.has(k)) itens.splice(i--, 1); else vistos.add(k);
+    }
+  }
   const bilhetes = itens;
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
@@ -97,7 +107,7 @@ function Bilhetes() {
             <div className="mt-2 space-y-3">
               {itens.map((r) => {
                 const b = porId.get(r.item_id);
-                return b ? <CartaoEmbarque key={r.item_id} b={b} s={status?.[b.id]} editar={r.editar} nome={nome} dono={dono} pessoa={pessoa?.person_id} membros={membros} /> : <CartaoResumo key={r.item_id} r={r} />;
+                return b ? <CartaoEmbarque key={r.item_id} b={b} grupo={grupoDe(b)} s={status?.[b.id]} editar={r.editar} nome={nome} dono={dono} pessoa={pessoa?.person_id} membros={membros} /> : <CartaoResumo key={r.item_id} r={r} />;
               })}
             </div>
           </section>
@@ -153,11 +163,11 @@ function FileiraPessoas({ tripId, membros, sel }: { tripId: string; membros: Mem
   );
 }
 
-function Selo({ b, dono, pessoa }: { b: Ticket; dono?: Membro; pessoa?: string }) {
+function Selo({ pax, dono, pessoa }: { pax: Ticket["passageiros"]; dono?: Membro; pessoa?: string }) {
   if (!dono || pessoa === dono.person_id) return null;
-  const outros = b.passageiros.filter((q) => q.person_id !== dono.person_id);
+  const outros = pax.filter((q) => q.person_id !== dono.person_id);
   if (!pessoa && !outros.length) return null;
-  const mesmo = b.passageiros.some((q) => q.person_id === dono.person_id);
+  const mesmo = pax.some((q) => q.person_id === dono.person_id);
   const n = dono.apelido || dono.nome.split(" ")[0];
   return mesmo ? (
     <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-sm font-bold text-secondary-foreground">Mesmo voo de {n}</span>
@@ -166,9 +176,10 @@ function Selo({ b, dono, pessoa }: { b: Ticket; dono?: Membro; pessoa?: string }
   );
 }
 
-function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Ticket; s?: StatusVooT; editar: boolean; nome: (pid: string) => string; dono?: Membro; pessoa?: string; membros: Membro[] }) {
+function CartaoEmbarque({ b, grupo, s, editar, nome, dono, pessoa, membros }: { b: Ticket; grupo: Ticket[]; s?: StatusVooT; editar: boolean; nome: (pid: string) => string; dono?: Membro; pessoa?: string; membros: Membro[] }) {
   const [aberto, setAberto] = useState(false);
   const qc = useQueryClient();
+  const pax = grupo.flatMap((t) => t.passageiros).filter((q, i, l) => l.findIndex((x) => x.person_id === q.person_id) === i);
   const minha = pessoa ? b.passageiros.find((q) => q.person_id === pessoa) : undefined;
   async function tirar() {
     if (!minha) return;
@@ -220,12 +231,12 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
             Chega {horaNoFuso(b.chegada_utc, b.chegada_tz)} · {dataBRCurta(chaveDia(b.chegada_utc, b.chegada_tz))}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {b.passageiros.length > 1 && (
+            {pax.length > 1 && (
               <span className="flex -space-x-2">
-                {b.passageiros.slice(0, 6).map((q) => <span key={q.id} className="rounded-full border-2 border-card"><AvatarPessoa nome={membros.find((m) => m.person_id === q.person_id)?.nome ?? "?"} foto={null} tamanho={32} /></span>)}
+                {pax.slice(0, 6).map((q) => <span key={q.id} className="rounded-full border-2 border-card"><AvatarPessoa nome={membros.find((m) => m.person_id === q.person_id)?.nome ?? "?"} foto={null} tamanho={32} /></span>)}
               </span>
             )}
-            <Selo b={b} dono={dono} pessoa={pessoa} />
+            <Selo pax={pax} dono={dono} pessoa={pessoa} />
           </div>
         </div>
       </div>
@@ -251,9 +262,9 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           </button>
         </div>
       )}
-      {!pessoa && b.passageiros.length > 0 && (
+      {!pessoa && pax.length > 0 && (
         <ul className="space-y-2 border-t border-border p-4">
-          {b.passageiros.map((p) => (
+          {pax.map((p) => (
             <li key={p.id} className="flex items-baseline justify-between gap-3 text-lg">
               <span className="font-bold text-foreground">{nome(p.person_id)}</span>
               <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}{p.classe ? ` · ${p.classe}` : ""}</span>
@@ -261,7 +272,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
           ))}
         </ul>
       )}
-      <AnexosItem tripId={b.trip_id} itemTipo="ticket" itemId={b.id} podeEditar={editar} />
+      {(pessoa ? [b] : grupo).map((t) => <AnexosItem key={t.id} tripId={t.trip_id} itemTipo="ticket" itemId={t.id} podeEditar={editar} />)}
       {editar && !minha && <AcoesItem tabela="ticket" id={b.id} tripId={b.trip_id} editarPara="/trip/$id/bilhetes/novo" queryKey={ticketsQuery(b.trip_id).queryKey} />}
 
       <Link
@@ -280,7 +291,7 @@ function CartaoEmbarque({ b, s, editar, nome, dono, pessoa, membros }: { b: Tick
       </button>
       {aberto && (
         <dl className="space-y-2 border-t border-border p-4 text-base">
-          {b.passageiros.map((p) => (
+          {pax.map((p) => (
             <Linha key={p.id} rotulo={nome(p.person_id)} valor={[p.nome_no_bilhete, p.eticket && `e-ticket ${p.eticket}`].filter(Boolean).join(" · ") || null} />
           ))}
           <Linha rotulo="Saída" valor={b.origem_cidade} />
