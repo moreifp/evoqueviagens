@@ -4,15 +4,16 @@ import { toast } from "sonner";
 
 /** Sem `capture`: no iPhone aparece o menu Tirar foto · Fototeca · Escolher arquivo. */
 export const ACEITA_FOTO = "image/*,.heic,.heif";
-export const ACEITA_DOC = "image/*,.heic,.heif,application/pdf";
-/** Qualquer arquivo (anexo simples, sem leitura). */
-export const ACEITA_QUALQUER = "*/*";
+export const ACEITA_DOC = "image/*,.heic,.heif,application/pdf,.eml,message/rfc822";
+/** Qualquer arquivo (anexo simples, sem leitura). Vazio = sem restrição; no iPhone, "*/*" esconde arquivos como .eml. */
+export const ACEITA_QUALQUER = "";
 
 export function aceitavel(f: File, aceita: string) {
-  if (aceita.includes("*")) return true;
+  if (!aceita || aceita.includes("*")) return true;
   const img = f.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name);
   const pdf = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
-  return img || (pdf && aceita.includes("pdf"));
+  const eml = f.type === "message/rfc822" || /\.eml$/i.test(f.name);
+  return img || (pdf && aceita.includes("pdf")) || (eml && aceita.includes("eml"));
 }
 
 // Colar (Ctrl/Cmd+V): vai para a área de foto mais recente na tela.
