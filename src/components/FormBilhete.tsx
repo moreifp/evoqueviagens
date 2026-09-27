@@ -117,8 +117,7 @@ export function FormBilhete({ tripId, inicial, copiarDe, para, onMesmoVoo }: { t
     // Mesmo nº de voo e mesma data de um trecho do organizador → vira "mesmo voo" sozinho.
     if (para && onMesmoVoo && x.numero && x.inicio) {
       const dono = membros.find((m) => m.papel === "owner")?.person_id;
-      const lido = { companhia: x.companhia ?? null, numero: x.numero, partida_utc: localParaUtc(dataLocal(x.inicio), f.partida_tz), partida_tz: f.partida_tz, grupo_reserva: x.localizador ?? null };
-      const casa = (b: Ticket) => { try { return mesmoVoo(b, lido) || mesmoVoo(b, { ...lido, partida_utc: localParaUtc(dataLocal(x.inicio), b.partida_tz), partida_tz: b.partida_tz }); } catch { return false; } };
+      const casa = (b: Ticket) => { try { return mesmoVoo(b, { companhia: x.companhia ?? null, numero: x.numero, partida_utc: localParaUtc(dataLocal(x.inicio), b.partida_tz), partida_tz: b.partida_tz, grupo_reserva: x.localizador ?? null }); } catch { return false; } };
       const t = dono && dono !== para ? todosBilhetes.find((b) => b.passageiros.some((q) => q.person_id === dono) && casa(b)) : undefined;
       if (t) {
         const eu = lidos.find((p) => casarPessoa(p.nome, membros) === para);
