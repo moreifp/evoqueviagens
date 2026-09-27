@@ -1043,6 +1043,7 @@ export type Database = {
           nome: string
           nome_como_no_documento: string | null
           owner_id: string | null
+          parent_person_id: string | null
           passo_atual: number
           sexo: string | null
           status: string
@@ -1074,6 +1075,7 @@ export type Database = {
           nome: string
           nome_como_no_documento?: string | null
           owner_id?: string | null
+          parent_person_id?: string | null
           passo_atual?: number
           sexo?: string | null
           status?: string
@@ -1105,6 +1107,7 @@ export type Database = {
           nome?: string
           nome_como_no_documento?: string | null
           owner_id?: string | null
+          parent_person_id?: string | null
           passo_atual?: number
           sexo?: string | null
           status?: string
@@ -1113,7 +1116,15 @@ export type Database = {
           visto_negado?: boolean | null
           visto_negado_detalhe?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "person_parent_person_id_fkey"
+            columns: ["parent_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       person_change: {
         Row: {

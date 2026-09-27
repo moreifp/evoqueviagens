@@ -31,7 +31,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const qc = useQueryClient();
   const [addingDependent, setAddingDependent] = useState(false);
   const [dependentName, setDependentName] = useState("");
-  const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Família", true);
+   const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Dependentes", true);
   const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
@@ -90,7 +90,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
   async function addDependent() {
     if (!dependentName.trim()) return;
-    const { error: insertError } = await supabase.from("person").insert({ nome: dependentName.trim(), apelido: dependentName.trim().split(/\s+/)[0], kind: "dependent", status: "em_andamento" });
+     const { error: insertError } = await supabase.from("person").insert({ nome: dependentName.trim(), apelido: dependentName.trim().split(/\s+/)[0], kind: "dependent", parent_person_id: personId, status: "em_andamento" });
     if (insertError) return;
     setDependentName(""); setAddingDependent(false);
     await qc.invalidateQueries({ queryKey: ["eu", personId] });
@@ -141,7 +141,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           <section id="familia">
             <div className="mb-3 flex items-center justify-between gap-3">
               <button type="button" onClick={alternarFamilia} aria-expanded={familiaAberta} className="tap flex min-h-14 flex-1 items-center justify-between gap-3 text-left">
-                <h2 className="text-2xl">Família</h2>
+                 <h2 className="text-2xl">Dependentes</h2>
                 <ChevronDown size={26} className={`text-muted-foreground transition-transform ${familiaAberta ? "rotate-180" : ""}`} aria-hidden />
               </button>
               <button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button>

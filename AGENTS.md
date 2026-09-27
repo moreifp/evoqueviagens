@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+Dependentes em `person` pertencem à pessoa indicada por `parent_person_id` (não à lista inteira da conta); a conta continua controlando o acesso por `account_id`, preservando a separação entre fichas.

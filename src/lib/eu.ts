@@ -9,6 +9,7 @@ const db = supabase as unknown as { from: (table: string) => any };
 export type EuPessoa = {
   id: string;
   account_id: string | null;
+  parent_person_id: string | null;
   visto_negado?: boolean | null;
   visto_negado_detalhe?: string | null;
   kind: string;
@@ -125,8 +126,8 @@ async function loadEu(personId: string): Promise<EuDados> {
         rows<AnexoDocumento[]>(db.from("document_attachment").select("*").eq("person_id", personId).is("deleted_at", null).order("created_at")),
         rows<Fidelidade[]>(db.from("loyalty_account").select("*").eq("person_id", personId).is("deleted_at", null).order("programa")),
         rows<Preferencias[]>(db.from("person_preferences").select("*").eq("person_id", personId).is("deleted_at", null).limit(1)),
-        pessoa.account_id === uid
-          ? rows<EuPessoa[]>(db.from("person").select("*").eq("account_id", uid).eq("kind", "dependent").is("deleted_at", null).order("nome"))
+         pessoa.account_id === uid
+           ? rows<EuPessoa[]>(db.from("person").select("*").eq("parent_person_id", personId).eq("kind", "dependent").is("deleted_at", null).order("nome"))
           : Promise.resolve([]),
         rows<EuDados["compartilhamentos"]>(db.from("share_grant").select("*").eq("status", "ativo")),
       ]);

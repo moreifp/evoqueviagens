@@ -49,8 +49,17 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
       const eu = await qc.fetchQuery({ ...minhaPessoaQuery(), staleTime: 0 });
       await qc.fetchQuery({ ...pessoasQuery(), staleTime: 0 }).catch(() => null);
       const dados = await qc.fetchQuery({ ...euQuery(eu.id), staleTime: 0 });
-      const fichas: EuDados[] = [dados];
-      for (const d of dados.dependentes) fichas.push(await qc.fetchQuery({ ...euQuery(d.id), staleTime: 0 }));
+       const fichas: EuDados[] = [dados];
+       const visitados = new Set([eu.id]);
+       for (let i = 0; i < fichas.length; i++) {
+         const ficha = fichas[i];
+         if (!ficha) continue;
+         for (const d of ficha.dependentes) {
+           if (visitados.has(d.id)) continue;
+           visitados.add(d.id);
+           fichas.push(await qc.fetchQuery({ ...euQuery(d.id), staleTime: 0 }));
+         }
+       }
       for (const f of fichas) {
         const refs = [f.pessoa.foto_url, ...f.documentos.map((d) => d.arquivo_path), ...f.anexos.map((a) => a.storage_path), ...f.fidelidades.map((l) => l.cartao_path)];
         for (const r of refs) if (r) manter.add(r);
