@@ -126,8 +126,9 @@ function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string
   const [aviso, setAviso] = useState<string | null>(null);
   const primeiro = k.c.nome.split(" ")[0] ?? k.c.nome;
   const achadoAviso = k.achados.find((a) => a.aviso);
+  useEffect(() => { if (window.location.hash === `#p-${k.c.person_id}`) document.getElementById(`p-${k.c.person_id}`)?.scrollIntoView({ block: "start" }); }, [k.c.person_id]);
   return (
-    <article className="shadow-soft overflow-hidden rounded-[18px] border border-border bg-card">
+    <article id={`p-${k.c.person_id}`} className="scroll-mt-4 shadow-soft overflow-hidden rounded-[18px] border border-border bg-card">
       <div className={`flex items-center gap-3 px-4 py-3 ${COR[k.nivel]}`}>
         <span className="flex-1 text-lg font-bold">{k.c.nome}{k.c.kind === "dependent" && k.c.meu ? " · sua família" : ""}</span>
         <span className="text-sm font-bold uppercase tracking-wide">{k.nivel === "esperando" ? (k.semConta ? "Sem conta" : k.c.pedido_aberto ? "Esperando" : "Sem acesso") : k.titulo}</span>
