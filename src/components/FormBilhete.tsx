@@ -22,6 +22,7 @@ import { PreencherArquivo, casarPessoa } from "@/components/PreencherArquivo";
 import type { Leitura } from "@/lib/reserva-ai.functions";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
+import { chaveVoo, mesmoVoo } from "@/lib/voo";
 
 type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string; localizador?: string; classe?: string; bag?: Bagagem | null };
 /** Dados pessoais lidos de uma foto/PDF/e-mail, para o "mesmo voo do organizador". */
@@ -116,9 +117,8 @@ export function FormBilhete({ tripId, inicial, copiarDe, para, onMesmoVoo }: { t
     // Mesmo nº de voo e mesma data de um trecho do organizador → vira "mesmo voo" sozinho.
     if (para && onMesmoVoo && x.numero && x.inicio) {
       const dono = membros.find((m) => m.papel === "owner")?.person_id;
-      const num = x.numero.replace(/\s/g, "").toUpperCase();
-      const dia = x.inicio.slice(0, 10);
-      const t = dono && dono !== para ? todosBilhetes.find((b) => b.passageiros.some((q) => q.person_id === dono) && (b.numero ?? "").replace(/\s/g, "").toUpperCase() === num && utcParaLocal(b.partida_utc, b.partida_tz).slice(0, 10) === dia) : undefined;
+      const lido = { companhia: x.companhia ?? null, numero: x.numero, partida_utc: localParaUtc(dataLocal(x.inicio), f.partida_tz), partida_tz: f.partida_tz, grupo_reserva: x.localizador ?? null };
+      const t = dono && dono !== para ? todosBilhetes.find((b) => b.passageiros.some((q) => q.person_id === dono) && (mesmoVoo(b, lido) || mesmoVoo(b, { ...lido, partida_utc: localParaUtc(dataLocal(x.inicio), b.partida_tz), partida_tz: b.partida_tz }))) : undefined;
       if (t) {
         const eu = lidos.find((p) => casarPessoa(p.nome, membros) === para);
         toast.success(`Mesmo voo de ${membros.find((m) => m.person_id === dono)?.apelido || "organizador"} · ${t.numero}`);
@@ -195,6 +195,17 @@ export function FormBilhete({ tripId, inicial, copiarDe, para, onMesmoVoo }: { t
       .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null, localizador: p.localizador?.trim() || null, classe: p.classe?.trim() || null, ...(p.bag ?? bag) }));
     const ops: Op[] = montarOpsVoo({ tripId, id, valores: claude ? { ...valores, origem: "agente" } as typeof valores : valores, passageiros: paxRows, inicial });
     if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
+    // Voo agrupado: horário/companhia mudam em todos os registros do mesmo voo (dados pessoais não).
+    const irmaos = inicial && chaveVoo(inicial) ? todosBilhetes.filter((b) => b.id !== id && chaveVoo(b) === chaveVoo(inicial)) : [];
+    const CAMPOS_VOO = ["tipo", "companhia", "numero", "origem_iata", "destino_iata", "origem_cidade", "destino_cidade", "partida_utc", "partida_tz", "chegada_utc", "chegada_tz"] as const;
+    for (const b of irmaos) {
+      const mud: Record<string, unknown> = {};
+      for (const k of CAMPOS_VOO) if (valores[k] !== (inicial as Record<string, unknown>)[k] && valores[k] !== (b as Record<string, unknown>)[k]) mud[k] = valores[k];
+      if (Object.keys(mud).length) {
+        ops.push({ tipo: "update", tabela: "ticket", id: b.id, valores: mud });
+        naTela<Ticket>(qc, ticketsQuery(tripId).queryKey, (l) => l.map((x) => (x.id === b.id ? { ...x, ...mud } : x)));
+      }
+    }
 
     // Aparece na tela na hora.
     const novo: Ticket = {
