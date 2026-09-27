@@ -23,9 +23,11 @@ import type { Leitura } from "@/lib/reserva-ai.functions";
 import { anexarImportado, dataLocal } from "@/lib/importAnexo";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
-type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string; bag?: Bagagem | null };
+type Pax = { id: string; person_id: string; nome_no_bilhete: string; assento: string; eticket: string; localizador?: string; classe?: string; bag?: Bagagem | null };
+/** Dados pessoais lidos de uma foto/PDF/e-mail, para o "mesmo voo do organizador". */
+export type PessoalLido = { nome_no_bilhete?: string; assento?: string; eticket?: string; localizador?: string };
 
-export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; inicial?: Ticket; copiarDe?: Ticket }) {
+export function FormBilhete({ tripId, inicial, copiarDe, para, onMesmoVoo }: { tripId: string; inicial?: Ticket; copiarDe?: Ticket; para?: string; onMesmoVoo?: (ticketId: string, lido: PessoalLido) => void }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(tripId));
@@ -45,13 +47,17 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     partida: inicial ? utcParaLocal(inicial.partida_utc, inicial.partida_tz) : "",
     chegada: inicial ? utcParaLocal(inicial.chegada_utc, inicial.chegada_tz) : "",
   }));
+  const { data: todosBilhetes } = useSuspenseQuery(ticketsQuery(tripId));
   const [pax, setPax] = useState<Pax[]>(() =>
+    !inicial && !copiarDe && para ? [{ id: novoId(), person_id: para, nome_no_bilhete: "", assento: "", eticket: "", localizador: "", classe: "" }] :
     (inicial?.passageiros ?? copiarDe?.passageiros ?? []).map((p) => ({
       id: inicial ? p.id : novoId(),
       person_id: p.person_id,
       nome_no_bilhete: p.nome_no_bilhete ?? "",
       assento: p.assento ?? "",
       eticket: p.eticket ?? "",
+      localizador: p.localizador ?? "",
+      classe: p.classe ?? "",
       bag: null as Bagagem | null,
     })),
   );
@@ -107,6 +113,18 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     const novos = lidos.flatMap((p) => { const pid = casarPessoa(p.nome, membros); return pid ? [{ id: novoId(), person_id: pid, nome_no_bilhete: p.nome.toUpperCase(), assento: p.assento ?? "", eticket: p.eticket ?? "" }] : []; });
     if (novos.length) setPax(novos.filter((p, i) => novos.findIndex((q) => q.person_id === p.person_id) === i));
     if (x.bagagem && temBagagem(x.bagagem)) setBag(pegarBagagem(x.bagagem));
+    // Mesmo nº de voo e mesma data de um trecho do organizador → vira "mesmo voo" sozinho.
+    if (para && onMesmoVoo && x.numero && x.inicio) {
+      const dono = membros.find((m) => m.papel === "owner")?.person_id;
+      const num = x.numero.replace(/\s/g, "").toUpperCase();
+      const dia = x.inicio.slice(0, 10);
+      const t = dono && dono !== para ? todosBilhetes.find((b) => b.passageiros.some((q) => q.person_id === dono) && (b.numero ?? "").replace(/\s/g, "").toUpperCase() === num && utcParaLocal(b.partida_utc, b.partida_tz).slice(0, 10) === dia) : undefined;
+      if (t) {
+        const eu = lidos.find((p) => casarPessoa(p.nome, membros) === para);
+        toast.success(`Mesmo voo de ${membros.find((m) => m.person_id === dono)?.apelido || "organizador"} · ${t.numero}`);
+        onMesmoVoo(t.id, { nome_no_bilhete: eu?.nome?.toUpperCase(), assento: eu?.assento ?? undefined, eticket: eu?.eticket ?? undefined, localizador: x.localizador ?? undefined });
+      }
+    }
   }
 
   /** Edição: junta o e-mail da agência só nos campos vazios e mostra o que mudaria. */
@@ -174,7 +192,7 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
     };
     const paxRows = pax
       .filter((p) => p.person_id)
-      .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null, ...(p.bag ?? bag) }));
+      .map((p) => ({ id: p.id, person_id: p.person_id, nome_no_bilhete: p.nome_no_bilhete.trim() || null, assento: p.assento.trim() || null, eticket: p.eticket.trim() || null, localizador: p.localizador?.trim() || null, classe: p.classe?.trim() || null, ...(p.bag ?? bag) }));
     const ops: Op[] = montarOpsVoo({ tripId, id, valores: claude ? { ...valores, origem: "agente" } as typeof valores : valores, passageiros: paxRows, inicial });
     if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
@@ -357,6 +375,12 @@ export function FormBilhete({ tripId, inicial, copiarDe }: { tripId: string; ini
               </Campo>
               <Campo rotulo="E-ticket">
                 <input value={p.eticket} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, eticket: e.target.value } : x)))} className={`${inputCls} mono-code`} />
+              </Campo>
+              <Campo rotulo="Localizador dele(a)">
+                <input value={p.localizador ?? ""} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, localizador: e.target.value.toUpperCase() } : x)))} className={`${inputCls} mono-code`} />
+              </Campo>
+              <Campo rotulo="Classe">
+                <input value={p.classe ?? ""} onChange={(e) => setPax((l) => l.map((x) => (x.id === p.id ? { ...x, classe: e.target.value } : x)))} placeholder="Econômica" className={inputCls} />
               </Campo>
             </div>
             {modoBag === "individual" ? (
