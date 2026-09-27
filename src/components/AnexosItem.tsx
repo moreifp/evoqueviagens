@@ -87,7 +87,7 @@ export function AnexosItem({
           <input
             ref={input}
             type="file"
-            accept="image/*,application/pdf"
+            accept="image/*,application/pdf,.eml,message/rfc822"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
