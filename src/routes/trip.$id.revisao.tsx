@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CircleAlert, TriangleAlert, Lightbulb, ShieldCheck, Plane, BedDouble, CalendarDays, Send, MessageCircle, FileSearch, Settings2 } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { useAuditoria, useDispensar } from "@/lib/auditoria";
+import { chaveAudit, useAuditoria } from "@/lib/auditoria";
+import { NaoMostrar, useEscondidos } from "@/lib/escondidos";
 import type { Achado, ItemRef } from "@/lib/audit";
 import { conferirQuery, entryRulesQuery, ticketsQuery, tripQuery } from "@/lib/data";
-import { ATALHOS, conferir, ordenar, regraPassaporte, type Cartao as CartaoP, type Nivel } from "@/lib/conferencia";
+import { ATALHOS, chaveAchado, conferir, criticoAchado, ordenar, semEscondidos, regraPassaporte, type Cartao as CartaoP, type Nivel } from "@/lib/conferencia";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { mutar } from "@/lib/outbox";
 import { abrirWhatsApp, mensagemLembrete } from "@/lib/links";
@@ -77,7 +78,8 @@ function Pessoas({ id }: { id: string }) {
   }, [bilhetes]);
   const ajuste = (trip as unknown as { regra_passaporte?: { meses?: number; base?: string } | null })?.regra_passaporte ?? null;
   const regra = trip ? regraPassaporte(trip, paises, ajuste) : null;
-  const cartoes = useMemo(() => (trip && regra ? ordenar(lista.map((c) => conferir(c, trip, trip.destino || trip.nome, paises, regra, regras))) : []), [lista, trip, regra, paises, regras]);
+  const { oculto } = useEscondidos();
+  const cartoes = useMemo(() => (trip && regra ? ordenar(lista.map((c) => semEscondidos(conferir(c, trip, trip.destino || trip.nome, paises, regra, regras), id, oculto))) : []), [lista, trip, regra, paises, regras, id, oculto]);
 
   async function salvarRegra(meses: number | null, base: string) {
     const valores = { regra_passaporte: meses ? { meses, base } : null };
@@ -136,10 +138,10 @@ function CartaoPessoa({ k, tripId, destino, fone }: { k: CartaoP; tripId: string
       <div className="space-y-2 p-4">
         {(k.semAcesso || k.semConta) && <p className="text-lg font-semibold text-foreground">{k.titulo}</p>}
         {k.achados.map((a, i) => (
-          <p key={i} className="flex gap-2 text-base text-foreground">
+          <div key={i} className="flex gap-2 text-base text-foreground">
             <span className={`mt-1.5 h-3 w-3 shrink-0 rounded-full ${COR[a.nivel].split(" ")[0] ?? ""}`} aria-hidden />
-            <span>{a.texto}</span>
-          </p>
+            <span className="min-w-0 flex-1">{a.texto}{a.nivel !== "ok" && <NaoMostrar className="flex" chave={chaveAchado(tripId, k.c.person_id, a)} impressao={a.texto} rotulo={`${k.c.nome.split(" ")[0]}: ${a.texto}`} contexto={tripId} critico={criticoAchado(a)} />}</span>
+          </div>
         ))}
         {k.c.avisos_abertos > 0 && <p className="text-base font-semibold text-muted-foreground">{k.c.avisos_abertos} aviso(s) aberto(s)</p>}
       </div>
@@ -202,7 +204,6 @@ function AvisoForm({ tripId, k, texto, setTexto, primeiro, destino, fone, campoI
 
 function Datas({ id }: { id: string }) {
   const { visiveis } = useAuditoria(id);
-  const dispensar = useDispensar(id);
   return (
     <main className="space-y-4 px-4 pb-32 pt-4">
       {visiveis.length === 0 ? (
@@ -212,7 +213,7 @@ function Datas({ id }: { id: string }) {
           <p className="text-base font-semibold text-muted-foreground">Datas, hotéis e bilhetes batem.</p>
         </section>
       ) : (
-        visiveis.map((a) => <CartaoData key={`${a.regra_id}-${a.hash_dos_dados}`} a={a} tripId={id} aoDispensar={() => dispensar(a)} />)
+        visiveis.map((a) => <CartaoData key={`${a.regra_id}-${a.hash_dos_dados}`} a={a} tripId={id} />)
       )}
     </main>
   );
@@ -224,7 +225,7 @@ const CORES = {
   sugestao: { fundo: "bg-accent", texto: "text-accent-foreground", Icone: Lightbulb, rotulo: "Sugestão" },
 } as const;
 
-function CartaoData({ a, tripId, aoDispensar }: { a: Achado; tripId: string; aoDispensar: () => void }) {
+function CartaoData({ a, tripId }: { a: Achado; tripId: string }) {
   const c = CORES[a.severidade];
   const alvo = a.correcao?.alvo === "hospedagem" ? "/trip/$id/hospedagem" : a.correcao?.alvo === "bilhetes" ? "/trip/$id/bilhetes" : "/trip/$id";
   return (
@@ -236,7 +237,7 @@ function CartaoData({ a, tripId, aoDispensar }: { a: Achado; tripId: string; aoD
       <p className="px-4 pt-4 text-lg font-bold leading-snug text-foreground">{a.mensagem}</p>
       <div className="grid grid-cols-2 gap-3 p-4">{a.itens.slice(0, 2).map((i, n) => <MiniCard key={`${i.id}-${n}`} i={i} />)}</div>
       <Link to={alvo as never} params={{ id: tripId } as never} className="gradient-hero tap mx-4 mb-3 flex items-center justify-center gap-3 rounded-xl text-lg font-bold">{a.correcao?.rotulo ?? "Ver item"}</Link>
-      <button onClick={aoDispensar} className="tap w-full border-t border-border text-base font-semibold text-muted-foreground">Está certo</button>
+      <div className="flex justify-center border-t border-border px-4 py-1"><NaoMostrar chave={chaveAudit(tripId, a)} impressao={a.hash_dos_dados} rotulo={a.mensagem} contexto={tripId} critico={a.severidade === "resolver"} /></div>
     </article>
   );
 }

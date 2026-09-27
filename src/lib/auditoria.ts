@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { horariosEfetivos } from "./voo";
 import { findingsQuery, flightStatusQuery, insertRow, lodgingsQuery, membersQuery, roteiroQuery, ticketsQuery, tripQuery, type ItemRoteiro, type Lodging, type Membro, type Ticket, type Trip } from "./data";
 import type { QueryClient } from "@tanstack/react-query";
+import { useEscondidos } from "./escondidos";
 import { ordenar, rodarAuditor, type Achado, type LodgingLite, type PessoasCtx, type TicketLite } from "./audit";
 
 export function useAuditoria(tripId: string) {
@@ -25,10 +26,13 @@ export function useAuditoria(tripId: string) {
     return h ? { ...b, partida_utc: h.partida ?? b.partida_utc, chegada_utc: h.chegada ?? b.chegada_utc } : b;
   });
   const todos = ordenar(rodarAuditor(trip, efetivos, hospedagens, ctx));
-  const visiveis = todos.filter((a) => !dispensados.has(`${a.regra_id}:${a.hash_dos_dados}`));
+  const { oculto } = useEscondidos();
+  const visiveis = todos.filter((a) => !dispensados.has(`${a.regra_id}:${a.hash_dos_dados}`) && !oculto(chaveAudit(tripId, a), a.hash_dos_dados));
 
   return { trip, visiveis, todos };
 }
+
+export const chaveAudit = (tripId: string, a: Achado) => `audit:${tripId}:${a.regra_id}:${a.itens_envolvidos.join(",")}`;
 
 export function useDispensar(tripId: string) {
   const qc = useQueryClient();

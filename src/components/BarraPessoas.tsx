@@ -5,7 +5,8 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
 import { conferirQuery, entryRulesQuery, membersQuery, ticketsQuery, tripsQuery } from "@/lib/data";
-import { conferir, regraPassaporte } from "@/lib/conferencia";
+import { conferir, semEscondidos, regraPassaporte } from "@/lib/conferencia";
+import { useEscondidos } from "@/lib/escondidos";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +59,7 @@ export function BarraPessoas({ atualId }: { atualId: string }) {
         {ordem.map((m) => {
           const c = lista.find((x) => x.person_id === m.person_id);
           const podeVer = m.meu || Boolean(c?.acesso);
-          const k = c ? conferir(c, trip, destino, paises, regra, regras) : null;
+          const k = c ? semEscondidos(conferir(c, trip, destino, paises, regra, regras), trip.id, oculto) : null;
           const alerta = k?.nivel === "resolver" ? "danger" : k?.nivel === "conferir" ? "warn" : null;
           const ativo = m.person_id === atualId;
           const nome = m === eu ? "Eu" : (m.apelido || m.nome).split(" ")[0];
