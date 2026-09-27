@@ -221,7 +221,13 @@ export function progressoFicha(dados: EuDados) {
   ];
   const OBRIG = new Set(["passaporte", "emergencia"]);
   const REPETE = new Set(["passaporte", "visto", "esta", "eta_canada", "eta_uk", "etias", "k_eta", "outro_visto", "vacina", "outra_vacina", "seguro", "global_entry"]);
-  const itens: ItemFicha[] = base.map((i) => ({ ...i,
+  // Item feito abre o documento salvo (não a tela de adicionar).
+  const abrir = (i: Omit<ItemFicha, "dispensado" | "obrigatorio">) => {
+    if (!i.done || REPETE.has(i.id)) return i.href;
+    const d = dados.documentos.find((x) => x.tipo === i.id);
+    return d ? `/pessoas/${p.id}/documentos/${d.id}` : i.href;
+  };
+  const itens: ItemFicha[] = base.map((i) => ({ ...i, href: abrir(i),
     ...(REPETE.has(i.id) && i.done ? {
       docs: dados.documentos.filter((d) => d.tipo === i.id).map((d) => ({ id: d.id, label: `${i.id === "passaporte" ? "Passaporte" : i.id === "visto" ? "Visto" : i.label.split(" · ")[0]}${paisPt(d.pais_emissor) ? ` · ${paisPt(d.pais_emissor)}` : ""}`, href: `/pessoas/${p.id}/documentos/${d.id}` })),
       novo: i.id === "passaporte" ? { label: "+ Novo passaporte", href: doc("passaporte") } : i.id === "visto" ? { label: "+ Novo visto", href: doc("visto") } : undefined,

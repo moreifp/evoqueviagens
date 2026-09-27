@@ -66,7 +66,8 @@ export function AnexosItem({
   if (!anexos.length && !podeEditar) return null;
   return (
     <div className="border-t border-border">
-      {anexos.map((a) => (
+      {anexos.length > 0 && <p className="px-4 pt-3 text-base font-bold text-muted-foreground">Arquivo original e anexos</p>}
+      {anexos.map((a, i) => (
         <div key={a.id} className="flex items-stretch border-b border-border last:border-b-0">
           <button
             onClick={() => void abrirAnexo(a.storage_path).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
@@ -74,6 +75,7 @@ export function AnexosItem({
           >
             <FileText size={26} strokeWidth={2.2} className="shrink-0 text-accent" />
             <span className="truncate">{a.nome}</span>
+            {i === 0 && <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">Original</span>}
           </button>
           {podeEditar && (
             <button onClick={() => void apagar(a)} aria-label={`Apagar ${a.nome}`} className="tap flex w-16 items-center justify-center text-destructive">
