@@ -10,6 +10,7 @@ import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
+import { BarraPessoas } from "./BarraPessoas";
 import { FichaCompleta } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, type Conferencia } from "@/lib/conferencia";
@@ -113,6 +114,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
       <main className="mx-auto max-w-3xl space-y-7 px-4">
         {!owner && <p className="rounded-lg border-2 border-accent bg-card p-3 text-lg font-semibold">Compartilhado com você · só leitura</p>}
 
+        <BarraPessoas atualId={p.id} onAdicionar={() => { if (owner) { setAddingDependent(true); document.getElementById("familia")?.scrollIntoView({ behavior: "smooth" }); } else void navigate({ to: "/" }); }} />
+
         <section className="gradient-hero shadow-medium rounded-lg p-5">
           <div className="flex items-center gap-4">
             <AvatarPessoa nome={p.nome} foto={p.foto_url} tamanho={76} />
@@ -158,7 +161,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         </section>
 
         {owner && (
-          <section>
+          <section id="familia">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-2xl">Família</h2><button onClick={() => setAddingDependent((value) => !value)} className="tap flex items-center gap-2 text-lg font-bold text-accent"><UserPlus size={24} /> Dependente</button></div>
             {addingDependent && <div className="mb-3 flex gap-2"><input value={dependentName} onChange={(event) => setDependentName(event.target.value)} placeholder="Nome do dependente" className="tap min-w-0 flex-1 rounded-lg border-2 border-input bg-card px-4 text-lg" /><button onClick={() => void addDependent()} className="tap rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">Adicionar</button></div>}
             {!data.dependentes.length && !addingDependent && <button onClick={() => setAddingDependent(true)} className="tap flex min-h-24 w-full items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border text-lg font-bold"><UserPlus size={28} /> Adicionar dependente</button>}<div className="space-y-2">{data.dependentes.map((dep) => <Link key={dep.id} to="/pessoas/$pid" params={{ pid: dep.id }} className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-3"><AvatarPessoa nome={dep.nome} foto={dep.foto_url} /><strong className="flex-1 text-lg">{dep.nome}</strong><ChevronRight size={26} /></Link>)}</div>

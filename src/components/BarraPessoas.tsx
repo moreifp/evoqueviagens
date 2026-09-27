@@ -41,9 +41,9 @@ export function BarraPessoas({ atualId, onAdicionar }: { atualId: string; onAdic
         const ativo = it.id === atualId;
         const corpo = (
           <>
-            <span className={`relative rounded-full p-0.5 ${ativo ? "ring-4 ring-success" : ""}`}>
+            <span className={`relative rounded-full p-0.5 ${ativo ? "ring-4 ring-ok" : ""}`}>
               <AvatarPessoa nome={it.self ? eu.nome : it.nome} foto={it.foto} tamanho={56} />
-              {it.alerta && <span aria-label={it.alerta === "danger" ? "Documento vencido" : "Documento vencendo"} className={`absolute right-0 top-0 h-4 w-4 rounded-full border-2 border-background ${it.alerta === "danger" ? "bg-destructive" : "bg-warning"}`} />}
+              {it.alerta && <span aria-label={it.alerta === "danger" ? "Documento vencido" : "Documento vencendo"} className={`absolute right-0 top-0 h-4 w-4 rounded-full border-2 border-background ${it.alerta === "danger" ? "bg-danger" : "bg-warn"}`} />}
             </span>
             <span className={`max-w-[72px] truncate text-sm ${ativo ? "font-bold" : ""}`}>{it.nome.split(" ")[0]}</span>
           </>
