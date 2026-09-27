@@ -58,8 +58,8 @@ function Documento() {
   async function aplicar() {
     if (!propostas) return; setAplicando(true);
     try {
-      const v = Object.fromEntries(propostas.map((x) => [x.chave, x.valor])); const docUp: Record<string, string> = {};
-      for (const k of ["nome_no_documento", "numero", "pais_emissor", "sexo", "validade", "emissao"]) if (v[k]) docUp[k] = v[k]!;
+      const v = Object.fromEntries(propostas.map((x) => [x.chave, x.valor])); const docUp: { nome_no_documento?: string; numero?: string; pais_emissor?: string; sexo?: string; validade?: string; emissao?: string } = {};
+      for (const k of ["nome_no_documento", "numero", "pais_emissor", "sexo", "validade", "emissao"] as const) if (v[k]) docUp[k] = v[k]!;
       if (Object.keys(docUp).length) { const u = await supabase.from("traveler_document").update(docUp).eq("id", did); if (u.error) throw u.error; }
       await salvarDadosPessoaPassaporte(data!.pessoa, { nascimento: v.nascimento, nacionalidade: v.nacionalidade, nome: v.nome_no_documento ?? doc.nome_no_documento });
       await qc.invalidateQueries({ queryKey: ["documento", pid, did] }); await qc.invalidateQueries({ queryKey: ["eu", pid] }); setPropostas(null); toast.success("Campos preenchidos");
