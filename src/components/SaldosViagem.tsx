@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ListTree, Share2 } from "lucide-react";
 import type { Acerto, Expense, Membro } from "@/lib/data";
-import { nomeCurto } from "@/lib/despesas";
+import { nomeCompleto, nomeCurto } from "@/lib/despesas";
 import { fmtMoney } from "@/lib/format";
 import { fraseSaldo, resumoSaldos, textoCompartilhar } from "@/lib/saldos";
 import { AvatarPessoa } from "./Pessoa";

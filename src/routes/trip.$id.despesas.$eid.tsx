@@ -9,7 +9,7 @@ import { mutar } from "@/lib/outbox";
 import { expensesQuery, membersQuery, tripQuery } from "@/lib/data";
 import { categoria } from "@/lib/categorias";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
-import { apagarDespesa, nomeCurto, useUid } from "@/lib/despesas";
+import { apagarDespesa, nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { AvatarPessoa } from "@/components/Pessoa";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({

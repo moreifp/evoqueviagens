@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, ChevronLeft, MessageCircle } from "lucide-react";
 import { expensesQuery, membersQuery, settlementsQuery, tripQuery } from "@/lib/data";
 import { centavos, origemSaldo } from "@/lib/divisao";
-import { nomeCurto, useUid } from "@/lib/despesas";
+import { nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { fraseSaldo, resumoSaldos, textoCompartilhar, useAcertos } from "@/lib/saldos";
 import { corSaldo } from "@/components/SaldosViagem";
