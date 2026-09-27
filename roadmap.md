@@ -105,3 +105,6 @@
 - [x] 5. Colar e-mail da agência (novo, Adicionar e edição com merge), sem preços, anexo privado
 
 - [x] Corrigido: seção "Avisos no celular" agora aparece também na prévia ("Ligue no app instalado")
+
+- [x] Despesas: exportar planilha Excel (formato Splitwise)
+- [x] Despesas: exportar a mesma planilha em PDF

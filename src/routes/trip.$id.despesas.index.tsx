@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeftRight, ChevronLeft, Eye, Plus, User } from "lucide-react";
+import { ArrowLeftRight, ChevronLeft, Eye, FileSpreadsheet, FileText, Plus, User } from "lucide-react";
 import { expensesQuery, settlementsQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
 import { fmtMoney } from "@/lib/format";
 import { acharMoeda } from "@/lib/moedas";
 import { nomeCurto, useUid } from "@/lib/despesas";
 import { LinhaDespesa } from "@/components/LinhaDespesa";
+import { baixarExcel, baixarPdf, montarTabela } from "@/lib/exportarDespesas";
 import { SaldosViagem } from "@/components/SaldosViagem";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
@@ -66,6 +67,16 @@ function Lista() {
       <main className="space-y-4 px-4 pt-3">
         {!org && uid !== undefined && (
           <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-bold text-foreground"><Eye size={18} strokeWidth={2.2} /> Só leitura</p>
+        )}
+        {despesas.length + acertos.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => void baixarExcel(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
+              <FileSpreadsheet size={24} strokeWidth={2.2} /> Excel
+            </button>
+            <button onClick={() => void baixarPdf(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
+              <FileText size={24} strokeWidth={2.2} /> PDF
+            </button>
+          </div>
         )}
         <SaldosViagem tripId={id} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
 
