@@ -1,29 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Wallet } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, Wallet } from "lucide-react";
+import { tripsQuery } from "@/lib/data";
+import { dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/despesas")({
   head: () => ({
     meta: [
       { title: "Despesas — Evoque Viagens" },
-      { name: "description", content: "Despesas de todas as viagens. Chega em breve." },
+      { name: "description", content: "Escolha a viagem para ver e lançar despesas." },
       { property: "og:title", content: "Despesas — Evoque Viagens" },
-      { property: "og:description", content: "Despesas de todas as viagens. Chega em breve." },
+      { property: "og:description", content: "Escolha a viagem para ver e lançar despesas." },
     ],
   }),
   component: Despesas,
 });
 
 function Despesas() {
+  const { data: viagens = [] } = useQuery(tripsQuery());
+  const ativas = viagens.filter((t) => !t.arquivada_em);
   return (
     <div className="min-h-screen bg-background pb-32">
-      <header className="flex items-center gap-2 px-4 py-3">
-        <h1 className="flex-1 text-3xl">Despesas</h1>
+      <header className="px-4 py-3">
+        <h1 className="text-3xl">Despesas</h1>
+        <p className="text-base text-muted-foreground">Escolha a viagem</p>
       </header>
-      <div className="mx-4 mt-10 flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-border p-10 text-center">
-        <Wallet size={48} strokeWidth={2.2} className="text-accent" />
-        <p className="text-2xl font-bold text-foreground">Chega em breve</p>
-        <p className="text-base text-muted-foreground">Os gastos de cada viagem continuam dentro da viagem.</p>
-      </div>
+      <ul className="space-y-2 px-4">
+        {ativas.map((t) => (
+          <li key={t.id}>
+            <Link to="/trip/$id/despesas" params={{ id: t.id }} className="shadow-soft flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card p-3">
+              <Wallet size={28} strokeWidth={2.2} className="text-teal" />
+              <span className="min-w-0 flex-1"><span className="block truncate text-lg font-bold">{t.nome}</span><span className="block text-sm text-muted-foreground">{dataBRCurta(t.data_inicio)} a {dataBRCurta(t.data_fim)} · {t.moeda_base}</span></span>
+              <ChevronRight size={26} strokeWidth={2.2} />
+            </Link>
+          </li>
+        ))}
+        {ativas.length === 0 && <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma viagem ainda</p>}
+      </ul>
     </div>
   );
 }

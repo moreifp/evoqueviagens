@@ -27,7 +27,7 @@ export function FolhaDivisao({ aberta, onFechar, totalC, moeda, pessoas, valor, 
   aberta: boolean; onFechar: () => void; totalC: number; moeda: string; pessoas: PessoaDiv[]; valor: Divisao; onPronto: (d: Divisao) => void;
 }) {
   const [d, setD] = useState<Divisao>(valor);
-  useEffect(() => { if (aberta) setD(valor); }, [aberta, valor]);
+  useEffect(() => { if (aberta) setD(valor); }, [aberta]); // eslint-disable-line react-hooks/exhaustive-deps
   const r = calcularDivisao(totalC, pessoas, d);
   const fecha = r.fecha && r.lista.length > 0;
 
