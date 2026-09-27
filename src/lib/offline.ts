@@ -52,7 +52,9 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
        const fichas: EuDados[] = [dados];
        const visitados = new Set([eu.id]);
        for (let i = 0; i < fichas.length; i++) {
-         for (const d of fichas[i].dependentes) {
+         const ficha = fichas[i];
+         if (!ficha) continue;
+         for (const d of ficha.dependentes) {
            if (visitados.has(d.id)) continue;
            visitados.add(d.id);
            fichas.push(await qc.fetchQuery({ ...euQuery(d.id), staleTime: 0 }));
