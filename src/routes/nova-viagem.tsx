@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { tripQuery, tripsQuery, type Trip } from "@/lib/data";
 import { CampoMoeda } from "@/components/CampoMoeda";
@@ -11,6 +11,8 @@ import { Campo, inputCls } from "@/components/Form";
 import { CampoCidades } from "@/components/CampoCidades";
 import { enviar, naTela, novoId } from "@/lib/itens";
 import type { Op } from "@/lib/outbox";
+import { mutar } from "@/lib/outbox";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/nova-viagem")({
   head: () => ({
@@ -19,6 +21,8 @@ export const Route = createFileRoute("/nova-viagem")({
       { name: "description", content: "Cadastre uma viagem com datas e moeda de referência." },
       { property: "og:title", content: "Nova viagem" },
       { property: "og:description", content: "Cadastre uma viagem com datas e moeda de referência." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { duplicar?: string; editar?: string } => ({ ...(typeof s.duplicar === "string" ? { duplicar: s.duplicar } : {}), ...(typeof s.editar === "string" ? { editar: s.editar } : {}) }),
@@ -38,6 +42,7 @@ function NovaViagem() {
   const [fim, setFim] = useState("");
   const [moeda, setMoeda] = useState("BRL");
   const [salvando, setSalvando] = useState(false);
+  const [confirmacao, setConfirmacao] = useState<0 | 1 | 2>(0);
 
   function isoDia(d: Date) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -101,6 +106,26 @@ function NovaViagem() {
     }
   }
 
+  async function apagar() {
+    if (!atual) return;
+    if (confirmacao < 2) {
+      setConfirmacao((confirmacao + 1) as 1 | 2);
+      return;
+    }
+    setSalvando(true);
+    try {
+      const resultado = await mutar({ tipo: "update", tabela: "trip", id: atual.id, valores: { deleted_at: new Date().toISOString() } });
+      naTela<Trip>(qc, tripsQuery().queryKey, (lista) => lista.filter((viagem) => viagem.id !== atual.id));
+      qc.removeQueries({ queryKey: tripQuery(atual.id).queryKey });
+      toast.success(resultado === "fila" ? "Sem internet · viagem será apagada ao conectar" : "Viagem apagada");
+      navigate({ to: "/viagens" });
+    } catch (erro) {
+      toast.error((erro as Error).message || "Não consegui apagar a viagem.");
+      setSalvando(false);
+      setConfirmacao(0);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background pb-10">
       <Topo titulo={editar ? "Editar viagem" : "Nova viagem"} voltarPara="/viagens" />
@@ -129,6 +154,12 @@ function NovaViagem() {
           <Check size={28} strokeWidth={2.2} />
           Salvar viagem
         </button>
+        {atual && (
+          <Button type="button" variant="destructive" disabled={salvando} onClick={() => void apagar()} className="tap min-h-14 w-full gap-2 text-lg font-bold">
+            <Trash2 size={24} strokeWidth={2.2} />
+            {confirmacao === 0 ? "Apagar viagem" : confirmacao === 1 ? "Tem certeza?" : "Mesmo?"}
+          </Button>
+        )}
       </form>
     </div>
   );

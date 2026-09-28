@@ -155,3 +155,7 @@
 - [x] Compactar bilhetes, hospedagem e reservas, mantendo detalhes ao abrir cada item
 - [x] Recolher roteiro e grupos de documentos por padrão
 - [x] Pessoas mantidas em uma linha por participante; ações aparecem somente quando necessárias
+
+## Apagar viagem (28/09)
+- [x] Botão na edição com duas confirmações: “Tem certeza?” e “Mesmo?”
+- [x] Exclusão recuperável e remoção imediata da lista
