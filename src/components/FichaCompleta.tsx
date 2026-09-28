@@ -88,8 +88,13 @@ function Grupo({ personId, grupo, itens, owner, ocupado, dispensar, navigate }: 
   if (!lista.length) return null;
   return (
     <div>
-      <button type="button" onClick={alternar} aria-expanded={aberto} className="tap flex min-h-14 w-full items-baseline justify-between gap-3 text-left">
-        <h2 className="text-2xl">{grupo}</h2>
+      <button type="button" onClick={alternar} aria-expanded={aberto} className="tap flex min-h-14 w-full items-center justify-between gap-3 text-left">
+        <span className="flex items-center gap-3">
+          {ICONE_GRUPO[grupo] && (() => { const { Icone, cor } = ICONE_GRUPO[grupo]; return (
+            <span className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-${cor}-soft text-${cor}`}><Icone size={20} aria-hidden /></span>
+          ); })()}
+          <h2 className="text-2xl">{grupo}</h2>
+        </span>
         <span className="ml-auto flex items-center gap-2 text-lg font-bold text-muted-foreground">{ok} de {lista.length}<ChevronDown size={26} className={`transition-transform ${aberto ? "rotate-180" : ""}`} aria-hidden /></span>
       </button>
       {aberto && <ul className="mt-2 divide-y divide-border overflow-hidden rounded-lg border-2 border-border bg-card">
