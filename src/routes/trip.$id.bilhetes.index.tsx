@@ -13,7 +13,7 @@ import { StatusVoo } from "@/components/StatusVoo";
 import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
 import { sufixoNome } from "@/lib/nomes";
 import { useState } from "react";
-import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus } from "lucide-react";
+import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus, ArrowRightLeft } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { Logo } from "@/components/Logo";
 import { logoCia } from "@/lib/logos";
@@ -203,42 +203,33 @@ function CartaoEmbarque({ b, grupo, s, editar, nome, dono, pessoa, membros }: { 
     }
   }
   const Icone = ICONE[b.tipo] ?? Plane;
-  const [hh, mm] = horaNoFuso(b.partida_utc, b.partida_tz).split(":");
+  const partidaDia = chaveDia(b.partida_utc, b.partida_tz);
+  const chegadaDia = chaveDia(b.chegada_utc, b.chegada_tz);
+  const dias = Math.round((Date.parse(`${chegadaDia}T12:00:00Z`) - Date.parse(`${partidaDia}T12:00:00Z`)) / 864e5);
   return (
     <article className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex items-start gap-4 p-4">
-        <Icone size={28} strokeWidth={2.2} className="mt-1 text-accent" />
-        <div className="min-w-0 flex-1">
-          <p className="num text-[36px] leading-none text-foreground">
-            {hh}
-            <span className="text-muted-foreground">:</span>
-            {mm}
-          </p>
-          <p className="mt-1 text-sm font-semibold text-muted-foreground">
-            {nomeFusoCurto(b.partida_tz)} · {horaNoFuso(b.partida_utc, fusoLocal())} no seu horário
-          </p>
-          <p className="mt-2 text-xl font-bold text-foreground">
-            {b.origem_iata ?? b.origem_cidade ?? "?"} → {b.destino_iata ?? b.destino_cidade ?? "?"}
-          </p>
-          <p className="mono-code mt-2 flex items-center gap-3 text-2xl font-bold text-foreground">
-            {b.tipo === "voo" && <Logo url={logoCia(b.companhia, b.numero)} Icone={Plane} nome={b.companhia ?? "companhia"} tamanho={32} className="text-accent" />}
-            {[b.companhia, b.numero].filter(Boolean).join(" ")}
-          </p>
-          {(minha?.localizador || b.localizador) && (
-            <p className="mono-code text-2xl font-bold text-accent">{minha?.localizador || b.localizador}</p>
-          )}
-          {minha?.classe && <p className="text-lg font-bold text-foreground">Classe {minha.classe}</p>}
-          <p className="mt-2 text-base font-semibold text-muted-foreground">
-            Chega {horaNoFuso(b.chegada_utc, b.chegada_tz)} · {dataBRCurta(chaveDia(b.chegada_utc, b.chegada_tz))}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {pax.length > 1 && (
-              <span className="flex -space-x-2">
-                {pax.slice(0, 6).map((q) => <span key={q.id} className="rounded-full border-2 border-card"><AvatarPessoa nome={membros.find((m) => m.person_id === q.person_id)?.nome ?? "?"} foto={null} tamanho={32} /></span>)}
-              </span>
-            )}
-            <Selo pax={pax} dono={dono} pessoa={pessoa} />
-          </div>
+      <div className="bg-primary p-5 text-primary-foreground">
+        <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
+          <Logo url={b.tipo === "voo" ? logoCia(b.companhia, b.numero) : null} Icone={Icone} nome={b.companhia ?? b.tipo} />
+          <span className="min-w-0 break-words">{[b.companhia, b.numero].filter(Boolean).join(" · ") || b.tipo}</span>
+        </p>
+        <p className="mt-1 text-lg">{dataBRCurta(partidaDia)}</p>
+        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="min-w-0"><small className="font-bold">ORIGEM</small><p className="break-words text-3xl font-bold">{b.origem_iata ?? b.origem_cidade ?? "—"}</p></div>
+          <ArrowRightLeft size={24} aria-hidden />
+          <div className="min-w-0 text-right"><small className="font-bold">DESTINO</small><p className="break-words text-3xl font-bold">{b.destino_iata ?? b.destino_cidade ?? "—"}</p></div>
+        </div>
+        <p className="num mt-3 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
+          <span>{horaNoFuso(b.partida_utc, b.partida_tz)}</span>
+          <span>{horaNoFuso(b.chegada_utc, b.chegada_tz)}{dias > 0 && <sup className="ml-1 text-base">+{dias}</sup>}</span>
+        </p>
+        <p className="mt-2 text-sm">{nomeFusoCurto(b.partida_tz)} · saída {horaNoFuso(b.partida_utc, fusoLocal())} no seu horário</p>
+        <p className="mt-2 text-right text-base">Chegada {horaNoFuso(b.chegada_utc, fusoLocal())} no seu horário</p>
+        {(minha?.localizador || b.localizador) && <p className="mono-code mt-2 break-all text-lg font-bold">Localizador {minha?.localizador || b.localizador}</p>}
+        {minha?.classe && <p className="mt-1 text-base font-bold">Classe {minha.classe}</p>}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {pax.length > 1 && <span className="flex -space-x-2">{pax.slice(0, 6).map((q) => <span key={q.id} className="rounded-full border-2 border-primary"><AvatarPessoa nome={membros.find((m) => m.person_id === q.person_id)?.nome ?? "?"} foto={null} tamanho={32} /></span>)}</span>}
+          <Selo pax={pax} dono={dono} pessoa={pessoa} />
         </div>
       </div>
 
