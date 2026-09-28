@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AcoesItem } from "@/components/AcoesItem";
-import { AnexosItem } from "@/components/AnexosItem";
 import { CartaoResumo } from "@/components/CartaoResumo";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { BedDouble, Phone, Plus } from "lucide-react";
+import { BedDouble, ChevronRight, Plus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { lodgingsQuery, membersQuery, roteiroQuery } from "@/lib/data";
-import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso, fusoLocal } from "@/lib/format";
+import { lodgingsQuery, roteiroQuery } from "@/lib/data";
+import { chaveDia, dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/hospedagem/")({
   head: () => ({
@@ -28,16 +26,10 @@ function Hospedagem() {
   const { id } = Route.useParams();
   const { data: detalhes } = useSuspenseQuery(lodgingsQuery(id));
   const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
-  const { data: membros } = useSuspenseQuery(membersQuery(id));
   const porId = new Map(detalhes.map((h) => [h.id, h]));
   const itens = roteiro.filter((r) => r.item_tipo === "lodging");
   // Itens recém-criados sem internet ainda podem não estar no roteiro guardado.
   for (const h of detalhes) if (!itens.some((r) => r.item_id === h.id)) itens.push({ item_tipo: "lodging", item_id: h.id, subtipo: "hotel", titulo: h.nome, inicio_utc: h.checkin, inicio_tz: "UTC", fim_utc: h.checkout, fim_tz: "UTC", cidade: h.cidade, origem_iata: null, destino_iata: null, companhia: null, numero: null, pessoas: [], detalhe: true, editar: true });
-  const nome = (pid: string) => {
-    const m = membros.find((x) => x.person_id === pid);
-    return m ? m.apelido || m.nome : "?";
-  };
-
   return (
     <>
       <Topo titulo="Hospedagem" voltarPara="/trip/$id" voltarParams={{ id }} />
@@ -51,39 +43,11 @@ function Hospedagem() {
           const h = porId.get(r.item_id);
           if (!h) return <CartaoResumo key={r.item_id} r={r} />;
           return (
-          <article key={h.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="bg-primary p-5 text-primary-foreground">
-              <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
-                <BedDouble size={28} strokeWidth={2.2} aria-hidden className="shrink-0" />
-                <span className="min-w-0 break-words">{h.nome}</span>
-              </p>
-              <p className="mt-1 text-lg">{h.cidade ?? h.endereco}</p>
-              {h.telefone && <a href={`tel:${h.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 inline-flex items-center gap-2 text-lg font-bold underline-offset-4 hover:underline"><Phone size={20} strokeWidth={2.2} aria-hidden /> {h.telefone}</a>}
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div><small className="font-bold">ENTRADA</small><p className="text-lg">{dataBRCurta(chaveDia(h.checkin))}</p></div>
-                <div className="text-right"><small className="font-bold">SAÍDA</small><p className="text-lg">{dataBRCurta(chaveDia(h.checkout))}</p></div>
-              </div>
-              <p className="num mt-1 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
-                <span>{horaNoFuso(h.checkin, fusoLocal())}</span><span>{horaNoFuso(h.checkout, fusoLocal())}</span>
-              </p>
-              {h.localizador && <p className="mono-code mt-3 break-all text-lg font-bold">Localizador {h.localizador}</p>}
-              {h.valor != null && <p className="num mt-2 text-3xl leading-none">{fmtMoney(Number(h.valor), h.moeda ?? "BRL")}</p>}
-            </div>
-            {h.quartos.length > 0 && (
-              <ul className="space-y-2 border-t border-border p-4">
-                {h.quartos.map((q) => (
-                  <li key={q.id} className="text-lg">
-                    <span className="font-bold">{q.nome}</span>
-                    {q.tipo ? <span className="text-muted-foreground"> · {q.tipo}</span> : null}
-                    <span className="block text-foreground">{q.hospedes.map((g) => nome(g.person_id)).join(", ") || "Sem hóspedes"}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <AnexosItem tripId={id} itemTipo="lodging" itemId={h.id} podeEditar={r.editar} />
-            <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "lodging", itemId: h.id }} className="tap flex w-full items-center justify-center border-t border-border text-lg font-bold text-accent">Abrir hotel</Link>
-            {r.editar && <AcoesItem tabela="lodging" id={h.id} tripId={id} editarPara="/trip/$id/hospedagem/nova" queryKey={lodgingsQuery(id).queryKey} />}
-          </article>
+          <Link key={h.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "lodging", itemId: h.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+            <BedDouble size={26} strokeWidth={2.2} className="shrink-0" aria-hidden />
+            <span className="min-w-0"><strong className="block truncate text-lg">{h.nome}</strong><span className="block truncate text-sm opacity-80">{dataBRCurta(chaveDia(h.checkin))}–{dataBRCurta(chaveDia(h.checkout))} · {h.cidade ?? h.endereco ?? "Local não informado"}</span></span>
+            <ChevronRight size={24} className="shrink-0" aria-hidden />
+          </Link>
           );
         })}
 
