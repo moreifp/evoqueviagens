@@ -1,5 +1,6 @@
 import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Camera, Check, ChevronDown, Download, Images, Trash2, X } from "lucide-react";
