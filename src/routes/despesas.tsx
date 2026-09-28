@@ -6,6 +6,7 @@ import { tripsQuery } from "@/lib/data";
 import { dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/despesas")({
+  validateSearch: (s: Record<string, unknown>) => ({ escolher: s.escolher === true || s.escolher === "true" }),
   head: () => ({
     meta: [
       { title: "Despesas — Evoque Viagens" },
@@ -29,9 +30,10 @@ function viagemPadrao(ativas: { id: string; data_inicio: string; data_fim: strin
 
 function Despesas() {
   const navigate = useNavigate();
+  const { escolher } = Route.useSearch();
   const { data: viagens = [], isLoading } = useQuery(tripsQuery());
   const ativas = viagens.filter((t) => !t.arquivada_em);
-  const padrao = viagemPadrao(ativas);
+  const padrao = escolher ? undefined : viagemPadrao(ativas);
 
   useEffect(() => {
     if (padrao) navigate({ to: "/trip/$id/despesas", params: { id: padrao.id }, replace: true });
