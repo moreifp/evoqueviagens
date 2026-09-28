@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { useUid } from "@/lib/despesas";
-import { Botao } from "@/components/Campo";
+import { Botao } from "@/components/Chrome";
 import { Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,7 +28,7 @@ function soDigitos(telefone: string): string {
   return telefone.replace(/\D/g, "");
 }
 
-export default function LinkDespesas({ tripId }: { tripId: string }) {
+export function LinkDespesas({ tripId }: { tripId: string }) {
   const uid = useUid();
   const qc = useQueryClient();
   const nav = useNavigate();
@@ -128,7 +128,7 @@ export default function LinkDespesas({ tripId }: { tripId: string }) {
         tipo: "update",
         tabela: "person",
         id: personId,
-        valoros: { telefone: formatado },
+        valores: { telefone: formatado },
       });
       qc.invalidateQueries({ queryKey: ["despesas-link-membros", tripId] });
       setEditando(null);
