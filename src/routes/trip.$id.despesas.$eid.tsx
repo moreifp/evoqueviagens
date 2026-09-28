@@ -13,6 +13,7 @@ import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { apagarDespesa, nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { AvatarPessoa } from "@/components/Pessoa";
 import { comprimir } from "@/lib/imagem";
+import { impressao } from "@/lib/despesas";
 import { transcreverRecibo } from "@/lib/recibo.functions";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
@@ -216,9 +217,3 @@ function Detalhe() {
 }
 
 /** Impressão curta da foto do recibo (muda quando a foto muda). */
-function impressao(ref: string | null | undefined) {
-  if (!ref) return null;
-  let h = 2166136261;
-  for (let i = 0; i < ref.length; i += Math.max(1, Math.floor(ref.length / 4096))) h = Math.imul(h ^ ref.charCodeAt(i), 16777619);
-  return `${ref.length}:${(h >>> 0).toString(36)}`;
-}
