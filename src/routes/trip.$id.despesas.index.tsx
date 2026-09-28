@@ -25,9 +25,6 @@ export const Route = createFileRoute("/trip/$id/despesas/")({
   notFoundComponent: () => <div className="p-6 text-lg">Sem despesas.</div>,
 });
 
-const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const diaCab = (d: string) => `${DIAS[new Date(`${d}T12:00:00Z`).getUTCDay()]} ${d.slice(8, 10)}/${d.slice(5, 7)}`;
-
 function Lista() {
   const { id } = Route.useParams();
   const uid = useUid();
@@ -46,8 +43,6 @@ function Lista() {
   const soma = (l: Expense[]) => l.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
   const nPessoas = new Set(divididas.flatMap((d) => d.partes.map((p) => p.person_id))).size || membros.length;
 
-  const dias = new Map<string, Expense[]>();
-  for (const d of despesas) dias.set(d.data, [...(dias.get(d.data) ?? []), d]);
   const porPessoa = new Map<string, Expense[]>();
   for (const d of pessoais) porPessoa.set(d.pessoal_de ?? "", [...(porPessoa.get(d.pessoal_de ?? "") ?? []), d]);
 
