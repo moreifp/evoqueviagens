@@ -4,7 +4,7 @@ import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { gcTime: Infinity, networkMode: "offlineFirst" } },
+    defaultOptions: { queries: { gcTime: Infinity, staleTime: 120_000, networkMode: "offlineFirst" } },
   });
 
   const router = createRouter({

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { EuDashboard } from "@/components/EuDashboard";
-import { MarketingPage } from "@/components/MarketingPage";
+import { lazy, Suspense } from "react";
+
+const MarketingPage = lazy(() => import("@/components/MarketingPage").then((m) => ({ default: m.MarketingPage })));
 import { minhaPessoaQuery } from "@/lib/eu";
 import { noHostLanding } from "@/lib/host";
 import { marketingHead } from "@/lib/marketing-head";
@@ -24,9 +26,9 @@ export const Route = createFileRoute("/")({
         })
       : {
           meta: [
-            { title: "Minha conta — Evoque Viagens" },
+            { title: "Eu — Evoque Viagens" },
             { name: "description", content: "Seus documentos, fidelidade, preferências e compartilhamentos de viagem." },
-            { property: "og:title", content: "Minha conta — Evoque Viagens" },
+            { property: "og:title", content: "Eu — Evoque Viagens" },
             { property: "og:description", content: "Seus dados pessoais de viagem, seguros e disponíveis offline." },
             { property: "og:type", content: "website" },
             { name: "twitter:card", content: "summary" },
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/")({
 
 function Inicio() {
   const { landing } = Route.useLoaderData();
-  return landing ? <MarketingPage page="home-pt" /> : <MinhaConta />;
+  return landing ? <Suspense fallback={<div className="min-h-screen" />}><MarketingPage page="home-pt" /></Suspense> : <MinhaConta />;
 }
 
 function MinhaConta() {
