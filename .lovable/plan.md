@@ -5,7 +5,8 @@
 - Manter o formulário atual, mas mover **Descrição da despesa** para o primeiro campo e torná-la obrigatória.
 - Mostrar em seguida a relação das despesas da viagem, priorizando **data, descrição, valor e quem pagou**.
 - Mover os saldos e “quem paga a quem” para depois da lista, dentro de uma seção com seta para recolher ou mostrar.
-- Preservar as abas Todas/Pessoais, exportações, link de compartilhamento e permissões atuais.
+- Colocar depois da divisão o **Link só para ver** e, por último, uma barra para criar **Excel ou PDF**.
+- Preservar as abas Todas/Pessoais e as permissões atuais.
 
 ## Verificação
 - Conferir o fluxo completo no tamanho de um iPhone: abrir a lista, criar despesa, validar descrição obrigatória e expandir/recolher a divisão.
