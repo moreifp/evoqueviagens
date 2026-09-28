@@ -270,9 +270,9 @@ function Atalho({
     <Link
       to={to as never}
       params={{ id } as never}
-      className={`shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4 ${COR_FUNDO[cor]}`}
+      className={`novo-cor shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4 ${COR_FUNDO[cor]}`}
     >
-      <Icone size={28} strokeWidth={2.2} className={COR_TEXTO[cor]} />
+      <Icone size={28} strokeWidth={2.2} className={`novo-cor-icone ${COR_TEXTO[cor]}`} />
       <span className="num truncate text-2xl text-foreground">{numero}</span>
       <span className="text-sm font-bold text-muted-foreground">{rotulo}</span>
     </Link>
