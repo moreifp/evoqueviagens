@@ -43,7 +43,7 @@ function Programa() {
     let vivo = true;
     readVaultItem(data.uid, fid).then((s) => { if (vivo) { setSecret(s); if (!s) setEditing(true); } }).catch((e) => { if (vivo) { toast.error((e as Error).message); setSecret(null); } });
     return () => { vivo = false; };
-  }, [unlocked, data?.uid, fid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [revealed, unlocked, data?.uid, fid]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!item?.cartao_path || !navigator.onLine) return; void supabase.storage.from("documentos").createSignedUrl(item.cartao_path, 600).then(({ data: s }) => setCardUrl(s?.signedUrl ?? null)); }, [item?.cartao_path]);
   useEffect(() => { if (!show) return; const t = setTimeout(() => setShow(false), 30000); return () => clearTimeout(t); }, [show]);
 
