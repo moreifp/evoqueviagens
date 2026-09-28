@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Car, Map as MapIcon, Phone, Plus, Ticket, Utensils } from "lucide-react";
+import { Car, ChevronRight, Map as MapIcon, Plus, Ticket, Utensils } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { AcoesItem } from "@/components/AcoesItem";
-import { AnexosItem } from "@/components/AnexosItem";
 import { CartaoResumo } from "@/components/CartaoResumo";
-import { membersQuery, reservasQuery, roteiroQuery } from "@/lib/data";
-import { chaveDia, dataBRCurta, fmtMoney, horaNoFuso } from "@/lib/format";
+import { reservasQuery, roteiroQuery } from "@/lib/data";
+import { chaveDia, dataBRCurta, horaNoFuso } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/reservas/")({
   head: () => ({
@@ -30,18 +28,12 @@ function Reservas() {
   const { id } = Route.useParams();
   const { data: detalhes } = useSuspenseQuery(reservasQuery(id));
   const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
-  const { data: membros } = useSuspenseQuery(membersQuery(id));
   const porId = new Map(detalhes.map((r) => [r.id, r]));
   const itens = roteiro.filter((r) => r.item_tipo === "reservation");
   for (const d of detalhes)
     if (!itens.some((r) => r.item_id === d.id))
       itens.push({ item_tipo: "reservation", item_id: d.id, subtipo: d.tipo, titulo: d.titulo, inicio_utc: d.inicio_utc, inicio_tz: d.inicio_tz, fim_utc: d.fim_utc, fim_tz: d.fim_tz, cidade: d.cidade, origem_iata: null, destino_iata: null, companhia: null, numero: null, pessoas: [], detalhe: true, editar: true });
   itens.sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc));
-  const nome = (pid: string) => {
-    const m = membros.find((x) => x.person_id === pid);
-    return m ? m.apelido || m.nome : "?";
-  };
-
   return (
     <>
       <Topo titulo="Reservas" voltarPara="/trip/$id" voltarParams={{ id }} />
@@ -54,36 +46,11 @@ function Reservas() {
           if (!d) return <CartaoResumo key={r.item_id} r={r} />;
           const Icone = ICONE[d.tipo] ?? Ticket;
           return (
-            <article key={d.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="bg-primary p-5 text-primary-foreground">
-                <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
-                  <Icone size={28} strokeWidth={2.2} aria-hidden className="shrink-0" />
-                  <span className="min-w-0 break-words">{d.titulo}</span>
-                </p>
-                <p className="mt-1 text-lg">{dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))}</p>
-                <p className="num mt-2 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
-                  <span>{horaNoFuso(d.inicio_utc, d.inicio_tz)}</span>
-                  {d.fim_utc && <span className="text-right">{horaNoFuso(d.fim_utc, d.fim_tz ?? d.inicio_tz)}</span>}
-                </p>
-                {d.fim_utc && <p className="mt-1 text-right text-base">até {dataBRCurta(chaveDia(d.fim_utc, d.fim_tz ?? d.inicio_tz))}</p>}
-                {(d.local || d.cidade) && <p className="mt-2 break-words text-lg">{[d.local, d.cidade].filter(Boolean).join(" · ")}</p>}
-                {d.telefone && (
-                  <a href={`tel:${d.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-2 inline-flex items-center gap-2 text-lg font-bold">
-                    <Phone size={20} strokeWidth={2.2} aria-hidden /> {d.telefone}
-                  </a>
-                )}
-                {d.localizador && <p className="mono-code mt-3 break-all text-lg font-bold">Localizador {d.localizador}</p>}
-                {d.valor != null && <p className="num mt-2 text-3xl leading-none">{fmtMoney(Number(d.valor), d.moeda ?? "BRL")}</p>}
-                {d.pessoas.length > 0 && (
-                  <p className="mt-2 text-lg">
-                    Vão: {d.pessoas.map((p) => `${nome(p.person_id)}${p.papel ? ` (${p.papel})` : ""}`).join(", ")}
-                  </p>
-                )}
-              </div>
-              <AnexosItem tripId={id} itemTipo="reservation" itemId={d.id} podeEditar={r.editar} />
-              <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap flex w-full items-center justify-center border-t border-border text-lg font-bold text-accent">Abrir reserva</Link>
-              {r.editar && <AcoesItem tabela="reservation" id={d.id} tripId={id} editarPara="/trip/$id/reservas/nova" queryKey={reservasQuery(id).queryKey} />}
-            </article>
+            <Link key={d.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+              <Icone size={26} strokeWidth={2.2} className="shrink-0" aria-hidden />
+              <span className="min-w-0"><strong className="block truncate text-lg">{d.titulo}</strong><span className="block truncate text-sm opacity-80">{dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))} · {horaNoFuso(d.inicio_utc, d.inicio_tz)} · {[d.local, d.cidade].filter(Boolean).join(" · ") || "Local não informado"}</span></span>
+              <ChevronRight size={24} className="shrink-0" aria-hidden />
+            </Link>
           );
         })}
         <Link to="/trip/$id/reservas/nova" params={{ id }} className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-xl font-bold text-accent">

@@ -70,10 +70,10 @@ export function FichaCompleta({ personId, itens, owner }: { personId: string; it
 
 export function useGrupoAberto(personId: string, grupo: string, temPendente: boolean) {
   const chave = `evoque-ficha-aberta-${personId}-${grupo}`;
-  const [aberto, setAberto] = useState(temPendente);
+  const [aberto, setAberto] = useState(false);
   useEffect(() => {
     const salvo = localStorage.getItem(chave);
-    setAberto(salvo === null ? temPendente : salvo === "1");
+    setAberto(salvo === "1");
   }, [chave, temPendente]);
   function alternar() {
     setAberto((atual) => {

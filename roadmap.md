@@ -152,4 +152,6 @@
 ## Visualização inicial compacta (28/09)
 - [x] Despesas: uma linha por despesa com data, descrição, valor e pagador
 - [x] Despesas: link público e divisão fechados por padrão
-- [ ] Compactar as listas iniciais dos demais módulos, mantendo detalhes ao abrir cada item
+- [x] Compactar bilhetes, hospedagem e reservas, mantendo detalhes ao abrir cada item
+- [x] Recolher roteiro e grupos de documentos por padrão
+- [x] Pessoas mantidas em uma linha por participante; ações aparecem somente quando necessárias
