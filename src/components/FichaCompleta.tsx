@@ -14,17 +14,9 @@ const ICONE_GRUPO: Record<string, { Icone: typeof IdCard; cor: string }> = {
   "Pessoal": { Icone: UserRound, cor: "bg-pess-soft text-pess" },
 };
 
-/**
- * Lista agrupada de todos os itens da ficha, cada linha abre o formulário do item.
- * Cada seção é recolhível: o título fica sempre visível; os campos só aparecem quando aberta.
- * Por padrão, abrem as seções com algo pendente; a escolha fica guardada no aparelho.
- */
-export function FichaCompleta({ personId, itens, owner }: { personId: string; itens: ItemFicha[]; owner: boolean }) {
-  const navigate = useNavigate();
+function useDispensar(personId: string) {
   const qc = useQueryClient();
   const [ocupado, setOcupado] = useState<string | null>(null);
-  const [verDispensados, setVerDispensados] = useState(false);
-
   async function dispensar(item: ItemFicha, sim: boolean) {
     setOcupado(item.id);
     const db = supabase as unknown as { from: (t: string) => any };
@@ -35,36 +27,54 @@ export function FichaCompleta({ personId, itens, owner }: { personId: string; it
     if (error) { toast.error("Não consegui salvar. Tente de novo."); return; }
     await qc.invalidateQueries({ queryKey: ["eu", personId] });
   }
+  return { ocupado, dispensar };
+}
 
-  const dispensados = itens.filter((i) => i.dispensado && !i.done && !i.docs?.length);
+/**
+ * Lista agrupada de todos os itens da ficha, cada linha abre o formulário do item.
+ * Cada seção é recolhível: o título fica sempre visível; os campos só aparecem quando aberta.
+ * Por padrão, abrem as seções com algo pendente; a escolha fica guardada no aparelho.
+ */
+export function FichaCompleta({ personId, itens, owner }: { personId: string; itens: ItemFicha[]; owner: boolean }) {
+  const navigate = useNavigate();
+  const { ocupado, dispensar } = useDispensar(personId);
 
   return (
     <section className="space-y-6" aria-label="Itens da ficha">
       {GRUPOS_FICHA.map((g) => <Grupo key={g} personId={personId} grupo={g} itens={itens} owner={owner} ocupado={ocupado} dispensar={dispensar} navigate={navigate} />)}
-
-      {dispensados.length > 0 && (
-        <div>
-          <button type="button" onClick={() => setVerDispensados((v) => !v)} aria-expanded={verDispensados} className="tap flex min-h-16 w-full items-center gap-3 rounded-lg border-2 border-border bg-card px-4 text-left text-lg">
-            <MinusCircle size={28} className="shrink-0 text-muted-foreground" aria-hidden />
-            <span className="flex-1 font-bold">Itens que você não tem ({dispensados.length})</span>
-            <ChevronDown size={24} className={`transition-transform ${verDispensados ? "rotate-180" : ""}`} aria-hidden />
-          </button>
-          {verDispensados && (
-            <ul className="mt-2 divide-y divide-border overflow-hidden rounded-lg border-2 border-border bg-card">
-              {dispensados.map((i) => (
-                <li key={i.id} className="flex min-h-16 items-center gap-3 px-4">
-                  <span className="min-w-0 flex-1 text-lg"><span className="block font-bold">{i.label}</span><span className="block text-base text-muted-foreground">{i.grupo}</span></span>
-                  {owner && <>
-                    <button type="button" disabled={ocupado === i.id} onClick={() => void dispensar(i, false)} className="tap rounded-xl border-2 border-border px-3 text-base font-bold">Desfazer</button>
-                    <button type="button" onClick={() => { void dispensar(i, false); navigate({ href: i.href }); }} className="tap rounded-xl bg-primary px-3 text-base font-bold text-primary-foreground">Acrescentar</button>
-                  </>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </section>
+  );
+}
+
+/** Itens marcados como "Não tenho"/"Pular" — agora fica na última linha da aba Eu. */
+export function ItensQueNaoTem({ personId, itens, owner }: { personId: string; itens: ItemFicha[]; owner: boolean }) {
+  const navigate = useNavigate();
+  const { ocupado, dispensar } = useDispensar(personId);
+  const [ver, setVer] = useState(false);
+  const dispensados = itens.filter((i) => i.dispensado && !i.done && !i.docs?.length);
+  if (!dispensados.length) return null;
+
+  return (
+    <div>
+      <button type="button" onClick={() => setVer((v) => !v)} aria-expanded={ver} className="tap flex min-h-16 w-full items-center gap-3 rounded-lg border-2 border-border bg-card px-4 text-left text-lg">
+        <MinusCircle size={28} className="shrink-0 text-muted-foreground" aria-hidden />
+        <span className="flex-1 font-bold">Itens que você não tem ({dispensados.length})</span>
+        <ChevronDown size={24} className={`transition-transform ${ver ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+      {ver && (
+        <ul className="mt-2 divide-y divide-border overflow-hidden rounded-lg border-2 border-border bg-card">
+          {dispensados.map((i) => (
+            <li key={i.id} className="flex min-h-16 items-center gap-3 px-4">
+              <span className="min-w-0 flex-1 text-lg"><span className="block font-bold">{i.label}</span><span className="block text-base text-muted-foreground">{i.grupo}</span></span>
+              {owner && <>
+                <button type="button" disabled={ocupado === i.id} onClick={() => void dispensar(i, false)} className="tap rounded-xl border-2 border-border px-3 text-base font-bold">Desfazer</button>
+                <button type="button" onClick={() => { void dispensar(i, false); navigate({ href: i.href }); }} className="tap rounded-xl bg-primary px-3 text-base font-bold text-primary-foreground">Acrescentar</button>
+              </>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

@@ -10,7 +10,7 @@ import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
 import { BarraPessoas } from "./BarraPessoas";
-import { FichaCompleta, useGrupoAberto } from "./FichaCompleta";
+import { FichaCompleta, ItensQueNaoTem, useGrupoAberto } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, semEscondidos, type Conferencia } from "@/lib/conferencia";
 import { AvisosEscondidos, useEscondidos } from "@/lib/escondidos";
@@ -172,6 +172,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
         {self && <button onClick={sair} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive"><LogOut size={26} /> Sair da conta</button>}
         {owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
+
+        <ItensQueNaoTem personId={p.id} itens={progresso.itens} owner={owner} />
 
         {self && <AvisosPush />}
         <AvisosEscondidos contextos={[p.id, ...(proxima ? [proxima.id] : [])]} />
