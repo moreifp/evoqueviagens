@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ChevronDown, Download, Images, Trash2, X } from "lucide-react";
+import { Camera, Check, ChevronDown, Download, Images, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
@@ -106,14 +106,48 @@ function FotosViagem() {
   }
 
   const [baixando, setBaixando] = useState(false);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [selecionando, setSelecionando] = useState(false);
+  const [confApagar, setConfApagar] = useState(false);
+  // Fotos já baixadas somem da aba só neste aparelho (os outros participantes continuam vendo).
+  const chaveBaixadas = `evoque-fotos-baixadas:${id}`;
+  const [baixadas, setBaixadas] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try { setBaixadas(new Set(JSON.parse(localStorage.getItem(chaveBaixadas) ?? "[]"))); } catch { /* vazio */ }
+  }, [chaveBaixadas]);
+  function salvarBaixadas(s: Set<string>) {
+    setBaixadas(s);
+    localStorage.setItem(chaveBaixadas, JSON.stringify([...s]));
+  }
+  const visiveis = fotos.filter((f) => !baixadas.has(f.id));
+
+  function alternar(fid: string) {
+    setConfApagar(false);
+    setSel((s) => { const n = new Set(s); if (n.has(fid)) n.delete(fid); else n.add(fid); return n; });
+  }
+
   async function baixarTodas() {
     setBaixando(true);
     try {
-      const blobs = await Promise.all(fotos.filter((f) => f.url).map((f) => fetch(f.url!).then((r) => r.blob())));
+      const alvo = visiveis.filter((f) => f.url && (sel.size === 0 || sel.has(f.id)));
+      const blobs = await Promise.all(alvo.map((f) => fetch(f.url!).then((r) => r.blob())));
       await baixarPasta(blobs);
+      salvarBaixadas(new Set([...baixadas, ...alvo.map((f) => f.id)]));
+      setSel(new Set()); setSelecionando(false);
     } catch {
       toast.error("Não consegui baixar as fotos. Confira a internet.");
     } finally { setBaixando(false); }
+  }
+
+  async function apagarSelecionadas() {
+    if (!confApagar) return setConfApagar(true);
+    const alvo = fotos.filter((f) => sel.has(f.id));
+    const r = await supabase.from("trip_photo").update({ deleted_at: new Date().toISOString() }).in("id", alvo.map((f) => f.id));
+    if (r.error) return void toast.error("Não foi possível apagar.");
+    await supabase.storage.from(BUCKET).remove(alvo.map((f) => f.storage_path));
+    setSel(new Set()); setSelecionando(false); setConfApagar(false);
+    await qc.invalidateQueries({ queryKey: ["fotos", id] });
+    toast.success(`${alvo.length} ${alvo.length === 1 ? "foto apagada" : "fotos apagadas"}`);
   }
 
   async function apagar(f: Foto) {
@@ -165,20 +199,44 @@ function FotosViagem() {
         {isLoading ? <p className="text-lg">Carregando…</p> : fotos.length === 0 ? (
           <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg">Nenhuma foto ainda.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
-            {fotos.map((f) => (
-              <button key={f.id} type="button" onClick={() => setAberta(f)} className="aspect-square overflow-hidden rounded-md bg-muted">
-                {f.url && <img src={f.url} alt="" loading="lazy" className="size-full object-cover" />}
-              </button>
-            ))}
+          <>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-base text-muted-foreground">{visiveis.length} {visiveis.length === 1 ? "foto" : "fotos"} a baixar</p>
+            <button type="button" onClick={() => { setSelecionando((s) => !s); setSel(new Set()); }} className="tap min-h-12 rounded-xl px-4 text-lg font-semibold text-accent">
+              {selecionando ? "Cancelar" : "Selecionar"}
+            </button>
           </div>
+          <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
+            {visiveis.map((f) => {
+              const marcada = sel.has(f.id);
+              return (
+                <button key={f.id} type="button" aria-pressed={selecionando || sel.size ? marcada : undefined}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || selecionando || sel.size) { if (!selecionando) setSelecionando(true); alternar(f.id); }
+                    else setAberta(f);
+                  }}
+                  className={`relative aspect-square overflow-hidden rounded-md bg-muted ${marcada ? "ring-4 ring-accent" : ""}`}>
+                  {f.url && <img src={f.url} alt="" loading="lazy" className={`size-full object-cover ${marcada ? "opacity-70" : ""}`} />}
+                  {marcada && <span className="absolute right-1 top-1 flex size-8 items-center justify-center rounded-full bg-accent text-accent-foreground"><Check size={20} strokeWidth={3} /></span>}
+                </button>
+              );
+            })}
+          </div>
+          </>
         )}
-        {fotos.length > 0 && (
-          <button type="button" onClick={baixarTodas} disabled={baixando} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold">
-            <Download size={24} strokeWidth={2.2} /> {baixando ? "Preparando…" : `Baixar todas (${fotos.length}) numa pasta`}
+        {sel.size > 0 && souDono && (
+          <button type="button" onClick={apagarSelecionadas} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-destructive text-lg font-bold text-destructive-foreground">
+            <Trash2 size={24} strokeWidth={2.2} /> {confApagar ? `Tem certeza? Apagar ${sel.size}` : `Apagar ${sel.size} ${sel.size === 1 ? "foto" : "fotos"}`}
           </button>
         )}
-        {!souDono && fotos.length > 0 && <p className="text-base text-muted-foreground">Só o organizador acrescenta ou apaga fotos.</p>}
+        {visiveis.length > 0 && (
+          <button type="button" onClick={baixarTodas} disabled={baixando} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold">
+            <Download size={24} strokeWidth={2.2} /> {baixando ? "Preparando…" : sel.size ? `Baixar ${sel.size} selecionadas numa pasta` : `Baixar todas (${visiveis.length}) numa pasta`}
+          </button>
+        )}
+        {fotos.length > 0 && visiveis.length === 0 && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram baixadas.</p>}
+        {baixadas.size > 0 && <button type="button" onClick={() => salvarBaixadas(new Set())} className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline">Mostrar de novo as já baixadas</button>}
+        <p className="text-base text-muted-foreground">No computador, segure ⌘ (ou Ctrl) e clique para escolher várias.{souDono ? "" : " Só o organizador acrescenta ou apaga fotos."}</p>
       </main>
 
       {aberta && <VerFoto foto={aberta} podeApagar={souDono} onFechar={() => setAberta(null)} onApagar={() => apagar(aberta)} />}
