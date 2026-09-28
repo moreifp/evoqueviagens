@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ChevronRight, Wallet } from "lucide-react";
 import { tripsQuery } from "@/lib/data";
-import { dataBRCurta, hojeISO } from "@/lib/format";
+import { dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/despesas")({
   head: () => ({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/despesas")({
 
 /** Viagem padrão: a que está acontecendo; senão a próxima; senão a mais recente. */
 function viagemPadrao(ativas: { id: string; data_inicio: string; data_fim: string }[]) {
-  const hoje = hojeISO();
+  const hoje = new Date().toLocaleDateString("en-CA");
   return (
     ativas.find((t) => t.data_inicio <= hoje && t.data_fim >= hoje) ??
     ativas.find((t) => t.data_inicio > hoje) ??
