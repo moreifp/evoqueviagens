@@ -35,7 +35,6 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const [dependentName, setDependentName] = useState("");
    const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Dependentes", true);
   const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
-  const [faltasAberta, alternarFaltas] = useGrupoAberto(personId, "Itens que você não tem", false);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
   const { oculto } = useEscondidos();
