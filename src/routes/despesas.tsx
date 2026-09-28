@@ -24,7 +24,7 @@ function viagemPadrao(ativas: { id: string; data_inicio: string; data_fim: strin
   return (
     ativas.find((t) => t.data_inicio <= hoje && t.data_fim >= hoje) ??
     ativas.find((t) => t.data_inicio > hoje) ??
-    [...ativas].sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))[0]
+    [...ativas].sort((a, b) => b.data_fim.localeCompare(a.data_fim))[0]
   );
 }
 
