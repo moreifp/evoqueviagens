@@ -90,9 +90,10 @@ function Programa() {
     {owner && item.cartao_path && <button onClick={() => void removeCard()} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"><Trash2 size={24} /> Tirar foto do cartão</button>}
     {item.site_url && <a href={item.site_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold">Abrir o site do programa <ExternalLink size={24} /></a>}
     {owner && <section className="rounded-lg border-2 border-border bg-card p-4"><h2 className="flex items-center gap-2 text-2xl"><LockKeyhole size={28} /> Cofre · acesso ao site</h2>
-      {!unlocked && <DestravarCofre uid={data.uid} />}
-      {unlocked && secret === undefined && <p className="mt-4 text-lg text-muted-foreground">Abrindo…</p>}
-      {unlocked && secret !== undefined && !editing && secret && <div className="mt-4 space-y-3">
+      {!revealed && <button type="button" onClick={() => setRevealed(true)} className="tap mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><LockKeyhole size={24} /> Destravar este acesso</button>}
+      {revealed && !unlocked && <DestravarCofre uid={data.uid} />}
+      {revealed && unlocked && secret === undefined && <p className="mt-4 text-lg text-muted-foreground">Abrindo…</p>}
+      {revealed && unlocked && secret !== undefined && !editing && secret && <div className="mt-4 space-y-3">
         <Campo rotulo="Login"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 break-all rounded-lg bg-muted px-4 py-3 text-lg">{secret.login || "—"}</span><button type="button" onClick={() => copy(secret.login)} aria-label="Copiar login" className="tap"><Copy size={24} /></button></div></Campo>
         <Campo rotulo="Senha"><div className="flex items-center gap-2"><span className="mono-code min-w-0 flex-1 break-all rounded-lg bg-muted px-4 py-3 text-lg">{secret.password ? (show ? secret.password : "••••••••") : "—"}</span><button type="button" onClick={() => setShow((x) => !x)} aria-label={show ? "Esconder senha" : "Mostrar senha"} className="tap">{show ? <EyeOff size={24} /> : <Eye size={24} />}</button><button type="button" onClick={() => copy(secret.password)} aria-label="Copiar senha" className="tap"><Copy size={24} /></button></div></Campo>
         <button type="button" onClick={() => setEditing(true)} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><Pencil size={24} /> Editar acesso</button>
