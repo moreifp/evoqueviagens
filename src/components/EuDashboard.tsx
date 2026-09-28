@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, FilePlus2, LogOut, Phone, Settings2, Share2, User, UserPlus, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus2, HardDrive, LogOut, Phone, Settings2, Share2, User, UserPlus, Users } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { contaDrive } from "@/lib/drive.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
 import { euQuery, progressoFicha, type EuDados } from "@/lib/eu";
@@ -163,6 +165,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "emergencia" }} className="tap flex items-center gap-3 py-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-emerg-soft text-emerg"><Phone size={24} strokeWidth={2.2} /></span><span className="flex-1"><strong className="block text-lg">Contato de emergência</strong><span className={`text-base ${p.emergencia_nome ? "text-muted-foreground" : "text-warn"}`}>{p.emergencia_nome ? `${p.emergencia_nome} · ${p.emergencia_telefone ?? "sem telefone"}` : "Falta preencher"}</span></span><ChevronRight size={26} /></Link>
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "pessoais" }} className="tap flex items-center gap-3 py-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-desp-soft text-desp"><User size={24} strokeWidth={2.2} /></span><span className="flex-1"><strong className="block text-lg">Dados pessoais</strong><span className="text-base text-muted-foreground">Nome, CPF, nascimento, contato e endereço</span></span><ChevronRight size={26} /></Link>
           {owner && <DocumentosCofre uid={data.uid} personId={p.id} />}
+          {self && <LinhaDrive pastaViagem={proxima?.nome ?? null} />}
           {self && <Link to="/compartilhamentos" className="tap flex items-center gap-3 py-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pess-soft text-pess"><Users size={24} strokeWidth={2.2} /></span><span className="flex-1"><strong className="block text-lg">Quem vê seus dados</strong><span className="text-base text-muted-foreground">Você compartilha com {quemVe.length} {quemVe.length === 1 ? "pessoa" : "pessoas"}</span></span><ChevronRight size={26} /></Link>}
         </div>}</section>
 
@@ -188,6 +191,29 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
     </div>
   );
 }
+/** Linha "Google Drive": conta conectada e pasta de destino das fotos. */
+function LinhaDrive({ pastaViagem }: { pastaViagem: string | null }) {
+  const [aberta, setAberta] = useState(false);
+  const buscar = useServerFn(contaDrive);
+  const { data: c, isLoading } = useQuery({ queryKey: ["drive-conta"], queryFn: buscar, enabled: aberta, staleTime: 60 * 60 * 1000 });
+  return (
+    <div className="py-3">
+      <button type="button" onClick={() => setAberta((a) => !a)} aria-expanded={aberta} className="tap flex w-full items-center gap-3 text-left">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-doc-soft text-doc"><HardDrive size={24} strokeWidth={2.2} /></span>
+        <span className="flex-1"><strong className="block text-lg">Google Drive</strong><span className="text-base text-muted-foreground">{aberta ? (c?.email ?? (isLoading ? "Conferindo…" : "Não ligado")) : "Conta e pasta de destino das fotos"}</span></span>
+        <ChevronRight size={26} className={`transition-transform ${aberta ? "rotate-90" : ""}`} />
+      </button>
+      {aberta && (
+        <div className="mt-2 space-y-1 rounded-lg bg-muted/50 p-3 text-base text-muted-foreground">
+          <p><strong className="text-foreground">Conta conectada:</strong> {c?.nome ? `${c.nome} · ` : ""}{c?.email ?? "…"}</p>
+          <p>Pasta de destino: {pastaViagem ? <span className="text-foreground">“{pastaViagem}”</span> : "uma pasta com o nome da viagem"}</p>
+          <p>As fotos vão como cópias pequenas para essa pasta no Drive; os originais ficam no aparelho.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Chave "Visual": Colorido (padrão) | Clássico (visual anterior). Só neste aparelho. */
 function ChaveVisual() {
   const v = useVisual();

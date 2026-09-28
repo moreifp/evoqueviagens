@@ -175,3 +175,8 @@
 - [x] B12 Texto do recibo em coluna; máx 1600 px
 - [x] C13–C19 Cores, grade, despesas, próximo compromisso, editar/apagar, Eu, consistência
 - [x] Chave Visual Colorido/Clássico
+
+## Fotos (28/09)
+- [x] Toggle para mostrar/esconder fotos já baixadas (sem voltar ao estado de baixar)
+- [x] Conferido: fotos CHEGARAM ao Drive (9 na pasta "Africa do Sul"); usuário não as via (conta/local)
+- [x] Linha "Google Drive" em Eu → Mais sobre você: conta conectada + pasta de destino

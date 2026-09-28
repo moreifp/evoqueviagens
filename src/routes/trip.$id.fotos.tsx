@@ -127,7 +127,9 @@ function FotosViagem() {
     setBaixadas(s);
     localStorage.setItem(chaveBaixadas, JSON.stringify([...s]));
   }
-  const visiveis = fotos.filter((f) => !baixadas.has(f.id));
+  const pendentes = fotos.filter((f) => !baixadas.has(f.id));
+  const [verBaixadas, setVerBaixadas] = useState(false);
+  const mostradas = verBaixadas ? fotos : pendentes;
 
   function alternar(fid: string) {
     setConfApagar(false);
@@ -137,7 +139,8 @@ function FotosViagem() {
   async function baixarTodas() {
     setBaixando(true);
     try {
-      const alvo = visiveis.filter((f) => f.url && (sel.size === 0 || sel.has(f.id)));
+      // Sem seleção: manda só as pendentes (as já baixadas não vão de novo).
+      const alvo = (sel.size ? mostradas : pendentes).filter((f) => f.url);
       const blobs = await Promise.all(alvo.map((f) => fetch(f.url!).then((r) => r.blob())));
       await baixarPasta(blobs);
       salvarBaixadas(new Set([...baixadas, ...alvo.map((f) => f.id)]));
@@ -209,14 +212,15 @@ function FotosViagem() {
         ) : (
           <>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-base text-muted-foreground">{visiveis.length} {visiveis.length === 1 ? "foto" : "fotos"} a baixar</p>
+            <p className="text-base text-muted-foreground">{pendentes.length} {pendentes.length === 1 ? "foto" : "fotos"} a baixar{verBaixadas && baixadas.size ? ` · ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}` : ""}</p>
             <button type="button" onClick={() => { setSelecionando((s) => !s); setSel(new Set()); }} className="tap min-h-12 rounded-xl px-4 text-lg font-semibold text-accent">
               {selecionando ? "Cancelar" : "Selecionar"}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
-            {visiveis.map((f) => {
+            {mostradas.map((f) => {
               const marcada = sel.has(f.id);
+              const jaBaixada = baixadas.has(f.id);
               return (
                 <button key={f.id} type="button" aria-pressed={selecionando || sel.size ? marcada : undefined}
                   onClick={(e) => {
@@ -225,6 +229,7 @@ function FotosViagem() {
                   }}
                   className={`relative aspect-square overflow-hidden rounded-md bg-muted ${marcada ? "ring-4 ring-accent" : ""}`}>
                   {f.url && <img src={f.url} alt="" loading="lazy" className={`size-full object-cover ${marcada ? "opacity-70" : ""}`} />}
+                  {jaBaixada && !marcada && <span aria-label="Já enviada ao Drive" className="absolute left-1 top-1 flex size-7 items-center justify-center rounded-full bg-primary/80 text-primary-foreground"><Check size={18} strokeWidth={3} /></span>}
                   {marcada && <span className="absolute right-1 top-1 flex size-8 items-center justify-center rounded-full bg-accent text-accent-foreground"><Check size={20} strokeWidth={3} /></span>}
                 </button>
               );
@@ -237,13 +242,17 @@ function FotosViagem() {
             <Trash2 size={24} strokeWidth={2.2} /> {confApagar ? `Tem certeza? Apagar ${sel.size}` : `Apagar ${sel.size} ${sel.size === 1 ? "foto" : "fotos"}`}
           </button>
         )}
-        {souDono && visiveis.length > 0 && (
+        {souDono && (pendentes.length > 0 || sel.size > 0) && (
           <button type="button" onClick={baixarTodas} disabled={baixando} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold">
-            <Download size={24} strokeWidth={2.2} /> {baixando ? `Enviando ${progresso}…` : sel.size ? `Enviar ${sel.size} ao Google Drive` : `Enviar todas (${visiveis.length}) ao Google Drive`}
+            <Download size={24} strokeWidth={2.2} /> {baixando ? `Enviando ${progresso}…` : sel.size ? `Enviar ${sel.size} ao Google Drive` : `Enviar todas (${pendentes.length}) ao Google Drive`}
           </button>
         )}
-        {fotos.length > 0 && visiveis.length === 0 && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram para o Google Drive.</p>}
-        {baixadas.size > 0 && <button type="button" onClick={() => salvarBaixadas(new Set())} className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline">Mostrar de novo as já baixadas</button>}
+        {fotos.length > 0 && pendentes.length === 0 && !verBaixadas && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram para o Google Drive.</p>}
+        {baixadas.size > 0 && (
+          <button type="button" onClick={() => setVerBaixadas((v) => !v)} aria-pressed={verBaixadas} className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline">
+            {verBaixadas ? `Esconder as ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}` : `Mostrar também as ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}`}
+          </button>
+        )}
         <p className="text-base text-muted-foreground">No computador, segure ⌘ (ou Ctrl) e clique para escolher várias.{souDono ? "" : " Só o organizador acrescenta ou apaga fotos."}</p>
       </main>
 

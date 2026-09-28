@@ -60,3 +60,11 @@ export const fotoDrive = createServerFn({ method: "POST" })
     );
     return { ok: true };
   });
+
+/** Conta Google ligada ao Drive deste projeto. */
+export const contaDrive = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const r = await checar(await fetch(`${GW}/drive/v3/about?fields=user`, { headers: headers() }), "conta");
+    return { email: (r.user?.emailAddress as string) ?? "", nome: (r.user?.displayName as string) ?? "" };
+  });
