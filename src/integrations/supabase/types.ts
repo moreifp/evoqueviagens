@@ -2253,6 +2253,32 @@ export type Database = {
           },
         ]
       }
+      trip_oculta: {
+        Row: {
+          account_id: string
+          created_at: string
+          trip_id: string
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          trip_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_oculta_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_trust: {
         Row: {
           account_id: string
