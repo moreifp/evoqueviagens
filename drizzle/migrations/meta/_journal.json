@@ -302,6 +302,13 @@
       "when": 1790620498992,
       "tag": "0042_trip_oculta",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1790621572177,
+      "tag": "0043_trip_photo",
+      "breakpoints": true
     }
   ]
 }
