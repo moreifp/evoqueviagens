@@ -16,6 +16,7 @@ import { Route as ConectarAssistenteRouteImport } from './routes/conectar-assist
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DespesasRouteImport } from './routes/despesas'
 import { Route as EnRouteImport } from './routes/en'
+import { Route as FotosRouteImport } from './routes/fotos'
 import { Route as LandingPreviewRouteImport } from './routes/landing-preview'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -43,6 +44,7 @@ import { Route as TripIdIndexRouteImport } from './routes/trip.$id.index'
 import { Route as TripIdAdicionarRouteImport } from './routes/trip.$id.adicionar'
 import { Route as TripIdClaudeRouteImport } from './routes/trip.$id.claude'
 import { Route as TripIdEmergenciaRouteImport } from './routes/trip.$id.emergencia'
+import { Route as TripIdFotosRouteImport } from './routes/trip.$id.fotos'
 import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
@@ -105,6 +107,11 @@ const DespesasRoute = DespesasRouteImport.update({
 const EnRoute = EnRouteImport.update({
   id: '/en',
   path: '/en',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FotosRoute = FotosRouteImport.update({
+  id: '/fotos',
+  path: '/fotos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LandingPreviewRoute = LandingPreviewRouteImport.update({
@@ -241,6 +248,11 @@ const TripIdClaudeRoute = TripIdClaudeRouteImport.update({
 const TripIdEmergenciaRoute = TripIdEmergenciaRouteImport.update({
   id: '/emergencia',
   path: '/emergencia',
+  getParentRoute: () => TripIdRoute,
+} as any)
+const TripIdFotosRoute = TripIdFotosRouteImport.update({
+  id: '/fotos',
+  path: '/fotos',
   getParentRoute: () => TripIdRoute,
 } as any)
 const TripIdPessoasRoute = TripIdPessoasRouteImport.update({
@@ -399,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
   '/en': typeof EnRouteWithChildren
+  '/fotos': typeof FotosRoute
   '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
@@ -424,6 +437,7 @@ export interface FileRoutesByFullPath {
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
+  '/trip/$id/fotos': typeof TripIdFotosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -462,6 +476,7 @@ export interface FileRoutesByTo {
   '/conectar-assistente': typeof ConectarAssistenteRoute
   '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
+  '/fotos': typeof FotosRoute
   '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
@@ -486,6 +501,7 @@ export interface FileRoutesByTo {
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
+  '/trip/$id/fotos': typeof TripIdFotosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -526,6 +542,7 @@ export interface FileRoutesById {
   '/contato': typeof ContatoRoute
   '/despesas': typeof DespesasRoute
   '/en': typeof EnRouteWithChildren
+  '/fotos': typeof FotosRoute
   '/landing-preview': typeof LandingPreviewRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mcp': typeof McpRoute
@@ -551,6 +568,7 @@ export interface FileRoutesById {
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
   '/trip/$id/claude': typeof TripIdClaudeRoute
   '/trip/$id/emergencia': typeof TripIdEmergenciaRoute
+  '/trip/$id/fotos': typeof TripIdFotosRoute
   '/trip/$id/pessoas': typeof TripIdPessoasRoute
   '/trip/$id/restaurantes': typeof TripIdRestaurantesRoute
   '/trip/$id/revisao': typeof TripIdRevisaoRoute
@@ -592,6 +610,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/despesas'
     | '/en'
+    | '/fotos'
     | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
@@ -617,6 +636,7 @@ export interface FileRouteTypes {
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
     | '/trip/$id/emergencia'
+    | '/trip/$id/fotos'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -655,6 +675,7 @@ export interface FileRouteTypes {
     | '/conectar-assistente'
     | '/contato'
     | '/despesas'
+    | '/fotos'
     | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
@@ -679,6 +700,7 @@ export interface FileRouteTypes {
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
     | '/trip/$id/emergencia'
+    | '/trip/$id/fotos'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -718,6 +740,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/despesas'
     | '/en'
+    | '/fotos'
     | '/landing-preview'
     | '/manifest.webmanifest'
     | '/mcp'
@@ -743,6 +766,7 @@ export interface FileRouteTypes {
     | '/trip/$id/adicionar'
     | '/trip/$id/claude'
     | '/trip/$id/emergencia'
+    | '/trip/$id/fotos'
     | '/trip/$id/pessoas'
     | '/trip/$id/restaurantes'
     | '/trip/$id/revisao'
@@ -783,6 +807,7 @@ export interface RootRouteChildren {
   ContatoRoute: typeof ContatoRoute
   DespesasRoute: typeof DespesasRoute
   EnRoute: typeof EnRouteWithChildren
+  FotosRoute: typeof FotosRoute
   LandingPreviewRoute: typeof LandingPreviewRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   McpRoute: typeof McpRoute
@@ -863,6 +888,13 @@ declare module '@tanstack/react-router' {
       path: '/en'
       fullPath: '/en'
       preLoaderRoute: typeof EnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fotos': {
+      id: '/fotos'
+      path: '/fotos'
+      fullPath: '/fotos'
+      preLoaderRoute: typeof FotosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/landing-preview': {
@@ -1052,6 +1084,13 @@ declare module '@tanstack/react-router' {
       path: '/emergencia'
       fullPath: '/trip/$id/emergencia'
       preLoaderRoute: typeof TripIdEmergenciaRouteImport
+      parentRoute: typeof TripIdRoute
+    }
+    '/trip/$id/fotos': {
+      id: '/trip/$id/fotos'
+      path: '/fotos'
+      fullPath: '/trip/$id/fotos'
+      preLoaderRoute: typeof TripIdFotosRouteImport
       parentRoute: typeof TripIdRoute
     }
     '/trip/$id/pessoas': {
@@ -1275,6 +1314,7 @@ interface TripIdRouteChildren {
   TripIdAdicionarRoute: typeof TripIdAdicionarRoute
   TripIdClaudeRoute: typeof TripIdClaudeRoute
   TripIdEmergenciaRoute: typeof TripIdEmergenciaRoute
+  TripIdFotosRoute: typeof TripIdFotosRoute
   TripIdPessoasRoute: typeof TripIdPessoasRoute
   TripIdRestaurantesRoute: typeof TripIdRestaurantesRoute
   TripIdRevisaoRoute: typeof TripIdRevisaoRoute
@@ -1299,6 +1339,7 @@ const TripIdRouteChildren: TripIdRouteChildren = {
   TripIdAdicionarRoute: TripIdAdicionarRoute,
   TripIdClaudeRoute: TripIdClaudeRoute,
   TripIdEmergenciaRoute: TripIdEmergenciaRoute,
+  TripIdFotosRoute: TripIdFotosRoute,
   TripIdPessoasRoute: TripIdPessoasRoute,
   TripIdRestaurantesRoute: TripIdRestaurantesRoute,
   TripIdRevisaoRoute: TripIdRevisaoRoute,
@@ -1330,6 +1371,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContatoRoute: ContatoRoute,
   DespesasRoute: DespesasRoute,
   EnRoute: EnRouteWithChildren,
+  FotosRoute: FotosRoute,
   LandingPreviewRoute: LandingPreviewRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   McpRoute: McpRoute,
