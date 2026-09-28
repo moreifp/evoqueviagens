@@ -80,7 +80,8 @@ export function TelaHoje({ trip }: { trip: Trip }) {
     void nav({ to: "/trip/$id/item/$tipo/$itemId", params: { id, tipo: "ticket", itemId: voo.id } });
   }
 
-  const chip = st ? chipDoStatus(st) : null;
+  const chip0 = st ? chipDoStatus(st) : null;
+  const chip = chip0 && !chip0.texto.startsWith("Portão") && chip0.tom !== "muted" ? chip0 : null;
 
   return (
     <div className="min-h-screen bg-background pb-32">
