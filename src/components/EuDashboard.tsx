@@ -1,12 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, FilePlus2, HardDrive, LogOut, Phone, Settings2, Share2, User, UserPlus, Users } from "lucide-react";
+import { BookUser, Stamp, Award, Siren, ChevronDown, ChevronRight, FilePlus2, HardDrive, LogOut, Phone, Settings2, Share2, User, UserPlus, Users } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { contaDrive } from "@/lib/drive.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
-import { euQuery, progressoFicha, type EuDados } from "@/lib/eu";
+import { euQuery, progressoFicha, statusDocumento, type EuDados } from "@/lib/eu";
 import { AvisosMeus, PedidosRecebidos } from "./AvisosPedidos";
 import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
@@ -115,25 +115,30 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
 
         <BarraPessoas atualId={p.id} />
 
-        <section className="gradient-hero shadow-medium rounded-lg p-5">
-          <div className="flex items-center gap-4">
-            <AvatarPessoa nome={p.nome} foto={p.foto_url} tamanho={76} />
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-2xl">{p.nome}</h2>
-              <p className="truncate text-base opacity-90">{p.email ?? "E-mail não informado"}</p>
-            </div>
-          </div>
-          <progress value={progresso.percentual} max={100} aria-label={`Ficha ${progresso.percentual}% completa`} className="mt-5 h-3 w-full overflow-hidden rounded-full accent-current" />
-          <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de {progresso.total}</p>
-          {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</button>)}</div>}
-        </section>
+        {(() => {
+          const nAvisos = faltas.filter((f) => f.obrigatorio).length + (viagemResumo?.atencao ?? 0);
+          const irAvisos = () => document.getElementById("avisos-eu")?.scrollIntoView({ behavior: "smooth" });
+          return (
+            <button type="button" onClick={irAvisos} className={`tap shadow-medium flex w-full items-center gap-4 rounded-3xl p-5 text-left ${nAvisos ? "bg-warn text-warn-foreground" : "gradient-hero"}`}>
+              <AvatarPessoa nome={p.nome} foto={p.foto_url} tamanho={60} />
+              <span className="min-w-0 flex-1">
+                <strong className="block text-2xl leading-tight">{nAvisos ? `${nAvisos} ${nAvisos === 1 ? "aviso" : "avisos"}` : "Tudo em ordem"}</strong>
+                <span className="block text-lg">Ficha {progresso.feitos} de {progresso.total}</span>
+              </span>
+              <ChevronRight size={28} className="shrink-0" />
+            </button>
+          );
+        })()}
 
         {owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="novo-botao tap flex items-center justify-center gap-2 rounded-lg bg-doc text-lg font-bold text-white"><FilePlus2 size={26} /> Adicionar documento</Link>}
+        {owner && <GradeEu data={data} />}
         {owner && <MostrarPassaporte pessoas={[{ id: p.id, nome: p.nome, docs: data.documentos }, ...data.dependentes.map((d) => ({ id: d.id, nome: d.nome, docs: data.documentosDependentes[d.id] ?? [] }))]} />}
 
+        <div id="avisos-eu" className="scroll-mt-4 space-y-7">
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
 
         <FichaCompleta personId={p.id} itens={progresso.itens} owner={owner} />
+        </div>
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
@@ -228,5 +233,26 @@ function ChaveVisual() {
         ))}
       </div>
     </section>
+  );
+}
+
+/** Grade 2×2: Passaportes, Vistos, Fidelidade e Emergência. */
+function GradeEu({ data }: { data: EuDados }) {
+  const p = data.pessoa;
+  const pass = data.documentos.filter((d) => d.tipo === "passaporte").sort((a, b) => String(b.validade).localeCompare(String(a.validade)));
+  const vistos = data.documentos.filter((d) => (TIPOS_VISTO as readonly string[]).includes(d.tipo));
+  const st = pass[0] ? statusDocumento(pass[0]) : null;
+  const emerg = !!(p.emergencia_nome && p.emergencia_telefone);
+  const bloco = "novo-cor tap shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4";
+  const chip = (texto: string, tom: string) => <span className={`self-start rounded-full px-2 py-0.5 text-sm font-bold ${tom === "ok" ? "bg-ok text-ok-foreground" : tom === "danger" ? "bg-danger text-danger-foreground" : tom === "warn" ? "bg-warn text-warn-foreground" : "bg-muted text-foreground"}`}>{texto}</span>;
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {pass[0]
+        ? <Link to="/pessoas/$pid/documentos/$did" params={{ pid: p.id, did: pass[0].id }} className={`${bloco} border-doc-border bg-doc-soft`}><BookUser size={28} strokeWidth={2.2} className="novo-cor-icone text-doc" /><strong className="text-lg text-foreground">Passaportes · {pass.length}</strong>{st && chip(st.label, st.tone)}</Link>
+        : <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "passaporte", did: "" }} className={`${bloco} border-doc-border bg-doc-soft`}><BookUser size={28} strokeWidth={2.2} className="novo-cor-icone text-doc" /><strong className="text-lg text-foreground">Passaportes · 0</strong>{chip("falta", "warn")}</Link>}
+      <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "visto", did: "" }} className={`${bloco} border-doc-border bg-doc-soft`}><Stamp size={28} strokeWidth={2.2} className="novo-cor-icone text-doc" /><strong className="text-lg text-foreground">Vistos · {vistos.length}</strong><span className="text-sm text-muted-foreground">{vistos.length ? "ver na ficha" : "adicionar"}</span></Link>
+      <Link to="/pessoas/$pid/fidelidade" params={{ pid: p.id }} className={`${bloco} border-pess-border bg-pess-soft`}><Award size={28} strokeWidth={2.2} className="novo-cor-icone text-pess" /><strong className="text-lg text-foreground">Fidelidade · {data.fidelidades.length}</strong><span className="text-sm text-muted-foreground">programas</span></Link>
+      <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "emergencia" }} className={`${bloco} border-emerg-border bg-emerg-soft`}><Siren size={28} strokeWidth={2.2} className="novo-cor-icone text-emerg" /><strong className="text-lg text-foreground">Emergência</strong>{chip(emerg ? "preenchido" : "falta", emerg ? "ok" : "warn")}</Link>
+    </div>
   );
 }
