@@ -100,14 +100,70 @@ export function AnexosItem({
               if (f) void enviarArquivo(f);
             }}
           />
-          <button
-            onClick={() => input.current?.click()}
-            disabled={enviando}
-            className="tap flex w-full items-center justify-center gap-2 bg-muted text-lg font-bold text-foreground"
+          <input
+            ref={inputCamera}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void enviarArquivo(f);
+            }}
+          />
+          <input
+            ref={inputGaleria}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void enviarArquivo(f);
+            }}
+          />
+          <div
+            onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+            onDragLeave={() => setArrastando(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setArrastando(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) void enviarArquivo(f);
+            }}
+            className={arrastando ? "bg-accent/10" : undefined}
           >
-            <Paperclip size={24} strokeWidth={2.2} />
-            {enviando ? "Enviando…" : "Anexar arquivo"}
-          </button>
+            <div className="grid grid-cols-3">
+              <button
+                onClick={() => inputCamera.current?.click()}
+                disabled={enviando}
+                className="tap flex items-center justify-center gap-2 bg-muted text-base font-bold text-foreground"
+              >
+                <Camera size={24} strokeWidth={2.2} />
+                Câmera
+              </button>
+              <button
+                onClick={() => inputGaleria.current?.click()}
+                disabled={enviando}
+                className="tap flex items-center justify-center gap-2 border-x border-border bg-muted text-base font-bold text-foreground"
+              >
+                <ImagePlus size={24} strokeWidth={2.2} />
+                Galeria
+              </button>
+              <button
+                onClick={() => input.current?.click()}
+                disabled={enviando}
+                className="tap flex items-center justify-center gap-2 bg-muted text-base font-bold text-foreground"
+              >
+                <Paperclip size={24} strokeWidth={2.2} />
+                Arquivo
+              </button>
+            </div>
+            <p className="bg-muted px-4 pb-3 text-center text-sm text-muted-foreground">
+              {enviando ? "Enviando…" : "Ou arraste um arquivo para cá"}
+            </p>
+          </div>
         </>
       )}
     </div>
