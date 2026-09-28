@@ -1,11 +1,11 @@
 import { LogOut } from "lucide-react";
 import { AvisosMeus } from "./AvisosPedidos";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BedDouble, CalendarCheck, Copy, MessageSquareWarning, Plane, Plus } from "lucide-react";
-import { membersQuery, roteiroQuery, ticketsQuery, pedidosQuery, type Trip, type ItemRoteiro } from "@/lib/data";
+import { tripQuery, tripsQuery, membersQuery, roteiroQuery, ticketsQuery, pedidosQuery, type Trip, type ItemRoteiro } from "@/lib/data";
 import { chaveDia, dataBRCurta, horaNoFuso } from "@/lib/format";
 import { AvatarGrupo } from "@/components/AvatarGrupo";
 import { SeloOffline } from "@/components/SeloOffline";
@@ -49,7 +49,7 @@ export function VisaoParticipante({ trip }: { trip: Trip }) {
 
   return (
     <>
-      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {dono?.nome ?? "Outra pessoa"} organiza</p></div><Link to="/nova-viagem" search={{ editar: trip.id }} aria-label="Sair desta viagem" className="tap flex flex-col items-center justify-center text-sm font-bold text-destructive"><LogOut size={26}/>Sair</Link></header>
+      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {dono?.nome ?? "Outra pessoa"} organiza</p></div><BotaoSair tripId={trip.id} /></header>
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-3 pb-28">
         <SeloOffline tripId={id} />
         <CartaoEmergencia trip={trip} editavel={false} />
@@ -87,5 +87,44 @@ export function VisaoParticipante({ trip }: { trip: Trip }) {
         </section>
       </main>
     </>
+  );
+}
+
+/** Sair da viagem direto na visão do participante: Sair → Tem certeza? → Mesmo? Não depende da rede para saber quem sou. */
+function BotaoSair({ tripId }: { tripId: string }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [passo, setPasso] = useState<0 | 1 | 2>(0);
+  const [ocupado, setOcupado] = useState(false);
+  async function sair() {
+    if (passo < 2) return setPasso((passo + 1) as 1 | 2);
+    setOcupado(true);
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      const meuId = s.session?.user.id;
+      if (!meuId) throw new Error("Entre na sua conta para sair.");
+      const { data: linhas, error } = await supabase.from("trip_member").select("id, person:person_id!inner(account_id)")
+        .eq("trip_id", tripId).eq("person.account_id", meuId).is("deleted_at", null);
+      if (error) throw error;
+      if (!linhas?.length) {
+        const { error: e2 } = await supabase.from("trip_oculta").upsert({ account_id: meuId, trip_id: tripId });
+        if (e2) throw e2;
+      }
+      for (const l of linhas ?? []) await mutar({ tipo: "update", tabela: "trip_member", id: l.id, valores: { status: "saiu", respondido_em: new Date().toISOString() } });
+      naTela<Trip>(qc, tripsQuery().queryKey, (lista) => lista.filter((v) => v.id !== tripId));
+      qc.removeQueries({ queryKey: tripQuery(tripId).queryKey });
+      toast.success("Você saiu da viagem");
+      navigate({ to: "/viagens" });
+    } catch (e) {
+      toast.error((e as Error).message || "Não consegui sair da viagem.");
+      setOcupado(false);
+      setPasso(0);
+    }
+  }
+  return (
+    <button type="button" onClick={() => void sair()} disabled={ocupado} aria-label="Sair desta viagem"
+      className={`tap flex flex-col items-center justify-center rounded-xl px-2 text-sm font-bold ${passo ? "bg-destructive text-destructive-foreground" : "text-destructive"}`}>
+      <LogOut size={26} />{passo === 0 ? "Sair" : passo === 1 ? "Tem certeza?" : "Mesmo?"}
+    </button>
   );
 }
