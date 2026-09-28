@@ -11,7 +11,8 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
-import { AbasApp, AvisoConexao } from "@/components/Chrome";
+import { AbasApp, AvisoConexao, AvisoFalhas } from "@/components/Chrome";
+import { aplicarVisual } from "@/lib/visual";
 import { ConviteInstalar } from "@/components/ConviteInstalar";
 import { BaixarOffline } from "@/components/BaixarOffline";
 
@@ -180,7 +181,7 @@ function hostComApp() {
 function RootApp() {
   const { queryClient } = Route.useRouteContext();
   const [instalavel, setInstalavel] = useState(false);
-  useEffect(() => setInstalavel(hostComApp()), []);
+  useEffect(() => { setInstalavel(hostComApp()); aplicarVisual(); }, []);
   // Só desenha as telas depois de trazer do aparelho os dados guardados:
   // sem isso, uma tela aberta sem internet ficaria esperando a rede.
   const [restaurado, setRestaurado] = useState(false);
@@ -224,6 +225,7 @@ function RootApp() {
     <QueryClientProvider client={queryClient}>
       {restaurado ? <Conteudo /> : <div className="min-h-screen bg-background" />}
       <AvisoConexao />
+      <AvisoFalhas />
       {instalavel && <ConviteInstalar />}
       <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>

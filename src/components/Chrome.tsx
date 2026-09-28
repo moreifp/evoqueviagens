@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, Plus, User, Plane, Utensils, Wallet, WifiOff, Images } from "lucide-react";
-import { useConexao } from "@/lib/outbox";
+import { useState } from "react";
+import { descartarFalha, nomeFalha, tentarFalha, useConexao, useFalhas } from "@/lib/outbox";
 
 export function Topo({
   titulo,
@@ -110,6 +111,24 @@ export function AvisoConexao() {
         : pendentes > 0
           ? `Sem internet · ${pendentes} ${pendentes === 1 ? "alteração esperando" : "alterações esperando"} internet`
           : "Sem internet · usando o que está no aparelho"}
+    </div>
+  );
+}
+
+/** Edições feitas sem internet que o servidor recusou ao sincronizar. */
+export function AvisoFalhas() {
+  const falhas = useFalhas();
+  const [ocupado, setOcupado] = useState(false);
+  const f = falhas[0];
+  if (!f) return null;
+  return (
+    <div role="alert" className="fixed inset-x-3 top-14 z-40 mx-auto max-w-md space-y-2 rounded-2xl border-2 border-danger bg-card p-3 shadow-medium">
+      <p className="text-base font-bold text-danger">Não deu para salvar {nomeFalha(f)}{falhas.length > 1 ? ` (+${falhas.length - 1})` : ""}</p>
+      <p className="line-clamp-2 text-sm text-muted-foreground">{f.erro}</p>
+      <div className="flex gap-2">
+        <button type="button" disabled={ocupado} onClick={async () => { setOcupado(true); await tentarFalha(0); setOcupado(false); }} className="tap flex-1 rounded-xl bg-primary text-base font-bold text-primary-foreground">Tentar de novo</button>
+        <button type="button" disabled={ocupado} onClick={() => void descartarFalha(0)} className="tap flex-1 rounded-xl border-2 border-border text-base font-bold">Descartar</button>
+      </div>
     </div>
   );
 }
