@@ -175,7 +175,7 @@ function VisaoOrganizador({ id }: { id: string }) {
 
         <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" cor="voos" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" cor="hosp" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" cor="reserva" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" cor="pess" />
           <Link to="/trip/$id/despesas" params={{ id }} className="novo-cor shadow-soft col-span-2 flex min-h-[72px] items-center gap-3 rounded-2xl border border-desp-border bg-desp-soft p-4">
-            <Wallet size={28} strokeWidth={2.2} className="shrink-0 text-desp" />
+            <Wallet size={28} strokeWidth={2.2} className="novo-cor-icone shrink-0 text-desp" />
             <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-muted-foreground">Despesas</span><span className="num block truncate text-2xl text-foreground">{fmtMoney(totalDesp, tripCompleta.moeda_base)}</span></span>
             {eu && <span className={`text-right text-base font-bold ${meuSaldo > 0 ? "text-recebe" : meuSaldo < 0 ? "text-deve" : "text-emdia"}`}>{meuSaldo > 0 ? `você recebe ${fmtMoney(meuSaldo / 100, tripCompleta.moeda_base)}` : meuSaldo < 0 ? `você deve ${fmtMoney(-meuSaldo / 100, tripCompleta.moeda_base)}` : "em dia"}</span>}
           </Link></div>
@@ -270,9 +270,9 @@ function Atalho({
     <Link
       to={to as never}
       params={{ id } as never}
-      className={`shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4 ${COR_FUNDO[cor]}`}
+      className={`novo-cor shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4 ${COR_FUNDO[cor]}`}
     >
-      <Icone size={28} strokeWidth={2.2} className={COR_TEXTO[cor]} />
+      <Icone size={28} strokeWidth={2.2} className={`novo-cor-icone ${COR_TEXTO[cor]}`} />
       <span className="num truncate text-2xl text-foreground">{numero}</span>
       <span className="text-sm font-bold text-muted-foreground">{rotulo}</span>
     </Link>
