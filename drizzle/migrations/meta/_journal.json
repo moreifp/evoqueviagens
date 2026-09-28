@@ -309,6 +309,13 @@
       "when": 1790621572177,
       "tag": "0043_trip_photo",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1790624685736,
+      "tag": "0044_lote_aviao_privacidade",
+      "breakpoints": true
     }
   ]
 }
