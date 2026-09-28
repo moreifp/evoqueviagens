@@ -1,40 +1,56 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { useUid } from "@/lib/despesas";
-import { Botao } from "@/components/Chrome";
 import { Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
-function formatarWhatsapp(digitos: string): string | null {
-  const num = digitos.replace(/\D/g, "");
+const PAISES = [
+  { codigo: "55", nome: "Brasil" },
+  { codigo: "1", nome: "EUA / Canadá" },
+  { codigo: "351", nome: "Portugal" },
+  { codigo: "54", nome: "Argentina" },
+  { codigo: "56", nome: "Chile" },
+  { codigo: "598", nome: "Uruguai" },
+  { codigo: "595", nome: "Paraguai" },
+  { codigo: "57", nome: "Colômbia" },
+  { codigo: "52", nome: "México" },
+  { codigo: "27", nome: "África do Sul" },
+  { codigo: "44", nome: "Reino Unido" },
+  { codigo: "34", nome: "Espanha" },
+  { codigo: "33", nome: "França" },
+  { codigo: "49", nome: "Alemanha" },
+  { codigo: "39", nome: "Itália" },
+] as const;
+
+function formatarWhatsapp(codigo: string, digitos: string): string | null {
+  let num = digitos.replace(/\D/g, "");
   if (!num) return null;
-  let sem55 = num;
-  if (sem55.startsWith("55") && (sem55.length === 12 || sem55.length === 13)) {
-    sem55 = sem55.slice(2);
+  // Se a pessoa digitou o código do país junto, não duplica
+  if (num.startsWith(codigo) && num.length > codigo.length + 5) {
+    num = num.slice(codigo.length);
   }
-  if (sem55.length === 11 || sem55.length === 10) {
-    return `+55${sem55}`;
-  }
-  if (sem55.length >= 12) {
-    return `+${num}`;
-  }
-  return null;
+  if (num.length < 6 || num.length > 14) return null;
+  return `+${codigo}${num}`;
 }
 
 function soDigitos(telefone: string): string {
   return telefone.replace(/\D/g, "");
 }
 
-export function LinkDespesas({ tripId }: { tripId: string }) {
+const btnPrimario =
+  "rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium";
+const btnSecundario =
+  "rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium";
+
+export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: string }) {
   const uid = useUid();
   const qc = useQueryClient();
-  const nav = useNavigate();
   const [msg, setMsg] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
   const [fone, setFone] = useState("");
+  const [pais, setPais] = useState("55");
   const [salvando, setSalvando] = useState(false);
 
   const { data: link } = useQuery({
@@ -70,7 +86,7 @@ export function LinkDespesas({ tripId }: { tripId: string }) {
   const url = link
     ? `${window.location.hostname === "localhost" ? window.location.origin : "https://evoque.global"}/d/${link.token}`
     : "";
-  const texto = `Despesas da viagem: ${url}`;
+  const texto = `Despesas da viagem${tripNome ? ` ${tripNome}` : ""}: ${url}`;
 
   async function criar() {
     const token = crypto.randomUUID().replace(/-/g, "");
@@ -113,13 +129,14 @@ export function LinkDespesas({ tripId }: { tripId: string }) {
   function abrirEdicao(personId: string) {
     setEditando(personId);
     setFone("");
+    setPais("55");
     setMsg("");
   }
 
   async function salvarFone(personId: string) {
-    const formatado = formatarWhatsapp(fone);
+    const formatado = formatarWhatsapp(pais, fone);
     if (!formatado) {
-      toast.error("Número inválido. Use DDD + número, ex: 11 98765-4321.");
+      toast.error("Número inválido. Digite DDD + número, ex: 11 98765-4321.");
       return;
     }
     setSalvando(true);
@@ -149,9 +166,9 @@ export function LinkDespesas({ tripId }: { tripId: string }) {
         fotos dos recibos ficam de fora.
       </p>
       {!link ? (
-        <Botao tipo="button" onClick={criar}>
+        <button type="button" className={btnPrimario} onClick={criar}>
           Criar link
-        </Botao>
+        </button>
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
@@ -159,16 +176,16 @@ export function LinkDespesas({ tripId }: { tripId: string }) {
               href={`https://wa.me/?text=${encodeURIComponent(texto)}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
+              className={btnPrimario}
             >
               WhatsApp
             </a>
-            <Botao tipo="button" variante="secundario" onClick={copiar}>
+            <button type="button" className={btnSecundario} onClick={copiar}>
               Copiar
-            </Botao>
-            <Botao tipo="button" variante="secundario" onClick={desligar}>
+            </button>
+            <button type="button" className={btnSecundario} onClick={desligar}>
               Desligar
-            </Botao>
+            </button>
           </div>
           {membros && membros.length > 0 && (
             <div className="space-y-2 pt-1">
@@ -194,30 +211,47 @@ export function LinkDespesas({ tripId }: { tripId: string }) {
                   return (
                     <div key={m.person_id} className="w-full">
                       {editando === m.person_id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="tel"
-                            inputMode="tel"
-                            placeholder="11 98765-4321"
-                            value={fone}
-                            onChange={(e) => setFone(e.target.value)}
-                            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                            autoFocus
-                          />
-                          <Botao
-                            tipo="button"
-                            onClick={() => salvarFone(m.person_id)}
-                            disabled={salvando}
-                          >
-                            {salvando ? "Salvando…" : "Salvar"}
-                          </Botao>
-                          <Botao
-                            tipo="button"
-                            variante="secundario"
-                            onClick={() => setEditando(null)}
-                          >
-                            Cancelar
-                          </Botao>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={pais}
+                              onChange={(e) => setPais(e.target.value)}
+                              className="rounded-lg border border-border bg-background px-2 py-2 text-sm"
+                              aria-label="Código do país"
+                            >
+                              {PAISES.map((p) => (
+                                <option key={p.codigo} value={p.codigo}>
+                                  +{p.codigo} {p.nome}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              placeholder="11 98765-4321"
+                              value={fone}
+                              onChange={(e) => setFone(e.target.value)}
+                              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className={btnPrimario}
+                              onClick={() => salvarFone(m.person_id)}
+                              disabled={salvando}
+                            >
+                              {salvando ? "Salvando…" : "Salvar"}
+                            </button>
+                            <button
+                              type="button"
+                              className={btnSecundario}
+                              onClick={() => setEditando(null)}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <button
