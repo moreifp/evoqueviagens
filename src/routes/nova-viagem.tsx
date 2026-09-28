@@ -21,6 +21,8 @@ export const Route = createFileRoute("/nova-viagem")({
       { name: "description", content: "Cadastre uma viagem com datas e moeda de referência." },
       { property: "og:title", content: "Nova viagem" },
       { property: "og:description", content: "Cadastre uma viagem com datas e moeda de referência." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { duplicar?: string; editar?: string } => ({ ...(typeof s.duplicar === "string" ? { duplicar: s.duplicar } : {}), ...(typeof s.editar === "string" ? { editar: s.editar } : {}) }),
