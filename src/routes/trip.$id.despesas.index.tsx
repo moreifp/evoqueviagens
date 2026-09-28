@@ -108,6 +108,8 @@ function Lista() {
           </>
         )}
 
+        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
+
         <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
           <button type="button" onClick={() => setMostrarDivisao((v) => !v)} aria-expanded={mostrarDivisao} aria-controls="divisao-despesas" className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 text-left">
             <span className="min-w-0">
@@ -133,8 +135,6 @@ function Lista() {
             </div>
           )}
         </section>
-
-        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
 
         {despesas.length + acertos.length > 0 && (
           <div className="grid grid-cols-2 gap-2" aria-label="Criar relatório">
