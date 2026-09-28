@@ -23,50 +23,25 @@ export const transcreverRecibo = createServerFn({ method: "POST" })
 
 Regras: transcreva apenas o que estiver visível, nunca invente valores ou itens. Se uma linha estiver ilegível, escreva (ilegível). Se não for um recibo, responda "Esta foto não parece uma conta ou recibo.". Devolva apenas o texto, sem comentários.`;
     try {
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      // Mesmo modelo da leitura de documentos: muito mais barato que o modelo
+      // de raciocínio e suficiente para transcrever uma conta.
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "Lovable-API-Key": key, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "openai/gpt-6-astra",
-          stream: true,
-          store: false,
-          reasoning: { effort: "low", summary: "auto" },
-          include: ["reasoning.encrypted_content"],
-          input: [{ role: "user", content: [
-            { type: "input_text", text: prompt },
-            { type: "input_image", image_url: data.imagem },
+          model: "google/gemini-2.5-flash",
+          messages: [{ role: "user", content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: data.imagem } },
           ] }],
         }),
       });
-      if (!r.ok || !r.body) {
+      if (!r.ok) {
         const msg = await r.text().catch(() => "");
         return { ok: false as const, erro: msg.slice(0, 300) || `erro ${r.status}` };
       }
-      // Lê a resposta em streaming e junta o texto final.
-      const leitor = r.body.getReader();
-      const dec = new TextDecoder();
-      let buffer = "";
-      let texto = "";
-      for (;;) {
-        const { done, value } = await leitor.read();
-        if (done) break;
-        buffer += dec.decode(value, { stream: true });
-        let nl: number;
-        while ((nl = buffer.indexOf("\n")) >= 0) {
-          const linha = buffer.slice(0, nl).trim();
-          buffer = buffer.slice(nl + 1);
-          if (!linha.startsWith("data:")) continue;
-          const carga = linha.slice(5).trim();
-          if (!carga || carga === "[DONE]") continue;
-          try {
-            const ev = JSON.parse(carga) as { type?: string; delta?: string; response?: { output_text?: string } };
-            if (ev.type === "response.output_text.delta" && ev.delta) texto += ev.delta;
-            else if (ev.type === "response.completed" && ev.response?.output_text && !texto) texto = ev.response.output_text;
-            else if (ev.type === "error") return { ok: false as const, erro: String((ev as { message?: string }).message ?? "erro").slice(0, 300) };
-          } catch { /* linha parcial ou de outro tipo */ }
-        }
-      }
-      texto = texto.trim();
+      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
+      const texto = (j.choices?.[0]?.message?.content ?? "").trim();
       if (!texto) return { ok: false as const, erro: "vazio" };
       return { ok: true as const, texto: texto.slice(0, 20_000) };
     } catch (e) {
