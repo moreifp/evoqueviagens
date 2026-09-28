@@ -10,6 +10,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
   const [rows, setRows] = useState<VaultDocument[]>([]);
   const [selected, setSelected] = useState<{ row: VaultDocument; contents: VaultDocumentContents } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [aberto, setAberto] = useState(false);
   useEffect(() => { if (!unlocked) { setSelected(null); setRows([]); return; } let alive = true; void listVaultDocuments(uid, personId).then((items) => { if (alive) setRows(items); }).catch(() => toast.error("Não foi possível abrir os arquivos do cofre.")); return () => { alive = false; }; }, [uid, personId, unlocked]);
   async function open(row: VaultDocument) { try { setSelected({ row, contents: await readVaultDocument(uid, row) }); } catch { toast.error("Não foi possível abrir o arquivo."); } }
   function download(contents: VaultDocumentContents) {
@@ -23,6 +24,9 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
     setBusy(true);
     try { await deleteVaultDocument(uid, selected.row); setRows((old) => old.filter((r) => r.id !== selected.row.id)); setSelected(null); toast.success("Arquivo apagado do cofre"); }
     catch { toast.error("Não foi possível apagar o arquivo."); } finally { setBusy(false); }
+  }
+  if (!aberto && !unlocked) {
+    return <button type="button" onClick={() => setAberto(true)} className="tap flex min-h-14 w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left"><LockKeyhole size={26} /><span className="flex-1"><strong className="block text-lg">Cofre · arquivos</strong><span className="text-base text-muted-foreground">Arquivos cifrados que só você abre</span></span></button>;
   }
   return <section className="space-y-3">
     <h2 className="flex items-center gap-2 text-2xl"><LockKeyhole size={26} /> Cofre · arquivos</h2>
