@@ -54,7 +54,9 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
     const cid = cidadesDosConsulados(e);
     return (
       <Link to="/trip/$id/emergencia" params={{ id: trip.id }} className={base}>
-        <Phone size={28} strokeWidth={2.2} className="shrink-0 text-destructive" />
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerg-soft text-emerg">
+          <Phone size={26} strokeWidth={2.2} />
+        </span>
         <span className="min-w-0 flex-1">
           <strong className="block text-lg">Emergência{n ? ` · ${n}` : ""}</strong>
           <span className="block text-base text-muted-foreground">{cid.length ? `Consulados em ${cid.join(" e ")} · sem internet` : "Salvo · sem internet"}</span>
@@ -71,7 +73,9 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
       onClick={async () => { if (await buscar()) void nav({ to: "/trip/$id/emergencia", params: { id: trip.id } }); }}
       className={`${base} disabled:opacity-70`}
     >
-      {buscando ? <Loader2 size={28} className="shrink-0 animate-spin text-destructive" /> : <Phone size={28} strokeWidth={2.2} className="shrink-0 text-destructive" />}
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerg-soft text-emerg">
+        {buscando ? <Loader2 size={26} className="animate-spin" /> : <Phone size={26} strokeWidth={2.2} />}
+      </span>
       <span className="min-w-0 flex-1">
         <strong className="block text-lg">{buscando ? "Buscando dados de emergência…" : "Dados de emergência · Buscar"}</strong>
         {!on && <span className="block text-base text-muted-foreground">Precisa de internet para buscar</span>}

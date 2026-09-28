@@ -29,7 +29,7 @@ function Despesas() {
         {ativas.map((t) => (
           <li key={t.id}>
             <Link to="/trip/$id/despesas" params={{ id: t.id }} className="shadow-soft flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card p-3">
-              <Wallet size={28} strokeWidth={2.2} className="text-teal" />
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-desp-soft text-desp"><Wallet size={26} strokeWidth={2.2} /></span>
               <span className="min-w-0 flex-1"><span className="block truncate text-lg font-bold">{t.nome}</span><span className="block text-sm text-muted-foreground">{dataBRCurta(t.data_inicio)} a {dataBRCurta(t.data_fim)} · {t.moeda_base}</span></span>
               <ChevronRight size={26} strokeWidth={2.2} />
             </Link>

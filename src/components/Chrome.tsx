@@ -55,11 +55,18 @@ export function BotaoFlutuante({ tripId }: { tripId: string }) {
 }
 
 const ABAS_APP = [
-  { to: "/", rotulo: "Eu", Icone: User, exact: true },
-  { to: "/viagens", rotulo: "Viagens", Icone: Plane, exact: false },
-  { to: "/restaurantes", rotulo: "Restaurantes", Icone: Utensils, exact: false },
-  { to: "/despesas", rotulo: "Despesas", Icone: Wallet, exact: false },
+  { to: "/", rotulo: "Eu", Icone: User, exact: true, cor: "doc" },
+  { to: "/viagens", rotulo: "Viagens", Icone: Plane, exact: false, cor: "voos" },
+  { to: "/restaurantes", rotulo: "Restaurantes", Icone: Utensils, exact: false, cor: "reserva" },
+  { to: "/despesas", rotulo: "Despesas", Icone: Wallet, exact: false, cor: "desp" },
 ] as const;
+
+const COR_ABA: Record<string, string> = {
+  doc: "text-doc bg-doc-soft",
+  voos: "text-voos bg-voos-soft",
+  reserva: "text-reserva bg-reserva-soft",
+  desp: "text-desp bg-desp-soft",
+};
 
 export function AbasApp() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -68,14 +75,14 @@ export function AbasApp() {
       aria-label="Seções do app"
       className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
     >
-      {ABAS_APP.map(({ to, rotulo, Icone, exact }) => {
+      {ABAS_APP.map(({ to, rotulo, Icone, exact, cor }) => {
         const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to) || (to === "/viagens" && path.startsWith("/trip"));
         return (
           <Link
             key={to}
             to={to}
-            className={`tap flex flex-col items-center justify-center gap-1 py-2 ${
-              ativo ? "text-accent" : "text-muted-foreground"
+            className={`tap mx-1 my-1 flex flex-col items-center justify-center gap-1 rounded-2xl py-2 ${
+              ativo ? COR_ABA[cor] : "text-muted-foreground"
             }`}
           >
             <Icone size={26} strokeWidth={2.2} />
