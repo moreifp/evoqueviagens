@@ -128,3 +128,7 @@
 
 ## Hospedagem em quadro preto
 - [x] Cartão de hospedagem no mesmo quadro escuro dos bilhetes
+
+## Revisão geral e custos (pedido 28/09)
+- [x] Leitura de recibo trocada para o modelo barato (gemini-2.5-flash), igual à leitura de documentos
+- [x] Recomendações de economia entregues ao usuário
