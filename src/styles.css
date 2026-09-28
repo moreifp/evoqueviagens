@@ -88,6 +88,29 @@
   --color-recebe: var(--recebe);
   --color-deve: var(--deve);
   --color-emdia: var(--emdia);
+
+  /* Acentos por tema */
+  --color-voos: var(--voos);
+  --color-voos-soft: var(--voos-soft);
+  --color-voos-border: var(--voos-border);
+  --color-hosp: var(--hosp);
+  --color-hosp-soft: var(--hosp-soft);
+  --color-hosp-border: var(--hosp-border);
+  --color-reserva: var(--reserva);
+  --color-reserva-soft: var(--reserva-soft);
+  --color-reserva-border: var(--reserva-border);
+  --color-doc: var(--doc);
+  --color-doc-soft: var(--doc-soft);
+  --color-doc-border: var(--doc-border);
+  --color-desp: var(--desp);
+  --color-desp-soft: var(--desp-soft);
+  --color-desp-border: var(--desp-border);
+  --color-pess: var(--pess);
+  --color-pess-soft: var(--pess-soft);
+  --color-pess-border: var(--pess-border);
+  --color-emerg: var(--emerg);
+  --color-emerg-soft: var(--emerg-soft);
+  --color-emerg-border: var(--emerg-border);
 }
 
 :root {
@@ -98,6 +121,29 @@
   --recebe: #1a5731;
   --deve: #8f2323;
   --emdia: #3d5064;
+
+  /* Acentos por tema (claro) */
+  --voos: #2f6da8;
+  --voos-soft: #e7f0f8;
+  --voos-border: #c5daec;
+  --hosp: #b05a2f;
+  --hosp-soft: #f9ede4;
+  --hosp-border: #ecd2c0;
+  --reserva: #8e3d6b;
+  --reserva-soft: #f7e9f1;
+  --reserva-border: #e4c9da;
+  --doc: #97701a;
+  --doc-soft: #faf2de;
+  --doc-border: #ecdcb4;
+  --desp: #25606a;
+  --desp-soft: #e4efef;
+  --desp-border: #c1d8d8;
+  --pess: #5d6b2e;
+  --pess-soft: #eff1e1;
+  --pess-border: #d7dbba;
+  --emerg: #a52a20;
+  --emerg-soft: #f9e9e6;
+  --emerg-border: #eccdc6;
   --navy: hsl(210 56% 11%);
   /* Landing institucional (evoque.global) */
   --ld-navy: #0c1c2c;
@@ -150,6 +196,8 @@
     hsl(165 43% 33%),
     hsl(188 46% 32%)
   );
+  --gradient-voos: linear-gradient(135deg, #1d4e7a, #2f6da8);
+  --gradient-hosp: linear-gradient(135deg, #8a4523, #b05a2f);
   --shadow-soft: 0 2px 8px -2px hsl(210 56% 11% / 0.08);
   --shadow-medium: 0 4px 16px -4px hsl(210 56% 11% / 0.12);
 }
@@ -162,6 +210,29 @@
   --recebe: #8fd6a4;
   --deve: #f2a3a3;
   --emdia: #b7c4d1;
+
+  /* Acentos por tema (escuro) */
+  --voos: #7db4e0;
+  --voos-soft: #16293c;
+  --voos-border: #2d4a66;
+  --hosp: #e0956a;
+  --hosp-soft: #3a2418;
+  --hosp-border: #5e3b26;
+  --reserva: #d990bf;
+  --reserva-soft: #371b2d;
+  --reserva-border: #5c3149;
+  --doc: #dcb45f;
+  --doc-soft: #362b12;
+  --doc-border: #584721;
+  --desp: #6fb0ba;
+  --desp-soft: #12302f;
+  --desp-border: #275050;
+  --pess: #b3c36f;
+  --pess-soft: #232a10;
+  --pess-border: #3e4820;
+  --emerg: #e88a7f;
+  --emerg-soft: #3a1712;
+  --emerg-border: #602a22;
   --background: hsl(210 56% 8%);
   --card: hsl(210 50% 12%);
   --card-foreground: hsl(40 40% 95%);
@@ -231,6 +302,16 @@
 
 @utility gradient-hero {
   background-image: var(--gradient-olive-teal);
+  color: hsl(40 40% 97%);
+}
+
+@utility gradient-voos {
+  background-image: var(--gradient-voos);
+  color: hsl(40 40% 97%);
+}
+
+@utility gradient-hosp {
+  background-image: var(--gradient-hosp);
   color: hsl(40 40% 97%);
 }
 
