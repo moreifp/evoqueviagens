@@ -11,6 +11,7 @@ import { aviso, naTela } from "@/lib/itens";
 import { textoBagagem, pegarBagagem } from "@/lib/bagagem";
 import { StatusVoo } from "@/components/StatusVoo";
 import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
+import { sufixoNome } from "@/lib/nomes";
 import { useState } from "react";
 import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
