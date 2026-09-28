@@ -6,6 +6,7 @@ import { dataBRCurta, diasAte } from "@/lib/format";
 import { AvatarGrupo } from "@/components/AvatarGrupo";
 import { ConvitesRecebidos } from "@/components/ConvitesRecebidos";
 import { ChipClaude } from "@/components/CaixaClaude";
+import { TelaHoje, viagemDeHoje } from "@/components/TelaHoje";
 import { AvisosMeus, PedidosRecebidos } from "@/components/AvisosPedidos";
 
 export const Route = createFileRoute("/viagens")({
@@ -14,11 +15,19 @@ export const Route = createFileRoute("/viagens")({
     { property: "og:title", content: "Viagens — Evoque Viagens" }, { property: "og:description", content: "Suas viagens atuais, próximas e passadas." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
+  validateSearch: (s: Record<string, unknown>): { todas?: boolean } => (s.todas === true || s.todas === "true" ? { todas: true } : {}),
   component: Viagens,
 });
 
 function Viagens() {
   const { data: viagens } = useSuspenseQuery(tripsQuery());
+  const { todas } = Route.useSearch();
+  const deHoje = todas ? null : viagemDeHoje(viagens);
+  if (deHoje) return <TelaHoje trip={deHoje} />;
+  return <ListaViagens viagens={viagens} />;
+}
+
+function ListaViagens({ viagens }: { viagens: Trip[] }) {
   const hoje = new Date().toISOString().slice(0, 10);
   const ordenadas = [...viagens].sort((a,b) => a.data_inicio.localeCompare(b.data_inicio));
   const futuras = ordenadas.filter((v) => !v.arquivada_em && v.data_fim >= hoje);

@@ -179,3 +179,27 @@ export const lerEmailAgencia = createServerFn({ method: "POST" })
       })),
     };
   });
+
+// ---------- Uma entrada só: lê TODOS os itens (vários voos, hotel, trem, carro, passeio) de uma vez ----------
+const tudoSchema = { type: "object", additionalProperties: false, properties: { itens: { type: "array", items: schema } }, required: ["itens"] };
+
+export const lerTudo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => input.parse(d))
+  .handler(async ({ data }): Promise<{ itens: Leitura[] }> => {
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) throw new Error("A leitura automática não está configurada.");
+    if (!data.texto?.trim() && !data.arquivo) throw new Error("Cole um texto ou escolha um arquivo.");
+    const instr = [
+      "Este conteúdo pode ter VÁRIAS reservas de viagem. Liste TODOS os itens encontrados, um por elemento: cada trecho de voo/trem/ônibus separado (ida, volta e conexões), cada hotel, cada aluguel de carro, passeio, ingresso ou restaurante.",
+      "Não adivinhe: campo ausente = null, lista ausente = []. Não liste despesas nem recibos. IGNORE cartões de crédito, parcelas e formas de pagamento.",
+      "Datas: ISO local YYYY-MM-DDTHH:mm (hora do lugar), data simples YYYY-MM-DD. Moeda ISO 4217. IATA com 3 letras.",
+      "Hotel: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out. Nomes de pessoas como 'Nome Sobrenome'.",
+    ].join(" ");
+    const content: Record<string, unknown>[] = [{ type: "input_text", text: instr }];
+    if (data.texto?.trim()) content.push({ type: "input_text", text: data.texto.trim() });
+    if (data.arquivo && data.mime?.startsWith("image/")) content.push({ type: "input_image", image_url: data.arquivo });
+    if (data.arquivo && data.mime === "application/pdf") content.push({ type: "input_file", filename: data.nome ?? "reserva.pdf", file_data: data.arquivo });
+    const out = z.object({ itens: z.array(saida) }).parse(JSON.parse(await chamarIA(key, content, "reservas_viagem", tudoSchema)));
+    return { itens: out.itens.filter((i) => i.tipo !== "despesa") };
+  });

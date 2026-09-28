@@ -13,12 +13,15 @@ export function AcoesItem({
   tripId,
   editarPara,
   queryKey,
+  destaque,
 }: {
   tabela: "ticket" | "lodging" | "reservation";
   id: string;
   tripId: string;
   editarPara: "/trip/$id/bilhetes/novo" | "/trip/$id/hospedagem/nova" | "/trip/$id/reservas/nova";
   queryKey: QueryKey;
+  /** Editar com fundo da cor do módulo e Apagar com contorno vermelho. */
+  destaque?: "voos" | "hosp";
 }) {
   const qc = useQueryClient();
 
@@ -51,6 +54,16 @@ export function AcoesItem({
     }
   }
 
+  if (destaque) return (
+    <div className="grid grid-cols-2 gap-2">
+      <Link to={editarPara} params={{ id: tripId }} search={{ editar: id } as never} className={`novo-botao tap flex items-center justify-center gap-2 rounded-2xl text-lg font-bold text-white ${destaque === "voos" ? "bg-voos" : "bg-hosp"}`}>
+        <Pencil size={24} strokeWidth={2.2} /> Editar
+      </Link>
+      <button onClick={apagar} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-destructive text-lg font-bold text-destructive">
+        <Trash2 size={24} strokeWidth={2.2} /> Apagar
+      </button>
+    </div>
+  );
   return (
     <div className="grid grid-cols-2 border-t border-border">
       <Link
