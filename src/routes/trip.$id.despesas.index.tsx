@@ -35,6 +35,7 @@ function Lista() {
   const { data: acertos } = useSuspenseQuery(settlementsQuery(id));
   const [aba, setAba] = useState<"todas" | "pessoais">("todas");
   const [mostrarDivisao, setMostrarDivisao] = useState(false);
+  const [mostrarLista, setMostrarLista] = useState(false);
   const org = uid === trip.owner_id;
   const moeda = trip.moeda_base;
   const nomeMoeda = (acharMoeda(moeda)?.nome ?? moeda).toLowerCase();
@@ -74,9 +75,16 @@ function Lista() {
         {!org && uid !== undefined && (
           <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-bold text-foreground"><Eye size={18} strokeWidth={2.2} /> Só leitura</p>
         )}
-        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
+        <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
+          <button type="button" onClick={() => setMostrarLista((v) => !v)} aria-expanded={mostrarLista} aria-controls="lista-despesas" className="tap flex w-full items-center justify-between gap-3 px-4 text-left">
+            <span className="text-lg font-bold text-foreground">Despesas · {despesas.length}</span>
+            {mostrarLista ? <ChevronUp className="shrink-0" size={26} strokeWidth={2.2} /> : <ChevronDown className="shrink-0" size={26} strokeWidth={2.2} />}
+          </button>
+          {mostrarLista && (
+            <div id="lista-despesas" className="space-y-3 border-t border-border p-3">
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 text-sm">
           {(["todas", "pessoais"] as const).map((a) => (
-            <button key={a} onClick={() => setAba(a)} aria-pressed={aba === a} className={`min-h-12 rounded-xl text-base font-bold ${aba === a ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}>
+            <button key={a} onClick={() => setAba(a)} aria-pressed={aba === a} className={`min-h-11 rounded-lg text-sm font-bold ${aba === a ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}>
               {a === "todas" ? "Todas" : `Pessoais (${pessoais.length})`}
             </button>
           ))}
@@ -86,9 +94,6 @@ function Lista() {
           despesas.length === 0
             ? <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma despesa ainda</p>
             : <section aria-label="Despesas da viagem">
-                <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto_4.5rem] gap-2 px-3 pb-1 text-xs font-bold uppercase text-muted-foreground">
-                  <span>Data</span><span>Descrição</span><span>Valor</span><span className="text-right">Pagou</span>
-                </div>
                 <ul className="space-y-2">{[...despesas].sort((a, b) => b.data.localeCompare(a.data)).map((d) => <li key={d.id}><LinhaDespesa d={d} mostrarData eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
         )}
@@ -110,6 +115,10 @@ function Lista() {
             ))}
           </>
         )}
+
+            </div>
+          )}
+        </section>
 
         <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
           <button type="button" onClick={() => setMostrarDivisao((v) => !v)} aria-expanded={mostrarDivisao} aria-controls="divisao-despesas" className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 text-left">
@@ -143,10 +152,10 @@ function Lista() {
         {despesas.length + acertos.length > 0 && (
           <div className="grid grid-cols-2 gap-2" aria-label="Criar relatório">
             <button onClick={() => void baixarExcel(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
-              <FileSpreadsheet size={24} strokeWidth={2.2} /> Criar Excel
+              <FileSpreadsheet size={24} strokeWidth={2.2} /> Excel
             </button>
             <button onClick={() => void baixarPdf(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
-              <FileText size={24} strokeWidth={2.2} /> Criar PDF
+              <FileText size={24} strokeWidth={2.2} /> PDF
             </button>
           </div>
         )}

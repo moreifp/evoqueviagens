@@ -176,9 +176,9 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
+    <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
       <button type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto} aria-controls="link-despesas-conteudo" className="tap flex w-full items-center justify-between gap-3 px-4 text-left">
-        <span className="font-medium text-sm">Link para verem as despesas</span>
+        <span className="min-w-0"><span className="block text-lg font-bold text-foreground">Link só para ver</span><span className="block text-sm text-muted-foreground">mandar no grupo</span></span>
         {aberto ? <ChevronUp className="shrink-0" size={24} /> : <ChevronDown className="shrink-0" size={24} />}
       </button>
       {aberto && <div id="link-despesas-conteudo" className="space-y-3 border-t border-border p-4">
