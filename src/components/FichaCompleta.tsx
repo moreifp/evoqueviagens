@@ -6,6 +6,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GRUPOS_FICHA, type ItemFicha } from "@/lib/eu";
 
+const ICONE_GRUPO: Record<string, { Icone: typeof IdCard; cor: string }> = {
+  "Documentos": { Icone: IdCard, cor: "bg-doc-soft text-doc" },
+  "Vistos e entrada": { Icone: Stamp, cor: "bg-voos-soft text-voos" },
+  "Saúde e seguro": { Icone: HeartPulse, cor: "bg-desp-soft text-desp" },
+  "Fidelidade": { Icone: Award, cor: "bg-reserva-soft text-reserva" },
+  "Pessoal": { Icone: UserRound, cor: "bg-pess-soft text-pess" },
+};
+
 /**
  * Lista agrupada de todos os itens da ficha, cada linha abre o formulário do item.
  * Cada seção é recolhível: o título fica sempre visível; os campos só aparecem quando aberta.
