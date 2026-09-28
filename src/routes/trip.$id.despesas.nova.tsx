@@ -12,8 +12,11 @@ import { CATEGORIAS, normalizarCategoria } from "@/lib/categorias";
 import { mutar } from "@/lib/outbox";
 import { novoId } from "@/lib/itens";
 import { participantesPadrao, centavos } from "@/lib/divisao";
-import { guardarTaxa, nomeCurto, ultimaTaxa, useUid } from "@/lib/despesas";
+import { impressao, guardarTaxa, nomeCurto, ultimaTaxa, useUid } from "@/lib/despesas";
 import { moedaValida } from "@/lib/moedas";
+import { useServerFn } from "@tanstack/react-start";
+import { transcreverRecibo } from "@/lib/recibo.functions";
+import { comprimir } from "@/lib/imagem";
 
 const s = (v: unknown) => {
   if (typeof v !== "string") return "";
@@ -59,6 +62,23 @@ function NovaDespesa() {
   const [data, setData] = useState(() => editando?.data ?? (q.data || hoje()));
   const [descricao, setDescricao] = useState(() => editando?.descricao ?? q.descricao);
   const [comprovante, setComprovante] = useState<string | null>(editando?.comprovante_url ?? null);
+  // Leitura automática da conta assim que a foto é anexada (texto vai junto com a despesa).
+  const lerConta = useServerFn(transcreverRecibo);
+  const [lendoConta, setLendoConta] = useState(false);
+  const [recibo, setRecibo] = useState<{ texto: string; path: string } | null>(null);
+  async function anexarRecibo(f: File) {
+    const melhor = await comprimir(f, 1600, 0.8).catch(() => f);
+    const url = await new Promise<string>((ok) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.readAsDataURL(melhor); });
+    setComprovante(url); setRecibo(null);
+    if (!navigator.onLine) { toast("Recibo anexado · a conta será lida quando abrir a despesa com internet."); return; }
+    setLendoConta(true);
+    try {
+      const r = await lerConta({ data: { imagem: url } });
+      if (r.ok) { setRecibo({ texto: r.texto, path: impressao(url)! }); toast.success("Conta lida · o texto fica na despesa."); }
+      else toast("Não conseguimos ler a conta. Veja se a foto está nítida.");
+    } catch { toast("Não conseguimos ler a conta agora."); }
+    finally { setLendoConta(false); }
+  }
   const [pagadores, setPagadores] = useState<Record<string, string>>(() =>
     editando ? Object.fromEntries(editando.pagadores.map((p) => [p.person_id, String(p.valor_original)])) : eu ? { [eu]: "" } : {});
   const [pessoal, setPessoal] = useState(editando?.pessoal ?? false);
@@ -171,6 +191,7 @@ function NovaDespesa() {
         item_id: editando?.item_id ?? (q.itemId || null),
       };
       const res = await mutar({ tipo: "rpc", funcao: "salvar_despesa", args: { _d: d, _pagadores: pagadoresJ, _partes: partesJ } });
+      if (recibo && comprovante && impressao(comprovante) === recibo.path) await mutar({ tipo: "update", tabela: "expense", id: expenseId, valores: { recibo_texto: recibo.texto, recibo_path: recibo.path } }).catch(() => null);
       const local: Expense = { ...(editando ?? {}), ...d, pago_por: pagadoresJ[0]!.person_id, criado_por: editando?.criado_por ?? uid ?? null, editado_em: editando ? new Date().toISOString() : null,
         pagadores: pagadoresJ.map((p, i) => ({ id: `l${i}`, deleted_at: null, ...p })), partes: partesJ.map((p, i) => ({ id: `p${i}`, deleted_at: null, ...p })) } as Expense;
       qc.setQueryData<Expense[]>(expensesQuery(id).queryKey, (l) => [local, ...(l ?? []).filter((e) => e.id !== expenseId)].sort((a, b) => b.data.localeCompare(a.data)));
@@ -328,10 +349,9 @@ function NovaDespesa() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-foreground">
-            <Camera size={24} strokeWidth={2.2} /> {comprovante ? "Recibo anexado" : "Foto do recibo"}
+            <Camera size={24} strokeWidth={2.2} /> {lendoConta ? "Lendo a conta…" : recibo ? "Conta lida ✓" : comprovante ? "Recibo anexado" : "Foto do recibo"}
             <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
-              const f = e.target.files?.[0]; if (!f) return;
-              const fr = new FileReader(); fr.onload = () => setComprovante(String(fr.result)); fr.readAsDataURL(f);
+              const f = e.target.files?.[0]; e.target.value = ""; if (f) void anexarRecibo(f);
             }} />
           </label>
           <label className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-2 text-base font-bold text-foreground">
@@ -340,7 +360,7 @@ function NovaDespesa() {
           </label>
         </div>
 
-        <button onClick={salvar} disabled={!podeSalvar || salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-40">
+        <button onClick={salvar} disabled={!podeSalvar || salvando || lendoConta} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-40">
           <Check size={28} strokeWidth={2.2} /> Salvar
         </button>
         <p className="text-center text-base text-muted-foreground">Sem internet? Salva no aparelho e sobe depois.</p>

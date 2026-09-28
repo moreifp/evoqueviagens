@@ -49,3 +49,11 @@ export async function apagarDespesa(qc: QueryClient, tripId: string, id: string)
     },
   });
 }
+
+/** Impressão curta da foto do recibo: liga o texto lido à foto certa. */
+export function impressao(ref: string | null | undefined) {
+  if (!ref) return null;
+  let h = 2166136261;
+  for (let i = 0; i < ref.length; i += Math.max(1, Math.floor(ref.length / 4096))) h = Math.imul(h ^ ref.charCodeAt(i), 16777619);
+  return `${ref.length}:${(h >>> 0).toString(36)}`;
+}
