@@ -46,7 +46,7 @@ function Reservas() {
           if (!d) return <CartaoResumo key={r.item_id} r={r} />;
           const Icone = ICONE[d.tipo] ?? Ticket;
           return (
-            <Link key={d.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+            <Link key={d.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl cartao-reserva px-4 text-primary-foreground shadow-soft">
               <Icone size={26} strokeWidth={2.2} className="shrink-0" aria-hidden />
               <span className="min-w-0"><strong className="block truncate text-lg">{d.titulo}</strong><span className="block truncate text-sm opacity-80">{dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))} · {horaNoFuso(d.inicio_utc, d.inicio_tz)} · {[d.local, d.cidade].filter(Boolean).join(" · ") || "Local não informado"}</span></span>
               <ChevronRight size={24} className="shrink-0" aria-hidden />

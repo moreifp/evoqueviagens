@@ -43,7 +43,7 @@ function Hospedagem() {
           const h = porId.get(r.item_id);
           if (!h) return <CartaoResumo key={r.item_id} r={r} />;
           return (
-          <Link key={h.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "lodging", itemId: h.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+          <Link key={h.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "lodging", itemId: h.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl cartao-hosp px-4 text-primary-foreground shadow-soft">
             <BedDouble size={26} strokeWidth={2.2} className="shrink-0" aria-hidden />
             <span className="min-w-0"><strong className="block truncate text-lg">{h.nome}</strong><span className="block truncate text-sm opacity-80">{dataBRCurta(chaveDia(h.checkin))}–{dataBRCurta(chaveDia(h.checkout))} · {h.cidade ?? h.endereco ?? "Local não informado"}</span></span>
             <ChevronRight size={24} className="shrink-0" aria-hidden />

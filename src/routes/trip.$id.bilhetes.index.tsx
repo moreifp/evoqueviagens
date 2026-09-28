@@ -172,7 +172,7 @@ function CartaoEmbarque({ b, grupo, s, nome, dono, pessoa }: { b: Ticket; grupo:
   const pax = grupo.flatMap((t) => t.passageiros).filter((q, i, l) => l.findIndex((x) => x.person_id === q.person_id) === i);
   const Icone = ICONE[b.tipo] ?? Plane;
   return (
-    <Link to="/trip/$id/item/$tipo/$itemId" params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+    <Link to="/trip/$id/item/$tipo/$itemId" params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl cartao-voo px-4 text-primary-foreground shadow-soft">
       <Logo url={b.tipo === "voo" ? logoCia(b.companhia, b.numero) : null} Icone={Icone} nome={b.companhia ?? b.tipo} tamanho={32} />
       <span className="min-w-0"><strong className="flex items-center gap-1 truncate text-lg">{b.origem_iata ?? b.origem_cidade ?? "—"}<ArrowRight size={17} />{b.destino_iata ?? b.destino_cidade ?? "—"}</strong><span className="block truncate text-sm opacity-80">{horaNoFuso(b.partida_utc, b.partida_tz)} · {[b.companhia, b.numero].filter(Boolean).join(" ")} · {pax.map((p) => nome(p.person_id)).join(", ")}</span><Selo pax={pax} dono={dono} pessoa={pessoa} /></span>
       <ChevronRight size={24} className="shrink-0" aria-hidden />
