@@ -1972,6 +1972,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           detalhe: string | null
+          detalhe2: string | null
           emissao: string | null
           id: string
           local_expedicao: string | null
@@ -1992,6 +1993,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           detalhe?: string | null
+          detalhe2?: string | null
           emissao?: string | null
           id?: string
           local_expedicao?: string | null
@@ -2012,6 +2014,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           detalhe?: string | null
+          detalhe2?: string | null
           emissao?: string | null
           id?: string
           local_expedicao?: string | null

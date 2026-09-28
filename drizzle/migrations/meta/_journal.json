@@ -281,6 +281,13 @@
       "when": 1790554326295,
       "tag": "0039_vault_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790554997870,
+      "tag": "0040_outro_detalhe2",
+      "breakpoints": true
     }
   ]
 }
