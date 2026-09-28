@@ -51,11 +51,11 @@ if (!HOST_SEM_APP) self.addEventListener("install", (event) => {
       // Um arquivo que falhar não impede os outros.
       await Promise.allSettled(lista.map(async (u) => {
         const r = await fetch(new Request(u, { cache: "reload" }));
-        if (r.ok) await cache.put(u, await limpar(r));
+        if (confiavel(r)) await cache.put(u, await limpar(r));
       }));
       try {
         const r = await fetch("/", { cache: "reload", credentials: "same-origin" });
-        if (r.ok) await cache.put(SHELL, await limpar(r));
+        if (confiavel(r)) await cache.put(SHELL, await limpar(r));
       } catch (e) {}
       await self.skipWaiting();
     })(),
@@ -66,37 +66,65 @@ if (!HOST_SEM_APP) self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const nomes = await caches.keys();
-      await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== RUNTIME && n !== ANEXOS && n !== LOGOS).map((n) => caches.delete(n)));
+      await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== ANEXOS && n !== LOGOS).map((n) => caches.delete(n)));
       await self.clients.claim();
     })(),
   );
 });
 
-async function navegar(request) {
+// Resposta boa para guardar: 200, mesmo host, sem ter sido desviada (portal de Wi-Fi de avião/aeroporto).
+function confiavel(r) {
+  if (!r || !r.ok || r.type === "opaqueredirect") return false;
   try {
-    const r = await fetch(request);
-    if (r.ok) {
-      const copia = r.clone();
-      caches.open(RUNTIME).then((c) => c.put(request, copia));
-      if (new URL(request.url).pathname === "/") {
-        const s = r.clone();
-        caches.open(CACHE).then((c) => c.put(SHELL, s));
-      }
-    }
-    return r;
+    if (r.redirected && new URL(r.url).host !== self.location.host) return false;
+    if (r.url && new URL(r.url).host !== self.location.host) return false;
+  } catch (e) { return false; }
+  return true;
+}
+
+async function guardarRuntime(req, r) {
+  const c = await caches.open(RUNTIME);
+  await c.put(req, r);
+  const k = await c.keys();
+  // Limite de ~200 itens: apaga os mais antigos.
+  for (let i = 0; i < k.length - 200; i++) await c.delete(k[i]);
+}
+
+async function daRede(request, ms) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(request, { signal: ctl.signal });
+    if (!confiavel(r)) return null;
+    const limpo = await limpar(r);
+    const a = limpo.clone(), b = limpo.clone();
+    guardarRuntime(request, a).catch(() => {});
+    if (new URL(request.url).pathname === "/") caches.open(CACHE).then((c) => c.put(SHELL, b)).catch(() => {});
+    return limpo;
   } catch (e) {
-    // Sem internet: qualquer tela abre o app guardado, que desenha com os dados do aparelho.
-    return (await caches.match(SHELL)) || (await caches.match(request)) || (await caches.match(OFFLINE)) || Response.error();
+    return null;
+  } finally { clearTimeout(t); }
+}
+
+// Navegação: casca guardada primeiro (abre no avião), atualiza em segundo plano.
+async function navegar(request, event) {
+  const casca = await caches.match(SHELL);
+  if (casca) {
+    event.waitUntil(daRede(request, 15000));
+    return casca;
   }
+  const r = await daRede(request, 2500);
+  if (r) return r;
+  return (await caches.match(request)) || (await caches.match(OFFLINE)) || Response.error();
 }
 
 async function arquivo(request) {
   const guardado = await caches.match(request, { ignoreVary: true });
   if (guardado) return guardado;
   const r = await fetch(request);
-  if (r.ok && r.type === "basic") {
+  if (confiavel(r) && r.type === "basic") {
     const copia = r.clone();
-    caches.open(RUNTIME).then((c) => c.put(request, copia));
+    guardarRuntime(request, copia).catch(() => {});
   }
   return r;
 }
@@ -151,7 +179,7 @@ if (!HOST_SEM_APP) self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin || ignorar(url)) return;
   if (req.mode === "navigate") {
-    event.respondWith(navegar(req));
+    event.respondWith(navegar(req, event));
     return;
   }
   event.respondWith(arquivo(req));

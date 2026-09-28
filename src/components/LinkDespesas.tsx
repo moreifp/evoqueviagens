@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { mutar } from "@/lib/outbox";
+import { origemApp } from "@/lib/site";
 import { useUid } from "@/lib/despesas";
 import { ChevronDown, ChevronUp, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -54,16 +54,17 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   const [salvando, setSalvando] = useState(false);
   const [aberto, setAberto] = useState(false);
 
-  const { data: link } = useQuery({
+  const [criando, setCriando] = useState(false);
+  const { data: links, isLoading: carregandoLink } = useQuery({
     queryKey: ["despesas-link", tripId],
     queryFn: async () => {
       const { data } = await supabase
         .from("despesas_link")
-        .select("id, token")
+        .select("id, token, expira_em")
         .eq("trip_id", tripId)
         .is("revogado_em", null)
-        .maybeSingle();
-      return data;
+        .order("created_at", { ascending: false });
+      return data ?? [];
     },
     enabled: !!uid && aberto,
   });
@@ -88,32 +89,46 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
     enabled: !!uid && aberto,
   });
 
-  const url = link
-    ? `${window.location.hostname === "localhost" ? window.location.origin : "https://evoque.global"}/d/${link.token}`
-    : "";
+  const link = links?.[0] ?? null;
+  const vencido = !!link?.expira_em && new Date(link.expira_em).getTime() < Date.now();
+  const url = link ? `${origemApp()}/d/${link.token}` : "";
   const texto = `Despesas da viagem${tripNome ? ` ${tripNome}` : ""}: ${url}`;
 
+  // Expira 30 dias depois do fim da viagem.
+  async function validade() {
+    const { data } = await supabase.from("trip").select("data_fim").eq("id", tripId).maybeSingle();
+    const fim = data?.data_fim ? new Date(`${data.data_fim}T23:59:59Z`) : new Date();
+    const base = Math.max(fim.getTime(), Date.now());
+    return new Date(base + 30 * 864e5).toISOString();
+  }
+
   async function criar() {
-    const token = crypto.randomUUID().replace(/-/g, "");
-    const { error } = await supabase.from("despesas_link").insert({
-      trip_id: tripId,
-      token,
-      criado_por: uid!,
-    });
-    if (error) {
-      toast.error("Não consegui criar o link.");
-      return;
-    }
-    qc.invalidateQueries({ queryKey: ["despesas-link", tripId] });
-    setMsg("Link criado.");
+    if (criando) return;
+    setCriando(true);
+    try {
+      const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+      const { error } = await supabase.from("despesas_link").insert({ trip_id: tripId, token, criado_por: uid!, expira_em: await validade() });
+      if (error) {
+        toast.error(error.code === "23505" ? "Esta viagem já tem um link ligado." : "Não consegui criar o link.");
+      } else setMsg("Link criado.");
+      await qc.invalidateQueries({ queryKey: ["despesas-link", tripId] });
+    } finally { setCriando(false); }
+  }
+
+  async function renovar() {
+    if (!link) return;
+    const { error } = await supabase.from("despesas_link").update({ expira_em: await validade() }).eq("id", link.id);
+    if (error) return void toast.error("Não consegui renovar.");
+    await qc.invalidateQueries({ queryKey: ["despesas-link", tripId] });
+    setMsg("Link renovado por mais 30 dias após o fim da viagem.");
   }
 
   async function desligar() {
-    if (!link) return;
+    if (!links?.length) return;
     const { error } = await supabase
       .from("despesas_link")
       .update({ revogado_em: new Date().toISOString() })
-      .eq("id", link.id);
+      .in("id", links.map((l) => l.id));
     if (error) {
       toast.error("Não consegui desligar o link.");
       return;
@@ -146,19 +161,15 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
     }
     setSalvando(true);
     try {
-      const m = membros?.find((x) => x.person_id === personId);
-      if (m?.meu) {
-        await mutar({ tipo: "update", tabela: "person", id: personId, valores: { telefone: formatado } });
-      } else {
-        const { data, error } = await supabase.from("trip_member").update({ convite_telefone: formatado }).eq("id", m?.member_id ?? "").select("id");
-        if (error || !data?.length) throw new Error("não salvou");
-      }
-      qc.invalidateQueries({ queryKey: ["despesas-link-membros", tripId] });
+      const { data: n, error } = await supabase.rpc("salvar_whatsapp_participante", { _trip: tripId, _person: personId, _telefone: formatado });
+      if (error) throw new Error(error.message);
+      if (!n) throw new Error("Nada foi alterado.");
+      await qc.invalidateQueries({ queryKey: ["despesas-link-membros", tripId] });
       setEditando(null);
       setFone("");
       toast.success(`WhatsApp salvo: ${formatado}`);
-    } catch {
-      toast.error("Não consegui salvar o número.");
+    } catch (e) {
+      toast.error(`Não salvei o número: ${e instanceof Error ? e.message : "erro"}`);
     } finally {
       setSalvando(false);
     }
@@ -176,11 +187,16 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
           fotos dos recibos ficam de fora.
         </p>
         {!link ? (
-        <button type="button" className={btnPrimario} onClick={criar}>
-          Criar link
+        <button type="button" className={btnPrimario} onClick={criar} disabled={criando || carregandoLink}>
+          {criando ? "Criando…" : carregandoLink ? "Carregando…" : "Criar link"}
         </button>
       ) : (
         <>
+          {(links?.length ?? 0) > 1 && <p className="text-sm font-semibold text-danger">Há {links!.length} links ligados. Toque em Desligar para desligar todos.</p>}
+          <p className={`text-xs ${vencido ? "font-semibold text-danger" : "text-muted-foreground"}`}>
+            {link.expira_em ? `${vencido ? "Venceu em" : "Vale até"} ${new Date(link.expira_em).toLocaleDateString("pt-BR")}.` : "Sem prazo."}{" "}
+            <button type="button" onClick={renovar} className="font-semibold text-accent underline">Renovar</button>
+          </p>
           <div className="flex flex-wrap gap-2">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(texto)}`}
@@ -194,7 +210,7 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
               Copiar
             </button>
             <button type="button" className={btnSecundario} onClick={desligar}>
-              Desligar
+              {(links?.length ?? 0) > 1 ? "Desligar todos" : "Desligar"}
             </button>
           </div>
           {membros && membros.length > 0 && (

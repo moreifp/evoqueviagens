@@ -18,9 +18,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let vivo = true;
     let garantido = false;
+    let erroRede = false;
     async function aplicar(s: Session | null, evento?: string) {
       // Sem internet, nunca derruba para a tela de login: usa a sessão guardada no aparelho.
-      if (!s && !navigator.onLine) s = sessaoGuardada();
+      if (!s && (!navigator.onLine || erroRede)) s = sessaoGuardada();
       if (!s && evento && evento !== "SIGNED_OUT" && !navigator.onLine) return;
       if (s && !garantido && navigator.onLine) {
         garantido = true;
@@ -39,8 +40,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     const semRede = setTimeout(() => {
       if (!navigator.onLine) void aplicar(sessaoGuardada());
     }, 1500);
-    supabase.auth.getSession().then(({ data }) => aplicar(data.session)).catch(() => aplicar(null));
+    // Erro de rede (Wi-Fi de avião sem internet, portal) conta como offline: usa a sessão guardada.
+    const deRede = (e: unknown) => /fetch|network|timeout|abort|load failed/i.test(String((e as Error)?.message ?? e));
+    supabase.auth.getSession()
+      .then(({ data, error }) => { if (error && deRede(error)) erroRede = true; return aplicar(data.session ?? (erroRede ? sessaoGuardada() : null)); })
+      .catch((e) => { erroRede = deRede(e) || true; return aplicar(sessaoGuardada()); });
     const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
+      // Refresh que falhou por rede dispara SIGNED_OUT sem sessão: não derruba se houver sessão guardada.
+      if (!s && e !== "SIGNED_OUT") erroRede = true;
       setTimeout(() => aplicar(s, e), 0);
     });
     // Internet voltou: renova a sessão (se não der, aí sim pede login).

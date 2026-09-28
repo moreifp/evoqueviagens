@@ -18,6 +18,8 @@ import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
 import { DocumentosCofre } from "./DocumentosCofre";
+import { MostrarPassaporte } from "./MostrarPassaporte";
+import { mudarVisual, useVisual } from "@/lib/visual";
 
 const LISTA_VAZIA: never[] = [];
 
@@ -103,15 +105,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
     <div className="min-h-screen bg-background pb-32">
       <header className="flex flex-wrap items-center gap-3 px-4 py-3">
         {back && <Link to="/" className="tap flex items-center text-lg font-bold text-foreground">Voltar</Link>}
-        <h1 className="min-w-0 flex-1 truncate text-3xl">{self ? "Minha conta" : p.apelido || p.nome}</h1>
-        {self && (
-          <div className="flex w-full items-center gap-3 sm:w-auto">
-            <Link to="/compartilhamentos" className="tap flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground sm:flex-none">
-              <Share2 size={26} strokeWidth={2.2} /> Compartilhar
-            </Link>
-            <ConvidarApp />
-          </div>
-        )}
+        <h1 className="min-w-0 flex-1 truncate text-3xl">{self ? "Eu" : p.apelido || p.nome}</h1>
       </header>
 
       <main className="mx-auto max-w-3xl space-y-7 px-4">
@@ -131,6 +125,9 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de {progresso.total}</p>
           {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</button>)}</div>}
         </section>
+
+        {owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="novo-botao tap flex items-center justify-center gap-2 rounded-lg bg-doc text-lg font-bold text-white"><FilePlus2 size={26} /> Adicionar documento</Link>}
+        {owner && <MostrarPassaporte pessoas={[{ id: p.id, nome: p.nome, docs: data.documentos }, ...data.dependentes.map((d) => ({ id: d.id, nome: d.nome, docs: data.documentosDependentes[d.id] ?? [] }))]} />}
 
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
 
@@ -170,15 +167,40 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         </div>}</section>
 
 
-        {self && <button onClick={sair} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive"><LogOut size={26} /> Sair da conta</button>}
-        {owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
 
         <ItensQueNaoTem personId={p.id} itens={progresso.itens} owner={owner} />
 
+        {self && <ChaveVisual />}
+        {self && (
+          <div className="flex items-center gap-3">
+            <Link to="/compartilhamentos" className="tap flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-lg font-bold text-primary-foreground">
+              <Share2 size={26} strokeWidth={2.2} /> Compartilhar
+            </Link>
+            <ConvidarApp />
+          </div>
+        )}
+
         {self && <AvisosPush />}
         <AvisosEscondidos contextos={[p.id, ...(proxima ? [proxima.id] : [])]} />
+        {self && <button onClick={sair} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive"><LogOut size={26} /> Sair da conta</button>}
         {versaoBuild() && <p className="pt-2 pb-4 text-center text-xs text-muted-foreground/70">Versão {versaoBuild()}</p>}
       </main>
     </div>
+  );
+}
+/** Chave "Visual": Colorido (padrão) | Clássico (visual anterior). Só neste aparelho. */
+function ChaveVisual() {
+  const v = useVisual();
+  return (
+    <section aria-label="Visual" className="space-y-2">
+      <h2 className="text-2xl">Visual</h2>
+      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
+        {(["colorido", "classico"] as const).map((x) => (
+          <button key={x} type="button" onClick={() => mudarVisual(x)} aria-pressed={v === x} className={`min-h-12 rounded-xl text-base font-bold ${v === x ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}>
+            {x === "colorido" ? "Colorido" : "Clássico"}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -1,3 +1,4 @@
+import { resumoSaldos } from "@/lib/saldos";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -38,6 +39,8 @@ function Lista() {
   const moeda = trip.moeda_base;
   const nomeMoeda = (acharMoeda(moeda)?.nome ?? moeda).toLowerCase();
 
+  const { saldos, eu } = resumoSaldos(despesas, acertos, membros);
+  const meuSaldo = eu ? saldos[eu] ?? 0 : 0;
   const divididas = despesas.filter((d) => !d.pessoal);
   const pessoais = despesas.filter((d) => d.pessoal);
   const soma = (l: Expense[]) => l.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
@@ -64,7 +67,7 @@ function Lista() {
       <main className="space-y-4 px-4 pt-3">
         {org && (
           <Link to="/trip/$id/despesas/nova" params={{ id }} search={{ editar: "", itemTipo: "", itemId: "", descricao: "", valor: "", moeda: "", data: "", categoria: "", pessoas: "", origemNome: "" }}
-            className="tap flex w-full items-center justify-center gap-2 rounded-2xl bg-navy px-5 text-lg font-bold text-primary-foreground shadow-medium">
+            className="tap flex w-full items-center justify-center gap-2 novo-botao rounded-2xl bg-desp px-5 text-lg font-bold text-white shadow-medium">
             <Plus size={26} strokeWidth={2.4} /> Nova despesa
           </Link>
         )}
@@ -108,13 +111,12 @@ function Lista() {
           </>
         )}
 
-        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
-
         <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
           <button type="button" onClick={() => setMostrarDivisao((v) => !v)} aria-expanded={mostrarDivisao} aria-controls="divisao-despesas" className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 text-left">
             <span className="min-w-0">
-               <span className="block text-lg font-bold text-foreground">Mostrar divisão</span>
-               <span className="block truncate text-sm text-muted-foreground">Saldos e pagamentos entre as pessoas</span>
+               <span className="block text-lg font-bold text-foreground">Divisão</span>
+               {eu ? <span className={`block truncate text-base font-bold ${meuSaldo > 0 ? "text-recebe" : meuSaldo < 0 ? "text-deve" : "text-emdia"}`}>{meuSaldo > 0 ? `você recebe ${fmtMoney(meuSaldo / 100, moeda)}` : meuSaldo < 0 ? `você deve ${fmtMoney(-meuSaldo / 100, moeda)}` : "em dia"}</span>
+                 : <span className="block truncate text-sm text-muted-foreground">Saldos e pagamentos entre as pessoas</span>}
             </span>
             {mostrarDivisao ? <ChevronUp className="shrink-0" size={26} strokeWidth={2.2} /> : <ChevronDown className="shrink-0" size={26} strokeWidth={2.2} />}
           </button>
@@ -135,6 +137,8 @@ function Lista() {
             </div>
           )}
         </section>
+
+        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
 
         {despesas.length + acertos.length > 0 && (
           <div className="grid grid-cols-2 gap-2" aria-label="Criar relatório">

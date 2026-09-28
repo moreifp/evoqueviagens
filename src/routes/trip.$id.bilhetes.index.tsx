@@ -18,9 +18,9 @@ export const Route = createFileRoute("/trip/$id/bilhetes/")({
   validateSearch: (s: Record<string, unknown>): { p?: string } => (typeof s.p === "string" ? { p: s.p } : {}),
   head: () => ({
     meta: [
-      { title: "Bilhetes — Evoque Viagens" },
+      { title: "Transporte — Evoque Viagens" },
       { name: "description", content: "Cartões de embarque da viagem, agrupados por dia." },
-      { property: "og:title", content: "Bilhetes" },
+      { property: "og:title", content: "Transporte" },
       { property: "og:description", content: "Cartões de embarque da viagem, agrupados por dia." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -83,13 +83,12 @@ function Bilhetes() {
 
   return (
     <>
-      <Topo titulo="Bilhetes" voltarPara="/trip/$id" voltarParams={{ id }} />
+      <Topo titulo="Transporte" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-6 px-4 pt-4">
         <FileiraPessoas tripId={id} membros={ativos} sel={pessoa?.person_id} />
         {bilhetes.length === 0 && (
-          <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">
-            {pessoa ? `Nenhum bilhete de ${pessoa.apelido || pessoa.nome.split(" ")[0]}` : "Nenhum bilhete ainda"}
-          </p>
+          pessoa ? <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nada de {pessoa.apelido || pessoa.nome.split(" ")[0]} ainda</p>
+          : <Link to="/trip/$id/bilhetes/novo" params={{ id }} className="tap flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-voos-border p-8 text-lg font-bold text-voos">+ Primeiro transporte</Link>
         )}
         {[...grupos.entries()].map(([dia, itens]) => (
           <section key={dia}>
@@ -135,7 +134,7 @@ function FileiraPessoas({ tripId, membros, sel }: { tripId: string; membros: Mem
   const ordem = eu ? [eu, ...membros.filter((m) => m !== eu)] : membros;
   const cls = "flex shrink-0 flex-col items-center gap-1";
   return (
-    <nav aria-label="Bilhetes por pessoa" className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+    <nav aria-label="Transporte por pessoa" className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
       <Link to="/trip/$id/bilhetes" params={{ id: tripId }} search={{}} className={cls} aria-current={!sel ? "page" : undefined}>
         <span className={`rounded-full p-0.5 ${!sel ? "ring-4 ring-ok" : ""}`}>
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-secondary-foreground"><Users size={26} strokeWidth={2.2} /></span>
@@ -172,7 +171,7 @@ function CartaoEmbarque({ b, grupo, s, nome, dono, pessoa }: { b: Ticket; grupo:
   const pax = grupo.flatMap((t) => t.passageiros).filter((q, i, l) => l.findIndex((x) => x.person_id === q.person_id) === i);
   const Icone = ICONE[b.tipo] ?? Plane;
   return (
-    <Link to="/trip/$id/item/$tipo/$itemId" params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+    <Link to="/trip/$id/item/$tipo/$itemId" params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl cartao-voo px-4 text-primary-foreground shadow-soft">
       <Logo url={b.tipo === "voo" ? logoCia(b.companhia, b.numero) : null} Icone={Icone} nome={b.companhia ?? b.tipo} tamanho={32} />
       <span className="min-w-0"><strong className="flex items-center gap-1 truncate text-lg">{b.origem_iata ?? b.origem_cidade ?? "—"}<ArrowRight size={17} />{b.destino_iata ?? b.destino_cidade ?? "—"}</strong><span className="block truncate text-sm opacity-80">{horaNoFuso(b.partida_utc, b.partida_tz)} · {[b.companhia, b.numero].filter(Boolean).join(" ")} · {pax.map((p) => nome(p.person_id)).join(", ")}</span><Selo pax={pax} dono={dono} pessoa={pessoa} /></span>
       <ChevronRight size={24} className="shrink-0" aria-hidden />

@@ -198,6 +198,7 @@
   );
   --gradient-voos: linear-gradient(135deg, #1d4e7a, #2f6da8);
   --gradient-hosp: linear-gradient(135deg, #8a4523, #b05a2f);
+  --gradient-reserva: linear-gradient(135deg, #6e2f53, #8e3d6b);
   --shadow-soft: 0 2px 8px -2px hsl(210 56% 11% / 0.08);
   --shadow-medium: 0 4px 16px -4px hsl(210 56% 11% / 0.12);
 }
@@ -315,6 +316,24 @@
   color: hsl(40 40% 97%);
 }
 
+@utility gradient-reserva {
+  background-image: var(--gradient-reserva);
+  color: hsl(40 40% 97%);
+}
+
+@utility cartao-voo {
+  background-color: #2f6da8;
+  background-image: var(--gradient-voos);
+}
+@utility cartao-hosp {
+  background-color: #b05a2f;
+  background-image: var(--gradient-hosp);
+}
+@utility cartao-reserva {
+  background-color: #8e3d6b;
+  background-image: var(--gradient-reserva);
+}
+
 @utility shadow-soft {
   box-shadow: var(--shadow-soft);
 }
@@ -339,4 +358,30 @@
 @utility mono-code {
   font-family: ui-monospace, "SFMono-Regular", "Roboto Mono", monospace;
   letter-spacing: 0.06em;
+}
+
+/* Chave "Visual" → Clássico: volta ao visual anterior (cartões azul-marinho, blocos neutros). */
+html.visual-classico .cartao-voo,
+html.visual-classico .cartao-hosp,
+html.visual-classico .cartao-reserva {
+  background-image: none;
+  background-color: var(--color-primary);
+}
+html.visual-classico .novo-cor {
+  background-color: var(--color-card) !important;
+  background-image: none !important;
+}
+html.visual-classico .novo-cor-icone {
+  color: var(--color-accent) !important;
+}
+html.visual-classico .novo-botao {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-foreground) !important;
+}
+html.visual-classico .novo-cat {
+  background-color: transparent !important;
+  color: var(--color-muted-foreground) !important;
+}
+html.visual-classico .novo-some {
+  display: none !important;
 }

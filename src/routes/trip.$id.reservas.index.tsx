@@ -39,14 +39,14 @@ function Reservas() {
       <Topo titulo="Reservas" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-4 px-4 pt-4">
         {itens.length === 0 && (
-          <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma reserva ainda</p>
+          <Link to="/trip/$id/reservas/nova" params={{ id }} className="tap flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-reserva-border p-8 text-lg font-bold text-reserva">+ Primeira reserva</Link>
         )}
         {itens.map((r) => {
           const d = porId.get(r.item_id);
           if (!d) return <CartaoResumo key={r.item_id} r={r} />;
           const Icone = ICONE[d.tipo] ?? Ticket;
           return (
-            <Link key={d.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+            <Link key={d.id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl cartao-reserva px-4 text-primary-foreground shadow-soft">
               <Icone size={26} strokeWidth={2.2} className="shrink-0" aria-hidden />
               <span className="min-w-0"><strong className="block truncate text-lg">{d.titulo}</strong><span className="block truncate text-sm opacity-80">{dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))} · {horaNoFuso(d.inicio_utc, d.inicio_tz)} · {[d.local, d.cidade].filter(Boolean).join(" · ") || "Local não informado"}</span></span>
               <ChevronRight size={24} className="shrink-0" aria-hidden />

@@ -159,3 +159,19 @@
 ## Apagar viagem (28/09)
 - [x] Botão na edição com duas confirmações: “Tem certeza?” e “Mesmo?”
 - [x] Exclusão recuperável e remoção imediata da lista
+
+## Lote Avião + Privacidade + Cor (28/09) — NÃO publicar
+- [x] A1 sw.js cache-first navegação, 2,5 s, sem redirecionadas, limpar runtime
+- [x] A2 AuthGate sessaoGuardada em erro de rede; getSession no lugar de getUser
+- [x] A3 Selo offline sempre visível
+- [x] A4 Outbox: falhas visíveis (Tentar de novo / Descartar)
+- [x] A5 Precache leve, MarketingPage lazy, staleTime 120 s
+- [x] B6 Link público: sem pessoais, colunas mínimas, apelido, expira, limite
+- [x] B7 Só 1 link ativo
+- [x] B8 WhatsApp por função no banco; link com origemApp()
+- [x] B9 Despesas sem viagem ativa → mais recente por data_fim
+- [x] B10 Sair da viagem na visão do participante
+- [x] B11 Status de voo ignora viagens apagadas
+- [x] B12 Texto do recibo em coluna; máx 1600 px
+- [x] C13–C19 Cores, grade, despesas, próximo compromisso, editar/apagar, Eu, consistência
+- [x] Chave Visual Colorido/Clássico

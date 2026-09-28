@@ -322,6 +322,7 @@ export type Database = {
         Row: {
           created_at: string
           criado_por: string
+          expira_em: string | null
           id: string
           revogado_em: string | null
           token: string
@@ -330,6 +331,7 @@ export type Database = {
         Insert: {
           created_at?: string
           criado_por?: string
+          expira_em?: string | null
           id?: string
           revogado_em?: string | null
           token: string
@@ -338,6 +340,7 @@ export type Database = {
         Update: {
           created_at?: string
           criado_por?: string
+          expira_em?: string | null
           id?: string
           revogado_em?: string | null
           token?: string
@@ -518,6 +521,8 @@ export type Database = {
           pago_por: string | null
           pessoal: boolean
           pessoal_de: string | null
+          recibo_path: string | null
+          recibo_texto: string | null
           taxa_cambio: number
           taxa_data: string | null
           taxa_fonte: string | null
@@ -543,6 +548,8 @@ export type Database = {
           pago_por?: string | null
           pessoal?: boolean
           pessoal_de?: string | null
+          recibo_path?: string | null
+          recibo_texto?: string | null
           taxa_cambio: number
           taxa_data?: string | null
           taxa_fonte?: string | null
@@ -568,6 +575,8 @@ export type Database = {
           pago_por?: string | null
           pessoal?: boolean
           pessoal_de?: string | null
+          recibo_path?: string | null
+          recibo_texto?: string | null
           taxa_cambio?: number
           taxa_data?: string | null
           taxa_fonte?: string | null
@@ -2626,6 +2635,10 @@ export type Database = {
       salvar_despesa: {
         Args: { _d: Json; _pagadores: Json; _partes: Json }
         Returns: string
+      }
+      salvar_whatsapp_participante: {
+        Args: { _person: string; _telefone: string; _trip: string }
+        Returns: number
       }
       somar_uso_api: { Args: { _mes: string; _n: number }; Returns: number }
       telefones_viagem: {

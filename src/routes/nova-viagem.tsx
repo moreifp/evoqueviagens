@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -44,7 +45,7 @@ function NovaViagem() {
   const [salvando, setSalvando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<0 | 1 | 2>(0);
   const [meuId, setMeuId] = useState<string | null>(null);
-  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
+  useEffect(() => { void usuarioLocal().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
   const souDono = !atual || !meuId || (atual as Trip & { owner_id?: string }).owner_id === meuId;
 
   function isoDia(d: Date) {
@@ -82,7 +83,7 @@ function NovaViagem() {
     }
     setSalvando(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await usuarioLocal();
       const tripId = novoId();
       const destino = cidades.join(", ");
       if (atual) {

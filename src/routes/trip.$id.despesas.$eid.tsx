@@ -12,7 +12,7 @@ import { categoria } from "@/lib/categorias";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { apagarDespesa, nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { AvatarPessoa } from "@/components/Pessoa";
-import { melhorarDocumentoParaOcr } from "@/lib/imagem";
+import { comprimir } from "@/lib/imagem";
 import { transcreverRecibo } from "@/lib/recibo.functions";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
@@ -45,10 +45,12 @@ function Detalhe() {
   const [mostrarTexto, setMostrarTexto] = useState(false);
   const [lendoConta, setLendoConta] = useState(false);
   const lerConta = useServerFn(transcreverRecibo);
+  // Texto lido fica na própria despesa (recibo_texto), ligado à foto por uma impressão (recibo_path).
+  const dRec = despesas.find((x) => x.id === eid) as (Expense & { recibo_texto?: string | null; recibo_path?: string | null }) | undefined;
   useEffect(() => {
-    const cache = localStorage.getItem(`evoque-recibo-texto:${eid}`);
-    if (cache) { setTextoConta(cache); }
-  }, [eid]);
+    if (dRec?.recibo_texto && dRec.recibo_path && dRec.recibo_path === impressao(dRec.comprovante_url)) setTextoConta(dRec.recibo_texto);
+    else setTextoConta(null);
+  }, [dRec?.recibo_texto, dRec?.recibo_path, dRec?.comprovante_url]);
   useEffect(() => {
     const f = () => setOnline(navigator.onLine);
     f(); window.addEventListener("online", f); window.addEventListener("offline", f);
@@ -60,8 +62,8 @@ function Detalhe() {
     if (!d) return;
     const antes = d.comprovante_url;
     const aplicar = async (v: string | null) => {
-      qc.setQueryData<Expense[]>(key, (l) => (l ?? []).map((e) => (e.id === d.id ? { ...e, comprovante_url: v } : e)));
-      await mutar({ tipo: "update", tabela: "expense", id: d.id, valores: { comprovante_url: v } });
+      qc.setQueryData<Expense[]>(key, (l) => (l ?? []).map((e) => (e.id === d.id ? { ...e, comprovante_url: v, recibo_texto: null, recibo_path: null } : e)));
+      await mutar({ tipo: "update", tabela: "expense", id: d.id, valores: { comprovante_url: v, recibo_texto: null, recibo_path: null } });
     };
     await aplicar(novo);
     toast(novo ? "Recibo trocado" : "Recibo tirado", { duration: 10_000, action: { label: "Desfazer", onClick: () => void aplicar(antes) } });
@@ -70,17 +72,20 @@ function Detalhe() {
   /** Lê a foto do recibo e vira texto organizado, fácil de ler em tela pequena. Guarda no aparelho para ler offline. */
   async function lerAConta() {
     if (!d?.comprovante_url || lendoConta) return;
+    if (textoConta) { setMostrarTexto(true); return; }
     if (!navigator.onLine) { toast("Sem internet · a leitura da conta precisa de conexão."); return; }
     setLendoConta(true);
     try {
       const blob = await (await fetch(d.comprovante_url)).blob();
-      const melhor = await melhorarDocumentoParaOcr(blob).catch(() => blob);
+      const melhor = await comprimir(new File([blob], "recibo.jpg", { type: blob.type || "image/jpeg" }), 1600, 0.8).catch(() => blob);
       const imagem = await new Promise<string>((ok) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.readAsDataURL(melhor); });
       const r = await lerConta({ data: { imagem } });
       if (r.ok) {
         setTextoConta(r.texto);
         setMostrarTexto(true);
-        try { localStorage.setItem(`evoque-recibo-texto:${d.id}`, r.texto); } catch { /* cheio: segue sem cache */ }
+        const rp = impressao(d.comprovante_url);
+        qc.setQueryData<Expense[]>(key, (l) => (l ?? []).map((e) => (e.id === d.id ? { ...e, recibo_texto: r.texto, recibo_path: rp } : e)));
+        await mutar({ tipo: "update", tabela: "expense", id: d.id, valores: { recibo_texto: r.texto, recibo_path: rp } }).catch(() => null);
       } else {
         toast(r.erro === "config" ? "Leitura indisponível agora · tente mais tarde." : "Não conseguimos ler a conta. Veja se a foto está nítida e tente de novo.");
       }
@@ -208,4 +213,12 @@ function Detalhe() {
       </main>
     </div>
   );
+}
+
+/** Impressão curta da foto do recibo (muda quando a foto muda). */
+function impressao(ref: string | null | undefined) {
+  if (!ref) return null;
+  let h = 2166136261;
+  for (let i = 0; i < ref.length; i += Math.max(1, Math.floor(ref.length / 4096))) h = Math.imul(h ^ ref.charCodeAt(i), 16777619);
+  return `${ref.length}:${(h >>> 0).toString(36)}`;
 }

@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NOME_DOC, TIPOS_VISTO } from "./cadastro-tipos";
@@ -106,7 +107,7 @@ export const minhaPessoaQuery = () =>
     queryKey: ["minha-pessoa"],
     networkMode: "offlineFirst",
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await usuarioLocal();
       if (!auth.user) throw new Error("Entre na sua conta para continuar.");
       const pessoas = await rows<EuPessoa[]>(
         db.from("person").select("*").eq("account_id", auth.user.id).eq("kind", "self").is("deleted_at", null).limit(1),
@@ -117,7 +118,7 @@ export const minhaPessoaQuery = () =>
   });
 
 async function loadEu(personId: string): Promise<EuDados> {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await usuarioLocal();
       const uid = auth.user?.id ?? "";
       const pessoas = await rows<EuPessoa[]>(db.from("person").select("*").eq("id", personId).is("deleted_at", null).limit(1));
       const pessoa = pessoas[0];

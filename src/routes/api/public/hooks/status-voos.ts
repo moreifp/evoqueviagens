@@ -14,9 +14,10 @@ export const Route = createFileRoute("/api/public/hooks/status-voos")({
         const agora = Date.now();
         const { data: tickets } = await db
           .from("ticket")
-          .select("id,trip_id,tipo,companhia,numero,origem_iata,destino_iata,partida_utc,partida_tz,chegada_utc")
+          .select("id,trip_id,tipo,companhia,numero,origem_iata,destino_iata,partida_utc,partida_tz,chegada_utc,trip:trip_id!inner(deleted_at)")
           .eq("tipo", "voo")
           .is("deleted_at", null)
+          .is("trip.deleted_at", null)
           .gte("partida_utc", new Date(agora - 2 * 3600_000).toISOString())
           .lte("partida_utc", new Date(agora + 30 * 3600_000).toISOString());
         let consultados = 0;
