@@ -318,6 +318,41 @@ export type Database = {
           },
         ]
       }
+      despesas_link: {
+        Row: {
+          created_at: string
+          criado_por: string
+          id: string
+          revogado_em: string | null
+          token: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string
+          id?: string
+          revogado_em?: string | null
+          token: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string
+          id?: string
+          revogado_em?: string | null
+          token?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despesas_link_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_attachment: {
         Row: {
           content_type: string
