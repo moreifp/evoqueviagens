@@ -67,6 +67,30 @@ function Detalhe() {
     toast(novo ? "Recibo trocado" : "Recibo tirado", { duration: 10_000, action: { label: "Desfazer", onClick: () => void aplicar(antes) } });
   }
 
+  /** Lê a foto do recibo e vira texto organizado, fácil de ler em tela pequena. Guarda no aparelho para ler offline. */
+  async function lerAConta() {
+    if (!d?.comprovante_url || lendoConta) return;
+    if (!navigator.onLine) { toast("Sem internet · a leitura da conta precisa de conexão."); return; }
+    setLendoConta(true);
+    try {
+      const blob = await (await fetch(d.comprovante_url)).blob();
+      const melhor = await melhorarDocumentoParaOcr(blob).catch(() => blob);
+      const imagem = await new Promise<string>((ok) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.readAsDataURL(melhor); });
+      const r = await lerConta({ data: { imagem } });
+      if (r.ok) {
+        setTextoConta(r.texto);
+        setMostrarTexto(true);
+        try { localStorage.setItem(`evoque-recibo-texto:${d.id}`, r.texto); } catch { /* cheio: segue sem cache */ }
+      } else {
+        toast(r.erro === "config" ? "Leitura indisponível agora · tente mais tarde." : "Não conseguimos ler a conta. Veja se a foto está nítida e tente de novo.");
+      }
+    } catch {
+      toast("Não conseguimos ler a conta. Veja se a foto está nítida e tente de novo.");
+    } finally {
+      setLendoConta(false);
+    }
+  }
+
   /** Taxa provisória → taxa histórica do dia do gasto. Só com o toque do organizador; vai para o log pelo salvar_despesa. */
   async function atualizarTaxa() {
     if (!d) return;
