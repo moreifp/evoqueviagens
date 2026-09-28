@@ -20,7 +20,8 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome: s
     void db.from("despesas_link").select("token").eq("trip_id", tripId).is("revogado_em", null).order("created_at", { ascending: false }).limit(1)
       .then(({ data }: { data: { token: string }[] | null }) => setToken(data?.[0]?.token ?? null));
   }, [tripId]);
-  const url = token ? `${window.location.origin}/d/${token}` : "";
+  const base = window.location.hostname === "localhost" ? window.location.origin : "https://evoque.global";
+  const url = token ? `${base}/d/${token}` : "";
   const texto = `Despesas da viagem ${tripNome} (só para ver): ${url}`;
 
   async function criar() {
