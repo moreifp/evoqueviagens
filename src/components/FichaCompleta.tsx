@@ -86,6 +86,7 @@ function Grupo({ personId, grupo, itens, owner, ocupado, dispensar, navigate }: 
   const temPendente = ok < lista.length;
   const [aberto, alternar] = useGrupoAberto(personId, grupo, temPendente);
   if (!lista.length) return null;
+  const dec = ICONE_GRUPO[grupo];
   return (
     <div>
       <button type="button" onClick={alternar} aria-expanded={aberto} className="tap flex min-h-14 w-full items-center justify-between gap-3 text-left">
