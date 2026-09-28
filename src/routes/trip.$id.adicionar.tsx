@@ -142,7 +142,7 @@ function Adicionar() {
       } else {
         const usados = new Set<string>();
         ops.push(...montarOpsReserva({ tripId: id, id: nid, valores: {
-          tipo: ["carro", "passeio", "restaurante"].includes(it.tipo) ? it.tipo : "outro", titulo: it.titulo ?? NOME_TIPO[it.tipo], inicio_utc: localParaUtc(ini.length > 10 ? ini : `${ini}T09:00`, tz), inicio_tz: tz,
+          tipo: ["carro", "passeio", "restaurante"].includes(it.tipo) ? it.tipo : "outro", titulo: it.titulo ?? NOME_TIPO[it.tipo] ?? "Reserva", inicio_utc: localParaUtc(ini.length > 10 ? ini : `${ini}T09:00`, tz), inicio_tz: tz,
           fim_utc: fim ? localParaUtc(fim.length > 10 ? fim : `${fim}T18:00`, tz) : null, fim_tz: fim ? tz : null, local: it.local, telefone: null, cidade: it.cidade, localizador: it.localizador,
           valor: it.valor, moeda: it.moeda, lat: null, lng: null, place_id: null, site: null,
         }, pessoas: it.pessoas.flatMap((n) => { const x = pid(n, usados); if (!x) return []; usados.add(x); return [{ id: novoId(), person_id: x, papel: null }]; }) }));

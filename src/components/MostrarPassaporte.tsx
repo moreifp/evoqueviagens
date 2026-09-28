@@ -17,7 +17,7 @@ const siglaPais = (v: string | null) => {
 function entradas(pessoas: Pessoa[]): Entrada[] {
   return pessoas.flatMap((p, j) => {
     const lista = p.docs.filter((d) => d.tipo === "passaporte").sort((a, b) => String(b.validade).localeCompare(String(a.validade)));
-    const base = j === 0 ? "Você" : p.nome.split(" ")[0];
+    const base = j === 0 ? "Você" : (p.nome.split(" ")[0] ?? p.nome);
     return lista.map((pass) => ({ chave: pass.id, nome: p.nome, pass, rotulo: lista.length > 1 && pass.pais_emissor ? `${base} · ${siglaPais(pass.pais_emissor)}` : base }));
   });
 }
