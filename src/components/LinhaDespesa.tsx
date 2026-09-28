@@ -26,6 +26,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostr
           <span className="min-w-0 flex-1">
           <span className="block truncate text-lg font-bold text-foreground">{d.descricao}</span>
           <span className="mt-0.5 inline-block rounded-md bg-pessoal-chip px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-pessoal-foreground">Pessoal · {eu && d.pessoal_de === eu ? "você" : nomeCurto(membros, d.pessoal_de)}</span>
+          </span>
         </span>
         <span className="num shrink-0 text-base font-bold text-pessoal-foreground">{fmtMoney(Number(d.valor_moeda_base), moedaBase)}</span>
         {mostrarData && <span className="truncate text-right text-sm font-semibold text-muted-foreground">{pag}</span>}
