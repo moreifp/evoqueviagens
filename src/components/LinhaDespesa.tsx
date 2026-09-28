@@ -28,7 +28,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostr
           {!mostrarData && <span className="novo-some flex size-8 shrink-0 items-center justify-center rounded-lg bg-pessoal-chip text-pessoal-foreground"><User size={18} strokeWidth={2.2} /></span>}
           <span className="min-w-0 flex-1">
             {mostrarData && <span className="num block text-xs font-semibold leading-tight text-muted-foreground">{data}</span>}
-            <span className={`block text-base font-bold text-foreground sm:text-lg ${mostrarData ? "line-clamp-2 break-words" : "truncate"}`}>{d.descricao}</span>
+            <span className={`text-base font-bold text-foreground sm:text-lg ${mostrarData ? "line-clamp-2 break-words" : "block truncate"}`}>{d.descricao}</span>
             <span className="mt-0.5 inline-block rounded-md bg-pessoal-chip px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-pessoal-foreground">Pessoal · {eu && d.pessoal_de === eu ? "você" : nomeCurto(membros, d.pessoal_de)}</span>
           </span>
         </span>
@@ -48,7 +48,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostr
         {!mostrarData && <span aria-hidden className="novo-some flex size-8 shrink-0 items-center justify-center rounded-lg text-white" style={{ backgroundColor: COR_CAT[c.id] ?? COR_CAT.outros }}><Icone size={18} strokeWidth={2.2} /></span>}
         <span className="min-w-0 flex-1">
           {mostrarData && <span className="num block text-xs font-semibold leading-tight text-muted-foreground">{data}</span>}
-          <span className={`block text-base font-bold text-foreground sm:text-lg ${mostrarData ? "line-clamp-2 break-words" : "truncate"}`}>{d.descricao}</span>
+          <span className={`text-base font-bold text-foreground sm:text-lg ${mostrarData ? "line-clamp-2 break-words" : "block truncate"}`}>{d.descricao}</span>
           {!mostrarData && <span className="block truncate text-sm text-muted-foreground">{pag} pagou · {d.partes.length} {d.partes.length === 1 ? "pessoa" : "pessoas"}{d.taxa_provisoria ? " · taxa provisória" : ""}</span>}
           {minha && <span className="block text-sm font-bold text-teal">sua parte {fmtMoney(Number(minha.valor_moeda_base), moedaBase)}</span>}
         </span>
