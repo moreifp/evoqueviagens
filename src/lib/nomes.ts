@@ -37,11 +37,15 @@ export function tokensNome(s: string): string[] {
   return res;
 }
 
-/** ok: 1º nome e último sobrenome iguais e nomes do bilhete na ordem do documento (meio pode faltar ou virar inicial). */
+/** ok: 1º nome e último sobrenome iguais e nomes do bilhete na ordem do documento (meio pode faltar ou virar inicial). Sufixos de geração (FILHO, NETO, JR…) não contam como sobrenome. */
 export function compararNomes(doc: string, bilhete: string): NivelNome {
-  const d = tokensNome(doc);
-  const b = tokensNome(bilhete);
+  const sd = sufixoNome(doc);
+  const sb = sufixoNome(bilhete);
+  const d = semSufixo(tokensNome(doc));
+  const b = semSufixo(tokensNome(bilhete));
   if (!d.length || !b.length) return "conferir";
+  // Sufixos diferentes dos dois lados (FILHO × NETO) → âmbar.
+  if (sd && sb && sd !== sb) return "conferir";
   if (b[0] !== d[0]) {
     const trocado = b.includes(d[0]!) && b.some((x) => d.slice(1).includes(x));
     return trocado ? "conferir" : "resolver";
