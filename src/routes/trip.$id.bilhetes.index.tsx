@@ -1,19 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AcoesItem } from "@/components/AcoesItem";
-import { AnexosItem } from "@/components/AnexosItem";
 import { CartaoResumo } from "@/components/CartaoResumo";
-import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "@/components/Pessoa";
-import { mutar } from "@/lib/outbox";
-import { aviso, naTela } from "@/lib/itens";
-import { textoBagagem, pegarBagagem } from "@/lib/bagagem";
-import { StatusVoo } from "@/components/StatusVoo";
 import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
-import { sufixoNome } from "@/lib/nomes";
-import { useState } from "react";
-import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus, ArrowRightLeft } from "lucide-react";
+import { Plane, TrainFront, Bus, Car, Plus, Users, ArrowRight, ChevronRight } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { Logo } from "@/components/Logo";
 import { logoCia } from "@/lib/logos";
@@ -108,7 +99,7 @@ function Bilhetes() {
             <div className="mt-2 space-y-3">
               {itens.map((r) => {
                 const b = porId.get(r.item_id);
-                return b ? <CartaoEmbarque key={r.item_id} b={b} grupo={grupoDe(b)} s={status?.[b.id]} editar={r.editar} nome={nome} dono={dono} pessoa={pessoa?.person_id} membros={membros} /> : <CartaoResumo key={r.item_id} r={r} />;
+                return b ? <CartaoEmbarque key={r.item_id} b={b} grupo={grupoDe(b)} s={status?.[b.id]} nome={nome} dono={dono} pessoa={pessoa?.person_id} /> : <CartaoResumo key={r.item_id} r={r} />;
               })}
             </div>
           </section>
@@ -177,137 +168,15 @@ function Selo({ pax, dono, pessoa }: { pax: Ticket["passageiros"]; dono?: Membro
   );
 }
 
-function CartaoEmbarque({ b, grupo, s, editar, nome, dono, pessoa, membros }: { b: Ticket; grupo: Ticket[]; s?: StatusVooT; editar: boolean; nome: (pid: string) => string; dono?: Membro; pessoa?: string; membros: Membro[] }) {
-  const [aberto, setAberto] = useState(false);
-  const qc = useQueryClient();
+function CartaoEmbarque({ b, grupo, s, nome, dono, pessoa }: { b: Ticket; grupo: Ticket[]; s?: StatusVooT; nome: (pid: string) => string; dono?: Membro; pessoa?: string }) {
   const pax = grupo.flatMap((t) => t.passageiros).filter((q, i, l) => l.findIndex((x) => x.person_id === q.person_id) === i);
-  const minha = pessoa ? b.passageiros.find((q) => q.person_id === pessoa) : undefined;
-  async function tirar() {
-    if (!minha) return;
-    const key = ticketsQuery(b.trip_id).queryKey;
-    const ultimo = b.passageiros.length === 1;
-    const agora = new Date().toISOString();
-    naTela<Ticket>(qc, key, (l) => (ultimo ? l.filter((x) => x.id !== b.id) : l.map((x) => (x.id === b.id ? { ...x, passageiros: x.passageiros.filter((q) => q.id !== minha.id) } : x))));
-    const volta = () => naTela<Ticket>(qc, key, (l) => [...l.filter((x) => x.id !== b.id), b].sort((a, c) => a.partida_utc.localeCompare(c.partida_utc)));
-    try {
-      const r = await mutar({ tipo: "update", tabela: "ticket_passenger", id: minha.id, valores: { deleted_at: agora } });
-      if (ultimo) await mutar({ tipo: "update", tabela: "ticket", id: b.id, valores: { deleted_at: agora } });
-      toast(aviso(r, ultimo ? "Voo apagado" : `${nome(minha.person_id)} saiu do voo`), {
-        duration: 10_000,
-        action: { label: "Desfazer", onClick: () => { volta(); void mutar({ tipo: "update", tabela: "ticket_passenger", id: minha.id, valores: { deleted_at: null } }); if (ultimo) void mutar({ tipo: "update", tabela: "ticket", id: b.id, valores: { deleted_at: null } }); } },
-      });
-      void qc.invalidateQueries({ queryKey: ["roteiro", b.trip_id] });
-    } catch (e) {
-      volta();
-      toast.error((e as Error).message || "Não deu para tirar.");
-    }
-  }
   const Icone = ICONE[b.tipo] ?? Plane;
-  const partidaDia = chaveDia(b.partida_utc, b.partida_tz);
-  const chegadaDia = chaveDia(b.chegada_utc, b.chegada_tz);
-  const dias = Math.round((Date.parse(`${chegadaDia}T12:00:00Z`) - Date.parse(`${partidaDia}T12:00:00Z`)) / 864e5);
   return (
-    <article className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="bg-primary p-5 text-primary-foreground">
-        <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
-          <Logo url={b.tipo === "voo" ? logoCia(b.companhia, b.numero) : null} Icone={Icone} nome={b.companhia ?? b.tipo} />
-          <span className="min-w-0 break-words">{[b.companhia, b.numero].filter(Boolean).join(" · ") || b.tipo}</span>
-        </p>
-        <p className="mt-1 text-lg">{dataBRCurta(partidaDia)}</p>
-        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="min-w-0"><small className="font-bold">ORIGEM</small><p className="break-words text-3xl font-bold">{b.origem_iata ?? b.origem_cidade ?? "—"}</p></div>
-          <ArrowRightLeft size={24} aria-hidden />
-          <div className="min-w-0 text-right"><small className="font-bold">DESTINO</small><p className="break-words text-3xl font-bold">{b.destino_iata ?? b.destino_cidade ?? "—"}</p></div>
-        </div>
-        <p className="num mt-3 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
-          <span>{horaNoFuso(b.partida_utc, b.partida_tz)}</span>
-          <span>{horaNoFuso(b.chegada_utc, b.chegada_tz)}{dias > 0 && <sup className="ml-1 text-base">+{dias}</sup>}</span>
-        </p>
-        <p className="mt-2 text-sm">{nomeFusoCurto(b.partida_tz)} · saída {horaNoFuso(b.partida_utc, fusoLocal())} no seu horário</p>
-        <p className="mt-2 text-right text-base">Chegada {horaNoFuso(b.chegada_utc, fusoLocal())} no seu horário</p>
-        {(minha?.localizador || b.localizador) && <p className="mono-code mt-2 break-all text-lg font-bold">Localizador {minha?.localizador || b.localizador}</p>}
-        {minha?.classe && <p className="mt-1 text-base font-bold">Classe {minha.classe}</p>}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {pax.length > 1 && <span className="flex -space-x-2">{pax.slice(0, 6).map((q) => <span key={q.id} className="rounded-full border-2 border-primary"><AvatarPessoa nome={membros.find((m) => m.person_id === q.person_id)?.nome ?? "?"} foto={null} tamanho={32} /></span>)}</span>}
-          <Selo pax={pax} dono={dono} pessoa={pessoa} />
-        </div>
-      </div>
-
-      <StatusVoo b={b} s={s} />
-
-      {minha && (
-        <dl className="space-y-2 border-t border-border p-4 text-lg">
-          <Linha rotulo="Assento" valor={minha.assento} />
-          <Linha rotulo="Nome no bilhete" valor={minha.nome_no_bilhete} />
-          {minha.nome_no_bilhete && (() => {
-            const doc = membros.find((m) => m.person_id === minha.person_id)?.nome_como_no_documento ?? "";
-            const sb = sufixoNome(minha.nome_no_bilhete);
-            const sd = sufixoNome(doc);
-            if (!sb && !sd) return null;
-            if (sb && sd) return null; // sufixos diferentes já viram âmbar na conferência
-            return <p className="text-sm text-muted-foreground">{sb ? `Bilhete com ${sb}, documento sem` : `Documento com ${sd}, bilhete sem`}</p>;
-          })()}
-          <Linha rotulo="Nº do bilhete" valor={minha.eticket} />
-          <Linha rotulo="Classe" valor={minha.classe ?? null} />
-          <Linha rotulo="Bagagem" valor={textoBagagem(pegarBagagem(minha)) || null} />
-        </dl>
-      )}
-      {minha && editar && (
-        <div className="grid grid-cols-2 border-t border-border">
-          <Link to="/trip/$id/bilhetes/novo" params={{ id: b.trip_id }} search={{ editar: b.id, pax: minha.person_id }} className="tap flex items-center justify-center gap-2 text-lg font-bold text-foreground">
-            <Pencil size={24} strokeWidth={2.2} /> Dados dele(a)
-          </Link>
-          <button onClick={tirar} className="tap flex items-center justify-center gap-2 border-l border-border text-lg font-bold text-destructive">
-            <UserMinus size={24} strokeWidth={2.2} /> Tirar do voo
-          </button>
-        </div>
-      )}
-      {!pessoa && pax.length > 0 && (
-        <ul className="space-y-2 border-t border-border p-4">
-          {pax.map((p) => (
-            <li key={p.id} className="flex items-baseline justify-between gap-3 text-lg">
-              <span className="font-bold text-foreground">{nome(p.person_id)}</span>
-              <span className="mono-code text-xl font-bold text-accent">{p.assento ?? "—"}{p.classe ? ` · ${p.classe}` : ""}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {(pessoa ? [b] : grupo).map((t) => <AnexosItem key={t.id} tripId={t.trip_id} itemTipo="ticket" itemId={t.id} podeEditar={editar} />)}
-      {editar && !minha && <AcoesItem tabela="ticket" id={b.id} tripId={b.trip_id} editarPara="/trip/$id/bilhetes/novo" queryKey={ticketsQuery(b.trip_id).queryKey} />}
-
-      <Link
-        to="/trip/$id/item/$tipo/$itemId"
-        params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }}
-        className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-accent"
-      >
-        Abrir {b.tipo === "voo" ? "voo" : "trecho"}
-      </Link>
-      <button
-        onClick={() => setAberto((a) => !a)}
-        className="tap flex w-full items-center justify-center gap-2 border-t border-border text-base font-bold text-muted-foreground"
-      >
-        <ChevronDown size={26} strokeWidth={2.2} className={aberto ? "rotate-180" : ""} />
-        Detalhes
-      </button>
-      {aberto && (
-        <dl className="space-y-2 border-t border-border p-4 text-base">
-          {pax.map((p) => (
-            <Linha key={p.id} rotulo={nome(p.person_id)} valor={[p.nome_no_bilhete, p.eticket && `e-ticket ${p.eticket}`].filter(Boolean).join(" · ") || null} />
-          ))}
-          <Linha rotulo="Saída" valor={b.origem_cidade} />
-          <Linha rotulo="Destino" valor={b.destino_cidade} />
-        </dl>
-      )}
-    </article>
-  );
-}
-
-function Linha({ rotulo, valor }: { rotulo: string; valor: string | null }) {
-  if (!valor) return null;
-  return (
-    <div className="flex justify-between gap-4">
-      <dt className="font-semibold text-muted-foreground">{rotulo}</dt>
-      <dd className="font-bold text-foreground">{valor}</dd>
-    </div>
+    <Link to="/trip/$id/item/$tipo/$itemId" params={{ id: b.trip_id, tipo: "ticket", itemId: b.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-primary px-4 text-primary-foreground shadow-soft">
+      <Logo url={b.tipo === "voo" ? logoCia(b.companhia, b.numero) : null} Icone={Icone} nome={b.companhia ?? b.tipo} tamanho={32} />
+      <span className="min-w-0"><strong className="flex items-center gap-1 truncate text-lg">{b.origem_iata ?? b.origem_cidade ?? "—"}<ArrowRight size={17} />{b.destino_iata ?? b.destino_cidade ?? "—"}</strong><span className="block truncate text-sm opacity-80">{horaNoFuso(b.partida_utc, b.partida_tz)} · {[b.companhia, b.numero].filter(Boolean).join(" ")} · {pax.map((p) => nome(p.person_id)).join(", ")}</span><Selo pax={pax} dono={dono} pessoa={pessoa} /></span>
+      <ChevronRight size={24} className="shrink-0" aria-hidden />
+      {s?.status && <span className="sr-only">Status {s.status}</span>}
+    </Link>
   );
 }
