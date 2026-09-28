@@ -139,3 +139,4 @@
 
 ## Iniciais nos ícones das pessoas (28/09)
 - [x] AvatarGrupo unificado: sempre 2 letras (nome + sobrenome) via iniciais()
+- [ ] Telefone: dropdown de código de país (padrão Brasil +55) na validação
