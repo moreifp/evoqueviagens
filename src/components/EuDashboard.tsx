@@ -135,7 +135,6 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
 
         <FichaCompleta personId={p.id} itens={progresso.itens} owner={owner} />
-        {owner && <DocumentosCofre uid={data.uid} personId={p.id} />}
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}
@@ -167,6 +166,8 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "emergencia" }} className="tap flex items-center py-3"><span className="flex-1"><strong className="block text-lg">Contato de emergência</strong><span className={`text-base ${p.emergencia_nome ? "text-muted-foreground" : "text-warn"}`}>{p.emergencia_nome ? `${p.emergencia_nome} · ${p.emergencia_telefone ?? "sem telefone"}` : "Falta preencher"}</span></span><ChevronRight size={26} /></Link>
           <Link to="/pessoas/$pid/dados" params={{ pid: p.id }} search={{ secao: "pessoais" }} className="tap flex items-center py-3"><span className="flex-1"><strong className="block text-lg">Dados pessoais</strong><span className="text-base text-muted-foreground">Nome, CPF, nascimento, contato e endereço</span></span><ChevronRight size={26} /></Link>
         </div>}</section>
+
+        {owner && <DocumentosCofre uid={data.uid} personId={p.id} />}
 
         {self && <Link to="/compartilhamentos" className="tap flex items-center gap-3 rounded-lg border border-border bg-card p-4"><Users size={28} /><span className="flex-1"><strong className="block text-lg">Quem vê seus dados</strong><span className="text-base text-muted-foreground">Você compartilha com {quemVe.length} {quemVe.length === 1 ? "pessoa" : "pessoas"}</span></span><ChevronRight size={26} /></Link>}
 
