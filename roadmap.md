@@ -123,3 +123,6 @@
 ## Recibo em texto (despesas)
 - [x] Transcrever a foto da conta em texto legível (como o scan do Restaurantes): server fn /v1/responses + botão "Ler a conta" na despesa
 - [ ] Testar na tela com recibo real e conferir cache offline
+
+## Recibo em texto (despesas)
+- [x] Transcrever a foto da conta em texto legível na despesa (botão "Ler a conta", cache offline) — testado na tela com recibo espécime, estado restaurado
