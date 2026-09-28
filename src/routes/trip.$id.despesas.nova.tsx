@@ -207,16 +207,20 @@ function NovaDespesa() {
         </label>
 
         <section className="rounded-3xl border border-border bg-card p-4 text-center">
-          <input
-            inputMode="decimal" aria-label="Valor" placeholder="0,00"
-            value={valorTxt} onChange={(e) => setValorTxt(e.target.value.replace(/[^\d.,]/g, ""))}
-            className="num w-full bg-transparent text-center text-[48px] leading-tight text-foreground outline-none"
-          />
-          <div className="mx-auto mt-2 max-w-xs"><CampoMoeda value={moeda} onChange={setMoeda} rotulo="Moeda" /></div>
+          <label className="block text-left text-lg font-bold text-foreground">
+            Valor em {moeda} <span className="text-danger" aria-hidden>*</span>
+            <input
+              id="valor-despesa" inputMode="decimal" placeholder="0,00"
+              value={valorTxt} onChange={(e) => setValorTxt(e.target.value.replace(/[^\d.,]/g, ""))}
+              className="num mt-2 w-full rounded-2xl border-2 border-primary bg-background px-3 text-center text-[44px] leading-tight text-foreground"
+            />
+          </label>
+          <div className="mx-auto mt-2 max-w-xs"><CampoMoeda value={moeda} onChange={(m) => { setMoeda(m); setTimeout(() => document.getElementById("valor-despesa")?.focus(), 50); }} rotulo="Moeda" /></div>
           {diferente && (
             <div className="mt-3 space-y-1 text-left">
-              <label className="text-base font-bold text-foreground">Câmbio {moeda} → {trip.moeda_base}
-                <input inputMode="decimal" value={taxaTxt} onChange={(e) => { setTaxaTxt(e.target.value.replace(",", ".")); setProvisoria(false); }} className="tap mt-1 w-full rounded-xl border-2 border-input bg-background px-3 text-xl font-bold" />
+              <label className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">Câmbio 1 {moeda} =
+                <input inputMode="decimal" aria-label={`Câmbio ${moeda} para ${trip.moeda_base}`} value={taxaTxt} onChange={(e) => { setTaxaTxt(e.target.value.replace(",", ".")); setProvisoria(false); }} className="h-10 w-24 rounded-lg border border-input bg-background px-2 text-base font-semibold text-foreground" />
+                {trip.moeda_base}
               </label>
               <p className="text-base text-muted-foreground">
                 = {fmtMoney(totalC / 100, trip.moeda_base)} · {fonte && String(fonte.taxa) === taxaTxt ? `${fonte.fonte} · ${fonte.data.slice(8, 10)}/${fonte.data.slice(5, 7)}` : provisoria ? "Taxa provisória (sem internet)" : taxaTxt ? "Taxa manual" : "Digite a taxa"}
