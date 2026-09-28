@@ -2236,6 +2236,47 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_document: {
+        Row: {
+          account_id: string
+          created_at: string
+          deleted_at: string | null
+          encrypted_payload: string
+          id: string
+          iv: string
+          person_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          encrypted_payload: string
+          id?: string
+          iv: string
+          person_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          encrypted_payload?: string
+          id?: string
+          iv?: string
+          person_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_document_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vault_item: {
         Row: {
           account_id: string

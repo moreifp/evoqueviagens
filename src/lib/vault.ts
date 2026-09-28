@@ -20,6 +20,10 @@ export function useVaultUnlocked(accountId: string | undefined) {
 
 type VaultMeta = { account_id: string; kdf_salt: string; kdf_iterations: number; verifier_ciphertext: string; verifier_iv: string };
 export type VaultItem = { id: string; account_id: string; loyalty_account_id: string; encrypted_payload: string; iv: string; created_at: string; updated_at: string };
+export type VaultDocument = { id: string; person_id: string; account_id: string; encrypted_payload: string; iv: string; created_at: string; deleted_at: string | null };
+export type VaultDocumentContents = { fields: Record<string, string>; file?: { name: string; type: string; data: string } };
+const documentCache = (accountId: string, personId: string) => `${CACHE_PREFIX}docs:${accountId}:${personId}`;
+const vaultDb = supabase as unknown as { from: (table: string) => any };
 
 function bytesToBase64(bytes: Uint8Array) {
   let value = "";
@@ -160,6 +164,45 @@ export async function readVaultItem(accountId: string, loyaltyAccountId: string)
 export async function removeVaultItem(accountId: string, loyaltyAccountId: string) {
   await del(`${CACHE_PREFIX}item:${accountId}:${loyaltyAccountId}`);
   if (navigator.onLine) await supabase.from("vault_item").delete().eq("account_id", accountId).eq("loyalty_account_id", loyaltyAccountId);
+}
+
+/** O conteúdo inteiro, inclusive arquivo e nome, só sai do aparelho cifrado. */
+export async function saveVaultDocument(accountId: string, personId: string, contents: VaultDocumentContents) {
+  if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
+  const encrypted = await encryptText(active.key, JSON.stringify(contents));
+  const row: VaultDocument = { id: crypto.randomUUID(), account_id: accountId, person_id: personId, encrypted_payload: encrypted.ciphertext, iv: encrypted.iv, created_at: new Date().toISOString(), deleted_at: null };
+  const cache = documentCache(accountId, personId);
+  const previous = ((await get(cache)) as VaultDocument[] | undefined) ?? [];
+  await set(cache, [...previous, row]);
+  let result: "salvo" | "fila";
+  try { result = await mutar({ tipo: "insert", tabela: "vault_document", valores: row }); }
+  catch (error) { await set(cache, previous); throw error; }
+  return { id: row.id, localOnly: result === "fila" };
+}
+
+export async function listVaultDocuments(accountId: string, personId: string) {
+  if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
+  const cache = documentCache(accountId, personId);
+  const local = ((await get(cache)) as VaultDocument[] | undefined) ?? [];
+  if (!navigator.onLine) return local.filter((row) => !row.deleted_at);
+  const { data, error } = await vaultDb.from("vault_document").select("*").eq("account_id", accountId).eq("person_id", personId).is("deleted_at", null).order("created_at", { ascending: false });
+  if (error) return local.filter((row) => !row.deleted_at);
+  const remote = data as VaultDocument[];
+  const merged = [...local.filter((row) => !remote.some((r) => r.id === row.id)), ...remote.filter((row) => !local.some((l) => l.id === row.id && l.deleted_at))];
+  await set(cache, merged);
+  return merged.filter((row) => !row.deleted_at);
+}
+
+export async function readVaultDocument(accountId: string, row: VaultDocument): Promise<VaultDocumentContents> {
+  if (!active || !vaultIsUnlocked(accountId) || row.account_id !== accountId) throw new Error("Destrave o cofre primeiro.");
+  return JSON.parse(await decryptText(active.key, row.encrypted_payload, row.iv)) as VaultDocumentContents;
+}
+
+export async function deleteVaultDocument(accountId: string, row: VaultDocument) {
+  if (!active || !vaultIsUnlocked(accountId) || row.account_id !== accountId) throw new Error("Destrave o cofre primeiro.");
+  const cache = documentCache(accountId, row.person_id);
+  await set(cache, ((await get(cache)) as VaultDocument[] | undefined ?? []).map((item) => item.id === row.id ? { ...item, deleted_at: new Date().toISOString() } : item));
+  await mutar({ tipo: "update", tabela: "vault_document", id: row.id, valores: { deleted_at: new Date().toISOString() } });
 }
 
 if (typeof document !== "undefined") {
