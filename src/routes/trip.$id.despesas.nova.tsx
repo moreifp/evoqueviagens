@@ -142,7 +142,7 @@ function NovaDespesa() {
     });
   }
 
-  const podeSalvar = valor > 0 && taxa > 0 && pagFecha && (pessoal ? !!pessoalDe : r.fecha && r.lista.length > 0) && uid === trip.owner_id;
+  const podeSalvar = descricao.trim().length > 0 && valor > 0 && taxa > 0 && pagFecha && (pessoal ? !!pessoalDe : r.fecha && r.lista.length > 0) && uid === trip.owner_id;
 
   async function salvar() {
     if (!podeSalvar) return;
@@ -161,7 +161,7 @@ function NovaDespesa() {
       const autoTaxa = fonte && String(fonte.taxa) === taxaTxt;
       const d = {
         id: expenseId, trip_id: id,
-        descricao: descricao.trim() || CATEGORIAS.find((c) => c.id === cat)!.rotulo,
+        descricao: descricao.trim(),
         categoria: cat, data, valor_original: valor, moeda_original: moeda, taxa_cambio: taxa, valor_moeda_base: totalC / 100,
         taxa_fonte: diferente ? (autoTaxa ? fonte!.fonte : provisoria ? "última guardada" : "manual") : null,
         taxa_data: diferente ? (autoTaxa ? fonte!.data : data) : null,
@@ -201,9 +201,14 @@ function NovaDespesa() {
           <p className="flex items-center gap-2 rounded-xl bg-muted px-3 py-3 text-base font-bold text-foreground"><Link2 size={22} strokeWidth={2.2} /> Veio do {q.origemNome}</p>
         )}
 
+        <label className="block text-lg font-bold text-foreground">
+          Descrição da despesa <span className="text-danger" aria-hidden>*</span>
+          <input autoFocus required aria-required="true" placeholder="Ex.: jantar, táxi, ingresso" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="tap mt-2 w-full rounded-xl border-2 border-input bg-card px-4 text-lg font-normal text-foreground" />
+        </label>
+
         <section className="rounded-3xl border border-border bg-card p-4 text-center">
           <input
-            inputMode="decimal" autoFocus={!editando} aria-label="Valor" placeholder="0,00"
+            inputMode="decimal" aria-label="Valor" placeholder="0,00"
             value={valorTxt} onChange={(e) => setValorTxt(e.target.value.replace(/[^\d.,]/g, ""))}
             className="num w-full bg-transparent text-center text-[48px] leading-tight text-foreground outline-none"
           />
@@ -330,8 +335,6 @@ function NovaDespesa() {
             <input type="date" aria-label="Data" value={data} max="2099-12-31" onChange={(e) => e.target.value && setData(e.target.value)} className="min-w-0 bg-transparent text-base font-bold" />
           </label>
         </div>
-
-        <input placeholder="Descrição (opcional)" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="tap w-full rounded-xl border-2 border-input bg-card px-4 text-lg text-foreground" />
 
         <button onClick={salvar} disabled={!podeSalvar || salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-40">
           <Check size={28} strokeWidth={2.2} /> Salvar
