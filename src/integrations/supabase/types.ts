@@ -2279,6 +2279,50 @@ export type Database = {
           },
         ]
       }
+      trip_photo: {
+        Row: {
+          altura: number | null
+          created_at: string
+          criado_por: string
+          deleted_at: string | null
+          id: string
+          largura: number | null
+          storage_path: string
+          tirada_em: string | null
+          trip_id: string
+        }
+        Insert: {
+          altura?: number | null
+          created_at?: string
+          criado_por?: string
+          deleted_at?: string | null
+          id?: string
+          largura?: number | null
+          storage_path: string
+          tirada_em?: string | null
+          trip_id: string
+        }
+        Update: {
+          altura?: number | null
+          created_at?: string
+          criado_por?: string
+          deleted_at?: string | null
+          id?: string
+          largura?: number | null
+          storage_path?: string
+          tirada_em?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_photo_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_trust: {
         Row: {
           account_id: string

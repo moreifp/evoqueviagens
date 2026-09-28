@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, Plus, User, Plane, Utensils, Wallet, WifiOff } from "lucide-react";
+import { ChevronLeft, Plus, User, Plane, Utensils, Wallet, WifiOff, Images } from "lucide-react";
 import { useConexao } from "@/lib/outbox";
 
 export function Topo({
@@ -59,6 +59,7 @@ const ABAS_APP = [
   { to: "/viagens", rotulo: "Viagens", Icone: Plane, exact: false, cor: "voos" },
   { to: "/restaurantes", rotulo: "Restaurantes", Icone: Utensils, exact: false, cor: "reserva" },
   { to: "/despesas", rotulo: "Despesas", Icone: Wallet, exact: false, cor: "desp" },
+  { to: "/fotos", rotulo: "Fotos", Icone: Images, exact: false, cor: "pess" },
 ] as const;
 
 const COR_ABA: Record<string, string> = {
@@ -66,6 +67,7 @@ const COR_ABA: Record<string, string> = {
   voos: "text-voos bg-voos-soft",
   reserva: "text-reserva bg-reserva-soft",
   desp: "text-desp bg-desp-soft",
+  pess: "text-pess bg-pess-soft",
 };
 
 export function AbasApp() {
@@ -73,20 +75,20 @@ export function AbasApp() {
   return (
     <nav
       aria-label="Seções do app"
-      className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
     >
       {ABAS_APP.map(({ to, rotulo, Icone, exact, cor }) => {
-        const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to) || (to === "/viagens" && path.startsWith("/trip"));
+        const ativo = exact ? path === "/" || path.startsWith("/pessoas") : path.startsWith(to) || (to === "/viagens" && path.startsWith("/trip") && !path.includes("/despesas") && !path.endsWith("/fotos")) || (to !== "/viagens" && path.startsWith("/trip") && path.includes(to));
         return (
           <Link
             key={to}
             to={to}
-            className={`tap mx-1 my-1 flex flex-col items-center justify-center gap-1 rounded-2xl py-2 ${
+            className={`tap mx-0.5 my-1 flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl py-2 ${
               ativo ? COR_ABA[cor] : "text-muted-foreground"
             }`}
           >
             <Icone size={26} strokeWidth={2.2} />
-            <span className="text-sm font-bold">{rotulo}</span>
+            <span className="max-w-full truncate px-0.5 text-[13px] font-bold">{rotulo}</span>
           </Link>
         );
       })}
