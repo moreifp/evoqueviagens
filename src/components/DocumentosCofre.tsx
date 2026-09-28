@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileLock2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
+import { ChevronRight, FileLock2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
@@ -58,7 +58,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
   }
 
   if (!aberto) {
-    return <button type="button" onClick={abrirSecao} className="tap flex min-h-14 w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left"><LockKeyhole size={26} /><span className="flex-1"><strong className="block text-lg">Cofre · arquivos</strong><span className="text-base text-muted-foreground">Arquivos cifrados que só você abre</span></span></button>;
+    return <button type="button" onClick={abrirSecao} className="tap flex min-h-14 w-full items-center gap-3 py-3 text-left"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-doc-soft text-doc"><LockKeyhole size={24} strokeWidth={2.2} /></span><span className="flex-1"><strong className="block text-lg">Cofre · arquivos</strong><span className="text-base text-muted-foreground">Arquivos cifrados que só você abre</span></span><ChevronRight size={26} /></button>;
   }
   return <section className="space-y-3">
     <div className="flex items-center justify-between gap-2"><h2 className="flex items-center gap-2 text-2xl"><LockKeyhole size={26} /> Cofre · arquivos</h2><Button type="button" variant="outline" onClick={fecharSecao}>Trancar</Button></div>
