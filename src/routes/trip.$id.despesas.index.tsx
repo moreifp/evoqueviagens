@@ -83,8 +83,8 @@ function Lista() {
           despesas.length === 0
             ? <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma despesa ainda</p>
             : <section aria-label="Despesas da viagem">
-                <div className="grid grid-cols-[3.25rem_minmax(0,1fr)_auto] gap-2 px-3 pb-1 text-xs font-bold uppercase text-muted-foreground">
-                  <span>Data</span><span>Despesa · quem pagou</span><span>Valor</span>
+                <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto_4.5rem] gap-2 px-3 pb-1 text-xs font-bold uppercase text-muted-foreground">
+                  <span>Data</span><span>Descrição</span><span>Valor</span><span className="text-right">Pagou</span>
                 </div>
                 <ul className="space-y-2">{[...despesas].sort((a, b) => b.data.localeCompare(a.data)).map((d) => <li key={d.id}><LinhaDespesa d={d} mostrarData eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
@@ -111,13 +111,14 @@ function Lista() {
         <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
           <button type="button" onClick={() => setMostrarDivisao((v) => !v)} aria-expanded={mostrarDivisao} aria-controls="divisao-despesas" className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 text-left">
             <span className="min-w-0">
-              <span className="block text-lg font-bold text-foreground">Quem deve e quem recebe</span>
-              <span className="block truncate text-sm text-muted-foreground">Veja os saldos e quem paga a quem</span>
+               <span className="block text-lg font-bold text-foreground">Mostrar divisão</span>
+               <span className="block truncate text-sm text-muted-foreground">Saldos e pagamentos entre as pessoas</span>
             </span>
             {mostrarDivisao ? <ChevronUp className="shrink-0" size={26} strokeWidth={2.2} /> : <ChevronDown className="shrink-0" size={26} strokeWidth={2.2} />}
           </button>
           {mostrarDivisao && (
             <div id="divisao-despesas" className="space-y-4 border-t border-border p-3">
+              <h2 className="text-lg font-bold text-foreground">Quem deve e quem recebe</h2>
               <section className="rounded-2xl bg-navy p-4 text-primary-foreground">
                 <p className="text-sm font-bold uppercase opacity-80">Total dividido</p>
                 <p className="num mt-1 text-[36px] leading-none">{fmtMoney(soma(divididas), moeda)}</p>
