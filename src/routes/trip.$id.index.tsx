@@ -112,6 +112,7 @@ function VisaoOrganizador({ id }: { id: string }) {
         {alertas?.[0] && <p className="rounded-2xl border-2 border-warn px-4 py-3 text-lg font-semibold">{alertas[0].mensagem}</p>}
         {usarBilhete && proximoBilhete ? (
           <CardProximo
+            tonalidade="voos"
             Icone={ICONE[proximoBilhete.tipo] ?? Plane}
             titulo={`${proximoBilhete.origem_iata ?? proximoBilhete.origem_cidade ?? "?"} → ${proximoBilhete.destino_iata ?? proximoBilhete.destino_cidade ?? "?"}`}
             hora={horaNoFuso(proximoBilhete.partida_utc, proximoBilhete.partida_tz)}
@@ -122,6 +123,7 @@ function VisaoOrganizador({ id }: { id: string }) {
           />
         ) : proximoHotel ? (
           <CardProximo
+            tonalidade="hosp"
             Icone={BedDouble}
             titulo={proximoHotel.nome}
             hora={horaNoFuso(proximoHotel.checkin, fusoLocal())}
@@ -160,7 +162,7 @@ function VisaoOrganizador({ id }: { id: string }) {
           </span>
         </Link>
 
-        <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" /></div>
+        <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" cor="voos" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" cor="hosp" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" cor="reserva" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" cor="pess" /></div>
         <CartaoEmergencia trip={tripCompleta} editavel />
         <section className="space-y-5 pb-28"><h2 className="text-2xl">Roteiro por dia</h2>{Object.entries(porDia).map(([dia,itens]) => <div key={dia}><div className="mb-2 flex items-center gap-2"><h3 className="flex-1 text-lg font-extrabold uppercase">{dataBRCurta(dia)}</h3>{(() => { const u = rotaDoDia(pontosDoDia(itens)); return u ? <a href={u} target="_blank" rel="noopener noreferrer" className="tap flex items-center gap-2 text-base font-bold text-accent"><IconeMapa size={22} /> Ver o dia no mapa</a> : null; })()}</div><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{itens.map((item) => <Link key={item.item_id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: item.item_tipo, itemId: item.item_id }} className="tap flex items-center gap-3 px-4"><strong className="num w-16 text-xl">{horaNoFuso(item.inicio_utc,item.inicio_tz)}</strong>{item.item_tipo === "ticket" && <Logo url={logoCia(item.companhia, item.numero)} Icone={ICONE[item.subtipo] ?? Plane} nome={item.companhia ?? "companhia"} tamanho={28} className="shrink-0 text-accent" />}<span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.titulo}</strong><span className="text-base text-muted-foreground">{item.pessoas.map(p=>p.nome).join(", ")}</span></span>{visiveis.some(a=>a.itens.some(x=>x.id===item.item_id))&&<span className="rounded-full bg-warn px-2 py-1 text-sm font-bold text-warn-foreground">Conferir</span>}</Link>)}</div></div>)}</section>
         <AvisosEscondidos contextos={[id]} />
@@ -170,6 +172,7 @@ function VisaoOrganizador({ id }: { id: string }) {
 }
 
 function CardProximo({
+  tonalidade = "hero",
   Icone,
   titulo,
   hora,
@@ -178,6 +181,7 @@ function CardProximo({
   tz,
   iso,
 }: {
+  tonalidade?: "voos" | "hosp" | "hero";
   Icone: typeof Plane;
   titulo: string;
   hora: string;
@@ -188,8 +192,9 @@ function CardProximo({
 }) {
   const [hh, mm] = hora.split(":");
   const local2 = horaNoFuso(iso, fusoLocal());
+  const fundo = tonalidade === "voos" ? "gradient-voos" : tonalidade === "hosp" ? "gradient-hosp" : "gradient-hero";
   return (
-    <section className="gradient-hero shadow-medium rounded-3xl p-6">
+    <section className={`${fundo} shadow-medium rounded-3xl p-6`}>
       <div className="flex items-center gap-3">
         <Icone size={40} strokeWidth={2.2} />
         <div>
@@ -212,26 +217,42 @@ function CardProximo({
   );
 }
 
+const COR_FUNDO: Record<string, string> = {
+  voos: "border-voos-border bg-voos-soft",
+  hosp: "border-hosp-border bg-hosp-soft",
+  reserva: "border-reserva-border bg-reserva-soft",
+  pess: "border-pess-border bg-pess-soft",
+};
+
+const COR_TEXTO: Record<string, string> = {
+  voos: "text-voos",
+  hosp: "text-hosp",
+  reserva: "text-reserva",
+  pess: "text-pess",
+};
+
 function Atalho({
   to,
   id,
   Icone,
   numero,
   rotulo,
+  cor,
 }: {
   to: string;
   id: string;
   Icone: typeof Plane;
   numero: string;
   rotulo: string;
+  cor: keyof typeof COR_FUNDO;
 }) {
   return (
     <Link
       to={to as never}
       params={{ id } as never}
-      className="shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border border-border bg-card p-4"
+      className={`shadow-soft flex min-h-[104px] flex-col justify-between rounded-2xl border p-4 ${COR_FUNDO[cor]}`}
     >
-      <Icone size={28} strokeWidth={2.2} className="text-accent" />
+      <Icone size={28} strokeWidth={2.2} className={COR_TEXTO[cor]} />
       <span className="num truncate text-2xl text-foreground">{numero}</span>
       <span className="text-sm font-bold text-muted-foreground">{rotulo}</span>
     </Link>
