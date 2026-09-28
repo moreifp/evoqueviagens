@@ -11,7 +11,8 @@ export const verDespesasPublicas = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ token: z.string().min(20).max(100) }).parse(d))
   .handler(async ({ data }): Promise<DespesasPublicas> => {
     const { adminClient } = await import("./cadastro.server");
-    const db = adminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = (await adminClient()) as any;
     const { data: link } = await db.from("despesas_link").select("trip_id, revogado_em").eq("token", data.token).maybeSingle();
     if (!link || link.revogado_em) return { ok: false };
     const tid = link.trip_id as string;

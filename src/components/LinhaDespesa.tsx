@@ -5,14 +5,16 @@ import { categoria } from "@/lib/categorias";
 import { fmtMoney } from "@/lib/format";
 import { nomeCurto } from "@/lib/despesas";
 
-export function LinhaDespesa({ d, membros, moedaBase, tripId, eu }: { d: Expense; membros: Membro[]; moedaBase: string; tripId: string; eu?: string }) {
+export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink }: { d: Expense; membros: Membro[]; moedaBase: string; tripId: string; eu?: string; semLink?: boolean }) {
   const minha = eu ? d.partes.find((p) => p.person_id === eu) : undefined;
   const c = categoria(d.categoria);
   const Icone = c.Icone;
   const pag = d.pagadores.length > 1 ? `${d.pagadores.length} pagaram` : `${nomeCurto(membros, d.pagadores[0]?.person_id ?? d.pago_por)} pagou`;
+  const Caixa = ({ className, children }: { className: string; children: React.ReactNode }) =>
+    semLink ? <div className={className}>{children}</div> : <Link to="/trip/$id/despesas/$eid" params={{ id: tripId, eid: d.id }} className={className}>{children}</Link>;
   if (d.pessoal) {
     return (
-      <Link to="/trip/$id/despesas/$eid" params={{ id: tripId, eid: d.id }} className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-pessoal-border bg-pessoal p-3">
+      <Caixa className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-pessoal-border bg-pessoal p-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pessoal-chip text-pessoal-foreground"><User size={26} strokeWidth={2.2} /></span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-lg font-bold text-foreground">{d.descricao}</span>
