@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileLock2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
+import { ChevronRight, FileLock2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
