@@ -17,6 +17,7 @@ import { AvisosEscondidos, useEscondidos } from "@/lib/escondidos";
 import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
+import { DocumentosCofre } from "./DocumentosCofre";
 
 const LISTA_VAZIA: never[] = [];
 
@@ -134,6 +135,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
 
         <FichaCompleta personId={p.id} itens={progresso.itens} owner={owner} />
+        {owner && <DocumentosCofre uid={data.uid} personId={p.id} />}
 
         {self && <AvisosMeus />}
         {self && <PedidosRecebidos />}

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { AlertTriangle, FileImage, FileUp, CheckCircle2, Keyboard, Loader2, RotateCw } from "lucide-react";
+import { AlertTriangle, FileImage, FileUp, CheckCircle2, Keyboard, Loader2, RotateCw, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { Campo, inputCls } from "@/components/Form";
@@ -17,6 +17,9 @@ import { identificarDocumentoAdmin, lerDocumentoAdmin, lerPassaporteAdmin } from
 import { supabase } from "@/integrations/supabase/client";
 import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
+import { DestravarCofre } from "@/components/Cofre";
+import { saveVaultDocument, useVaultUnlocked } from "@/lib/vault";
+import { Button } from "@/components/ui/button";
 
 const TIPOS = [["passaporte", "Passaporte"], ["rg", "RG"], ["cnh", "CNH e PID"], ["visto", "Visto ou ESTA"], ["vacina", "Vacina"], ["seguro", "Seguro"], ["global_entry", "Global Entry"], ["outro", "Outro"]] as const;
 /** Lista completa do seletor (inclui ETA, eTA, ETIAS…), para o tipo escolhido nunca virar "Passaporte". */
@@ -33,7 +36,7 @@ export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
 function NovoDocumento() {
   const { pid } = Route.useParams(); const search = Route.useSearch(); const nav = useNavigate(); const qc = useQueryClient();
   const { data } = useQuery(euQuery(pid)); const identify = useServerFn(identificarDocumentoAdmin); const readDoc = useServerFn(lerDocumentoAdmin); const readPassport = useServerFn(lerPassaporteAdmin);
-  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail" | "anexo">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const [motivo, setMotivo] = useState(""); const [conferir, setConferir] = useState(false); const [previa, setPrevia] = useState<string | null>(null); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
+  const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail" | "anexo">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const [motivo, setMotivo] = useState(""); const [conferir, setConferir] = useState(false); const [previa, setPrevia] = useState<string | null>(null); const [guardarNoCofre, setGuardarNoCofre] = useState(false); const unlocked = useVaultUnlocked(data?.uid); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
   useEffect(() => { if (!editDoc) return; setTipo(editDoc.tipo); setFields((old) => ({ ...old, nome_no_documento: editDoc.nome_no_documento ?? "", numero: editDoc.numero ?? "", pais_emissor: editDoc.pais_emissor ?? "", sexo: editDoc.sexo ?? "", detalhe: editDoc.detalhe ?? "", emissao: editDoc.emissao ?? "", validade: editDoc.validade ?? "", primeira_habilitacao: editDoc.primeira_habilitacao ?? "", local_expedicao: editDoc.local_expedicao ?? "" })); }, [editDoc?.id]);
   useEffect(() => { if (!data) return; setFields((old) => ({ ...old, nascimento: old.nascimento || data.pessoa.data_nascimento || "", nacionalidade: old.nacionalidade || data.pessoa.nacionalidades[0] || "" })); }, [data?.pessoa.id]);
   if (!data) return <p className="p-6 text-lg">Carregando…</p>;
@@ -112,6 +115,22 @@ function NovoDocumento() {
     if (!owner || !tipo) return; setSaving(true);
     let passo = "Não deu para salvar os dados do documento.";
     try {
+      if (tipo === "outro" && guardarNoCofre && !editDoc) {
+        if (!unlocked) throw new Error("Destrave o cofre antes de guardar.");
+        const valores = Object.fromEntries(["nome_no_documento", "numero", "pais_emissor", "sexo", "detalhe", "emissao", "validade"].map((key) => [key, String(form.get(key) || "")]).filter(([, value]) => value));
+        let original: { name: string; type: string; data: string } | undefined;
+        if (file) {
+          passo = "Não deu para cifrar o arquivo original.";
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          let binary = ""; for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
+          original = { name: file.name, type: file.type || "application/octet-stream", data: btoa(binary) };
+        }
+        passo = "Não deu para guardar o arquivo no cofre.";
+        const result = await saveVaultDocument(data.uid, pid, { fields: valores, file: original });
+        toast.success(result.localOnly ? "Guardado no aparelho · sincroniza quando voltar a internet" : "Guardado no cofre");
+        nav({ to: "/pessoas/$pid", params: { pid } });
+        return;
+      }
       const id = editDoc?.id ?? crypto.randomUUID(); const values = { person_id: pid, tipo, numero: String(form.get("numero") || "") || null, nome_no_documento: String(form.get("nome_no_documento") || "") || null, pais_emissor: String(form.get("pais_emissor") || "") || null, sexo: String(form.get("sexo") || "") || null, detalhe: String(form.get("detalhe") || "") || null, emissao: String(form.get("emissao") || "") || null, validade: String(form.get("validade") || "") || null, primeira_habilitacao: ehCnh ? String(form.get("primeira_habilitacao") || "") || null : (editDoc?.primeira_habilitacao ?? null), local_expedicao: ehCnh ? String(form.get("local_expedicao") || "") || null : (editDoc?.local_expedicao ?? null) };
       if (editDoc) { const changed = Object.fromEntries(Object.entries(values).filter(([key, value]) => key !== "person_id" && value !== (editDoc[key as keyof typeof editDoc] ?? null))) as Partial<typeof values>; if (Object.keys(changed).length) { const updated = await supabase.from("traveler_document").update(changed).eq("id", id); if (updated.error) throw updated.error; } } else { const inserted = await supabase.from("traveler_document").insert({ id, ...values }); if (inserted.error) throw inserted.error; }
       passo = "Os dados foram salvos, mas não deu para atualizar a ficha (nascimento/nacionalidade).";
@@ -128,7 +147,7 @@ function NovoDocumento() {
         await supabase.from("traveler_document").update({ arquivo_path: path }).eq("id", id);
       }
       await qc.invalidateQueries({ queryKey: ["eu", pid] }); await qc.invalidateQueries({ queryKey: ["documento", pid, id] }); toast.success(`${nomeDocumento(tipo)} salvo`); nav({ to: "/pessoas/$pid/documentos/$did", params: { pid, did: id } });
-    } catch { toast.error(passo); setSaving(false); }
+    } catch (error) { toast.error(error instanceof Error && error.message === "Destrave o cofre antes de guardar." ? error.message : passo); setSaving(false); }
   }
 
   const campos: [string, string, string][] = [['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']];
@@ -140,10 +159,11 @@ function NovoDocumento() {
     {!tipo && <section><h2 className="mb-3 text-2xl">Ou escolha o tipo</h2><div className="grid grid-cols-3 gap-2">{TIPOS.map(([id, label]) => <button key={id} onClick={() => setTipo(id)} className="tap rounded-lg border-2 border-border p-2 text-base font-bold">{label}</button>)}</div></section>}
     {(file || editDoc || manual) && <form action={(fd) => void save(fd)} className="space-y-4">{file && <div className="rounded-lg border border-border bg-card p-3">{previa ? <img src={previa} alt="Página do PDF que está sendo lida" className="h-40 w-full rounded-lg bg-muted object-contain" /> : <Miniatura src={previaDe(file)} className="h-40 w-full rounded-lg" />}<p className="mt-3 flex items-center gap-2 text-lg font-bold">{reading ? <><Loader2 size={24} className="animate-spin" /> Lendo…</> : readState === "ok" ? precisaConfirmar || conferir ? <><AlertTriangle size={24} className="text-warn" /> Lemos o documento · confira os campos</> : <><CheckCircle2 size={24} className="text-ok" /> Lemos a foto · confira</> : readState === "fail" ? "Não deu para ler" : readState === "anexo" ? "Arquivo anexado · digite os dados" : null}</p>{readState === "fail" && motivo && <p className="text-base text-muted-foreground">{motivo}</p>}<div className="flex flex-wrap gap-4">{readState === "fail" && !reading && <button type="button" onClick={() => void receive(file, tipo || undefined)} className="tap inline-flex items-center gap-2 text-lg font-bold text-accent"><RotateCw size={22} /> Tentar ler de novo</button>}<button type="button" onClick={() => { setFile(null); setReadState("idle"); setPrevia(null); }} className="tap text-lg font-bold text-accent">Trocar arquivo</button></div></div>}{manual && !file && <button type="button" onClick={() => setManual(false)} className="tap text-lg font-bold text-accent">Usar foto em vez de digitar</button>}
       <Campo rotulo="Tipo"><select value={tipo} onChange={(e) => setTipo(e.target.value)} className={inputCls}>{TODOS_TIPOS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></Campo>
+      {tipo === "outro" && !editDoc && <div className="space-y-3 rounded-lg border border-border bg-card p-4"><label className="flex min-h-14 items-center gap-3 text-lg font-bold"><input type="checkbox" checked={guardarNoCofre} onChange={(e) => setGuardarNoCofre(e.target.checked)} className="h-7 w-7 accent-primary" /><LockKeyhole size={26} /> Guardar no cofre</label>{guardarNoCofre && <><p className="text-base text-muted-foreground">Só você pode abrir. O arquivo original e os dados ficam cifrados; não entram nos documentos compartilhados.</p>{!unlocked && <DestravarCofre uid={data.uid} />}</>}</div>}
       {campos.map(([key,label,input]) => <Campo key={key} rotulo={(ROTULOS[tipo] ?? {})[key] ?? label}><input name={key} type={input} max={input === "date" ? "2099-12-31" : undefined} inputMode={ehCnh && key === "numero" ? "numeric" : undefined} maxLength={ehCnh && key === "numero" ? 11 : undefined} placeholder={ehCnh && key === "numero" && regFalhou && !fields.numero ? "Não deu para ler o nº de registro · digite" : undefined} value={fields[key] ?? ""} onChange={(e) => setFields((old) => ({ ...old, [key]: ehCnh && key === "numero" ? e.target.value.replace(/\D/g, "") : e.target.value }))} className={inputCls + ambar(key)} />{ehCnh && key === "numero" && fields.numero && <p className={`mt-1 text-base font-bold ${numeroCnhInvalido ? "text-warn" : "text-ok"}`}>{numeroCnhInvalido ? (fields.numero.length < 11 ? `${fields.numero.length} de 11 dígitos` : "Número não confere · verifique") : "Número confere"}</p>}</Campo>)}
       {tipo === "passaporte" && <><Campo rotulo="Data de nascimento"><input name="nascimento" type="date" max="2099-12-31" value={fields.nascimento ?? ""} onChange={(e) => setFields((o) => ({ ...o, nascimento: e.target.value }))} className={inputCls} /></Campo><Campo rotulo={`Nacionalidade${fields.nacionalidade ? ` · ${nomePais3(fields.nacionalidade)}` : ""}`}><input name="nacionalidade" type="text" maxLength={3} placeholder="BRA" autoCapitalize="characters" value={fields.nacionalidade ?? ""} onChange={(e) => setFields((o) => ({ ...o, nacionalidade: e.target.value.toUpperCase() }))} className={inputCls} /></Campo></>}
       {precisaConfirmar && <p className="rounded-lg border-2 border-warn p-3 text-lg">Algumas datas ou o número não conferem. Confira os campos em destaque antes de confirmar.</p>}
-      <button disabled={saving || reading || !owner} className="gradient-hero tap w-full rounded-lg text-xl font-bold">{readState === "ok" ? "Confirmar" : `Salvar ${nomeDocumento(tipo)}`}</button>
+      <Button disabled={saving || reading || !owner || (tipo === "outro" && guardarNoCofre && !unlocked)} className="gradient-hero w-full text-xl font-bold">{tipo === "outro" && guardarNoCofre ? "Guardar no cofre" : readState === "ok" ? "Confirmar" : `Salvar ${nomeDocumento(tipo)}`}</Button>
     </form>}
   </main></div>;
 }
