@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, MinusCircle } from "lucide-react";
+import { Award, CheckCircle2, ChevronDown, ChevronRight, CircleDashed, HeartPulse, IdCard, MinusCircle, Stamp, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GRUPOS_FICHA, type ItemFicha } from "@/lib/eu";
