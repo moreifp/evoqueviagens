@@ -198,6 +198,7 @@
   );
   --gradient-voos: linear-gradient(135deg, #1d4e7a, #2f6da8);
   --gradient-hosp: linear-gradient(135deg, #8a4523, #b05a2f);
+  --gradient-reserva: linear-gradient(135deg, #6e2f53, #8e3d6b);
   --shadow-soft: 0 2px 8px -2px hsl(210 56% 11% / 0.08);
   --shadow-medium: 0 4px 16px -4px hsl(210 56% 11% / 0.12);
 }
@@ -312,6 +313,11 @@
 
 @utility gradient-hosp {
   background-image: var(--gradient-hosp);
+  color: hsl(40 40% 97%);
+}
+
+@utility gradient-reserva {
+  background-image: var(--gradient-reserva);
   color: hsl(40 40% 97%);
 }
 
