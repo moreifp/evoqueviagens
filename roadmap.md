@@ -1,7 +1,5 @@
 # Roadmap — Módulo 2 partes 1 e 2
 
-## Recibo em texto (despesas)
-- [x] Transcrever a foto da conta em texto legível na despesa (botão "Ler a conta", cache offline) — testado na tela com recibo espécime, estado restaurado
 
 
 - [x] Migrations 0014–0016 (modelo, permissões, roteiro_viagem, membros_viagem, anexos trip/)
@@ -120,9 +118,4 @@
 - [x] Associar novos dependentes à pessoa aberta e preservar os antigos na ficha do titular
 - [x] Incluir dependentes de dependentes no download offline
 
-## Recibo em texto (despesas)
-- [x] Transcrever a foto da conta em texto legível (como o scan do Restaurantes): server fn /v1/responses + botão "Ler a conta" na despesa
-- [ ] Testar na tela com recibo real e conferir cache offline
 
-## Recibo em texto (despesas)
-- [x] Transcrever a foto da conta em texto legível na despesa (botão "Ler a conta", cache offline) — testado na tela com recibo espécime, estado restaurado
