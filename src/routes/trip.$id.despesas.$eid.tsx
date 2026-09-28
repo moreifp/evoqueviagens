@@ -164,6 +164,17 @@ function Detalhe() {
             <img src={d.comprovante_url} alt="Recibo" className="max-h-80 w-full object-contain" />
           </button>
         )}
+        {d.comprovante_url && (
+          <div>
+            <button onClick={() => (mostrarTexto ? setMostrarTexto(false) : void lerAConta())} disabled={lendoConta} aria-expanded={mostrarTexto} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-desp">
+              {lendoConta ? <Loader2 size={24} strokeWidth={2.2} className="animate-spin" aria-hidden /> : <FileText size={24} strokeWidth={2.2} aria-hidden />}
+              {lendoConta ? "Lendo a conta…" : mostrarTexto ? "Esconder a conta em texto" : textoConta ? "Ver a conta em texto" : "Ler a conta da foto"}
+            </button>
+            {mostrarTexto && textoConta && (
+              <div className="mt-2 whitespace-pre-wrap rounded-2xl border-2 border-desp-border bg-desp-soft p-4 text-base leading-relaxed text-foreground">{textoConta}</div>
+            )}
+          </div>
+        )}
         {org && (
           <div className={`grid gap-3 ${d.comprovante_url ? "grid-cols-2" : "grid-cols-1"}`}>
             <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold">
