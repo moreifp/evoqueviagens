@@ -141,9 +141,9 @@ function FotosViagem() {
       await baixarPasta(blobs);
       salvarBaixadas(new Set([...baixadas, ...alvo.map((f) => f.id)]));
       setSel(new Set()); setSelecionando(false);
-    } catch {
-      toast.error("Não consegui baixar as fotos. Confira a internet.");
-    } finally { setBaixando(false); }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não consegui enviar ao Google Drive.");
+    } finally { setBaixando(false); setProgresso(""); }
   }
 
   async function apagarSelecionadas() {
@@ -196,10 +196,10 @@ function FotosViagem() {
         {souDono && novas.length > 0 && !camera && (
           <div className="space-y-2 rounded-2xl border-2 border-accent bg-card p-4">
             <p className="text-lg font-semibold">{novas.length} {novas.length === 1 ? "foto nova" : "fotos novas"}{enviando > 0 ? ` · enviando ${enviando}…` : ""}</p>
-            <button type="button" onClick={salvarNoFotos} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
-              <Download size={24} strokeWidth={2.2} /> Salvar pasta "{nomePasta}"
+            <button type="button" onClick={salvarNoFotos} disabled={salvandoNovas} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
+              <Download size={24} strokeWidth={2.2} /> {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
             </button>
-            <p className="text-base text-muted-foreground">No iPhone, toque em "Salvar em Arquivos" e depois toque no arquivo para abrir a pasta. Fotos em tamanho original.</p>
+            <p className="text-base text-muted-foreground">Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive.</p>
           </div>
         )}
 
@@ -236,12 +236,12 @@ function FotosViagem() {
             <Trash2 size={24} strokeWidth={2.2} /> {confApagar ? `Tem certeza? Apagar ${sel.size}` : `Apagar ${sel.size} ${sel.size === 1 ? "foto" : "fotos"}`}
           </button>
         )}
-        {visiveis.length > 0 && (
+        {souDono && visiveis.length > 0 && (
           <button type="button" onClick={baixarTodas} disabled={baixando} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold">
-            <Download size={24} strokeWidth={2.2} /> {baixando ? "Preparando…" : sel.size ? `Baixar ${sel.size} selecionadas numa pasta` : `Baixar todas (${visiveis.length}) numa pasta`}
+            <Download size={24} strokeWidth={2.2} /> {baixando ? `Enviando ${progresso}…` : sel.size ? `Enviar ${sel.size} ao Google Drive` : `Enviar todas (${visiveis.length}) ao Google Drive`}
           </button>
         )}
-        {fotos.length > 0 && visiveis.length === 0 && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram baixadas.</p>}
+        {fotos.length > 0 && visiveis.length === 0 && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram para o Google Drive.</p>}
         {baixadas.size > 0 && <button type="button" onClick={() => salvarBaixadas(new Set())} className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline">Mostrar de novo as já baixadas</button>}
         <p className="text-base text-muted-foreground">No computador, segure ⌘ (ou Ctrl) e clique para escolher várias.{souDono ? "" : " Só o organizador acrescenta ou apaga fotos."}</p>
       </main>
