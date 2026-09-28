@@ -30,7 +30,7 @@ export function viagensParaBaixar(trips: Trip[]) {
 }
 
 let rodando = false;
-export async function baixarTudo(qc: QueryClient, forcar = false) {
+export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: string) {
   if (rodando || typeof navigator === "undefined" || !navigator.onLine) return;
   rodando = true;
   try {
@@ -41,6 +41,8 @@ export async function baixarTudo(qc: QueryClient, forcar = false) {
 
     const trips = await qc.fetchQuery({ ...tripsQuery(), staleTime: 0 });
     const alvo = viagensParaBaixar(trips);
+    const extra = incluir ? trips.find((t) => t.id === incluir && !alvo.includes(t)) : undefined;
+    if (extra) alvo.push(extra);
     emitir({ ...estado, baixando: alvo.map((t) => t.id) });
     const manter = new Set<string>();
 
@@ -149,8 +151,8 @@ export function useSeloOffline(tripId: string) {
   }, []);
   if (e.baixando.includes(tripId)) return { texto: "Baixando…", ok: false };
   const em = e.em[tripId];
-  if (!em) return null;
-  return { texto: `Disponível sem internet · atualizado ${haQuanto(em)}`, ok: true };
+  if (!em) return { texto: "Não salva no aparelho", ok: false };
+  return { texto: `Salva no aparelho · ${haQuanto(em)}`, ok: true };
 }
 
 export function haQuanto(ts: number) {
