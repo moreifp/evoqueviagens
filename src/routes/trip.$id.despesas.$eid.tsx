@@ -41,6 +41,14 @@ function Detalhe() {
   const [telaCheia, setTelaCheia] = useState(false);
   const [online, setOnline] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
+  const [textoConta, setTextoConta] = useState<string | null>(null);
+  const [mostrarTexto, setMostrarTexto] = useState(false);
+  const [lendoConta, setLendoConta] = useState(false);
+  const lerConta = useServerFn(transcreverRecibo);
+  useEffect(() => {
+    const cache = localStorage.getItem(`evoque-recibo-texto:${eid}`);
+    if (cache) { setTextoConta(cache); }
+  }, [eid]);
   useEffect(() => {
     const f = () => setOnline(navigator.onLine);
     f(); window.addEventListener("online", f); window.addEventListener("offline", f);
