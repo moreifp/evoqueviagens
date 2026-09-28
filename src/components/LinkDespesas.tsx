@@ -71,15 +71,19 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   const { data: membros } = useQuery({
     queryKey: ["despesas-link-membros", tripId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("trip_member")
-        .select("person_id, person:person_id(id, nome, telefone)")
-        .eq("trip_id", tripId)
-        .is("deleted_at", null);
-      return (data ?? []) as Array<{
-        person_id: string;
-        person: { id: string; nome: string; telefone: string | null } | null;
-      }>;
+      const [{ data: ms }, { data: tels }, { data: convites }] = await Promise.all([
+        supabase.rpc("membros_viagem", { _tid: tripId }),
+        supabase.rpc("telefones_viagem", { _tid: tripId }),
+        supabase.from("trip_member").select("id, convite_telefone").eq("trip_id", tripId).is("deleted_at", null),
+      ]);
+      const telPorPessoa = new Map((tels ?? []).map((t) => [t.person_id, t.telefone]));
+      const convitePorMembro = new Map((convites ?? []).map((c) => [c.id, c.convite_telefone]));
+      return (ms ?? []).filter((m) => m.status !== "saiu").map((m) => ({
+        member_id: m.id,
+        person_id: m.person_id,
+        meu: m.meu,
+        person: { id: m.person_id, nome: m.apelido || m.nome, telefone: telPorPessoa.get(m.person_id) ?? convitePorMembro.get(m.id) ?? null },
+      }));
     },
     enabled: !!uid && aberto,
   });
@@ -142,12 +146,13 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
     }
     setSalvando(true);
     try {
-      await mutar({
-        tipo: "update",
-        tabela: "person",
-        id: personId,
-        valores: { telefone: formatado },
-      });
+      const m = membros?.find((x) => x.person_id === personId);
+      if (m?.meu) {
+        await mutar({ tipo: "update", tabela: "person", id: personId, valores: { telefone: formatado } });
+      } else {
+        const { data, error } = await supabase.from("trip_member").update({ convite_telefone: formatado }).eq("id", m?.member_id ?? "").select("id");
+        if (error || !data?.length) throw new Error("não salvou");
+      }
       qc.invalidateQueries({ queryKey: ["despesas-link-membros", tripId] });
       setEditando(null);
       setFone("");
