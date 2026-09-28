@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRightLeft, CalendarDays, Copy, Hotel as IconeHotel, Luggage, Navigation, Phone, Plane, Plus } from "lucide-react";
@@ -72,8 +73,9 @@ function Voo({ tripId, itemId }: { tripId: string; itemId: string }) {
     <section><div className="flex items-center"><h2 className="flex-1 text-2xl">Passageiros · {item.passageiros.length}</h2></div>{item.passageiros.map((p) => { const nome = membros.find((x) => x.person_id === p.person_id)?.nome ?? "Passageiro"; const estado = conferencia.find((x) => x.person_id === p.person_id)?.estado; return <div key={p.id} className="border-b border-border py-3"><div className="flex items-center justify-between gap-2"><strong>{nome} · {p.assento || "sem assento"}{p.classe ? ` · ${p.classe}` : ""}</strong><span className={`rounded-full px-3 py-1 text-sm font-bold ${estado === "confere" ? "bg-ok text-ok-foreground" : estado === "diferente" ? "bg-danger text-danger-foreground" : "bg-warn text-warn-foreground"}`}>{estado === "confere" ? "Nome confere" : estado === "diferente" ? "Nome diferente" : estado === "sem_passaporte" ? "Sem passaporte" : estado === "sem_acesso" ? "Sem acesso" : "Conferir"}</span></div><p className="text-base text-muted-foreground">{p.nome_no_bilhete || "Nome não informado"} · •••{p.eticket?.slice(-4) || "—"}</p>{dif.includes(p) && <p className="flex items-center gap-1 text-base text-muted-foreground"><Luggage size={18} aria-hidden /> {textoBagagem(p)}</p>}</div>; })}</section>
     <div className="grid grid-cols-2 gap-2">
       <Link to="/trip/$id/bilhetes/novo" params={{ id: tripId }} search={{ copiar: itemId } as never} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-lg font-bold"><ArrowRightLeft size={22} /> Copiar p/ volta</Link>
-      <Autoria tipo="ticket" id={itemId}><VirarDespesa className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-lg font-bold text-foreground" tripId={tripId} tipo="ticket" itemId={itemId} expenseId={item.expense_id} descricao={`${item.companhia ?? "Voo"} ${item.numero ?? ""}`} data={item.partida_utc.slice(0, 10)} pessoas={(item.passageiros ?? []).map((p) => p.person_id)} /></Autoria>
+      <SoQuemEdita tipo="ticket" id={itemId}><VirarDespesa className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-lg font-bold text-foreground" tripId={tripId} tipo="ticket" itemId={itemId} expenseId={item.expense_id} descricao={`${item.companhia ?? "Voo"} ${item.numero ?? ""}`} data={item.partida_utc.slice(0, 10)} pessoas={(item.passageiros ?? []).map((p) => p.person_id)} /></SoQuemEdita>
     </div>
+    <Autoria tipo="ticket" id={itemId} />
     <AnexosItem tripId={tripId} itemTipo="ticket" itemId={itemId} podeEditar />
   </main></>;
 }
@@ -123,4 +125,9 @@ function AcoesTopo({ tipo, itemId, tripId, editarPara, queryKey, destaque }: { d
   const { data } = useQuery(autoriaQuery(tipo, itemId));
   if (!data?.editar) return null;
   return <AcoesItem tripId={tripId} tabela={tipo} id={itemId} editarPara={editarPara} queryKey={queryKey as never} destaque={destaque} />;
+}
+
+function SoQuemEdita({ tipo, id, children }: { tipo: string; id: string; children: React.ReactNode }) {
+  const { data } = useQuery(autoriaQuery(tipo, id));
+  return data?.editar ? <>{children}</> : null;
 }
