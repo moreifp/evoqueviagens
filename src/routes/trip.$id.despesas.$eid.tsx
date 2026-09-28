@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tan/react-query-noop";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Camera, ChevronLeft, Eye, Pencil, RefreshCw, Trash2, User, X } from "lucide-react";
+import { Camera, ChevronLeft, Eye, FileText, Loader2, Pencil, RefreshCw, Trash2, User, X } from "lucide-react";
 import { buscarCotacaoDetalhe, type Expense } from "@/lib/data";
 import { centavos, dividir } from "@/lib/divisao";
 import { mutar } from "@/lib/outbox";
