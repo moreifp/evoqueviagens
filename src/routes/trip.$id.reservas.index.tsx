@@ -39,7 +39,7 @@ function Reservas() {
       <Topo titulo="Reservas" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-4 px-4 pt-4">
         {itens.length === 0 && (
-          <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma reserva ainda</p>
+          <Link to="/trip/$id/reservas/nova" params={{ id }} className="tap flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-reserva-border p-8 text-lg font-bold text-reserva">+ Primeira reserva</Link>
         )}
         {itens.map((r) => {
           const d = porId.get(r.item_id);

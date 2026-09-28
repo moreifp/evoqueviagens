@@ -35,9 +35,7 @@ function Hospedagem() {
       <Topo titulo="Hospedagem" voltarPara="/trip/$id" voltarParams={{ id }} />
       <main className="space-y-4 px-4 pt-4">
         {itens.length === 0 && (
-          <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">
-            Nenhuma estadia ainda
-          </p>
+          <Link to="/trip/$id/hospedagem/nova" params={{ id }} className="tap flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-hosp-border p-8 text-lg font-bold text-hosp">+ Primeira estadia</Link>
         )}
         {itens.map((r) => {
           const h = porId.get(r.item_id);
