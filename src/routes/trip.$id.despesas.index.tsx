@@ -56,7 +56,7 @@ function Lista() {
           <h1 className="text-3xl">Despesas</h1>
           <p className="truncate text-base text-muted-foreground">{trip.nome} · {nomeMoeda}{org ? " · você organiza" : ""}</p>
         </div>
-        <Link to="/despesas" className="tap flex flex-col items-center justify-center rounded-xl px-2 text-foreground">
+        <Link to="/despesas" search={{ escolher: true }} className="tap flex flex-col items-center justify-center rounded-xl px-2 text-foreground">
           <ArrowLeftRight size={24} strokeWidth={2.2} /><span className="text-xs font-semibold">Viagem</span>
         </Link>
       </header>

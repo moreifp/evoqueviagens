@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { ChevronRight, Wallet } from "lucide-react";
 import { tripsQuery } from "@/lib/data";
 import { dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/despesas")({
+  validateSearch: (s: Record<string, unknown>) => ({ escolher: s.escolher === true || s.escolher === "true" }),
   head: () => ({
     meta: [
       { title: "Despesas — Evoque Viagens" },
@@ -16,9 +18,29 @@ export const Route = createFileRoute("/despesas")({
   component: Despesas,
 });
 
+/** Viagem padrão: a que está acontecendo; senão a próxima; senão a mais recente. */
+function viagemPadrao(ativas: { id: string; data_inicio: string; data_fim: string }[]) {
+  const hoje = new Date().toLocaleDateString("en-CA");
+  return (
+    ativas.find((t) => t.data_inicio <= hoje && t.data_fim >= hoje) ??
+    ativas.find((t) => t.data_inicio > hoje) ??
+    ativas[0]
+  );
+}
+
 function Despesas() {
-  const { data: viagens = [] } = useQuery(tripsQuery());
+  const navigate = useNavigate();
+  const { escolher } = Route.useSearch();
+  const { data: viagens = [], isLoading } = useQuery(tripsQuery());
   const ativas = viagens.filter((t) => !t.arquivada_em);
+  const padrao = escolher ? undefined : viagemPadrao(ativas);
+
+  useEffect(() => {
+    if (padrao) navigate({ to: "/trip/$id/despesas", params: { id: padrao.id }, replace: true });
+  }, [padrao, navigate]);
+
+  if (isLoading || padrao) return <p className="p-6 text-lg">Abrindo as despesas…</p>;
+
   return (
     <div className="min-h-screen bg-background pb-32">
       <header className="px-4 py-3">
