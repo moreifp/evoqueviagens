@@ -2,13 +2,13 @@ import { AvisosEscondidos } from "@/lib/escondidos";
 import { ChipClaude } from "@/components/CaixaClaude";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Map as IconeMapa, Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Share2, Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { Map as IconeMapa, Plane, BedDouble, Bus, Car, TrainFront, ShieldCheck, TriangleAlert, CircleAlert, Users, CalendarCheck, Pencil, Wallet, ChevronLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VisaoParticipante } from "@/components/VisaoParticipante";
 import { useQuery } from "@tanstack/react-query";
 import { cancelado, formatarAtraso } from "@/lib/voo";
-import { tripQuery, apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
+import { settlementsQuery, tripQuery, apiAlertaQuery, expensesQuery, flightStatusQuery, membersQuery, roteiroQuery, type ItemRoteiro } from "@/lib/data";
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
 import { CartaoEmergencia } from "@/components/CartaoEmergencia";
@@ -17,6 +17,8 @@ import { carregarAeroportos, porIata, type Aeroporto } from "@/lib/aeroportos";
 import { rotaDoDia, type Ponto } from "@/lib/mapas";
 import { Logo } from "@/components/Logo";
 import { logoCia } from "@/lib/logos";
+import { resumoSaldos } from "@/lib/saldos";
+import { fmtMoney } from "@/lib/format";
 import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
 
 export const Route = createFileRoute("/trip/$id/")({
@@ -79,10 +81,15 @@ function VisaoOrganizador({ id }: { id: string }) {
     return [];
   });
   const proximoBilhete = bilhetes.find((b) => b.partida_utc >= agora);
-  const proximoHotel = hospedagens.find((h) => h.checkin >= agora);
+  // Hotel atual continua aparecendo até o check-out.
+  const proximoHotel = hospedagens.find((h) => h.checkout >= agora);
+  const hotelEmCurso = !!proximoHotel && proximoHotel.checkin < agora;
   const usarBilhete =
-    proximoBilhete && (!proximoHotel || proximoBilhete.partida_utc <= proximoHotel.checkin);
-  void despesas;
+    proximoBilhete && (!proximoHotel || proximoBilhete.partida_utc <= (hotelEmCurso ? proximoHotel.checkout : proximoHotel.checkin));
+  const { data: acertos = [] } = useQuery(settlementsQuery(id));
+  const { saldos, eu } = resumoSaldos(despesas, acertos, membros);
+  const meuSaldo = eu ? saldos[eu] ?? 0 : 0;
+  const totalDesp = despesas.reduce((a, d) => a + Number(d.valor_moeda_base ?? 0), 0);
 
   const grave = visiveis.find((a) => a.severidade === "resolver");
   const medio = visiveis.find((a) => a.severidade === "conferir");
@@ -105,7 +112,7 @@ function VisaoOrganizador({ id }: { id: string }) {
 
   return (
     <>
-      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {trip.moeda_base.toLowerCase()} · você organiza</p></div><Link to="/nova-viagem" search={{ editar: trip.id }} className="tap flex flex-col items-center justify-center text-sm font-bold"><Pencil size={26}/>Editar</Link><button disabled aria-label="Compartilhar viagem em breve" className="tap flex items-center justify-center text-muted-foreground"><Share2 size={28}/></button></header>
+      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" aria-label="Voltar" className="tap flex flex-col items-center justify-center rounded-xl text-foreground"><ChevronLeft size={28} strokeWidth={2.2} /><span className="text-xs font-semibold">Voltar</span></Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {trip.moeda_base.toLowerCase()} · você organiza</p></div><Link to="/nova-viagem" search={{ editar: trip.id }} className="tap flex flex-col items-center justify-center text-sm font-bold"><Pencil size={26}/>Editar</Link></header>
       <main className="space-y-4 px-4 pt-3">
         <SeloOffline tripId={id} />
         <ChipClaude tripId={id} />
@@ -113,6 +120,7 @@ function VisaoOrganizador({ id }: { id: string }) {
         {alertas?.[0] && <p className="rounded-2xl border-2 border-warn px-4 py-3 text-lg font-semibold">{alertas[0].mensagem}</p>}
         {usarBilhete && proximoBilhete ? (
           <CardProximo
+            para={{ id, tipo: "ticket", itemId: proximoBilhete.id }}
             tonalidade="voos"
             Icone={ICONE[proximoBilhete.tipo] ?? Plane}
             titulo={`${proximoBilhete.origem_iata ?? proximoBilhete.origem_cidade ?? "?"} → ${proximoBilhete.destino_iata ?? proximoBilhete.destino_cidade ?? "?"}`}
@@ -124,14 +132,16 @@ function VisaoOrganizador({ id }: { id: string }) {
           />
         ) : proximoHotel ? (
           <CardProximo
+            para={{ id, tipo: "lodging", itemId: proximoHotel.id }}
+            rotulo={hotelEmCurso ? "Hospedado · check-out" : "Próximo"}
             tonalidade="hosp"
             Icone={BedDouble}
             titulo={proximoHotel.nome}
-            hora={horaNoFuso(proximoHotel.checkin, fusoLocal())}
-            dia={dataBRCurta(chaveDia(proximoHotel.checkin))}
+            hora={horaNoFuso(hotelEmCurso ? proximoHotel.checkout : proximoHotel.checkin, fusoLocal())}
+            dia={dataBRCurta(chaveDia(hotelEmCurso ? proximoHotel.checkout : proximoHotel.checkin))}
             local={proximoHotel.cidade ?? proximoHotel.endereco ?? ""}
             tz={fusoLocal()}
-            iso={proximoHotel.checkin}
+            iso={hotelEmCurso ? proximoHotel.checkout : proximoHotel.checkin}
           />
         ) : (
           <div className="gradient-hero shadow-medium rounded-3xl p-6">
@@ -163,7 +173,12 @@ function VisaoOrganizador({ id }: { id: string }) {
           </span>
         </Link>
 
-        <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" cor="voos" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" cor="hosp" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" cor="reserva" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" cor="pess" /></div>
+        <div className="grid grid-cols-2 gap-3"><Atalho to="/trip/$id/bilhetes" id={id} Icone={Plane} numero={String(bilhetes.length)} rotulo="Transporte" cor="voos" /><Atalho to="/trip/$id/hospedagem" id={id} Icone={BedDouble} numero={String(hospedagens.length)} rotulo="Hospedagem" cor="hosp" /><Atalho to="/trip/$id/reservas" id={id} Icone={CalendarCheck} numero={String(reservas.length)} rotulo="Reservas" cor="reserva" /><Atalho to="/trip/$id/pessoas" id={id} Icone={Users} numero={String(membros.length)} rotulo="Pessoas" cor="pess" />
+          <Link to="/trip/$id/despesas" params={{ id }} className="shadow-soft col-span-2 flex min-h-[72px] items-center gap-3 rounded-2xl border border-desp-border bg-desp-soft p-4">
+            <Wallet size={28} strokeWidth={2.2} className="shrink-0 text-desp" />
+            <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-muted-foreground">Despesas</span><span className="num block truncate text-2xl text-foreground">{fmtMoney(totalDesp, tripCompleta.moeda_base)}</span></span>
+            {eu && <span className={`text-right text-base font-bold ${meuSaldo > 0 ? "text-recebe" : meuSaldo < 0 ? "text-deve" : "text-emdia"}`}>{meuSaldo > 0 ? `você recebe ${fmtMoney(meuSaldo / 100, tripCompleta.moeda_base)}` : meuSaldo < 0 ? `você deve ${fmtMoney(-meuSaldo / 100, tripCompleta.moeda_base)}` : "em dia"}</span>}
+          </Link></div>
         <CartaoEmergencia trip={tripCompleta} editavel />
         <section className="overflow-hidden rounded-2xl border border-border bg-card pb-0"><button type="button" onClick={() => setRoteiroAberto((v) => !v)} aria-expanded={roteiroAberto} className="tap flex w-full items-center justify-between px-4 text-left"><span className="text-xl font-bold">Roteiro por dia</span>{roteiroAberto ? <ChevronUp size={26} /> : <ChevronDown size={26} />}</button>{roteiroAberto && <div className="space-y-5 border-t border-border p-4 pb-28">{Object.entries(porDia).map(([dia,itens]) => <div key={dia}><div className="mb-2 flex items-center gap-2"><h3 className="flex-1 text-lg font-extrabold uppercase">{dataBRCurta(dia)}</h3>{(() => { const u = rotaDoDia(pontosDoDia(itens)); return u ? <a href={u} target="_blank" rel="noopener noreferrer" className="tap flex items-center gap-2 text-base font-bold text-accent"><IconeMapa size={22} /> Ver o dia no mapa</a> : null; })()}</div><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{itens.map((item) => <Link key={item.item_id} to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: item.item_tipo, itemId: item.item_id }} className="tap flex items-center gap-3 px-4"><strong className="num w-16 text-xl">{horaNoFuso(item.inicio_utc,item.inicio_tz)}</strong>{item.item_tipo === "ticket" ? <Logo url={logoCia(item.companhia, item.numero)} Icone={ICONE[item.subtipo] ?? Plane} nome={item.companhia ?? "companhia"} tamanho={28} className="shrink-0 text-voos" /> : <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${item.item_tipo === "lodging" ? "bg-hosp-soft text-hosp" : "bg-reserva-soft text-reserva"}`}>{item.item_tipo === "lodging" ? <BedDouble size={20} strokeWidth={2.2} /> : <CalendarCheck size={20} strokeWidth={2.2} />}</span>}<span className="min-w-0 flex-1"><strong className="block truncate text-lg">{item.titulo}</strong><span className="text-base text-muted-foreground">{item.pessoas.map(p=>p.nome).join(", ")}</span></span>{visiveis.some(a=>a.itens.some(x=>x.id===item.item_id))&&<span className="rounded-full bg-warn px-2 py-1 text-sm font-bold text-warn-foreground">Conferir</span>}</Link>)}</div></div>)}</div>}</section>
         <AvisosEscondidos contextos={[id]} />
@@ -173,6 +188,8 @@ function VisaoOrganizador({ id }: { id: string }) {
 }
 
 function CardProximo({
+  para,
+  rotulo = "Próximo",
   tonalidade = "hero",
   Icone,
   titulo,
@@ -182,6 +199,8 @@ function CardProximo({
   tz,
   iso,
 }: {
+  para: { id: string; tipo: string; itemId: string };
+  rotulo?: string;
   tonalidade?: "voos" | "hosp" | "hero";
   Icone: typeof Plane;
   titulo: string;
@@ -195,11 +214,11 @@ function CardProximo({
   const local2 = horaNoFuso(iso, fusoLocal());
   const fundo = tonalidade === "voos" ? "gradient-voos" : tonalidade === "hosp" ? "gradient-hosp" : "gradient-hero";
   return (
-    <section className={`${fundo} shadow-medium rounded-3xl p-6`}>
+    <Link to="/trip/$id/item/$tipo/$itemId" params={para} className={`${fundo} shadow-medium block rounded-3xl p-6`}>
       <div className="flex items-center gap-3">
         <Icone size={40} strokeWidth={2.2} />
         <div>
-          <p className="text-sm font-bold uppercase tracking-wide opacity-90">Próximo</p>
+          <p className="text-sm font-bold uppercase tracking-wide opacity-90">{rotulo}</p>
           <h2 className="text-xl leading-tight">{titulo}</h2>
         </div>
       </div>
@@ -214,7 +233,7 @@ function CardProximo({
       <p className="mt-1 text-sm opacity-85">
         {nomeFusoCurto(tz)} · {local2} no seu horário
       </p>
-    </section>
+    </Link>
   );
 }
 
