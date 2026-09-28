@@ -132,3 +132,10 @@
 ## Revisão geral e custos (pedido 28/09)
 - [x] Leitura de recibo trocada para o modelo barato (gemini-2.5-flash), igual à leitura de documentos
 - [x] Recomendações de economia entregues ao usuário
+
+## WhatsApp no link das despesas (28/09)
+- [x] Atalho no cartão do link para cadastrar WhatsApp de quem está sem número
+- [x] Validação e formatação com +55 automático
+
+## Iniciais nos ícones das pessoas (28/09)
+- [x] AvatarGrupo unificado: sempre 2 letras (nome + sobrenome) via iniciais()
