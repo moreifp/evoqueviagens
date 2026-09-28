@@ -35,6 +35,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
   const [dependentName, setDependentName] = useState("");
    const [familiaAberta, alternarFamilia] = useGrupoAberto(personId, "Dependentes", true);
   const [maisAberta, alternarMais] = useGrupoAberto(personId, "Mais sobre você", true);
+  const [faltasAberta, alternarFaltas] = useGrupoAberto(personId, "Itens que você não tem", false);
   const { data: viagens = LISTA_VAZIA } = useQuery(tripsQuery());
   const { data: regras = LISTA_VAZIA } = useQuery(entryRulesQuery());
   const { oculto } = useEscondidos();
@@ -129,7 +130,6 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           </div>
           <progress value={progresso.percentual} max={100} aria-label={`Ficha ${progresso.percentual}% completa`} className="mt-5 h-3 w-full overflow-hidden rounded-full accent-current" />
           <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de {progresso.total}</p>
-          {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</button>)}</div>}
         </section>
 
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
