@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Trash2 } from "lucide-react";
+import { Check, LogOut, Trash2 } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { tripQuery, tripsQuery, type Trip } from "@/lib/data";
 import { CampoMoeda } from "@/components/CampoMoeda";
@@ -43,6 +43,9 @@ function NovaViagem() {
   const [moeda, setMoeda] = useState("BRL");
   const [salvando, setSalvando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<0 | 1 | 2>(0);
+  const [meuId, setMeuId] = useState<string | null>(null);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
+  const souDono = !atual || !meuId || (atual as Trip & { owner_id?: string }).owner_id === meuId;
 
   function isoDia(d: Date) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -106,6 +109,36 @@ function NovaViagem() {
     }
   }
 
+  async function sair() {
+    if (!atual || !meuId) return;
+    if (confirmacao < 2) {
+      setConfirmacao((confirmacao + 1) as 1 | 2);
+      return;
+    }
+    setSalvando(true);
+    try {
+      const { data: linhas, error } = await supabase
+        .from("trip_member")
+        .select("id, person:person_id!inner(account_id)")
+        .eq("trip_id", atual.id)
+        .eq("person.account_id", meuId)
+        .is("deleted_at", null);
+      if (error) throw error;
+      if (!linhas?.length) throw new Error("Não achei sua participação nesta viagem.");
+      for (const l of linhas) {
+        await mutar({ tipo: "update", tabela: "trip_member", id: l.id, valores: { status: "saiu", respondido_em: new Date().toISOString() } });
+      }
+      naTela<Trip>(qc, tripsQuery().queryKey, (lista) => lista.filter((viagem) => viagem.id !== atual.id));
+      qc.removeQueries({ queryKey: tripQuery(atual.id).queryKey });
+      toast.success("Você saiu da viagem");
+      navigate({ to: "/viagens" });
+    } catch (erro) {
+      toast.error((erro as Error).message || "Não consegui sair da viagem.");
+      setSalvando(false);
+      setConfirmacao(0);
+    }
+  }
+
   async function apagar() {
     if (!atual) return;
     if (confirmacao < 2) {
@@ -154,7 +187,13 @@ function NovaViagem() {
           <Check size={28} strokeWidth={2.2} />
           Salvar viagem
         </button>
-        {atual && (
+        {atual && !souDono && (
+          <Button type="button" variant="destructive" disabled={salvando} onClick={() => void sair()} className="tap min-h-14 w-full gap-2 text-lg font-bold">
+            <LogOut size={24} strokeWidth={2.2} />
+            {confirmacao === 0 ? "Sair desta viagem" : confirmacao === 1 ? "Tem certeza?" : "Mesmo?"}
+          </Button>
+        )}
+        {atual && souDono && (
           <Button type="button" variant="destructive" disabled={salvando} onClick={() => void apagar()} className="tap min-h-14 w-full gap-2 text-lg font-bold">
             <Trash2 size={24} strokeWidth={2.2} />
             {confirmacao === 0 ? "Apagar viagem" : confirmacao === 1 ? "Tem certeza?" : "Mesmo?"}
