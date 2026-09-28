@@ -92,7 +92,7 @@ function FotosViagem() {
     const carimbo = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
     for (let i = 0; i < files.length; i++) {
       setProgresso(`${i + 1} de ${files.length}`);
-      const buf = new Uint8Array(await files[i].arrayBuffer());
+      const buf = new Uint8Array(await files[i]!.arrayBuffer());
       let bin = "";
       for (let j = 0; j < buf.length; j += 0x8000) bin += String.fromCharCode(...buf.subarray(j, j + 0x8000));
       await mandarFoto({ data: { pastaId: pasta.id, nome: `${pasta.nome} ${carimbo} ${String(i + 1).padStart(3, "0")}.jpg`, base64: btoa(bin) } });
