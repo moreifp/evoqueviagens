@@ -37,7 +37,7 @@ function NovoDocumento() {
   const { pid } = Route.useParams(); const search = Route.useSearch(); const nav = useNavigate(); const qc = useQueryClient();
   const { data } = useQuery(euQuery(pid)); const identify = useServerFn(identificarDocumentoAdmin); const readDoc = useServerFn(lerDocumentoAdmin); const readPassport = useServerFn(lerPassaporteAdmin);
   const [manual, setManual] = useState(false); const [tipo, setTipo] = useState(search.tipo || ""); const [file, setFile] = useState<File | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [reading, setReading] = useState(false); const [readState, setReadState] = useState<"idle" | "ok" | "fail" | "anexo">("idle"); const [saving, setSaving] = useState(false); const [regFalhou, setRegFalhou] = useState(false); const [motivo, setMotivo] = useState(""); const [conferir, setConferir] = useState(false); const [previa, setPrevia] = useState<string | null>(null); const [guardarNoCofre, setGuardarNoCofre] = useState(false); const unlocked = useVaultUnlocked(data?.uid); const editDoc = data?.documentos.find((doc) => doc.id === search.did);
-  useEffect(() => { if (!editDoc) return; setTipo(editDoc.tipo); setFields((old) => ({ ...old, nome_no_documento: editDoc.nome_no_documento ?? "", numero: editDoc.numero ?? "", pais_emissor: editDoc.pais_emissor ?? "", sexo: editDoc.sexo ?? "", detalhe: editDoc.detalhe ?? "", emissao: editDoc.emissao ?? "", validade: editDoc.validade ?? "", primeira_habilitacao: editDoc.primeira_habilitacao ?? "", local_expedicao: editDoc.local_expedicao ?? "" })); }, [editDoc?.id]);
+  useEffect(() => { if (!editDoc) return; setTipo(editDoc.tipo); setFields((old) => ({ ...old, nome_no_documento: editDoc.nome_no_documento ?? "", numero: editDoc.numero ?? "", pais_emissor: editDoc.pais_emissor ?? "", sexo: editDoc.sexo ?? "", detalhe: editDoc.detalhe ?? "", detalhe2: editDoc.detalhe2 ?? "", emissao: editDoc.emissao ?? "", validade: editDoc.validade ?? "", primeira_habilitacao: editDoc.primeira_habilitacao ?? "", local_expedicao: editDoc.local_expedicao ?? "" })); }, [editDoc?.id]);
   useEffect(() => { if (!data) return; setFields((old) => ({ ...old, nascimento: old.nascimento || data.pessoa.data_nascimento || "", nacionalidade: old.nacionalidade || data.pessoa.nacionalidades[0] || "" })); }, [data?.pessoa.id]);
   if (!data) return <p className="p-6 text-lg">Carregando…</p>;
   const owner = data.pessoa.account_id === data.uid;
@@ -119,7 +119,7 @@ function NovoDocumento() {
     try {
       if (tipo === "outro" && guardarNoCofre && !editDoc) {
         if (!unlocked) throw new Error("Destrave o cofre antes de guardar.");
-        const valores = Object.fromEntries(["nome_no_documento", "numero", "pais_emissor", "sexo", "detalhe", "emissao", "validade"].map((key) => [key, String(form.get(key) || "")]).filter(([, value]) => value));
+        const valores = Object.fromEntries(["nome_no_documento", "numero", "pais_emissor", "sexo", "detalhe", "detalhe2", "emissao", "validade"].map((key) => [key, String(form.get(key) || "")]).filter(([, value]) => value));
         let original: { name: string; type: string; data: string } | undefined;
         if (file) {
           passo = "Não deu para cifrar o arquivo original.";
@@ -134,7 +134,7 @@ function NovoDocumento() {
         nav({ to: "/pessoas/$pid", params: { pid } });
         return;
       }
-      const id = editDoc?.id ?? crypto.randomUUID(); const values = { person_id: pid, tipo, numero: String(form.get("numero") || "") || null, nome_no_documento: String(form.get("nome_no_documento") || "") || null, pais_emissor: String(form.get("pais_emissor") || "") || null, sexo: String(form.get("sexo") || "") || null, detalhe: String(form.get("detalhe") || "") || null, emissao: String(form.get("emissao") || "") || null, validade: String(form.get("validade") || "") || null, primeira_habilitacao: ehCnh ? String(form.get("primeira_habilitacao") || "") || null : (editDoc?.primeira_habilitacao ?? null), local_expedicao: ehCnh ? String(form.get("local_expedicao") || "") || null : (editDoc?.local_expedicao ?? null) };
+      const id = editDoc?.id ?? crypto.randomUUID(); const values = { person_id: pid, tipo, numero: String(form.get("numero") || "") || null, nome_no_documento: String(form.get("nome_no_documento") || "") || null, pais_emissor: String(form.get("pais_emissor") || "") || null, sexo: String(form.get("sexo") || "") || null, detalhe: String(form.get("detalhe") || "") || null, detalhe2: tipo === "outro" ? String(form.get("detalhe2") || "") || null : (editDoc?.detalhe2 ?? null), emissao: String(form.get("emissao") || "") || null, validade: String(form.get("validade") || "") || null, primeira_habilitacao: ehCnh ? String(form.get("primeira_habilitacao") || "") || null : (editDoc?.primeira_habilitacao ?? null), local_expedicao: ehCnh ? String(form.get("local_expedicao") || "") || null : (editDoc?.local_expedicao ?? null) };
       if (editDoc) { const changed = Object.fromEntries(Object.entries(values).filter(([key, value]) => key !== "person_id" && value !== (editDoc[key as keyof typeof editDoc] ?? null))) as Partial<typeof values>; if (Object.keys(changed).length) { const updated = await supabase.from("traveler_document").update(changed).eq("id", id); if (updated.error) throw updated.error; } } else { const inserted = await supabase.from("traveler_document").insert({ id, ...values }); if (inserted.error) throw inserted.error; }
       passo = "Os dados foram salvos, mas não deu para atualizar a ficha (nascimento/nacionalidade).";
       if (tipo === "passaporte") await salvarDadosPessoaPassaporte(data!.pessoa, { nascimento: String(form.get("nascimento") || ""), nacionalidade: String(form.get("nacionalidade") || ""), nome: values.nome_no_documento });
@@ -153,7 +153,8 @@ function NovoDocumento() {
     } catch (error) { toast.error(error instanceof Error && ["Destrave o cofre antes de guardar.", "O cofre aceita arquivos de até 15 MB."].includes(error.message) ? error.message : passo); setSaving(false); }
   }
 
-  const campos: [string, string, string][] = [['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']];
+  // "Outro" é livre e local: nome, número e dois detalhes, sem datas/país/sexo e sem leitura automática.
+  const campos: [string, string, string][] = tipo === "outro" ? [['nome_no_documento','Nome do documento','text'],['numero','Número','text'],['detalhe','Detalhe 1','text'],['detalhe2','Detalhe 2','text']] : [['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']];
   if (ehCnh) campos.splice(5, 0, ['local_expedicao','Local de expedição','text'], ['primeira_habilitacao','1ª habilitação','date']);
   const ambar = (k: string) => (suspeitos.has(k) && (readState === "ok" || k === "numero") ? " border-warn ring-2 ring-warn" : "");
 
