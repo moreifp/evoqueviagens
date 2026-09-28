@@ -22,7 +22,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostr
     return (
       <Caixa className="shadow-soft grid min-h-16 items-center gap-2 rounded-2xl border-2 border-pessoal-border bg-pessoal p-3 grid-cols-[auto_minmax(0,1fr)_auto]">
         {mostrarData
-          ? <span className="novo-some flex size-7 shrink-0 items-center justify-center rounded-lg bg-pessoal-chip text-pessoal-foreground"><User size={16} strokeWidth={2.2} /></span>
+          ? <span className="novo-cat flex size-7 shrink-0 items-center justify-center rounded-lg bg-pessoal-chip text-pessoal-foreground"><User size={16} strokeWidth={2.2} /></span>
           : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pessoal-chip text-pessoal-foreground"><User size={26} strokeWidth={2.2} /></span>}
         <span className="flex min-w-0 flex-1 items-center gap-2">
           {!mostrarData && <span className="novo-some flex size-8 shrink-0 items-center justify-center rounded-lg bg-pessoal-chip text-pessoal-foreground"><User size={18} strokeWidth={2.2} /></span>}
@@ -42,7 +42,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostr
   return (
     <Caixa className="shadow-soft grid min-h-16 items-center gap-2 rounded-2xl border border-border bg-card p-3 grid-cols-[auto_minmax(0,1fr)_auto]">
       {mostrarData
-        ? <span aria-hidden className="novo-some flex size-7 shrink-0 items-center justify-center rounded-lg text-white" style={{ backgroundColor: COR_CAT[c.id] ?? COR_CAT.outros }}><Icone size={16} strokeWidth={2.2} /></span>
+        ? <span aria-hidden className="novo-cat flex size-7 shrink-0 items-center justify-center rounded-lg text-white" style={{ backgroundColor: COR_CAT[c.id] ?? COR_CAT.outros }}><Icone size={16} strokeWidth={2.2} /></span>
         : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-teal"><Icone size={26} strokeWidth={2.2} /></span>}
       <span className="flex min-w-0 flex-1 items-center gap-2">
         {!mostrarData && <span aria-hidden className="novo-some flex size-8 shrink-0 items-center justify-center rounded-lg text-white" style={{ backgroundColor: COR_CAT[c.id] ?? COR_CAT.outros }}><Icone size={18} strokeWidth={2.2} /></span>}
