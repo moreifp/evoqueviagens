@@ -10,7 +10,7 @@ import { AvisosPush } from "./AvisosPush";
 import { ConvidarApp } from "./ConvidarApp";
 import { EmOrdem } from "./EmOrdem";
 import { BarraPessoas } from "./BarraPessoas";
-import { FichaCompleta, useGrupoAberto } from "./FichaCompleta";
+import { FichaCompleta, ItensQueNaoTem, useGrupoAberto } from "./FichaCompleta";
 import { entryRulesQuery, ticketsQuery, tripsQuery } from "@/lib/data";
 import { conferir, regraPassaporte, semEscondidos, type Conferencia } from "@/lib/conferencia";
 import { AvisosEscondidos, useEscondidos } from "@/lib/escondidos";
@@ -129,6 +129,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
           </div>
           <progress value={progresso.percentual} max={100} aria-label={`Ficha ${progresso.percentual}% completa`} className="mt-5 h-3 w-full overflow-hidden rounded-full accent-current" />
           <p className="mt-2 text-lg font-bold">Sua ficha está {progresso.percentual}% completa · {progresso.feitos} de {progresso.total}</p>
+          {owner && faltas.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{faltas.map((item) => <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex items-center rounded-full bg-background px-4 text-base font-bold text-foreground">+ {item.label}</button>)}</div>}
         </section>
 
         {data.documentos.length > 0 && <EmOrdem personId={p.id} documentos={data.documentos} owner={owner} viagem={viagemResumo} dependentes={owner ? data.dependentes.map((pessoa) => ({ pessoa, documentos: data.documentosDependentes[pessoa.id] ?? [] })) : []} />}
@@ -172,23 +173,7 @@ function EuDashboardConteudo({ personId, back, data }: { personId: string; back:
         {self && <button onClick={sair} className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-destructive"><LogOut size={26} /> Sair da conta</button>}
         {owner && <Link to="/pessoas/$pid/documentos/novo" params={{ pid: p.id }} search={{ tipo: "", did: "" }} className="gradient-hero tap flex items-center justify-center gap-2 rounded-lg text-lg font-bold"><FilePlus2 size={26} /> Adicionar documento</Link>}
 
-        {owner && faltas.length > 0 && (
-          <section>
-            <button type="button" onClick={alternarFaltas} aria-expanded={faltasAberta} className="tap mb-3 flex min-h-14 w-full items-center justify-between gap-3 text-left">
-              <h2 className="text-2xl">Itens que você não tem ({faltas.length})</h2>
-              <ChevronDown size={26} className={`text-muted-foreground transition-transform ${faltasAberta ? "rotate-180" : ""}`} aria-hidden />
-            </button>
-            {faltasAberta && <div className="divide-y divide-border rounded-lg border border-border bg-card px-4">
-              {faltas.map((item) => (
-                <button type="button" key={item.id} onClick={() => navigate({ href: item.href })} className="tap flex w-full items-center gap-3 py-3 text-left">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-doc-soft text-doc"><FilePlus2 size={24} strokeWidth={2.2} /></span>
-                  <span className="flex-1"><strong className="block text-lg">{item.label}</strong><span className="text-base text-muted-foreground">Toque para preencher</span></span>
-                  <ChevronRight size={26} />
-                </button>
-              ))}
-            </div>}
-          </section>
-        )}
+        <ItensQueNaoTem personId={p.id} itens={progresso.itens} owner={owner} />
 
         {self && <AvisosPush />}
         <AvisosEscondidos contextos={[p.id, ...(proxima ? [proxima.id] : [])]} />
