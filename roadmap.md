@@ -140,3 +140,11 @@
 ## Iniciais nos ícones das pessoas (28/09)
 - [x] AvatarGrupo unificado: sempre 2 letras (nome + sobrenome) via iniciais()
 - [x] Telefone: dropdown de código de país (padrão Brasil +55) na validação
+
+## Despesas no iPhone (28/09)
+- [ ] Nova despesa como primeira ação
+- [ ] Descrição obrigatória como primeiro campo do formulário
+- [ ] Relação das despesas com data, descrição, valor e quem pagou
+- [ ] Divisão de quem deve e recebe recolhível por seta
+- [ ] Link só para ver depois da divisão
+- [ ] Barra para criar Excel ou PDF ao final
