@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { origemApp } from "@/lib/site";
 import { useUid } from "@/lib/despesas";
-import { ChevronDown, ChevronUp, Phone, MessageCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Phone, MessageCircle, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const PAISES = [
