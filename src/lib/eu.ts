@@ -41,6 +41,7 @@ export type EuDocumento = {
   nome_no_documento: string | null;
   sexo: string | null;
   detalhe: string | null;
+  detalhe2?: string | null;
   arquivo_path: string | null;
   primeira_habilitacao?: string | null;
   local_expedicao?: string | null;
