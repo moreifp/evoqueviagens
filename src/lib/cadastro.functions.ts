@@ -9,7 +9,7 @@ const tokenSchema = z.string().min(20).max(100);
 
 const PERSON_COLS =
   "id, nome, apelido, cpf, telefone, email, foto_url, sexo, data_nascimento, nacionalidades, nome_como_no_documento, endereco, emergencia_nome, emergencia_parentesco, emergencia_telefone, visto_negado, visto_negado_detalhe, status, passo_atual, modo, idioma, consentimento_em";
-const DOC_COLS = "id, tipo, numero, pais_emissor, validade, emissao, nome_no_documento, sexo, detalhe, arquivo_path";
+const DOC_COLS = "id, tipo, numero, pais_emissor, validade, emissao, nome_no_documento, sexo, detalhe, detalhe2, arquivo_path";
 
 async function carregar(db: Admin, pid: string): Promise<CadastroDTO> {
   async function consultar() {

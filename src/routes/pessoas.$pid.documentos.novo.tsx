@@ -82,8 +82,8 @@ function NovoDocumento() {
     setFile(next); setReading(true); setReadState("idle"); setRegFalhou(false); setMotivo(""); setConferir(false); setPrevia(null);
     const alvo = forced || tipo;
     try {
-      // Um arquivo destinado ao cofre não passa pela leitura remota: permanece só no aparelho até ser cifrado.
-      if (alvo === "outro" && guardarNoCofre) { setReadState("anexo"); return; }
+      // Tipo "Outro" é livre: nunca passa pela leitura automática. No cofre, o arquivo também permanece só no aparelho até ser cifrado.
+      if (alvo === "outro") { setReadState("anexo"); return; }
       // E-mail (.eml): lê o texto; o arquivo fica como anexo.
       if (/\.eml$/i.test(next.name) || next.type === "message/rfc822") {
         const tipoDoc = alvo && alvo !== "passaporte" ? alvo : "outro";
