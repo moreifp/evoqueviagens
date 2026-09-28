@@ -2,7 +2,7 @@ import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, ChevronDown, Download, Images, Trash2, X } from "lucide-react";
+import { Camera, Check, ChevronDown, ChevronLeft, Download, Images, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
@@ -172,13 +172,26 @@ function FotosViagem() {
 
   return (
     <div className="pb-8">
-      <header className="flex items-center gap-3 px-4 py-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-pess-soft text-pess"><Images size={26} strokeWidth={2.2} /></span>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-3xl">Fotos</h1>
-          <Link to="/fotos" search={{ escolher: true }} className="tap inline-flex items-center gap-1 text-base font-semibold text-muted-foreground">
-            <span className="truncate">{trip?.nome ?? "Viagem"}</span> <ChevronDown size={20} strokeWidth={2.2} />
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
+        <div className="flex items-center gap-1">
+          <Link
+            to="/trip/$id"
+            params={{ id }}
+            aria-label="Voltar"
+            className="tap flex flex-col items-center justify-center rounded-xl text-foreground"
+          >
+            <ChevronLeft size={28} strokeWidth={2.2} />
+            <span className="text-xs font-semibold">Voltar</span>
           </Link>
+        </div>
+        <div className="mt-1 flex items-center gap-3">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-pess-soft text-pess"><Images size={26} strokeWidth={2.2} /></span>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-3xl">Fotos</h1>
+            <Link to="/fotos" search={{ escolher: true }} className="tap inline-flex items-center gap-1 text-base font-semibold text-muted-foreground">
+              <span className="truncate">{trip?.nome ?? "Viagem"}</span> <ChevronDown size={20} strokeWidth={2.2} />
+            </Link>
+          </div>
         </div>
       </header>
 
