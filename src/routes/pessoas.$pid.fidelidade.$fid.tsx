@@ -29,12 +29,17 @@ function Programa() {
   const [secret, setSecret] = useState<Segredo | null | undefined>(undefined);
   const [editing, setEditing] = useState(false); const [show, setShow] = useState(false); const [saving, setSaving] = useState(false);
   const [confirmEmpty, setConfirmEmpty] = useState(false); const [cardUrl, setCardUrl] = useState<string | null>(null);
+  // Cada programa destrava só o seu próprio acesso: nada de abrir/fechar todos de uma vez.
+  const [revealed, setRevealed] = useState(false);
   const item = data?.fidelidades.find((x) => x.id === fid); const owner = !!data && data.pessoa.account_id === data.uid;
   const unlocked = useVaultUnlocked(owner ? data?.uid : undefined);
 
   useEffect(() => {
+    setSecret(undefined); setShow(false); setRevealed(false);
+  }, [fid]);
+  useEffect(() => {
     setSecret(undefined); setShow(false);
-    if (!unlocked || !data) { setEditing(false); return; }
+    if (!revealed || !unlocked || !data) { setEditing(false); return; }
     let vivo = true;
     readVaultItem(data.uid, fid).then((s) => { if (vivo) { setSecret(s); if (!s) setEditing(true); } }).catch((e) => { if (vivo) { toast.error((e as Error).message); setSecret(null); } });
     return () => { vivo = false; };
