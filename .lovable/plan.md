@@ -1,16 +1,16 @@
-# Corrigir leitura de documentos em PDF
+# Reorganizar despesas no iPhone
 
-## Mudanças
-- Renderizar cada página do PDF separadamente, começando pela primeira e tentando a segunda somente quando necessário.
-- Manter largura útil próxima de 2.000 px e criar uma segunda versão com margens brancas removidas automaticamente.
-- Usar a versão legada do PDF.js com fallback sem worker, registrando a etapa exata quando houver falha.
-- Exibir a página renderizada como miniatura e mostrar um motivo curto abaixo de “Não deu para ler”.
-- No passaporte, preservar os campos legíveis mesmo quando a MRZ não passar integralmente na validação, sempre exigindo confirmação.
+## O que vai mudar
+- Colocar **Nova despesa** como primeira ação da tela, em largura confortável para o iPhone.
+- Manter o formulário atual, mas mover **Descrição da despesa** para o primeiro campo e torná-la obrigatória.
+- Mostrar em seguida a relação das despesas da viagem, priorizando **data, descrição, valor e quem pagou**.
+- Mover os saldos e “quem paga a quem” para depois da lista, dentro de uma seção com seta para recolher ou mostrar.
+- Preservar as abas Todas/Pessoais, exportações, link de compartilhamento e permissões atuais.
 
-## Validação
-- Gerar um PDF A4 de passaporte espécime com MRZ ICAO e executar PDF → imagem → IA → campos.
-- Gerar um PDF A4 de CNH espécime com frente e verso e executar o mesmo caminho.
-- Conferir erros de código e o fluxo em viewport móvel; não publicar.
+## Verificação
+- Conferir o fluxo completo no tamanho de um iPhone: abrir a lista, criar despesa, validar descrição obrigatória e expandir/recolher a divisão.
+- Confirmar que a versão compila sem erros e que nenhuma regra de cálculo foi alterada.
 
-## Limite
-- Alterar apenas o fluxo de leitura de documentos PDF e sua apresentação durante a leitura.
+## Detalhes técnicos
+- Alterações somente na apresentação e validação das telas existentes; banco, cálculos, câmbio e regras de acesso permanecem iguais.
+- A descrição será validada antes de habilitar Salvar, sem usar o nome da categoria como preenchimento automático.
