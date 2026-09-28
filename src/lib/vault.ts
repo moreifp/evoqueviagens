@@ -172,8 +172,11 @@ export async function saveVaultDocument(accountId: string, personId: string, con
   const encrypted = await encryptText(active.key, JSON.stringify(contents));
   const row: VaultDocument = { id: crypto.randomUUID(), account_id: accountId, person_id: personId, encrypted_payload: encrypted.ciphertext, iv: encrypted.iv, created_at: new Date().toISOString(), deleted_at: null };
   const cache = documentCache(accountId, personId);
-  await set(cache, [...((await get(cache)) as VaultDocument[] | undefined ?? []), row]);
-  const result = await mutar({ tipo: "insert", tabela: "vault_document", valores: row });
+  const previous = ((await get(cache)) as VaultDocument[] | undefined) ?? [];
+  await set(cache, [...previous, row]);
+  let result: "salvo" | "fila";
+  try { result = await mutar({ tipo: "insert", tabela: "vault_document", valores: row }); }
+  catch (error) { await set(cache, previous); throw error; }
   return { id: row.id, localOnly: result === "fila" };
 }
 
@@ -185,9 +188,9 @@ export async function listVaultDocuments(accountId: string, personId: string) {
   const { data, error } = await vaultDb.from("vault_document").select("*").eq("account_id", accountId).eq("person_id", personId).is("deleted_at", null).order("created_at", { ascending: false });
   if (error) return local.filter((row) => !row.deleted_at);
   const remote = data as VaultDocument[];
-  const merged = [...local.filter((row) => !row.deleted_at && !remote.some((r) => r.id === row.id)), ...remote];
+  const merged = [...local.filter((row) => !remote.some((r) => r.id === row.id)), ...remote.filter((row) => !local.some((l) => l.id === row.id && l.deleted_at))];
   await set(cache, merged);
-  return merged;
+  return merged.filter((row) => !row.deleted_at);
 }
 
 export async function readVaultDocument(accountId: string, row: VaultDocument): Promise<VaultDocumentContents> {

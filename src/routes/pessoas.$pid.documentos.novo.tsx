@@ -121,6 +121,7 @@ function NovoDocumento() {
         let original: { name: string; type: string; data: string } | undefined;
         if (file) {
           passo = "Não deu para cifrar o arquivo original.";
+          if (file.size > 15 * 1024 * 1024) throw new Error("O cofre aceita arquivos de até 15 MB.");
           const bytes = new Uint8Array(await file.arrayBuffer());
           let binary = ""; for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
           original = { name: file.name, type: file.type || "application/octet-stream", data: btoa(binary) };
@@ -147,7 +148,7 @@ function NovoDocumento() {
         await supabase.from("traveler_document").update({ arquivo_path: path }).eq("id", id);
       }
       await qc.invalidateQueries({ queryKey: ["eu", pid] }); await qc.invalidateQueries({ queryKey: ["documento", pid, id] }); toast.success(`${nomeDocumento(tipo)} salvo`); nav({ to: "/pessoas/$pid/documentos/$did", params: { pid, did: id } });
-    } catch (error) { toast.error(error instanceof Error && error.message === "Destrave o cofre antes de guardar." ? error.message : passo); setSaving(false); }
+    } catch (error) { toast.error(error instanceof Error && ["Destrave o cofre antes de guardar.", "O cofre aceita arquivos de até 15 MB."].includes(error.message) ? error.message : passo); setSaving(false); }
   }
 
   const campos: [string, string, string][] = [['nome_no_documento','Nome no documento','text'],['numero','Número','text'],['pais_emissor','País emissor','text'],['sexo','Sexo','text'],['detalhe','Detalhe','text'],['emissao','Emissão','date'],['validade','Validade','date']];
