@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { User } from "lucide-react";
 import type { Expense, Membro } from "@/lib/data";
@@ -10,7 +11,7 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink }: { d
   const c = categoria(d.categoria);
   const Icone = c.Icone;
   const pag = d.pagadores.length > 1 ? `${d.pagadores.length} pagaram` : `${nomeCurto(membros, d.pagadores[0]?.person_id ?? d.pago_por)} pagou`;
-  const Caixa = ({ className, children }: { className: string; children: React.ReactNode }) =>
+  const Caixa = ({ className, children }: { className: string; children: ReactNode }) =>
     semLink ? <div className={className}>{children}</div> : <Link to="/trip/$id/despesas/$eid" params={{ id: tripId, eid: d.id }} className={className}>{children}</Link>;
   if (d.pessoal) {
     return (

@@ -8,13 +8,13 @@ import { fraseSaldo, resumoSaldos, textoCompartilhar } from "@/lib/saldos";
 import { AvatarPessoa } from "./Pessoa";
 import { CompartilharTexto } from "./CompartilharTexto";
 
-type Props = { tripId: string; tripNome: string; despesas: Expense[]; acertos: Acerto[]; membros: Membro[]; moeda: string; org: boolean };
+type Props = { tripId: string; tripNome: string; despesas: Expense[]; acertos: Acerto[]; membros: Membro[]; moeda: string; org: boolean; semLink?: boolean };
 
 export const corSaldo = (c: number) => (c > 0 ? "text-recebe" : c < 0 ? "text-deve" : "text-emdia");
 export const rotuloSaldo = (c: number) => (c > 0 ? "recebe" : c < 0 ? "deve" : "em dia");
 
 /** Cartões de saldo (grade 2 colunas) e, para o participante, o cartão dele no topo. */
-export function SaldosViagem({ tripId, tripNome, despesas, acertos, membros, moeda, org }: Props) {
+export function SaldosViagem({ tripId, tripNome, despesas, acertos, membros, moeda, org, semLink }: Props) {
   const [compartilhar, setCompartilhar] = useState(false);
   const { saldos, dividas, pessoas, saiu, eu } = resumoSaldos(despesas, acertos, membros);
   if (!despesas.some((d) => !d.pessoal) && acertos.length === 0) return null;
@@ -47,14 +47,14 @@ export function SaldosViagem({ tripId, tripNome, despesas, acertos, membros, moe
             const nome = nomeCurto(membros, p);
             return (
               <li key={p}>
-                <Link to="/trip/$id/despesas/saldo/$pid" params={{ id: tripId, pid: p }} className={`flex h-full min-h-28 flex-col gap-1 rounded-2xl border bg-card p-3 shadow-soft ${voce && !org ? "border-2 border-teal" : "border-border"}`}>
+                {(() => { const cn = `flex h-full min-h-28 flex-col gap-1 rounded-2xl border bg-card p-3 shadow-soft ${voce && !org ? "border-2 border-teal" : "border-border"}`; const c = (<>
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="shrink-0"><AvatarPessoa nome={nomeCompleto(membros, p)} foto={null} tamanho={40} /></span>
                     <span className="min-w-0 flex-1 truncate text-base font-bold text-foreground">{voce ? "Você" : nome}</span>
                   </span>
                   <span className={`text-sm font-bold ${corSaldo(v)}`}>{rotuloSaldo(v)}{saiu(p) ? " · saiu" : ""}</span>
                   <span className={`num text-2xl leading-none ${corSaldo(v)}`}>{fmtMoney(Math.abs(v) / 100, moeda)}</span>
-                </Link>
+                </>); return semLink ? <div className={cn}>{c}</div> : <Link to="/trip/$id/despesas/saldo/$pid" params={{ id: tripId, pid: p }} className={cn}>{c}</Link>; })()}
               </li>
             );
           })}
