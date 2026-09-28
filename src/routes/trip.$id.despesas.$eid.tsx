@@ -12,6 +12,8 @@ import { categoria } from "@/lib/categorias";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { apagarDespesa, nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { AvatarPessoa } from "@/components/Pessoa";
+import { melhorarDocumentoParaOcr } from "@/lib/imagem";
+import { transcreverRecibo } from "@/lib/recibo.functions";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
   head: () => ({
