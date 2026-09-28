@@ -68,7 +68,7 @@ function Pagina() {
             <ul className="mt-4 space-y-1 border-t border-primary-foreground/20 pt-3">
               <li className="text-sm font-bold uppercase tracking-wide opacity-80">Quem paga a quem</li>
               {dividas.map((d, i) => (
-                <li key={i} className="flex justify-between gap-2 text-lg"><span>{nomeCurto(membros, d.de)} → {nomeCurto(membros, d.para)}</span><span className="num">{fmtMoney(d.valor / 100, moeda)}</span></li>
+                <li key={i} className="flex justify-between gap-2 text-lg"><span>{nomeCurto(membros, d.de)} → {nomeCurto(membros, d.para)}</span><span className="num">{fmtMoney(d.centavos / 100, moeda)}</span></li>
               ))}
             </ul>
           )}

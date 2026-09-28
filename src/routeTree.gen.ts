@@ -28,6 +28,7 @@ import { Route as ViagensRouteImport } from './routes/viagens'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
+import { Route as DTokenRouteImport } from './routes/d.$token'
 import { Route as EnIndexRouteImport } from './routes/en.index'
 import { Route as EnConnectAssistantRouteImport } from './routes/en.connect-assistant'
 import { Route as EnContactRouteImport } from './routes/en.contact'
@@ -165,6 +166,11 @@ const CTokenRoute = CTokenRouteImport.update({
 const ConviteTokenRoute = ConviteTokenRouteImport.update({
   id: '/convite/$token',
   path: '/convite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DTokenRoute = DTokenRouteImport.update({
+  id: '/d/$token',
+  path: '/d/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnIndexRoute = EnIndexRouteImport.update({
@@ -405,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/d/$token': typeof DTokenRoute
   '/en/connect-assistant': typeof EnConnectAssistantRoute
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
@@ -467,6 +474,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/d/$token': typeof DTokenRoute
   '/en/connect-assistant': typeof EnConnectAssistantRoute
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/d/$token': typeof DTokenRoute
   '/en/connect-assistant': typeof EnConnectAssistantRoute
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
@@ -595,6 +604,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/d/$token'
     | '/en/connect-assistant'
     | '/en/contact'
     | '/en/privacy'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/d/$token'
     | '/en/connect-assistant'
     | '/en/contact'
     | '/en/privacy'
@@ -719,6 +730,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/c/$token'
     | '/convite/$token'
+    | '/d/$token'
     | '/en/connect-assistant'
     | '/en/contact'
     | '/en/privacy'
@@ -783,6 +795,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
+  DTokenRoute: typeof DTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
@@ -934,6 +947,13 @@ declare module '@tanstack/react-router' {
       path: '/convite/$token'
       fullPath: '/convite/$token'
       preLoaderRoute: typeof ConviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/d/$token': {
+      id: '/d/$token'
+      path: '/d/$token'
+      fullPath: '/d/$token'
+      preLoaderRoute: typeof DTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/en/': {
@@ -1323,6 +1343,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
+  DTokenRoute: DTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
