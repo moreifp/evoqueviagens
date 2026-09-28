@@ -157,5 +157,5 @@
 - [x] Pessoas mantidas em uma linha por participante; ações aparecem somente quando necessárias
 
 ## Apagar viagem (28/09)
-- [ ] Botão na edição com duas confirmações: “Tem certeza?” e “Mesmo?”
-- [ ] Exclusão recuperável e remoção imediata da lista
+- [x] Botão na edição com duas confirmações: “Tem certeza?” e “Mesmo?”
+- [x] Exclusão recuperável e remoção imediata da lista
