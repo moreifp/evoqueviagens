@@ -78,24 +78,42 @@ function FotosViagem() {
     fs.forEach((f) => void enviar(f));
   }
 
-  async function salvarNoFotos() {
-    const files = novas;
-    if (navigator.canShare?.({ files })) {
-      try {
-        await navigator.share({ files });
-        setNovas([]);
-      } catch { /* cancelou */ }
+  const nomePasta = (trip?.nome ?? "Viagem").replace(/[\\/:*?"<>|]/g, "-").trim() || "Viagem";
+
+  // Uma pasta com o nome da viagem (arquivo .zip). No iPhone: "Salvar em Arquivos"; tocar no zip vira pasta.
+  async function baixarPasta(files: Blob[]) {
+    if (!files.length) return;
+    const { default: JSZip } = await import("jszip");
+    const zip = new JSZip();
+    const pasta = zip.folder(nomePasta)!;
+    files.forEach((f, i) => pasta.file(`${nomePasta} ${String(i + 1).padStart(3, "0")}.jpg`, f));
+    const blob = await zip.generateAsync({ type: "blob" });
+    const arquivo = new File([blob], `${nomePasta}.zip`, { type: "application/zip" });
+    if (navigator.canShare?.({ files: [arquivo] })) {
+      try { await navigator.share({ files: [arquivo] }); } catch { /* cancelou */ }
       return;
     }
-    // Computador: baixa os arquivos.
-    files.forEach((f, i) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(f);
-      a.download = `${trip?.nome ?? "viagem"}-${i + 1}.jpg`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(arquivo);
+    a.download = arquivo.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }
+
+  async function salvarNoFotos() {
+    await baixarPasta(novas);
     setNovas([]);
+  }
+
+  const [baixando, setBaixando] = useState(false);
+  async function baixarTodas() {
+    setBaixando(true);
+    try {
+      const blobs = await Promise.all(fotos.filter((f) => f.url).map((f) => fetch(f.url!).then((r) => r.blob())));
+      await baixarPasta(blobs);
+    } catch {
+      toast.error("Não consegui baixar as fotos. Confira a internet.");
+    } finally { setBaixando(false); }
   }
 
   async function apagar(f: Foto) {
@@ -138,9 +156,9 @@ function FotosViagem() {
           <div className="space-y-2 rounded-2xl border-2 border-accent bg-card p-4">
             <p className="text-lg font-semibold">{novas.length} {novas.length === 1 ? "foto nova" : "fotos novas"}{enviando > 0 ? ` · enviando ${enviando}…` : ""}</p>
             <button type="button" onClick={salvarNoFotos} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
-              <Download size={24} strokeWidth={2.2} /> Salvar no Fotos do iPhone
+              <Download size={24} strokeWidth={2.2} /> Salvar pasta "{nomePasta}"
             </button>
-            <p className="text-base text-muted-foreground">No menu, toque em "Salvar imagens". Depois, no Fotos, junte-as no álbum "{trip?.nome}".</p>
+            <p className="text-base text-muted-foreground">No iPhone, toque em "Salvar em Arquivos" e depois toque no arquivo para abrir a pasta. Fotos em tamanho original.</p>
           </div>
         )}
 
@@ -154,6 +172,11 @@ function FotosViagem() {
               </button>
             ))}
           </div>
+        )}
+        {fotos.length > 0 && (
+          <button type="button" onClick={baixarTodas} disabled={baixando} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold">
+            <Download size={24} strokeWidth={2.2} /> {baixando ? "Preparando…" : `Baixar todas (${fotos.length}) numa pasta`}
+          </button>
         )}
         {!souDono && fotos.length > 0 && <p className="text-base text-muted-foreground">Só o organizador acrescenta ou apaga fotos.</p>}
       </main>
