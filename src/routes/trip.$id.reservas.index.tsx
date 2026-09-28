@@ -55,28 +55,30 @@ function Reservas() {
           const Icone = ICONE[d.tipo] ?? Ticket;
           return (
             <article key={d.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="flex gap-4 p-4">
-                <Icone size={28} strokeWidth={2.2} className="mt-1 text-accent" />
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-xl leading-tight text-foreground">{d.titulo}</h2>
-                  <p className="text-lg font-semibold text-muted-foreground">
-                    {dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))} · {horaNoFuso(d.inicio_utc, d.inicio_tz)}
-                    {d.fim_utc ? ` até ${dataBRCurta(chaveDia(d.fim_utc, d.fim_tz ?? d.inicio_tz))} ${horaNoFuso(d.fim_utc, d.fim_tz ?? d.inicio_tz)}` : ""}
+              <div className="bg-primary p-5 text-primary-foreground">
+                <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
+                  <Icone size={28} strokeWidth={2.2} aria-hidden className="shrink-0" />
+                  <span className="min-w-0 break-words">{d.titulo}</span>
+                </p>
+                <p className="mt-1 text-lg">{dataBRCurta(chaveDia(d.inicio_utc, d.inicio_tz))}</p>
+                <p className="num mt-2 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
+                  <span>{horaNoFuso(d.inicio_utc, d.inicio_tz)}</span>
+                  {d.fim_utc && <span className="text-right">{horaNoFuso(d.fim_utc, d.fim_tz ?? d.inicio_tz)}</span>}
+                </p>
+                {d.fim_utc && <p className="mt-1 text-right text-base">até {dataBRCurta(chaveDia(d.fim_utc, d.fim_tz ?? d.inicio_tz))}</p>}
+                {(d.local || d.cidade) && <p className="mt-2 break-words text-lg">{[d.local, d.cidade].filter(Boolean).join(" · ")}</p>}
+                {d.telefone && (
+                  <a href={`tel:${d.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-2 inline-flex items-center gap-2 text-lg font-bold">
+                    <Phone size={20} strokeWidth={2.2} aria-hidden /> {d.telefone}
+                  </a>
+                )}
+                {d.localizador && <p className="mono-code mt-3 break-all text-lg font-bold">Localizador {d.localizador}</p>}
+                {d.valor != null && <p className="num mt-2 text-3xl leading-none">{fmtMoney(Number(d.valor), d.moeda ?? "BRL")}</p>}
+                {d.pessoas.length > 0 && (
+                  <p className="mt-2 text-lg">
+                    Vão: {d.pessoas.map((p) => `${nome(p.person_id)}${p.papel ? ` (${p.papel})` : ""}`).join(", ")}
                   </p>
-                  {(d.local || d.cidade) && <p className="text-lg text-foreground">{[d.local, d.cidade].filter(Boolean).join(" · ")}</p>}
-                  {d.telefone && (
-                    <a href={`tel:${d.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 flex items-center gap-2 text-lg font-bold text-accent">
-                      <Phone size={20} strokeWidth={2.2} aria-hidden /> {d.telefone}
-                    </a>
-                  )}
-                  {d.localizador && <p className="mono-code mt-2 text-2xl font-bold text-accent">{d.localizador}</p>}
-                  {d.valor != null && <p className="num mt-2 text-[36px] leading-none text-foreground">{fmtMoney(Number(d.valor), d.moeda ?? "BRL")}</p>}
-                  {d.pessoas.length > 0 && (
-                    <p className="mt-2 text-lg text-foreground">
-                      Vão: {d.pessoas.map((p) => `${nome(p.person_id)}${p.papel ? ` (${p.papel})` : ""}`).join(", ")}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
               <AnexosItem tripId={id} itemTipo="reservation" itemId={d.id} podeEditar={r.editar} />
               <Link to="/trip/$id/item/$tipo/$itemId" params={{ id, tipo: "reservation", itemId: d.id }} className="tap flex w-full items-center justify-center border-t border-border text-lg font-bold text-accent">Abrir reserva</Link>
