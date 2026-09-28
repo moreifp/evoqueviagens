@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { BLOCOS_INFO, type Bloco } from "@/lib/blocos";
@@ -32,7 +33,7 @@ export function EscolherBlocos({
     queryKey: ["minhas-viagens-compartilhar"],
     enabled: !!onTrips && viagensOn,
     queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await usuarioLocal();
       const { data } = await supabase
         .from("trip")
         .select("id, nome, data_inicio")

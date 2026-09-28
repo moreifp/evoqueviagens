@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -63,7 +64,7 @@ function Conferir() {
     if (!navigator.onLine) return toast.error("Para conferir é preciso internet.");
     setSalvando(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await usuarioLocal();
       const agora = new Date().toISOString();
       const devolvidas: { secao: Secao; recado: string }[] = [];
       for (const s of secoes) {

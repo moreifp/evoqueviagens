@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -48,7 +49,7 @@ function FotosViagem() {
   const { data: trip } = useQuery(tripQuery(id));
   const { data: fotos = [], isLoading } = useQuery(fotosQuery(id));
   const [meuId, setMeuId] = useState<string | null>(null);
-  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
+  useEffect(() => { void usuarioLocal().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
   const souDono = Boolean(trip && meuId && (trip as { owner_id?: string }).owner_id === meuId);
 
   const [camera, setCamera] = useState(false);

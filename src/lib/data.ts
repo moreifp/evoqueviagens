@@ -1,3 +1,4 @@
+import { usuarioLocal } from "@/lib/sessao";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -513,7 +514,7 @@ export const avisosMeusQuery = () =>
   queryOptions({
     queryKey: ["avisos_meus"],
     queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await usuarioLocal();
       const l = await unwrap<(AvisoMeu & { enviado_por: string | null })[]>(db.from("trip_notice").select("id, trip_id, person_id, mensagem, campo, enviado_em, enviado_por, trip:trip(nome)").eq("tipo", "aviso").is("resolvido_em", null).order("enviado_em", { ascending: false }));
       return l.filter((a) => a.enviado_por !== u.user?.id);
     },
