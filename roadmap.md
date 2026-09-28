@@ -124,7 +124,7 @@
 
 
 ## Link só das despesas
-- [ ] Link público só leitura das despesas
+- [x] Link público só leitura das despesas
 
 ## Hospedagem em quadro preto
-- [ ] Cartão de hospedagem no mesmo quadro escuro dos bilhetes
+- [x] Cartão de hospedagem no mesmo quadro escuro dos bilhetes
