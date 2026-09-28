@@ -65,7 +65,7 @@ export function MostrarPassaporte({ pessoas, aberto: abertoFora, onFechar, semBo
               ))}
             </div>
           )}
-          <div className="flex min-h-[200px] flex-1 items-center justify-center px-4">
+          <div className="flex min-h-[160px] items-center justify-center px-4 py-2">
             {url ? <img src={url} alt={`Passaporte de ${atual.nome}`} className="max-h-[45vh] max-w-full rounded-xl object-contain" /> : <p className="text-lg opacity-90">{atual.pass.arquivo_path ? "Carregando a foto…" : "Sem foto guardada."}</p>}
           </div>
           <div className="space-y-4 px-5 pb-6 pt-4">

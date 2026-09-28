@@ -183,7 +183,7 @@ function Adicionar() {
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <button type="button" onClick={() => void colar()} className="tap flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-white/15 text-base font-bold"><ClipboardPaste size={30} /> Colar</button>
                 <button type="button" onClick={() => foto.current?.click()} className="tap flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-white/15 text-base font-bold"><Camera size={30} /> Foto</button>
-                <button type="button" onClick={() => arquivo.current?.click()} className="tap flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-white/15 text-base font-bold"><FileUp size={30} /> PDF/arquivo</button>
+                <button type="button" onClick={() => arquivo.current?.click()} className="tap flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-white/15 text-sm font-bold"><FileUp size={30} /> PDF/arquivo</button>
               </div>
             )}
             <input ref={foto} hidden type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void analisar({ arq: f }); }} />

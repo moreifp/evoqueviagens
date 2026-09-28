@@ -126,7 +126,7 @@ export function TelaHoje({ trip }: { trip: Trip }) {
               {(hotel.endereco || hotel.cidade) && <p className="mt-1 line-clamp-2 text-xl">{hotel.endereco ?? hotel.cidade}</p>}
             </Link>
             <div className="mt-4 flex gap-2">
-              <a href={linkGoogle({ nome: hotel.nome, endereco: hotel.endereco, lat: hotel.lat, lng: hotel.lng, place_id: hotel.place_id })} target="_blank" rel="noopener noreferrer" className="tap flex flex-1 items-center justify-center gap-2 rounded-xl bg-white text-lg font-bold text-hosp"><Navigation size={22} /> Como chegar</a>
+              <a href={linkGoogle({ nome: hotel.nome, endereco: hotel.endereco, lat: hotel.lat, lng: hotel.lng, place_id: hotel.place_id })} target="_blank" rel="noopener noreferrer" className="tap flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white px-2 text-base font-bold text-hosp"><Navigation size={20} /> Como chegar</a>
               {hotel.telefone && <a href={tel(hotel.telefone)} className="tap flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-white text-lg font-bold text-white"><Phone size={22} /> Ligar</a>}
             </div>
           </div>
