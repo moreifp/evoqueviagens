@@ -178,7 +178,7 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   return (
     <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
       <button type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto} aria-controls="link-despesas-conteudo" className="tap flex w-full items-center justify-between gap-3 px-4 text-left">
-        <span className="min-w-0"><span className="block text-lg font-bold text-foreground">Link só para ver</span><span className="block text-sm text-muted-foreground">mandar no grupo</span></span>
+        <span className="min-w-0"><span className="block text-lg font-bold text-foreground">Visão Despesas</span><span className="block text-sm text-muted-foreground">mandar no grupo</span></span>
         {aberto ? <ChevronUp className="shrink-0" size={24} /> : <ChevronDown className="shrink-0" size={24} />}
       </button>
       {aberto && <div id="link-despesas-conteudo" className="space-y-3 border-t border-border p-4">
@@ -217,6 +217,15 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
             <div className="space-y-2 pt-1">
               <p className="text-xs text-muted-foreground">Enviar para:</p>
               <div className="flex flex-wrap gap-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(texto)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                >
+                  <Users className="h-4 w-4 text-primary" />
+                  Todos
+                </a>
                 {membros.map((m) => {
                   const tel = m.person?.telefone?.trim();
                   const nome = m.person?.nome ?? "—";
