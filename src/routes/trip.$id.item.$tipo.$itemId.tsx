@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRightLeft, CalendarDays, Copy, Hotel as IconeHotel, Luggage, Phone, Plane } from "lucide-react";
+import { ArrowRightLeft, CalendarDays, Copy, Hotel as IconeHotel, Luggage, Phone, Plane, Plus } from "lucide-react";
 import { textoBagagem } from "@/lib/bagagem";
 import { AbrirMapa } from "@/components/AbrirMapa";
 import { Logo } from "@/components/Logo";
