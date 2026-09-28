@@ -80,7 +80,8 @@ export async function sincronizar() {
         await executar(ops[0]!);
       } catch (e) {
         if (ehErroDeRede(e)) break;
-        console.error("Descartada edição inválida", e);
+        console.error("Edição recusada", e);
+        await guardarFalha(ops[0]!, String((e as Error)?.message ?? e));
       }
       enviadas++;
       ops = ops.slice(1);
@@ -116,4 +117,54 @@ export function useConexao() {
     };
   }, []);
   return { online, pendentes };
+}
+
+/** Edições recusadas pelo servidor ao sincronizar: ficam guardadas para o usuário decidir. */
+export type Falha = { op: Op; erro: string; em: string };
+const CHAVE_FALHAS = "evoque-outbox-falhas";
+const ouvintesFalha = new Set<(f: Falha[]) => void>();
+async function lerFalhas(): Promise<Falha[]> {
+  return ((await get(CHAVE_FALHAS)) as Falha[] | undefined) ?? [];
+}
+async function gravarFalhas(f: Falha[]) {
+  await set(CHAVE_FALHAS, f);
+  ouvintesFalha.forEach((x) => x(f));
+}
+async function guardarFalha(op: Op, erro: string) {
+  await gravarFalhas([...(await lerFalhas()), { op, erro, em: new Date().toISOString() }]);
+}
+const NOMES: Record<string, string> = {
+  person: "dados pessoais", trip: "viagem", trip_member: "participante", ticket: "transporte", ticket_passenger: "passageiro",
+  lodging: "hospedagem", reservation: "reserva", expense: "despesa", traveler_document: "documento", loyalty_account: "fidelidade",
+};
+export function nomeFalha(f: Falha) {
+  const t = f.op.tipo === "rpc" ? f.op.funcao : f.op.tabela;
+  return NOMES[t] ?? "uma edição";
+}
+export async function tentarFalha(i: number) {
+  const lista = await lerFalhas();
+  const f = lista[i];
+  if (!f) return;
+  try {
+    await executar(f.op);
+    await gravarFalhas(lista.filter((_, j) => j !== i));
+    window.dispatchEvent(new Event("evoque-sincronizado"));
+    return true;
+  } catch (e) {
+    lista[i] = { ...f, erro: String((e as Error)?.message ?? e) };
+    await gravarFalhas(lista);
+    return false;
+  }
+}
+export async function descartarFalha(i: number) {
+  await gravarFalhas((await lerFalhas()).filter((_, j) => j !== i));
+}
+export function useFalhas() {
+  const [f, setF] = useState<Falha[]>([]);
+  useEffect(() => {
+    lerFalhas().then(setF);
+    ouvintesFalha.add(setF);
+    return () => { ouvintesFalha.delete(setF); };
+  }, []);
+  return f;
 }
