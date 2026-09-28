@@ -178,5 +178,5 @@
 
 ## Fotos (28/09)
 - [x] Toggle para mostrar/esconder fotos já baixadas (sem voltar ao estado de baixar)
-- [ ] Conferir por que fotos não aparecem no Google Drive (conexão + pasta "Africa do Sul")
-- [ ] Mostrar conta Google conectada e pasta de destino nas configurações (aba Eu)
+- [x] Conferido: fotos CHEGARAM ao Drive (9 na pasta "Africa do Sul"); usuário não as via (conta/local)
+- [x] Linha "Google Drive" em Eu → Mais sobre você: conta conectada + pasta de destino
