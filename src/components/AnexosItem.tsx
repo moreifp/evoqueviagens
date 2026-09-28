@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Paperclip, Trash2 } from "lucide-react";
+import { Camera, FileText, ImagePlus, Paperclip, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { anexosQuery, type Anexo } from "@/lib/data";
@@ -24,7 +24,10 @@ export function AnexosItem({
   const { data } = useQuery(anexosQuery(tripId));
   const anexos = (data ?? []).filter((a) => a.item_id === itemId);
   const input = useRef<HTMLInputElement>(null);
+  const inputCamera = useRef<HTMLInputElement>(null);
+  const inputGaleria = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
+  const [arrastando, setArrastando] = useState(false);
   const key = anexosQuery(tripId).queryKey;
 
   async function enviarArquivo(arq: File) {
