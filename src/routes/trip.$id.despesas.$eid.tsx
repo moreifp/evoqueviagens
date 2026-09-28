@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Camera, ChevronLeft, Eye, Pencil, RefreshCw, Trash2, User, X } from "lucide-react";
+import { Camera, ChevronLeft, Eye, FileText, Loader2, Pencil, RefreshCw, Trash2, User, X } from "lucide-react";
 import { buscarCotacaoDetalhe, type Expense } from "@/lib/data";
 import { centavos, dividir } from "@/lib/divisao";
 import { mutar } from "@/lib/outbox";
@@ -11,6 +12,8 @@ import { categoria } from "@/lib/categorias";
 import { dataBRCurta, fmtMoney } from "@/lib/format";
 import { apagarDespesa, nomeCompleto, nomeCurto, useUid } from "@/lib/despesas";
 import { AvatarPessoa } from "@/components/Pessoa";
+import { melhorarDocumentoParaOcr } from "@/lib/imagem";
+import { transcreverRecibo } from "@/lib/recibo.functions";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
   head: () => ({
@@ -38,6 +41,14 @@ function Detalhe() {
   const [telaCheia, setTelaCheia] = useState(false);
   const [online, setOnline] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
+  const [textoConta, setTextoConta] = useState<string | null>(null);
+  const [mostrarTexto, setMostrarTexto] = useState(false);
+  const [lendoConta, setLendoConta] = useState(false);
+  const lerConta = useServerFn(transcreverRecibo);
+  useEffect(() => {
+    const cache = localStorage.getItem(`evoque-recibo-texto:${eid}`);
+    if (cache) { setTextoConta(cache); }
+  }, [eid]);
   useEffect(() => {
     const f = () => setOnline(navigator.onLine);
     f(); window.addEventListener("online", f); window.addEventListener("offline", f);
@@ -54,6 +65,30 @@ function Detalhe() {
     };
     await aplicar(novo);
     toast(novo ? "Recibo trocado" : "Recibo tirado", { duration: 10_000, action: { label: "Desfazer", onClick: () => void aplicar(antes) } });
+  }
+
+  /** Lê a foto do recibo e vira texto organizado, fácil de ler em tela pequena. Guarda no aparelho para ler offline. */
+  async function lerAConta() {
+    if (!d?.comprovante_url || lendoConta) return;
+    if (!navigator.onLine) { toast("Sem internet · a leitura da conta precisa de conexão."); return; }
+    setLendoConta(true);
+    try {
+      const blob = await (await fetch(d.comprovante_url)).blob();
+      const melhor = await melhorarDocumentoParaOcr(blob).catch(() => blob);
+      const imagem = await new Promise<string>((ok) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.readAsDataURL(melhor); });
+      const r = await lerConta({ data: { imagem } });
+      if (r.ok) {
+        setTextoConta(r.texto);
+        setMostrarTexto(true);
+        try { localStorage.setItem(`evoque-recibo-texto:${d.id}`, r.texto); } catch { /* cheio: segue sem cache */ }
+      } else {
+        toast(r.erro === "config" ? "Leitura indisponível agora · tente mais tarde." : "Não conseguimos ler a conta. Veja se a foto está nítida e tente de novo.");
+      }
+    } catch {
+      toast("Não conseguimos ler a conta. Veja se a foto está nítida e tente de novo.");
+    } finally {
+      setLendoConta(false);
+    }
   }
 
   /** Taxa provisória → taxa histórica do dia do gasto. Só com o toque do organizador; vai para o log pelo salvar_despesa. */
@@ -128,6 +163,17 @@ function Detalhe() {
           <button onClick={() => setTelaCheia(true)} aria-label="Ver recibo em tela cheia" className="block w-full overflow-hidden rounded-2xl border border-border bg-card">
             <img src={d.comprovante_url} alt="Recibo" className="max-h-80 w-full object-contain" />
           </button>
+        )}
+        {d.comprovante_url && (
+          <div>
+            <button onClick={() => (mostrarTexto ? setMostrarTexto(false) : void lerAConta())} disabled={lendoConta} aria-expanded={mostrarTexto} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-desp">
+              {lendoConta ? <Loader2 size={24} strokeWidth={2.2} className="animate-spin" aria-hidden /> : <FileText size={24} strokeWidth={2.2} aria-hidden />}
+              {lendoConta ? "Lendo a conta…" : mostrarTexto ? "Esconder a conta em texto" : textoConta ? "Ver a conta em texto" : "Ler a conta da foto"}
+            </button>
+            {mostrarTexto && textoConta && (
+              <div className="mt-2 whitespace-pre-wrap rounded-2xl border-2 border-desp-border bg-desp-soft p-4 text-base leading-relaxed text-foreground">{textoConta}</div>
+            )}
+          </div>
         )}
         {org && (
           <div className={`grid gap-3 ${d.comprovante_url ? "grid-cols-2" : "grid-cols-1"}`}>

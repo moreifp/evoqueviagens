@@ -1,10 +1,18 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, CircleDashed, MinusCircle } from "lucide-react";
+import { Award, CheckCircle2, ChevronDown, ChevronRight, CircleDashed, HeartPulse, IdCard, MinusCircle, Stamp, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GRUPOS_FICHA, type ItemFicha } from "@/lib/eu";
+
+const ICONE_GRUPO: Record<string, { Icone: typeof IdCard; cor: string }> = {
+  "Documentos": { Icone: IdCard, cor: "bg-doc-soft text-doc" },
+  "Vistos e entrada": { Icone: Stamp, cor: "bg-voos-soft text-voos" },
+  "Saúde e seguro": { Icone: HeartPulse, cor: "bg-desp-soft text-desp" },
+  "Fidelidade": { Icone: Award, cor: "bg-reserva-soft text-reserva" },
+  "Pessoal": { Icone: UserRound, cor: "bg-pess-soft text-pess" },
+};
 
 /**
  * Lista agrupada de todos os itens da ficha, cada linha abre o formulário do item.
@@ -86,10 +94,16 @@ function Grupo({ personId, grupo, itens, owner, ocupado, dispensar, navigate }: 
   const temPendente = ok < lista.length;
   const [aberto, alternar] = useGrupoAberto(personId, grupo, temPendente);
   if (!lista.length) return null;
+  const dec = ICONE_GRUPO[grupo];
   return (
     <div>
-      <button type="button" onClick={alternar} aria-expanded={aberto} className="tap flex min-h-14 w-full items-baseline justify-between gap-3 text-left">
-        <h2 className="text-2xl">{grupo}</h2>
+      <button type="button" onClick={alternar} aria-expanded={aberto} className="tap flex min-h-14 w-full items-center justify-between gap-3 text-left">
+        <span className="flex items-center gap-3">
+          {dec && (
+            <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${dec.cor}`}><dec.Icone size={20} aria-hidden /></span>
+          )}
+          <h2 className="text-2xl">{grupo}</h2>
+        </span>
         <span className="ml-auto flex items-center gap-2 text-lg font-bold text-muted-foreground">{ok} de {lista.length}<ChevronDown size={26} className={`transition-transform ${aberto ? "rotate-180" : ""}`} aria-hidden /></span>
       </button>
       {aberto && <ul className="mt-2 divide-y divide-border overflow-hidden rounded-lg border-2 border-border bg-card">

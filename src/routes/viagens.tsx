@@ -52,5 +52,5 @@ function Viagens() {
 
 function Lista({ titulo, viagens }: { titulo: string; viagens: Trip[] }) {
   if (!viagens.length) return null;
-  return <section><h2 className="mb-3 text-2xl">{titulo}</h2><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{viagens.map((v) => <Link key={v.id} to="/trip/$id" params={{ id: v.id }} className="tap flex items-center gap-3 px-4"><MapPin size={26} className="text-accent" /><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{v.nome}</strong><span className="text-base text-muted-foreground">{dataBRCurta(v.data_inicio)} · {v.destino}</span></span></Link>)}</div></section>;
+  return <section><h2 className="mb-3 text-2xl">{titulo}</h2><div className="divide-y divide-border rounded-[18px] border border-border bg-card">{viagens.map((v) => <Link key={v.id} to="/trip/$id" params={{ id: v.id }} className="tap flex items-center gap-3 px-4"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pess-soft text-pess"><MapPin size={24} strokeWidth={2.2} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-lg">{v.nome}</strong><span className="text-base text-muted-foreground">{dataBRCurta(v.data_inicio)} · {v.destino}</span></span></Link>)}</div></section>;
 }
