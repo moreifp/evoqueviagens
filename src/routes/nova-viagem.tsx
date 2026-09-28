@@ -124,7 +124,11 @@ function NovaViagem() {
         .eq("person.account_id", meuId)
         .is("deleted_at", null);
       if (error) throw error;
-      if (!linhas?.length) throw new Error("Não achei sua participação nesta viagem.");
+      if (!linhas?.length) {
+        // Viagem vista só por compartilhamento: esconde apenas para mim, sem mexer na do organizador.
+        const { error: e2 } = await supabase.from("trip_oculta").upsert({ account_id: meuId, trip_id: atual.id });
+        if (e2) throw e2;
+      }
       for (const l of linhas) {
         await mutar({ tipo: "update", tabela: "trip_member", id: l.id, valores: { status: "saiu", respondido_em: new Date().toISOString() } });
       }
