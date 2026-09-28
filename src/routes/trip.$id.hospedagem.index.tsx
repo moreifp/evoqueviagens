@@ -52,34 +52,22 @@ function Hospedagem() {
           if (!h) return <CartaoResumo key={r.item_id} r={r} />;
           return (
           <article key={h.id} className="shadow-soft overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="flex gap-4 p-4">
-              <BedDouble size={28} strokeWidth={2.2} className="mt-1 text-accent" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-xl leading-tight text-foreground">{h.nome}</h2>
-                <p className="text-base font-semibold text-muted-foreground">{h.cidade ?? h.endereco}</p>{h.telefone && <a href={`tel:${h.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 inline-flex items-center gap-2 text-lg font-bold text-accent"><Phone size={20} strokeWidth={2.2} aria-hidden /> {h.telefone}</a>}
-
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm font-bold uppercase text-muted-foreground">Entrada</p>
-                    <p className="num text-2xl text-foreground">{horaNoFuso(h.checkin, fusoLocal())}</p>
-                    <p className="text-base font-semibold text-foreground">{dataBRCurta(chaveDia(h.checkin))}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase text-muted-foreground">Saída</p>
-                    <p className="num text-2xl text-foreground">{horaNoFuso(h.checkout, fusoLocal())}</p>
-                    <p className="text-base font-semibold text-foreground">{dataBRCurta(chaveDia(h.checkout))}</p>
-                  </div>
-                </div>
-
-                {h.localizador && (
-                  <p className="mono-code mt-3 text-2xl font-bold text-accent">{h.localizador}</p>
-                )}
-                {h.valor != null && (
-                  <p className="num mt-2 text-[36px] leading-none text-foreground">
-                    {fmtMoney(Number(h.valor), h.moeda ?? "BRL")}
-                  </p>
-                )}
+            <div className="bg-primary p-5 text-primary-foreground">
+              <p className="flex min-w-0 items-center gap-3 text-xl font-bold">
+                <BedDouble size={28} strokeWidth={2.2} aria-hidden className="shrink-0" />
+                <span className="min-w-0 break-words">{h.nome}</span>
+              </p>
+              <p className="mt-1 text-lg">{h.cidade ?? h.endereco}</p>
+              {h.telefone && <a href={`tel:${h.telefone.replace(/[^\d+]/g, "")}`} className="tap mt-1 inline-flex items-center gap-2 text-lg font-bold underline-offset-4 hover:underline"><Phone size={20} strokeWidth={2.2} aria-hidden /> {h.telefone}</a>}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div><small className="font-bold">ENTRADA</small><p className="text-lg">{dataBRCurta(chaveDia(h.checkin))}</p></div>
+                <div className="text-right"><small className="font-bold">SAÍDA</small><p className="text-lg">{dataBRCurta(chaveDia(h.checkout))}</p></div>
               </div>
+              <p className="num mt-1 flex justify-between gap-2 text-[clamp(32px,10vw,44px)] leading-none">
+                <span>{horaNoFuso(h.checkin, fusoLocal())}</span><span>{horaNoFuso(h.checkout, fusoLocal())}</span>
+              </p>
+              {h.localizador && <p className="mono-code mt-3 break-all text-lg font-bold">Localizador {h.localizador}</p>}
+              {h.valor != null && <p className="num mt-2 text-3xl leading-none">{fmtMoney(Number(h.valor), h.moeda ?? "BRL")}</p>}
             </div>
             {h.quartos.length > 0 && (
               <ul className="space-y-2 border-t border-border p-4">

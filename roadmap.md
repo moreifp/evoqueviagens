@@ -122,3 +122,9 @@
 - [x] Incluir dependentes de dependentes no download offline
 
 
+
+## Link só das despesas
+- [x] Link público só leitura das despesas
+
+## Hospedagem em quadro preto
+- [x] Cartão de hospedagem no mesmo quadro escuro dos bilhetes

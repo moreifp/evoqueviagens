@@ -9,6 +9,7 @@ import { nomeCurto, useUid } from "@/lib/despesas";
 import { LinhaDespesa } from "@/components/LinhaDespesa";
 import { baixarExcel, baixarPdf, montarTabela } from "@/lib/exportarDespesas";
 import { SaldosViagem } from "@/components/SaldosViagem";
+import { LinkDespesas } from "@/components/LinkDespesas";
 
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
@@ -78,6 +79,7 @@ function Lista() {
             </button>
           </div>
         )}
+        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
         <SaldosViagem tripId={id} tripNome={trip.nome} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
 
         <section className="rounded-3xl bg-navy p-5 text-primary-foreground shadow-medium">

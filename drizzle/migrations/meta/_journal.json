@@ -288,6 +288,13 @@
       "when": 1790554997870,
       "tag": "0040_outro_detalhe2",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790559657790,
+      "tag": "0041_despesas_link_publico",
+      "breakpoints": true
     }
   ]
 }

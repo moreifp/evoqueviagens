@@ -232,7 +232,7 @@ function RootApp() {
 
 function Conteudo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  if (path.startsWith("/c/")) return <Outlet />;
+  if (path.startsWith("/c/") || path.startsWith("/d/")) return <Outlet />;
   const mostraAbas = !path.startsWith("/.lovable/") && !path.startsWith("/trip/") && !path.startsWith("/pessoas/") && path !== "/nova-viagem";
   return (
     <AuthGate>
