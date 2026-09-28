@@ -1,3 +1,4 @@
+import { LogOut } from "lucide-react";
 import { AvisosMeus } from "./AvisosPedidos";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery, useQuery } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ export function VisaoParticipante({ trip }: { trip: Trip }) {
 
   return (
     <>
-      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {dono?.nome ?? "Outra pessoa"} organiza</p></div></header>
+      <header className="flex items-center gap-3 px-4 py-3"><Link to="/viagens" className="tap flex items-center text-lg font-bold">Voltar</Link><div className="min-w-0 flex-1"><h1 className="truncate text-2xl">{trip.nome}</h1><p className="text-base text-muted-foreground">{dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} · {dono?.nome ?? "Outra pessoa"} organiza</p></div><Link to="/nova-viagem" search={{ editar: trip.id }} aria-label="Sair desta viagem" className="tap flex flex-col items-center justify-center text-sm font-bold text-destructive"><LogOut size={26}/>Sair</Link></header>
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-3 pb-28">
         <SeloOffline tripId={id} />
         <CartaoEmergencia trip={trip} editavel={false} />
