@@ -29,16 +29,21 @@ function Programa() {
   const [secret, setSecret] = useState<Segredo | null | undefined>(undefined);
   const [editing, setEditing] = useState(false); const [show, setShow] = useState(false); const [saving, setSaving] = useState(false);
   const [confirmEmpty, setConfirmEmpty] = useState(false); const [cardUrl, setCardUrl] = useState<string | null>(null);
+  // Cada programa destrava só o seu próprio acesso: nada de abrir/fechar todos de uma vez.
+  const [revealed, setRevealed] = useState(false);
   const item = data?.fidelidades.find((x) => x.id === fid); const owner = !!data && data.pessoa.account_id === data.uid;
   const unlocked = useVaultUnlocked(owner ? data?.uid : undefined);
 
   useEffect(() => {
+    setSecret(undefined); setShow(false); setRevealed(false);
+  }, [fid]);
+  useEffect(() => {
     setSecret(undefined); setShow(false);
-    if (!unlocked || !data) { setEditing(false); return; }
+    if (!revealed || !unlocked || !data) { setEditing(false); return; }
     let vivo = true;
     readVaultItem(data.uid, fid).then((s) => { if (vivo) { setSecret(s); if (!s) setEditing(true); } }).catch((e) => { if (vivo) { toast.error((e as Error).message); setSecret(null); } });
     return () => { vivo = false; };
-  }, [unlocked, data?.uid, fid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [revealed, unlocked, data?.uid, fid]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!item?.cartao_path || !navigator.onLine) return; void supabase.storage.from("documentos").createSignedUrl(item.cartao_path, 600).then(({ data: s }) => setCardUrl(s?.signedUrl ?? null)); }, [item?.cartao_path]);
   useEffect(() => { if (!show) return; const t = setTimeout(() => setShow(false), 30000); return () => clearTimeout(t); }, [show]);
 
@@ -85,14 +90,15 @@ function Programa() {
     {owner && item.cartao_path && <button onClick={() => void removeCard()} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"><Trash2 size={24} /> Tirar foto do cartão</button>}
     {item.site_url && <a href={item.site_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold">Abrir o site do programa <ExternalLink size={24} /></a>}
     {owner && <section className="rounded-lg border-2 border-border bg-card p-4"><h2 className="flex items-center gap-2 text-2xl"><LockKeyhole size={28} /> Cofre · acesso ao site</h2>
-      {!unlocked && <DestravarCofre uid={data.uid} />}
-      {unlocked && secret === undefined && <p className="mt-4 text-lg text-muted-foreground">Abrindo…</p>}
-      {unlocked && secret !== undefined && !editing && secret && <div className="mt-4 space-y-3">
+      {!revealed && <button type="button" onClick={() => setRevealed(true)} className="tap mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><LockKeyhole size={24} /> Destravar este acesso</button>}
+      {revealed && !unlocked && <DestravarCofre uid={data.uid} />}
+      {revealed && unlocked && secret === undefined && <p className="mt-4 text-lg text-muted-foreground">Abrindo…</p>}
+      {revealed && unlocked && secret !== undefined && !editing && secret && <div className="mt-4 space-y-3">
         <Campo rotulo="Login"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 break-all rounded-lg bg-muted px-4 py-3 text-lg">{secret.login || "—"}</span><button type="button" onClick={() => copy(secret.login)} aria-label="Copiar login" className="tap"><Copy size={24} /></button></div></Campo>
         <Campo rotulo="Senha"><div className="flex items-center gap-2"><span className="mono-code min-w-0 flex-1 break-all rounded-lg bg-muted px-4 py-3 text-lg">{secret.password ? (show ? secret.password : "••••••••") : "—"}</span><button type="button" onClick={() => setShow((x) => !x)} aria-label={show ? "Esconder senha" : "Mostrar senha"} className="tap">{show ? <EyeOff size={24} /> : <Eye size={24} />}</button><button type="button" onClick={() => copy(secret.password)} aria-label="Copiar senha" className="tap"><Copy size={24} /></button></div></Campo>
-        <button type="button" onClick={() => setEditing(true)} className="tap flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><Pencil size={24} /> Editar acesso</button>
+        <div className="flex gap-2"><button type="button" onClick={() => setEditing(true)} className="tap flex flex-[2] items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><Pencil size={24} /> Editar acesso</button><button type="button" onClick={() => { setRevealed(false); setSecret(undefined); setShow(false); }} aria-label="Trancar este acesso" className="tap flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><LockKeyhole size={24} /> Trancar</button></div>
       </div>}
-      {unlocked && secret !== undefined && editing && <form key={secret ? "e" : "n"} action={(fd) => void saveSecret(fd)} className="mt-4 space-y-3">
+      {revealed && unlocked && secret !== undefined && editing && <form key={secret ? "e" : "n"} action={(fd) => void saveSecret(fd)} className="mt-4 space-y-3">
         <Campo rotulo="Login"><input name="login" defaultValue={secret?.login ?? ""} autoComplete="off" className={inputCls} /></Campo>
         <Campo rotulo="Senha"><div className="flex gap-2"><input name="password" type={show ? "text" : "password"} defaultValue={secret?.password ?? ""} autoComplete="new-password" className={inputCls} /><button type="button" onClick={() => setShow((x) => !x)} aria-label="Mostrar senha" className="tap">{show ? <EyeOff size={24} /> : <Eye size={24} />}</button></div></Campo>
         {confirmEmpty && <p className="text-base font-bold text-warn">Os dois campos estão vazios. Toque em "Salvar" de novo para apagar o acesso guardado.</p>}
