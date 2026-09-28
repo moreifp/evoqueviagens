@@ -148,3 +148,8 @@
 - [x] Divisão de quem deve e recebe recolhível por seta
 - [x] Link só para ver depois da divisão
 - [x] Barra para criar Excel ou PDF ao final
+
+## Visualização inicial compacta (28/09)
+- [x] Despesas: uma linha por despesa com data, descrição, valor e pagador
+- [x] Despesas: link público e divisão fechados por padrão
+- [ ] Compactar as listas iniciais dos demais módulos, mantendo detalhes ao abrir cada item

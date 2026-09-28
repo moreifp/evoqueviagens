@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { useUid } from "@/lib/despesas";
-import { Phone, MessageCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const PAISES = [
@@ -52,6 +52,7 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   const [fone, setFone] = useState("");
   const [pais, setPais] = useState("55");
   const [salvando, setSalvando] = useState(false);
+  const [aberto, setAberto] = useState(false);
 
   const { data: link } = useQuery({
     queryKey: ["despesas-link", tripId],
@@ -64,7 +65,7 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
         .maybeSingle();
       return data;
     },
-    enabled: !!uid,
+    enabled: !!uid && aberto,
   });
 
   const { data: membros } = useQuery({
@@ -80,7 +81,7 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
         person: { id: string; nome: string; telefone: string | null } | null;
       }>;
     },
-    enabled: !!uid,
+    enabled: !!uid && aberto,
   });
 
   const url = link
@@ -159,13 +160,17 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      <p className="font-medium text-sm">Link para verem as despesas</p>
-      <p className="text-xs text-muted-foreground">
-        Quem abre o link vê as despesas e os saldos, sem precisar de conta. As
-        fotos dos recibos ficam de fora.
-      </p>
-      {!link ? (
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <button type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto} aria-controls="link-despesas-conteudo" className="tap flex w-full items-center justify-between gap-3 px-4 text-left">
+        <span className="font-medium text-sm">Link para verem as despesas</span>
+        {aberto ? <ChevronUp className="shrink-0" size={24} /> : <ChevronDown className="shrink-0" size={24} />}
+      </button>
+      {aberto && <div id="link-despesas-conteudo" className="space-y-3 border-t border-border p-4">
+        <p className="text-xs text-muted-foreground">
+          Quem abre o link vê as despesas e os saldos, sem precisar de conta. As
+          fotos dos recibos ficam de fora.
+        </p>
+        {!link ? (
         <button type="button" className={btnPrimario} onClick={criar}>
           Criar link
         </button>
@@ -271,7 +276,8 @@ export function LinkDespesas({ tripId, tripNome }: { tripId: string; tripNome?: 
           )}
         </>
       )}
-      {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
-    </div>
+        {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
+      </div>}
+    </section>
   );
 }
