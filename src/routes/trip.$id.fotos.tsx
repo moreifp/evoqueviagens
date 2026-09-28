@@ -127,7 +127,9 @@ function FotosViagem() {
     setBaixadas(s);
     localStorage.setItem(chaveBaixadas, JSON.stringify([...s]));
   }
-  const visiveis = fotos.filter((f) => !baixadas.has(f.id));
+  const pendentes = fotos.filter((f) => !baixadas.has(f.id));
+  const [verBaixadas, setVerBaixadas] = useState(false);
+  const mostradas = verBaixadas ? fotos : pendentes;
 
   function alternar(fid: string) {
     setConfApagar(false);
