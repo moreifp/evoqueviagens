@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
 import { comprimir } from "@/lib/imagem";
+import { useServerFn } from "@tanstack/react-start";
+import { fotoDrive, pastaDrive } from "@/lib/drive.functions";
 
 export const Route = createFileRoute("/trip/$id/fotos")({
   head: () => ({
@@ -79,30 +81,35 @@ function FotosViagem() {
   }
 
   const nomePasta = (trip?.nome ?? "Viagem").replace(/[\\/:*?"<>|]/g, "-").trim() || "Viagem";
+  const criarPasta = useServerFn(pastaDrive);
+  const mandarFoto = useServerFn(fotoDrive);
+  const [progresso, setProgresso] = useState("");
 
-  // Uma pasta com o nome da viagem (arquivo .zip). No iPhone: "Salvar em Arquivos"; tocar no zip vira pasta.
+  // Manda direto para a pasta com o nome da viagem no Google Drive, uma foto por vez.
   async function baixarPasta(files: Blob[]) {
     if (!files.length) return;
-    const { default: JSZip } = await import("jszip");
-    const zip = new JSZip();
-    const pasta = zip.folder(nomePasta)!;
-    files.forEach((f, i) => pasta.file(`${nomePasta} ${String(i + 1).padStart(3, "0")}.jpg`, f));
-    const blob = await zip.generateAsync({ type: "blob" });
-    const arquivo = new File([blob], `${nomePasta}.zip`, { type: "application/zip" });
-    if (navigator.canShare?.({ files: [arquivo] })) {
-      try { await navigator.share({ files: [arquivo] }); } catch { /* cancelou */ }
-      return;
+    const pasta = await criarPasta({ data: { tripId: id } });
+    const carimbo = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    for (let i = 0; i < files.length; i++) {
+      setProgresso(`${i + 1} de ${files.length}`);
+      const buf = new Uint8Array(await files[i].arrayBuffer());
+      let bin = "";
+      for (let j = 0; j < buf.length; j += 0x8000) bin += String.fromCharCode(...buf.subarray(j, j + 0x8000));
+      await mandarFoto({ data: { pastaId: pasta.id, nome: `${pasta.nome} ${carimbo} ${String(i + 1).padStart(3, "0")}.jpg`, base64: btoa(bin) } });
     }
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(arquivo);
-    a.download = arquivo.name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    setProgresso("");
+    toast.success(`${files.length} ${files.length === 1 ? "foto enviada" : "fotos enviadas"} para a pasta "${pasta.nome}" no Google Drive`);
   }
 
+  const [salvandoNovas, setSalvandoNovas] = useState(false);
   async function salvarNoFotos() {
-    await baixarPasta(novas);
-    setNovas([]);
+    setSalvandoNovas(true);
+    try {
+      await baixarPasta(novas);
+      setNovas([]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não consegui enviar ao Google Drive.");
+    } finally { setSalvandoNovas(false); setProgresso(""); }
   }
 
   const [baixando, setBaixando] = useState(false);
