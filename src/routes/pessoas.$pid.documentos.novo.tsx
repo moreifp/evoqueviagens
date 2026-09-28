@@ -126,7 +126,7 @@ function NovoDocumento() {
           original = { name: file.name, type: file.type || "application/octet-stream", data: btoa(binary) };
         }
         passo = "Não deu para guardar o arquivo no cofre.";
-        const result = await saveVaultDocument(data.uid, pid, { fields: valores, file: original });
+        const result = await saveVaultDocument(data!.uid, pid, { fields: valores, file: original });
         toast.success(result.localOnly ? "Guardado no aparelho · sincroniza quando voltar a internet" : "Guardado no cofre");
         nav({ to: "/pessoas/$pid", params: { pid } });
         return;
