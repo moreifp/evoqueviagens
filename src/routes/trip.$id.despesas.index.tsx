@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeftRight, ChevronLeft, HandCoins, Eye, FileSpreadsheet, FileText, Plus, User } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronUp, HandCoins, Eye, FileSpreadsheet, FileText, Plus, User } from "lucide-react";
 import { expensesQuery, settlementsQuery, membersQuery, tripQuery, type Expense } from "@/lib/data";
 import { fmtMoney } from "@/lib/format";
 import { acharMoeda } from "@/lib/moedas";
@@ -25,9 +25,6 @@ export const Route = createFileRoute("/trip/$id/despesas/")({
   notFoundComponent: () => <div className="p-6 text-lg">Sem despesas.</div>,
 });
 
-const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const diaCab = (d: string) => `${DIAS[new Date(`${d}T12:00:00Z`).getUTCDay()]} ${d.slice(8, 10)}/${d.slice(5, 7)}`;
-
 function Lista() {
   const { id } = Route.useParams();
   const uid = useUid();
@@ -36,6 +33,7 @@ function Lista() {
   const { data: membros } = useSuspenseQuery(membersQuery(id));
   const { data: acertos } = useSuspenseQuery(settlementsQuery(id));
   const [aba, setAba] = useState<"todas" | "pessoais">("todas");
+  const [mostrarDivisao, setMostrarDivisao] = useState(false);
   const org = uid === trip.owner_id;
   const moeda = trip.moeda_base;
   const nomeMoeda = (acharMoeda(moeda)?.nome ?? moeda).toLowerCase();
@@ -45,8 +43,6 @@ function Lista() {
   const soma = (l: Expense[]) => l.reduce((s, d) => s + Number(d.valor_moeda_base), 0);
   const nPessoas = new Set(divididas.flatMap((d) => d.partes.map((p) => p.person_id))).size || membros.length;
 
-  const dias = new Map<string, Expense[]>();
-  for (const d of despesas) dias.set(d.data, [...(dias.get(d.data) ?? []), d]);
   const porPessoa = new Map<string, Expense[]>();
   for (const d of pessoais) porPessoa.set(d.pessoal_de ?? "", [...(porPessoa.get(d.pessoal_de ?? "") ?? []), d]);
 
@@ -66,36 +62,15 @@ function Lista() {
       </header>
 
       <main className="space-y-4 px-4 pt-3">
+        {org && (
+          <Link to="/trip/$id/despesas/nova" params={{ id }} search={{ editar: "", itemTipo: "", itemId: "", descricao: "", valor: "", moeda: "", data: "", categoria: "", pessoas: "", origemNome: "" }}
+            className="tap flex w-full items-center justify-center gap-2 rounded-2xl bg-navy px-5 text-lg font-bold text-primary-foreground shadow-medium">
+            <Plus size={26} strokeWidth={2.4} /> Nova despesa
+          </Link>
+        )}
         {!org && uid !== undefined && (
           <p className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-bold text-foreground"><Eye size={18} strokeWidth={2.2} /> Só leitura</p>
         )}
-        {despesas.length + acertos.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => void baixarExcel(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
-              <FileSpreadsheet size={24} strokeWidth={2.2} /> Excel
-            </button>
-            <button onClick={() => void baixarPdf(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
-              <FileText size={24} strokeWidth={2.2} /> PDF
-            </button>
-          </div>
-        )}
-        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
-        <SaldosViagem tripId={id} tripNome={trip.nome} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
-
-        <section className="rounded-3xl bg-navy p-5 text-primary-foreground shadow-medium">
-          <p className="text-sm font-bold uppercase tracking-wide opacity-80">Total dividido</p>
-          <p className="num mt-1 text-[42px] leading-none">{fmtMoney(soma(divididas), moeda)}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-base opacity-90">{nPessoas} pessoas · {divididas.length} {divididas.length === 1 ? "despesa" : "despesas"}</span>
-            {pessoais.length > 0 && <span className="rounded-full bg-pessoal-chip px-3 py-1 text-sm font-bold text-pessoal-foreground">+ {fmtMoney(soma(pessoais), moeda)} pessoais</span>}
-          </div>
-          {acertos.length + divididas.length > 0 && (
-            <Link to="/trip/$id/despesas/acertar" params={{ id }} className="tap mt-4 flex items-center justify-center gap-2 rounded-2xl bg-primary-foreground text-lg font-bold text-navy">
-              <HandCoins size={24} strokeWidth={2.2} /> {org ? "Simplificar e acertar" : "Quem paga a quem"}
-            </Link>
-          )}
-        </section>
-
         <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
           {(["todas", "pessoais"] as const).map((a) => (
             <button key={a} onClick={() => setAba(a)} aria-pressed={aba === a} className={`min-h-12 rounded-xl text-base font-bold ${aba === a ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}>
@@ -107,12 +82,12 @@ function Lista() {
         {aba === "todas" && (
           despesas.length === 0
             ? <p className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-lg font-semibold">Nenhuma despesa ainda</p>
-            : [...dias.entries()].map(([dia, itens]) => (
-              <section key={dia}>
-                <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{diaCab(dia)}</h2>
-                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+            : <section aria-label="Despesas da viagem">
+                <div className="grid grid-cols-[3.25rem_minmax(0,1fr)_auto] gap-2 px-3 pb-1 text-xs font-bold uppercase text-muted-foreground">
+                  <span>Data</span><span>Despesa · quem pagou</span><span>Valor</span>
+                </div>
+                <ul className="space-y-2">{[...despesas].sort((a, b) => b.data.localeCompare(a.data)).map((d) => <li key={d.id}><LinhaDespesa d={d} mostrarData eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
-            ))
         )}
 
         {aba === "pessoais" && (
@@ -127,19 +102,50 @@ function Lista() {
                 <h2 className="flex items-baseline justify-between text-base font-bold text-foreground">
                   <span>{nomeCurto(membros, pid)}</span><span className="num text-lg text-pessoal-foreground">{fmtMoney(soma(itens), moeda)}</span>
                 </h2>
-                <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
+                 <ul className="mt-2 space-y-2">{itens.map((d) => <li key={d.id}><LinhaDespesa d={d} mostrarData eu={org ? undefined : membros.find((m) => m.meu && m.kind === "self")?.person_id} membros={membros} moedaBase={moeda} tripId={id} /></li>)}</ul>
               </section>
             ))}
           </>
         )}
-      </main>
 
-      {org && (
-        <Link to="/trip/$id/despesas/nova" params={{ id }} search={{ editar: "", itemTipo: "", itemId: "", descricao: "", valor: "", moeda: "", data: "", categoria: "", pessoas: "", origemNome: "" }}
-          className="fixed bottom-24 right-4 z-30 flex min-h-14 items-center gap-2 rounded-full bg-navy px-5 text-lg font-bold text-primary-foreground shadow-medium">
-          <Plus size={26} strokeWidth={2.4} /> Despesa
-        </Link>
-      )}
+        <section className="overflow-hidden rounded-2xl border-2 border-border bg-card">
+          <button type="button" onClick={() => setMostrarDivisao((v) => !v)} aria-expanded={mostrarDivisao} aria-controls="divisao-despesas" className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 text-left">
+            <span className="min-w-0">
+              <span className="block text-lg font-bold text-foreground">Quem deve e quem recebe</span>
+              <span className="block truncate text-sm text-muted-foreground">Veja os saldos e quem paga a quem</span>
+            </span>
+            {mostrarDivisao ? <ChevronUp className="shrink-0" size={26} strokeWidth={2.2} /> : <ChevronDown className="shrink-0" size={26} strokeWidth={2.2} />}
+          </button>
+          {mostrarDivisao && (
+            <div id="divisao-despesas" className="space-y-4 border-t border-border p-3">
+              <section className="rounded-2xl bg-navy p-4 text-primary-foreground">
+                <p className="text-sm font-bold uppercase opacity-80">Total dividido</p>
+                <p className="num mt-1 text-[36px] leading-none">{fmtMoney(soma(divididas), moeda)}</p>
+                <p className="mt-2 text-base opacity-90">{nPessoas} pessoas · {divididas.length} {divididas.length === 1 ? "despesa" : "despesas"}</p>
+                {acertos.length + divididas.length > 0 && (
+                  <Link to="/trip/$id/despesas/acertar" params={{ id }} className="tap mt-3 flex items-center justify-center gap-2 rounded-xl bg-primary-foreground text-base font-bold text-navy">
+                    <HandCoins size={22} strokeWidth={2.2} /> {org ? "Simplificar e acertar" : "Quem paga a quem"}
+                  </Link>
+                )}
+              </section>
+              <SaldosViagem tripId={id} tripNome={trip.nome} despesas={despesas} acertos={acertos} membros={membros} moeda={moeda} org={org} />
+            </div>
+          )}
+        </section>
+
+        {org && <LinkDespesas tripId={id} tripNome={trip.nome} />}
+
+        {despesas.length + acertos.length > 0 && (
+          <div className="grid grid-cols-2 gap-2" aria-label="Criar relatório">
+            <button onClick={() => void baixarExcel(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
+              <FileSpreadsheet size={24} strokeWidth={2.2} /> Criar Excel
+            </button>
+            <button onClick={() => void baixarPdf(montarTabela(trip.nome, despesas, acertos, membros, moeda))} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-primary text-base font-bold text-foreground">
+              <FileText size={24} strokeWidth={2.2} /> Criar PDF
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

@@ -6,17 +6,18 @@ import { categoria } from "@/lib/categorias";
 import { fmtMoney } from "@/lib/format";
 import { nomeCurto } from "@/lib/despesas";
 
-export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink }: { d: Expense; membros: Membro[]; moedaBase: string; tripId: string; eu?: string; semLink?: boolean }) {
+export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink, mostrarData = false }: { d: Expense; membros: Membro[]; moedaBase: string; tripId: string; eu?: string; semLink?: boolean; mostrarData?: boolean }) {
   const minha = eu ? d.partes.find((p) => p.person_id === eu) : undefined;
   const c = categoria(d.categoria);
   const Icone = c.Icone;
   const pag = d.pagadores.length > 1 ? `${d.pagadores.length} pagaram` : `${nomeCurto(membros, d.pagadores[0]?.person_id ?? d.pago_por)} pagou`;
+  const data = `${d.data.slice(8, 10)}/${d.data.slice(5, 7)}`;
   const Caixa = ({ className, children }: { className: string; children: ReactNode }) =>
     semLink ? <div className={className}>{children}</div> : <Link to="/trip/$id/despesas/$eid" params={{ id: tripId, eid: d.id }} className={className}>{children}</Link>;
   if (d.pessoal) {
     return (
-      <Caixa className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-pessoal-border bg-pessoal p-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pessoal-chip text-pessoal-foreground"><User size={26} strokeWidth={2.2} /></span>
+      <Caixa className={`grid min-h-16 items-center gap-2 rounded-2xl border-2 border-pessoal-border bg-pessoal p-3 ${mostrarData ? "grid-cols-[3.25rem_minmax(0,1fr)_auto]" : "grid-cols-[auto_minmax(0,1fr)_auto]"}`}>
+        {mostrarData ? <span className="num text-sm font-bold text-muted-foreground">{data}</span> : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pessoal-chip text-pessoal-foreground"><User size={26} strokeWidth={2.2} /></span>}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-lg font-bold text-foreground">{d.descricao}</span>
           <span className="mt-0.5 inline-block rounded-md bg-pessoal-chip px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-pessoal-foreground">Pessoal · {eu && d.pessoal_de === eu ? "você" : nomeCurto(membros, d.pessoal_de)}</span>
@@ -26,8 +27,8 @@ export function LinhaDespesa({ d, membros, moedaBase, tripId, eu, semLink }: { d
     );
   }
   return (
-    <Caixa className="shadow-soft flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card p-3">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-teal"><Icone size={26} strokeWidth={2.2} /></span>
+    <Caixa className={`shadow-soft grid min-h-16 items-center gap-2 rounded-2xl border border-border bg-card p-3 ${mostrarData ? "grid-cols-[3.25rem_minmax(0,1fr)_auto]" : "grid-cols-[auto_minmax(0,1fr)_auto]"}`}>
+      {mostrarData ? <span className="num text-sm font-bold text-muted-foreground">{data}</span> : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-teal"><Icone size={26} strokeWidth={2.2} /></span>}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-lg font-bold text-foreground">{d.descricao}</span>
         <span className="block truncate text-sm text-muted-foreground">{pag} · {d.partes.length} {d.partes.length === 1 ? "pessoa" : "pessoas"}{d.taxa_provisoria ? " · taxa provisória" : ""}</span>

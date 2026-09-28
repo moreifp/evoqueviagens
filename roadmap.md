@@ -142,9 +142,9 @@
 - [x] Telefone: dropdown de código de país (padrão Brasil +55) na validação
 
 ## Despesas no iPhone (28/09)
-- [ ] Nova despesa como primeira ação
-- [ ] Descrição obrigatória como primeiro campo do formulário
-- [ ] Relação das despesas com data, descrição, valor e quem pagou
-- [ ] Divisão de quem deve e recebe recolhível por seta
-- [ ] Link só para ver depois da divisão
-- [ ] Barra para criar Excel ou PDF ao final
+- [x] Nova despesa como primeira ação
+- [x] Descrição obrigatória como primeiro campo do formulário
+- [x] Relação das despesas com data, descrição, valor e quem pagou
+- [x] Divisão de quem deve e recebe recolhível por seta
+- [x] Link só para ver depois da divisão
+- [x] Barra para criar Excel ou PDF ao final
