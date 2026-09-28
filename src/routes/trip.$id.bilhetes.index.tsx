@@ -11,6 +11,7 @@ import { aviso, naTela } from "@/lib/itens";
 import { textoBagagem, pegarBagagem } from "@/lib/bagagem";
 import { StatusVoo } from "@/components/StatusVoo";
 import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
+import { sufixoNome } from "@/lib/nomes";
 import { useState } from "react";
 import { Plane, TrainFront, Bus, Car, Plus, ChevronDown, Users, Pencil, UserMinus } from "lucide-react";
 import { Topo } from "@/components/Chrome";
@@ -247,6 +248,14 @@ function CartaoEmbarque({ b, grupo, s, editar, nome, dono, pessoa, membros }: { 
         <dl className="space-y-2 border-t border-border p-4 text-lg">
           <Linha rotulo="Assento" valor={minha.assento} />
           <Linha rotulo="Nome no bilhete" valor={minha.nome_no_bilhete} />
+          {minha.nome_no_bilhete && (() => {
+            const doc = membros.find((m) => m.person_id === minha.person_id)?.nome_como_no_documento ?? "";
+            const sb = sufixoNome(minha.nome_no_bilhete);
+            const sd = sufixoNome(doc);
+            if (!sb && !sd) return null;
+            if (sb && sd) return null; // sufixos diferentes já viram âmbar na conferência
+            return <p className="text-sm text-muted-foreground">{sb ? `Bilhete com ${sb}, documento sem` : `Documento com ${sd}, bilhete sem`}</p>;
+          })()}
           <Linha rotulo="Nº do bilhete" valor={minha.eticket} />
           <Linha rotulo="Classe" valor={minha.classe ?? null} />
           <Linha rotulo="Bagagem" valor={textoBagagem(pegarBagagem(minha)) || null} />
