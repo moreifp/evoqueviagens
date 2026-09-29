@@ -115,7 +115,14 @@ function FotosViagem() {
   async function salvarNoFotos() {
     setSalvandoNovas(true);
     try {
+      // Espera as cópias pequenas terminarem de subir antes de marcar como enviadas.
+      while (uploads.current.length) await Promise.all([...uploads.current]);
       await baixarPasta(novas);
+      // Originais foram ao Drive: essas fotos saem da lista "a baixar" (não reenvia a cópia pequena).
+      if (idsNovas.current.length) {
+        salvarBaixadas(new Set([...baixadas, ...idsNovas.current]));
+        idsNovas.current = [];
+      }
       setNovas([]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não consegui enviar ao Google Drive.");
