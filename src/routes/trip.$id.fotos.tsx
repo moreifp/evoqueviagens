@@ -251,6 +251,8 @@ function FotosViagem() {
     localStorage.setItem(chaveBaixadas, JSON.stringify([...s]));
   }
   const pendentes = fotos.filter((f) => !baixadas.has(f.id));
+  // Conta só as baixadas que ainda existem (apagadas somem da contagem).
+  const nBaixadas = fotos.length - pendentes.length;
   const [verBaixadas, setVerBaixadas] = useState(false);
   const mostradas = verBaixadas ? fotos : pendentes;
 
@@ -277,6 +279,9 @@ function FotosViagem() {
       );
     if (r.error) return void toast.error("Não foi possível apagar.");
     await supabase.storage.from(BUCKET).remove(alvo.map((f) => f.storage_path));
+    const restantes = new Set(baixadas);
+    alvo.forEach((f) => restantes.delete(f.id));
+    salvarBaixadas(restantes);
     setSel(new Set());
     setSelecionando(false);
     setConfApagar(false);
@@ -431,27 +436,30 @@ function FotosViagem() {
             <div className="flex items-center justify-between gap-2">
               <p className="text-base text-muted-foreground">
                 {pendentes.length} {pendentes.length === 1 ? "foto" : "fotos"} a baixar
-                {verBaixadas && baixadas.size
-                  ? ` · ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}`
+                {verBaixadas && nBaixadas
+                  ? ` · ${nBaixadas} já baixada${nBaixadas === 1 ? "" : "s"}`
                   : ""}
               </p>
               <div className="flex items-center">
-                {selecionando && (
+                {souDono && (
                   <button
                     type="button"
                     aria-label="Selecionar todas as fotos"
                     onClick={() => {
                       setConfApagar(false);
-                      const todas = mostradas.every((f) => sel.has(f.id));
-                      setSel(todas ? new Set() : new Set(mostradas.map((f) => f.id)));
+                      const todas = fotos.every((f) => sel.has(f.id));
+                      setSelecionando(!todas);
+                      setVerBaixadas(!todas);
+                      setSel(todas ? new Set() : new Set(fotos.map((f) => f.id)));
                     }}
-                    className="tap flex min-h-12 items-center justify-center rounded-xl px-3 text-accent"
+                    className="tap flex min-h-12 items-center justify-center gap-1 rounded-xl px-3 text-lg font-semibold text-accent"
                   >
-                    {mostradas.length > 0 && mostradas.every((f) => sel.has(f.id)) ? (
+                    {fotos.every((f) => sel.has(f.id)) ? (
                       <X size={24} strokeWidth={2.2} />
                     ) : (
                       <CheckCheck size={26} strokeWidth={2.2} />
                     )}
+                    Todas
                   </button>
                 )}
                 <button
@@ -527,7 +535,7 @@ function FotosViagem() {
             Todas as fotos já foram para o Google Drive.
           </p>
         )}
-        {baixadas.size > 0 && (
+        {nBaixadas > 0 && (
           <button
             type="button"
             onClick={() => setVerBaixadas((v) => !v)}
@@ -535,8 +543,8 @@ function FotosViagem() {
             className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline"
           >
             {verBaixadas
-              ? `Esconder as ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}`
-              : `Mostrar também as ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}`}
+              ? `Esconder as ${nBaixadas} já baixada${nBaixadas === 1 ? "" : "s"}`
+              : `Mostrar também as ${nBaixadas} já baixada${nBaixadas === 1 ? "" : "s"}`}
           </button>
         )}
         <p className="text-base text-muted-foreground">
