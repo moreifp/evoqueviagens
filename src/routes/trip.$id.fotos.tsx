@@ -232,7 +232,7 @@ function FotosViagem() {
             <button type="button" onClick={salvarNoFotos} disabled={salvandoNovas} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
               <Download size={24} strokeWidth={2.2} /> {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
             </button>
-            <p className="text-base text-muted-foreground">Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive (precisa de internet). No app fica só a cópia pequena.</p>
+            <p className="text-base text-muted-foreground">Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive (precisa de internet). No app fica só a cópia pequena, para ver na tela — ela não é reenviada ao Drive depois.</p>
           </div>
         )}
 
