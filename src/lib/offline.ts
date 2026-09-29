@@ -65,7 +65,8 @@ export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: stri
       for (const f of fichas) {
         const refs = [f.pessoa.foto_url, ...f.documentos.map((d) => d.arquivo_path), ...f.anexos.map((a) => a.storage_path), ...f.fidelidades.map((l) => l.cartao_path)];
         for (const r of refs) if (r) manter.add(r);
-        for (const d of f.documentos) await qc.fetchQuery({ ...euQueryDoc(f.pessoa.id, d.id), staleTime: 0 }).catch(() => null);
+        // Mesmo formato que documentoQuery devolve, sem reler a ficha para cada documento.
+        for (const d of f.documentos) qc.setQueryData(documentoQuery(f.pessoa.id, d.id).queryKey, { ...f, documento: d, anexos: f.anexos.filter((a) => a.document_id === d.id) });
       }
       await Promise.all([...manter].map((r) => guardarAnexo(r)));
     } catch (e) {
@@ -132,9 +133,6 @@ export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: stri
   }
 }
 
-function euQueryDoc(pid: string, did: string) {
-  return documentoQuery(pid, did);
-}
 
 /** Selo da viagem: "Baixando…" ou há quanto tempo foi atualizada. */
 export function useSeloOffline(tripId: string) {

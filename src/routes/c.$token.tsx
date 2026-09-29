@@ -18,7 +18,7 @@ import { CampoData } from "@/components/FichaPartes";
 import { ACEITA_FOTO, DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
 
 export const Route = createFileRoute("/c/$token")({
-  validateSearch: (s) => z.object({ secao: z.string().optional() }).parse(s),
+  validateSearch: (s: Record<string, unknown>) => ({ secao: typeof s.secao === "string" ? s.secao : undefined }),
   head: () => ({
     meta: [
       { title: "Cadastro de viagem — Evoque" },
