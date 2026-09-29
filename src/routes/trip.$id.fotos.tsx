@@ -169,7 +169,6 @@ function FotosViagem() {
     }
   }
 
-  const [baixando, setBaixando] = useState(false);
 
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selecionando, setSelecionando] = useState(false);
@@ -202,23 +201,6 @@ function FotosViagem() {
     });
   }
 
-  async function baixarTodas() {
-    setBaixando(true);
-    try {
-      // Sem seleção: manda só as pendentes (as já baixadas não vão de novo).
-      const alvo = (sel.size ? mostradas : pendentes).filter((f) => f.url);
-      const blobs = await Promise.all(alvo.map((f) => fetch(f.url!).then((r) => r.blob())));
-      await baixarPasta(blobs);
-      salvarBaixadas(new Set([...baixadas, ...alvo.map((f) => f.id)]));
-      setSel(new Set());
-      setSelecionando(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Não consegui enviar ao Google Drive.");
-    } finally {
-      setBaixando(false);
-      setProgresso("");
-    }
-  }
 
   async function apagarSelecionadas() {
     if (!confApagar) return setConfApagar(true);
@@ -426,21 +408,6 @@ function FotosViagem() {
             {confApagar
               ? `Tem certeza? Apagar ${sel.size}`
               : `Apagar ${sel.size} ${sel.size === 1 ? "foto" : "fotos"}`}
-          </button>
-        )}
-        {souDono && (pendentes.length > 0 || sel.size > 0) && (
-          <button
-            type="button"
-            onClick={baixarTodas}
-            disabled={baixando}
-            className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold"
-          >
-            <Download size={24} strokeWidth={2.2} />{" "}
-            {baixando
-              ? `Enviando ${progresso}…`
-              : sel.size
-                ? `Enviar ${sel.size} ao Google Drive`
-                : `Enviar todas (${pendentes.length}) ao Google Drive`}
           </button>
         )}
         {fotos.length > 0 && pendentes.length === 0 && !verBaixadas && (
