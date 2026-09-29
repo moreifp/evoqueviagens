@@ -57,22 +57,30 @@ function FotosViagem() {
   const [enviando, setEnviando] = useState(0);
   const [aberta, setAberta] = useState<Foto | null>(null);
   const galeria = useRef<HTMLInputElement>(null);
+  // Uploads em andamento e ids das fotos recém-enviadas (para marcá-las como "já no Drive").
+  const uploads = useRef<Promise<void>[]>([]);
+  const idsNovas = useRef<string[]>([]);
 
-  async function enviar(f: File) {
-    setEnviando((n) => n + 1);
-    try {
-      const mini = await comprimir(f, 480, 0.7);
-      const path = `${id}/${crypto.randomUUID()}.jpg`;
-      const up = await supabase.storage.from(BUCKET).upload(path, mini, { contentType: "image/jpeg" });
-      if (up.error) throw up.error;
-      const ins = await supabase.from("trip_photo").insert({ trip_id: id, storage_path: path, tirada_em: new Date(f.lastModified || Date.now()).toISOString() });
-      if (ins.error) { await supabase.storage.from(BUCKET).remove([path]); throw ins.error; }
-    } catch {
-      toast.error("Uma foto não foi enviada. Confira a internet.");
-    } finally {
-      setEnviando((n) => n - 1);
-      void qc.invalidateQueries({ queryKey: ["fotos", id] });
-    }
+  function enviar(f: File) {
+    const p = (async () => {
+      setEnviando((n) => n + 1);
+      try {
+        const mini = await comprimir(f, 480, 0.7);
+        const path = `${id}/${crypto.randomUUID()}.jpg`;
+        const up = await supabase.storage.from(BUCKET).upload(path, mini, { contentType: "image/jpeg" });
+        if (up.error) throw up.error;
+        const ins = await supabase.from("trip_photo").insert({ trip_id: id, storage_path: path, tirada_em: new Date(f.lastModified || Date.now()).toISOString() }).select("id").single();
+        if (ins.error) { await supabase.storage.from(BUCKET).remove([path]); throw ins.error; }
+        idsNovas.current.push(ins.data.id);
+      } catch {
+        toast.error("Uma foto não foi enviada. Confira a internet.");
+      } finally {
+        setEnviando((n) => n - 1);
+        void qc.invalidateQueries({ queryKey: ["fotos", id] });
+      }
+    })();
+    uploads.current.push(p);
+    void p.finally(() => { uploads.current = uploads.current.filter((x) => x !== p); });
   }
 
   function receber(fs: File[]) {
