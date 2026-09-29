@@ -12,7 +12,7 @@ const input = z.object({
   esperado: z.enum(["voo", "hotel", "reserva", "despesa"]).optional(),
 });
 
-/** Modelo da leitura de reservas (trocar aqui). Comparado com google/gemini-2.5-flash em 29/09: ver AGENTS.md. */
+/** Modelo da leitura de reservas (trocar aqui). Gemini 2.5 Flash testado em 29/09: errou valor, horário e bagagem; mantido este. */
 export const MODELO_LEITURA = "openai/gpt-6-astra";
 
 const TIPOS = ["voo", "trem", "onibus", "hotel", "carro", "passeio", "restaurante", "outro", "despesa"] as const;
