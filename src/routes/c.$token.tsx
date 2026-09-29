@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { z } from "zod";
 import {
   User, BookOpen, Stamp, Award, SlidersHorizontal, Phone, Camera, Check, CheckCircle2, RotateCcw, Plus,
   IdCard, Car, Syringe, ShieldPlus, Plane, Home, PauseCircle, X, ChevronRight,
