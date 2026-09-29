@@ -618,29 +618,3 @@ export const enviarCadastro = createServerFn({ method: "POST" })
       .eq("id", pid);
     return { ok: true, cadastro: await carregar(db, pid) };
   });
-
-/** Cria a conta de login só para e-mails da lista de admins. */
-export const verificarAdmin = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ email: z.string().email().max(200) }).parse(d))
-  .handler(async ({ data }) => {
-    const db = await adminClient();
-    const email = data.email.trim().toLowerCase();
-    const { data: adm } = await db.from("app_admin").select("email").ilike("email", email).maybeSingle();
-    return { ok: !!adm };
-  });
-
-export const cadastrarAdmin = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ email: z.string().email().max(200), senha: z.string().min(6).max(100) }).parse(d))
-  .handler(async ({ data }) => {
-    const db = await adminClient();
-    const email = data.email.trim().toLowerCase();
-    const { data: adm } = await db.from("app_admin").select("email").ilike("email", email).maybeSingle();
-    if (!adm) return { ok: false as const, erro: "NAO_ADMIN" };
-    const { error } = await db.auth.admin.createUser({ email, password: data.senha, email_confirm: true });
-    if (error) {
-      const m = error.message.toLowerCase();
-      if (m.includes("already")) return { ok: false as const, erro: "JA_EXISTE" };
-      return { ok: false as const, erro: "FALHA" };
-    }
-    return { ok: true as const };
-  });
