@@ -49,9 +49,20 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     valor: inicial?.valor != null ? String(inicial.valor) : "",
     moeda: inicial?.moeda ?? moedaPadrao,
   }));
-  const [pessoas, setPessoas] = useState<PessoaF[]>(() => (inicial?.pessoas ?? []).map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel ?? "" })));
+  const [pessoas, setPessoas] = useState<PessoaF[]>(() =>
+    (inicial?.pessoas ?? []).map((p) => ({
+      id: p.id,
+      person_id: p.person_id,
+      papel: p.papel ?? "",
+    })),
+  );
   const [salvando, setSalvando] = useState(false);
-  const [geo, setGeo] = useState(() => ({ lat: inicial?.lat ?? null, lng: inicial?.lng ?? null, place_id: inicial?.place_id ?? null, site: inicial?.site ?? null }));
+  const [geo, setGeo] = useState(() => ({
+    lat: inicial?.lat ?? null,
+    lng: inicial?.lng ?? null,
+    place_id: inicial?.place_id ?? null,
+    site: inicial?.site ?? null,
+  }));
   function escolherLugar(l: Lugar) {
     setF((v) => ({
       ...v,
@@ -70,30 +81,69 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       const p = ed.payload as unknown as { id: string; valores: Reserva; pessoas: PessoaF[] };
       const v = p.valores;
       setClaude({ inboxId: ed.inboxId, id: p.id });
-      setF({ tipo: v.tipo as typeof f.tipo, titulo: v.titulo, inicio_tz: v.inicio_tz, fim_tz: v.fim_tz ?? v.inicio_tz, inicio: utcParaLocal(v.inicio_utc, v.inicio_tz), fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "", local: v.local ?? "", telefone: v.telefone ?? "", cidade: v.cidade ?? "", localizador: v.localizador ?? "", valor: v.valor != null ? String(v.valor) : "", moeda: v.moeda ?? moedaPadrao });
-      setGeo({ lat: v.lat ?? null, lng: v.lng ?? null, place_id: v.place_id ?? null, site: v.site ?? null });
-      setPessoas(p.pessoas.map((x) => ({ id: x.id, person_id: x.person_id, papel: x.papel ?? "" })));
+      setF({
+        tipo: v.tipo as typeof f.tipo,
+        titulo: v.titulo,
+        inicio_tz: v.inicio_tz,
+        fim_tz: v.fim_tz ?? v.inicio_tz,
+        inicio: utcParaLocal(v.inicio_utc, v.inicio_tz),
+        fim: v.fim_utc ? utcParaLocal(v.fim_utc, v.fim_tz ?? v.inicio_tz) : "",
+        local: v.local ?? "",
+        telefone: v.telefone ?? "",
+        cidade: v.cidade ?? "",
+        localizador: v.localizador ?? "",
+        valor: v.valor != null ? String(v.valor) : "",
+        moeda: v.moeda ?? moedaPadrao,
+      });
+      setGeo({
+        lat: v.lat ?? null,
+        lng: v.lng ?? null,
+        place_id: v.place_id ?? null,
+        site: v.site ?? null,
+      });
+      setPessoas(
+        p.pessoas.map((x) => ({ id: x.id, person_id: x.person_id, papel: x.papel ?? "" })),
+      );
       return;
     }
-    const raw = sessionStorage.getItem(`evoque-import-${tripId}`); if (!raw) return;
+    const raw = sessionStorage.getItem(`evoque-import-${tripId}`);
+    if (!raw) return;
     sessionStorage.removeItem(`evoque-import-${tripId}`);
     aplicar(JSON.parse(raw) as Leitura);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicial, tripId]);
   function aplicar(x: Leitura) {
     const tipo = (["carro", "passeio", "restaurante", "outro"] as const).find((t) => t === x.tipo);
-    setF((v) => ({ ...v, tipo: tipo ?? v.tipo, titulo: x.titulo ?? v.titulo, inicio: dataLocal(x.inicio) || v.inicio, fim: dataLocal(x.fim) || v.fim, local: x.local ?? v.local, cidade: x.cidade ?? v.cidade, localizador: x.localizador ?? v.localizador, valor: x.valor == null ? v.valor : String(x.valor), moeda: x.moeda ?? v.moeda }));
-    const pids = [...new Set((x.pessoas ?? []).map((n) => casarPessoa(n, membros)).filter(Boolean) as string[])];
+    setF((v) => ({
+      ...v,
+      tipo: tipo ?? v.tipo,
+      titulo: x.titulo ?? v.titulo,
+      inicio: dataLocal(x.inicio) || v.inicio,
+      fim: dataLocal(x.fim) || v.fim,
+      local: x.local ?? v.local,
+      cidade: x.cidade ?? v.cidade,
+      localizador: x.localizador ?? v.localizador,
+      valor: x.valor == null ? v.valor : String(x.valor),
+      moeda: x.moeda ?? v.moeda,
+    }));
+    const pids = [
+      ...new Set((x.pessoas ?? []).map((n) => casarPessoa(n, membros)).filter(Boolean) as string[]),
+    ];
     if (pids.length) setPessoas(pids.map((pid) => ({ id: novoId(), person_id: pid, papel: "" })));
   }
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((v) => ({ ...v, [k]: e.target.value }));
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setF((v) => ({ ...v, [k]: e.target.value }));
   const nome = (pid: string) => {
     const m = membros.find((x) => x.person_id === pid);
     return m ? m.apelido || m.nome : "?";
   };
 
   function alternar(pid: string) {
-    setPessoas((l) => (l.some((p) => p.person_id === pid) ? l.filter((p) => p.person_id !== pid) : [...l, { id: novoId(), person_id: pid, papel: "" }]));
+    setPessoas((l) =>
+      l.some((p) => p.person_id === pid)
+        ? l.filter((p) => p.person_id !== pid)
+        : [...l, { id: novoId(), person_id: pid, papel: "" }],
+    );
   }
 
   async function salvar(e: React.FormEvent) {
@@ -116,12 +166,32 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
       moeda: f.valor ? f.moeda : null,
       ...geo,
     };
-    const rows = pessoas.map((p) => ({ id: p.id, person_id: p.person_id, papel: p.papel.trim() || null }));
-    const ops: Op[] = montarOpsReserva({ tripId, id, valores: claude ? ({ ...valores, origem: "agente" } as typeof valores) : valores, pessoas: rows, inicial });
+    const rows = pessoas.map((p) => ({
+      id: p.id,
+      person_id: p.person_id,
+      papel: p.papel.trim() || null,
+    }));
+    const ops: Op[] = montarOpsReserva({
+      tripId,
+      id,
+      valores: claude ? ({ ...valores, origem: "agente" } as typeof valores) : valores,
+      pessoas: rows,
+      inicial,
+    });
     if (claude) ops.push(baixa(claude.inboxId, "confirmado", id, tripId));
 
-    const novo = { ...(inicial ?? { criado_por: null }), id, trip_id: tripId, ...valores, pessoas: rows.map((r) => ({ ...r, reservation_id: id })) } as Reserva;
-    naTela<Reserva>(qc, reservasQuery(tripId).queryKey, (l) => [...l.filter((x) => x.id !== id), novo].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)));
+    const novo = {
+      ...(inicial ?? { criado_por: null }),
+      id,
+      trip_id: tripId,
+      ...valores,
+      pessoas: rows.map((r) => ({ ...r, reservation_id: id })),
+    } as Reserva;
+    naTela<Reserva>(qc, reservasQuery(tripId).queryKey, (l) =>
+      [...l.filter((x) => x.id !== id), novo].sort((a, b) =>
+        a.inicio_utc.localeCompare(b.inicio_utc),
+      ),
+    );
     noRoteiro(qc, tripId, {
       item_tipo: "reservation",
       item_id: id,
@@ -142,7 +212,9 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
     });
     try {
       const r = await enviar(ops);
-      await anexarImportado(tripId, "reservation", id).catch((e: Error) => toast.error(`Reserva salva, mas o anexo não subiu: ${e.message}`));
+      await anexarImportado(tripId, "reservation", id).catch((e: Error) =>
+        toast.error(`Reserva salva, mas o anexo não subiu: ${e.message}`),
+      );
       toast.success(aviso(r, "Reserva salva"));
       if (r === "salvo") void qc.invalidateQueries({ queryKey: ["roteiro", tripId] });
       if (claude) void qc.invalidateQueries({ queryKey: ["caixa-claude"] });
@@ -168,13 +240,28 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
         </select>
       </Campo>
       <Campo rotulo="Nome">
-        <input required value={f.titulo} onChange={set("titulo")} placeholder="Localiza · retirada no aeroporto" className={inputCls} />
+        <input
+          required
+          value={f.titulo}
+          onChange={set("titulo")}
+          placeholder="Localiza · retirada no aeroporto"
+          className={inputCls}
+        />
       </Campo>
       <div>
         <Campo rotulo="Início (hora local)">
-          <input type="datetime-local" required value={f.inicio} onChange={set("inicio")} className={inputCls} />
+          <input
+            type="datetime-local"
+            required
+            value={f.inicio}
+            onChange={set("inicio")}
+            className={inputCls}
+          />
         </Campo>
-        <TrocarFuso valor={f.inicio_tz} onChange={(tz) => setF((v) => ({ ...v, inicio_tz: tz, fim_tz: tz }))} />
+        <TrocarFuso
+          valor={f.inicio_tz}
+          onChange={(tz) => setF((v) => ({ ...v, inicio_tz: tz, fim_tz: tz }))}
+        />
       </div>
       <Campo rotulo="Fim (opcional)">
         <input type="datetime-local" value={f.fim} onChange={set("fim")} className={inputCls} />
@@ -191,19 +278,33 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
           placeholder="Digite o nome ou endereço para buscar"
         />
       </Campo>
-      {geo.lat != null && <p className="text-base text-muted-foreground">Local do mapa · horário local {f.inicio_tz}</p>}
+      {geo.lat != null && (
+        <p className="text-base text-muted-foreground">
+          Local do mapa · horário local {f.inicio_tz}
+        </p>
+      )}
       <Campo rotulo="Telefone">
-        <input type="tel" value={f.telefone} onChange={set("telefone")} placeholder="+27 21 123 4567" className={`${inputCls} mono-code`} />
+        <input
+          type="tel"
+          value={f.telefone}
+          onChange={set("telefone")}
+          placeholder="+27 21 123 4567"
+          className={`${inputCls} mono-code`}
+        />
       </Campo>
       <Campo rotulo="Cidade">
         <input value={f.cidade} onChange={set("cidade")} className={inputCls} />
       </Campo>
       <Campo rotulo="Localizador">
-        <input value={f.localizador} onChange={set("localizador")} className={`${inputCls} mono-code`} />
+        <input
+          value={f.localizador}
+          onChange={set("localizador")}
+          className={`${inputCls} mono-code`}
+        />
       </Campo>
       <Campo rotulo="Valor">
-          <input inputMode="decimal" value={f.valor} onChange={set("valor")} className={inputCls} />
-        </Campo>
+        <input inputMode="decimal" value={f.valor} onChange={set("valor")} className={inputCls} />
+      </Campo>
       <CampoMoeda value={f.moeda} onChange={(m) => setF((v) => ({ ...v, moeda: m }))} />
 
       <section className="space-y-3">
@@ -213,14 +314,23 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
           return (
             <div key={m.person_id} className="rounded-2xl border-2 border-border bg-card p-3">
               <label className="flex min-h-[56px] items-center gap-3 text-lg font-bold">
-                <input type="checkbox" checked={!!p} onChange={() => alternar(m.person_id)} className="h-7 w-7 accent-[var(--accent)]" />
+                <input
+                  type="checkbox"
+                  checked={!!p}
+                  onChange={() => alternar(m.person_id)}
+                  className="h-7 w-7 accent-[var(--accent)]"
+                />
                 {m.apelido || m.nome}
               </label>
               {p && f.tipo === "carro" && (
                 <input
                   value={p.papel}
                   placeholder="Papel (ex.: motorista)"
-                  onChange={(e) => setPessoas((l) => l.map((x) => (x.id === p.id ? { ...x, papel: e.target.value } : x)))}
+                  onChange={(e) =>
+                    setPessoas((l) =>
+                      l.map((x) => (x.id === p.id ? { ...x, papel: e.target.value } : x)),
+                    )
+                  }
                   className={`${inputCls} mt-2`}
                 />
               )}
@@ -229,7 +339,11 @@ export function FormReserva({ tripId, inicial }: { tripId: string; inicial?: Res
         })}
       </section>
 
-      <button type="submit" disabled={salvando} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold">
+      <button
+        type="submit"
+        disabled={salvando}
+        className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
+      >
         <Check size={28} strokeWidth={2.2} />
         {inicial ? "Salvar mudanças" : "Salvar reserva"}
       </button>

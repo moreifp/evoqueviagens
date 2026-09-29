@@ -100,16 +100,24 @@ export function MarketingPage({ page, preview = false }: MarketingPageProps) {
       await navigator.clipboard.writeText(copyButton.dataset.copy ?? "");
       if (status) status.textContent = isEnglish ? "Copied." : "Copiado.";
     } catch {
-      if (status) status.textContent = isEnglish ? "Select and copy the text above." : "Selecione e copie o texto acima.";
+      if (status)
+        status.textContent = isEnglish
+          ? "Select and copy the text above."
+          : "Selecione e copie o texto acima.";
     }
   };
 
   useEffect(() => {
     const button = rootRef.current?.querySelector<HTMLButtonElement>(".theme-toggle");
     if (!button) return;
-    button.textContent = theme === "dark"
-      ? (isEnglish ? "Light appearance" : "Aparência clara")
-      : (isEnglish ? "Dark appearance" : "Aparência escura");
+    button.textContent =
+      theme === "dark"
+        ? isEnglish
+          ? "Light appearance"
+          : "Aparência clara"
+        : isEnglish
+          ? "Dark appearance"
+          : "Aparência escura";
     button.setAttribute("aria-pressed", String(theme === "dark"));
   }, [isEnglish, theme]);
 

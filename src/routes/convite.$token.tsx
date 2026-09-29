@@ -32,7 +32,11 @@ function Convite() {
   const qc = useQueryClient();
   const ver = useServerFn(verConvite);
   const aceitar = useServerFn(aceitarConvite);
-  const { data: c, isLoading } = useQuery({ queryKey: ["convite", token], queryFn: () => ver({ data: { token } }), retry: 1 });
+  const { data: c, isLoading } = useQuery({
+    queryKey: ["convite", token],
+    queryFn: () => ver({ data: { token } }),
+    retry: 1,
+  });
   const [blocos, setBlocos] = useState<Bloco[]>(TODOS_BLOCOS);
   const [trips, setTrips] = useState<string[] | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -58,7 +62,10 @@ function Convite() {
           <>
             <h1 className="text-3xl">Convite</h1>
             <p className="text-lg text-foreground">{ERROS[c.erro] ?? ERROS.INVALIDO}</p>
-            <button onClick={() => navigate({ to: "/" })} className="tap w-full rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
+            <button
+              onClick={() => navigate({ to: "/" })}
+              className="tap w-full rounded-2xl bg-primary text-xl font-bold text-primary-foreground"
+            >
               Ir para o app
             </button>
           </>
@@ -71,8 +78,15 @@ function Convite() {
                 {c.deNome} já começou sua ficha. Ao aceitar, ela passa a ser sua: só você edita.
               </p>
             )}
-            <p className="text-lg text-foreground">Escolha o que {c.deNome} pode ver. Dá para mudar ou revogar quando quiser.</p>
-            <EscolherBlocos valor={blocos} onChange={setBlocos} tripIds={trips} onTrips={setTrips} />
+            <p className="text-lg text-foreground">
+              Escolha o que {c.deNome} pode ver. Dá para mudar ou revogar quando quiser.
+            </p>
+            <EscolherBlocos
+              valor={blocos}
+              onChange={setBlocos}
+              tripIds={trips}
+              onTrips={setTrips}
+            />
             <button
               onClick={() => ok(blocos)}
               disabled={enviando}
@@ -85,7 +99,9 @@ function Convite() {
         {c?.ok && c.direcao === "oferta" && (
           <>
             <h1 className="text-3xl">{c.deNome} compartilhou dados de viagem com você</h1>
-            <p className="text-lg text-foreground">Você vai ver: {c.blocos.map(nomeBloco).join(" · ")}. Só leitura.</p>
+            <p className="text-lg text-foreground">
+              Você vai ver: {c.blocos.map(nomeBloco).join(" · ")}. Só leitura.
+            </p>
             <button
               onClick={() => ok([])}
               disabled={enviando}

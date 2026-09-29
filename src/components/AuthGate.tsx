@@ -41,10 +41,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       if (!navigator.onLine) void aplicar(sessaoGuardada());
     }, 1500);
     // Erro de rede (Wi-Fi de avião sem internet, portal) conta como offline: usa a sessão guardada.
-    const deRede = (e: unknown) => /fetch|network|timeout|abort|load failed/i.test(String((e as Error)?.message ?? e));
-    supabase.auth.getSession()
-      .then(({ data, error }) => { if (error && deRede(error)) erroRede = true; return aplicar(data.session ?? (erroRede ? sessaoGuardada() : null)); })
-      .catch((e) => { erroRede = deRede(e) || true; return aplicar(sessaoGuardada()); });
+    const deRede = (e: unknown) =>
+      /fetch|network|timeout|abort|load failed/i.test(String((e as Error)?.message ?? e));
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error && deRede(error)) erroRede = true;
+        return aplicar(data.session ?? (erroRede ? sessaoGuardada() : null));
+      })
+      .catch((e) => {
+        erroRede = deRede(e) || true;
+        return aplicar(sessaoGuardada());
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
       // Refresh que falhou por rede dispara SIGNED_OUT sem sessão: não derruba se houver sessão guardada.
       if (!s && e !== "SIGNED_OUT") erroRede = true;
@@ -76,8 +84,12 @@ function sessaoGuardada(): Session | null {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i) ?? "";
       if (!/^sb-.+-auth-token$/.test(k)) continue;
-      const v = JSON.parse(localStorage.getItem(k) ?? "null") as Session | { currentSession?: Session } | null;
-      const s = (v && "access_token" in v ? v : (v as { currentSession?: Session } | null)?.currentSession) ?? null;
+      const v = JSON.parse(localStorage.getItem(k) ?? "null") as
+        Session | { currentSession?: Session } | null;
+      const s =
+        (v && "access_token" in v
+          ? v
+          : (v as { currentSession?: Session } | null)?.currentSession) ?? null;
       if (s?.user) return s as Session;
     }
   } catch {
@@ -94,7 +106,8 @@ function traduzErro(msg: string): { texto: string; espera?: number } {
     return { texto: "Aguarde um minuto antes de tentar de novo.", espera: s };
   }
   if (m.includes("invalid login credentials")) return { texto: "E-mail ou senha incorretos." };
-  if (m.includes("email not confirmed")) return { texto: "Este e-mail ainda não foi liberado. Tente entrar de novo." };
+  if (m.includes("email not confirmed"))
+    return { texto: "Este e-mail ainda não foi liberado. Tente entrar de novo." };
   if (m.includes("user already registered") || m.includes("already been registered"))
     return { texto: "Já existe uma conta com este e-mail. Toque em Entrar." };
   if (m.includes("password should be at least"))
@@ -118,7 +131,9 @@ function Entrar() {
     if (carregando) return;
     setCarregando(true);
     try {
-      const r = await lovable.auth.signInWithOAuth(provedor, { redirect_uri: window.location.href });
+      const r = await lovable.auth.signInWithOAuth(provedor, {
+        redirect_uri: window.location.href,
+      });
       if (r.error || r.redirected) {
         setCarregando(false);
         if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
@@ -168,7 +183,6 @@ function Entrar() {
     }
     if (!data.session) toast.error("Não deu certo agora. Tente de novo em instantes.");
   }
-
 
   return (
     <div className="min-h-screen bg-background px-5 pt-16 pb-10">
@@ -236,18 +250,13 @@ function Entrar() {
             className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-60"
           >
             <LogIn size={28} strokeWidth={2.2} />
-            {espera > 0
-              ? `Aguarde ${espera}s`
-              : modo === "entrar"
-                ? "Entrar"
-                : "Criar minha conta"}
+            {espera > 0 ? `Aguarde ${espera}s` : modo === "entrar" ? "Entrar" : "Criar minha conta"}
           </button>
           {espera > 0 && (
             <p className="text-center text-base text-muted-foreground">
               Muitas tentativas seguidas. Tente de novo em {espera} segundos.
             </p>
           )}
-
         </form>
 
         <button

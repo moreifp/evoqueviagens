@@ -50,7 +50,8 @@ export function ZonaArquivo({
 
   function receber(f: File | undefined) {
     if (!f) return;
-    if (!aceitavel(f, aceita)) return void toast.error(aceita.includes("pdf") ? "Use uma foto ou um PDF." : "Use uma foto.");
+    if (!aceitavel(f, aceita))
+      return void toast.error(aceita.includes("pdf") ? "Use uma foto ou um PDF." : "Use uma foto.");
     cb.current(f);
   }
 
@@ -113,7 +114,19 @@ export function DicaArrastar({ en = false }: { en?: boolean }) {
 }
 
 /** Botão "Tirar foto" com câmera ao vivo (computador e telefone). Painel inline, não modal. */
-export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: { onFoto: (f: File) => void; en?: boolean; className?: string; rotulo?: string; sub?: string }) {
+export function TirarFoto({
+  onFoto,
+  en = false,
+  className = "",
+  rotulo,
+  sub,
+}: {
+  onFoto: (f: File) => void;
+  en?: boolean;
+  className?: string;
+  rotulo?: string;
+  sub?: string;
+}) {
   const [aberta, setAberta] = useState(false);
   const [erro, setErro] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -127,7 +140,9 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
   async function abrir() {
     setErro(false);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
       streamRef.current = stream;
       setAberta(true);
       requestAnimationFrame(() => {
@@ -135,7 +150,11 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
       });
     } catch {
       setErro(true);
-      toast.error(en ? "I couldn't access the camera. You can choose a photo instead." : "Não consegui acessar a câmera. Você pode escolher uma foto da galeria.");
+      toast.error(
+        en
+          ? "I couldn't access the camera. You can choose a photo instead."
+          : "Não consegui acessar a câmera. Você pode escolher uma foto da galeria.",
+      );
     }
   }
 
@@ -147,7 +166,11 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
   function capturar() {
     const v = videoRef.current;
     if (!v || !v.videoWidth) {
-      toast.error(en ? "Wait for the camera to load and try again." : "Aguarde a câmera carregar e tente de novo.");
+      toast.error(
+        en
+          ? "Wait for the camera to load and try again."
+          : "Aguarde a câmera carregar e tente de novo.",
+      );
       return;
     }
     const c = document.createElement("canvas");
@@ -168,13 +191,23 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
 
   if (aberta)
     return (
-      <div className={`flex flex-col gap-3 rounded-xl border-2 border-border bg-card p-3 ${className}`}>
+      <div
+        className={`flex flex-col gap-3 rounded-xl border-2 border-border bg-card p-3 ${className}`}
+      >
         <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg bg-black" />
         <div className="flex gap-3">
-          <button type="button" onClick={capturar} className="tap flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground">
+          <button
+            type="button"
+            onClick={capturar}
+            className="tap flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground"
+          >
             <Camera size={24} strokeWidth={2.2} aria-hidden /> {en ? "Capture" : "Capturar"}
           </button>
-          <button type="button" onClick={fechar} className="tap flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-border px-5 text-lg text-foreground">
+          <button
+            type="button"
+            onClick={fechar}
+            className="tap flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-border px-5 text-lg text-foreground"
+          >
             <X size={24} strokeWidth={2.2} aria-hidden /> {en ? "Cancel" : "Cancelar"}
           </button>
         </div>
@@ -189,18 +222,32 @@ export function TirarFoto({ onFoto, en = false, className = "", rotulo, sub }: {
       className={`tap flex min-h-14 items-center justify-center gap-2 rounded-xl px-5 text-lg ${className.includes("gradient-hero") ? "" : "border-2 border-border text-foreground"} ${className}`}
     >
       <Camera size={sub ? 32 : 24} strokeWidth={2.2} aria-hidden className="shrink-0" />
-      {sub ? <span className="text-left"><span className="block">{rotulo}</span><span className="block text-base font-medium">{sub}</span></span> : (rotulo ?? (en ? "Take photo" : "Tirar foto"))}
+      {sub ? (
+        <span className="text-left">
+          <span className="block">{rotulo}</span>
+          <span className="block text-base font-medium">{sub}</span>
+        </span>
+      ) : (
+        (rotulo ?? (en ? "Take photo" : "Tirar foto"))
+      )}
     </button>
   );
 }
 
 export function previaDe(f: File): string {
   if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) return "pdf";
-  if (!f.type.startsWith("image/") && !/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name)) return "arquivo";
+  if (!f.type.startsWith("image/") && !/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name))
+    return "arquivo";
   return URL.createObjectURL(f);
 }
 
-export function Miniatura({ src, className = "" }: { src: string | null | undefined; className?: string }) {
+export function Miniatura({
+  src,
+  className = "",
+}: {
+  src: string | null | undefined;
+  className?: string;
+}) {
   if (!src) return null;
   if (src === "pdf" || /\.pdf(\?|$)/i.test(src))
     return (

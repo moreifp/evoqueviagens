@@ -31,20 +31,33 @@ export function AcoesItem({
     const item = lista.find((x) => x.id === id);
     const itemR = roteiro.find((x) => x.item_id === id);
     const restaurar = () => {
-      if (item) naTela<{ id: string }>(qc, queryKey, (l) => [...l.filter((x) => x.id !== id), item]);
-      if (itemR) naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) => [...l.filter((x) => x.item_id !== id), itemR].sort((a, b) => a.inicio_utc.localeCompare(b.inicio_utc)));
+      if (item)
+        naTela<{ id: string }>(qc, queryKey, (l) => [...l.filter((x) => x.id !== id), item]);
+      if (itemR)
+        naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) =>
+          [...l.filter((x) => x.item_id !== id), itemR].sort((a, b) =>
+            a.inicio_utc.localeCompare(b.inicio_utc),
+          ),
+        );
     };
     naTela<{ id: string }>(qc, queryKey, (l) => l.filter((x) => x.id !== id));
     naTela<ItemRoteiro>(qc, ["roteiro", tripId], (l) => l.filter((x) => x.item_id !== id));
     try {
-      const r = await mutar({ tipo: "update", tabela, id, valores: { deleted_at: new Date().toISOString() } });
+      const r = await mutar({
+        tipo: "update",
+        tabela,
+        id,
+        valores: { deleted_at: new Date().toISOString() },
+      });
       toast(aviso(r, "Apagado"), {
         duration: 10_000,
         action: {
           label: "Desfazer",
           onClick: () => {
             restaurar();
-            void mutar({ tipo: "update", tabela, id, valores: { deleted_at: null } }).then((x) => toast.success(aviso(x, "Voltou")));
+            void mutar({ tipo: "update", tabela, id, valores: { deleted_at: null } }).then((x) =>
+              toast.success(aviso(x, "Voltou")),
+            );
           },
         },
       });
@@ -54,16 +67,25 @@ export function AcoesItem({
     }
   }
 
-  if (destaque) return (
-    <div className="grid grid-cols-2 gap-2">
-      <Link to={editarPara} params={{ id: tripId }} search={{ editar: id } as never} className={`novo-botao tap flex items-center justify-center gap-2 rounded-2xl text-lg font-bold text-white ${destaque === "voos" ? "bg-voos" : "bg-hosp"}`}>
-        <Pencil size={24} strokeWidth={2.2} /> Editar
-      </Link>
-      <button onClick={apagar} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-destructive text-lg font-bold text-destructive">
-        <Trash2 size={24} strokeWidth={2.2} /> Apagar
-      </button>
-    </div>
-  );
+  if (destaque)
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        <Link
+          to={editarPara}
+          params={{ id: tripId }}
+          search={{ editar: id } as never}
+          className={`novo-botao tap flex items-center justify-center gap-2 rounded-2xl text-lg font-bold text-white ${destaque === "voos" ? "bg-voos" : "bg-hosp"}`}
+        >
+          <Pencil size={24} strokeWidth={2.2} /> Editar
+        </Link>
+        <button
+          onClick={apagar}
+          className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-destructive text-lg font-bold text-destructive"
+        >
+          <Trash2 size={24} strokeWidth={2.2} /> Apagar
+        </button>
+      </div>
+    );
   return (
     <div className="grid grid-cols-2 border-t border-border">
       <Link
@@ -74,7 +96,10 @@ export function AcoesItem({
       >
         <Pencil size={24} strokeWidth={2.2} /> Editar
       </Link>
-      <button onClick={apagar} className="tap flex items-center justify-center gap-2 border-l border-border text-lg font-bold text-destructive">
+      <button
+        onClick={apagar}
+        className="tap flex items-center justify-center gap-2 border-l border-border text-lg font-bold text-destructive"
+      >
         <Trash2 size={24} strokeWidth={2.2} /> Apagar
       </button>
     </div>

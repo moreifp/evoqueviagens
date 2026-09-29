@@ -32,10 +32,15 @@ export function EditarItem({
     void qc.cancelQueries({ queryKey });
     qc.setQueryData<Linha[]>(queryKey, (lista) => (lista ? f(lista) : lista));
   }
-  const aviso = (r: "salvo" | "fila", ok: string) => (r === "fila" ? "Sem internet · salvo no aparelho" : ok);
+  const aviso = (r: "salvo" | "fila", ok: string) =>
+    r === "fila" ? "Sem internet · salvo no aparelho" : ok;
 
   function abrir() {
-    setForm(Object.fromEntries(campos.map((c) => [c.chave, item[c.chave] == null ? "" : String(item[c.chave])])));
+    setForm(
+      Object.fromEntries(
+        campos.map((c) => [c.chave, item[c.chave] == null ? "" : String(item[c.chave])]),
+      ),
+    );
     setAberto(true);
   }
 
@@ -46,7 +51,8 @@ export function EditarItem({
       const antes = item[c.chave] == null ? "" : String(item[c.chave]);
       const agora = (form[c.chave] ?? "").trim();
       if (agora === antes) continue;
-      valores[c.chave] = agora === "" ? null : c.tipo === "number" ? Number(agora.replace(",", ".")) : agora;
+      valores[c.chave] =
+        agora === "" ? null : c.tipo === "number" ? Number(agora.replace(",", ".")) : agora;
     }
     if (Object.keys(valores).length === 0) return setAberto(false);
     if (ajustar) valores = ajustar(valores, item);
@@ -65,7 +71,12 @@ export function EditarItem({
     const agora = new Date().toISOString();
     aplicarNaTela((l) => l.filter((x) => x.id !== item.id));
     try {
-      const r = await mutar({ tipo: "update", tabela, id: item.id, valores: { deleted_at: agora } });
+      const r = await mutar({
+        tipo: "update",
+        tabela,
+        id: item.id,
+        valores: { deleted_at: agora },
+      });
       toast(aviso(r, "Apagado"), {
         duration: 10_000,
         action: {
@@ -85,10 +96,16 @@ export function EditarItem({
   if (!aberto) {
     return (
       <div className="grid grid-cols-2 border-t border-border">
-        <button onClick={abrir} className="tap flex items-center justify-center gap-2 text-lg font-bold text-foreground">
+        <button
+          onClick={abrir}
+          className="tap flex items-center justify-center gap-2 text-lg font-bold text-foreground"
+        >
           <Pencil size={24} strokeWidth={2.2} /> Editar
         </button>
-        <button onClick={apagar} className="tap flex items-center justify-center gap-2 border-l border-border text-lg font-bold text-destructive">
+        <button
+          onClick={apagar}
+          className="tap flex items-center justify-center gap-2 border-l border-border text-lg font-bold text-destructive"
+        >
           <Trash2 size={24} strokeWidth={2.2} /> Apagar
         </button>
       </div>
@@ -108,10 +125,16 @@ export function EditarItem({
         </label>
       ))}
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={salvar} className="tap flex items-center justify-center gap-2 rounded-xl bg-primary text-lg font-bold text-primary-foreground">
+        <button
+          onClick={salvar}
+          className="tap flex items-center justify-center gap-2 rounded-xl bg-primary text-lg font-bold text-primary-foreground"
+        >
           <Check size={24} strokeWidth={2.2} /> Salvar
         </button>
-        <button onClick={() => setAberto(false)} className="tap flex items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-foreground">
+        <button
+          onClick={() => setAberto(false)}
+          className="tap flex items-center justify-center gap-2 rounded-xl border-2 border-border text-lg font-bold text-foreground"
+        >
           <X size={24} strokeWidth={2.2} /> Cancelar
         </button>
       </div>

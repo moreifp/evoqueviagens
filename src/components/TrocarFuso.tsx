@@ -9,7 +9,11 @@ export function TrocarFuso({ valor, onChange }: { valor: string; onChange: (tz: 
     return (
       <p className="mt-1 text-base text-muted-foreground">
         Fuso: <span className="font-semibold">{valor.replace(/_/g, " ")}</span>{" "}
-        <button type="button" onClick={() => setAberto(true)} className="min-h-[44px] font-bold text-accent underline">
+        <button
+          type="button"
+          onClick={() => setAberto(true)}
+          className="min-h-[44px] font-bold text-accent underline"
+        >
           trocar fuso
         </button>
       </p>

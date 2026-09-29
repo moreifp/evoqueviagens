@@ -10,14 +10,21 @@ export function SeloOffline({ tripId }: { tripId: string }) {
   const baixando = selo.texto === "Baixando…";
   if (selo.ok || baixando) {
     return (
-      <p role="status" className={`flex items-center gap-2 text-base font-semibold ${selo.ok ? "text-ok" : "text-muted-foreground"}`}>
+      <p
+        role="status"
+        className={`flex items-center gap-2 text-base font-semibold ${selo.ok ? "text-ok" : "text-muted-foreground"}`}
+      >
         <Icone size={22} strokeWidth={2.2} className="shrink-0" />
         {selo.texto}
       </p>
     );
   }
   return (
-    <button type="button" onClick={() => void baixarTudo(qc, true, tripId)} className="tap flex min-h-12 items-center gap-2 rounded-xl bg-warn/10 px-3 text-base font-semibold text-warn">
+    <button
+      type="button"
+      onClick={() => void baixarTudo(qc, true, tripId)}
+      className="tap flex min-h-12 items-center gap-2 rounded-xl bg-warn/10 px-3 text-base font-semibold text-warn"
+    >
       <Icone size={22} strokeWidth={2.2} className="shrink-0" />
       Não salva · Baixar agora
     </button>

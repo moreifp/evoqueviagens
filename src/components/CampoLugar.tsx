@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
-import { autocompletarLugar, detalhesLugar, type Lugar, type Sugestao } from "@/lib/lugares.functions";
+import {
+  autocompletarLugar,
+  detalhesLugar,
+  type Lugar,
+  type Sugestao,
+} from "@/lib/lugares.functions";
 import { inputCls } from "@/components/Form";
 
 /**
@@ -82,10 +87,17 @@ export function CampoLugar({
   return (
     <div className="relative">
       <div className="relative">
-        {online && <Search size={22} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />}
+        {online && (
+          <Search
+            size={22}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        )}
         <input
           value={valor}
-          placeholder={online ? (placeholder ?? "Digite para buscar") : "Sem internet · digite normalmente"}
+          placeholder={
+            online ? (placeholder ?? "Digite para buscar") : "Sem internet · digite normalmente"
+          }
           onChange={(e) => {
             digitou.current = true;
             onTexto(e.target.value);
@@ -97,10 +109,18 @@ export function CampoLugar({
         />
       </div>
       {aberto && sug.length > 0 && (
-        <ul role="listbox" className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-medium">
+        <ul
+          role="listbox"
+          className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-medium"
+        >
           {sug.map((s) => (
             <li key={s.place_id}>
-              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => void escolher(s)} className="flex min-h-[56px] w-full items-center gap-3 px-4 py-2 text-left text-lg hover:bg-muted">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => void escolher(s)}
+                className="flex min-h-[56px] w-full items-center gap-3 px-4 py-2 text-left text-lg hover:bg-muted"
+              >
                 <MapPin size={22} className="shrink-0 text-accent" /> {s.texto}
               </button>
             </li>

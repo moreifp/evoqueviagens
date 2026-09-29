@@ -10,7 +10,14 @@ import { AvatarPessoa } from "@/components/Pessoa";
 import { Dado, NumeroOculto, VerFoto, dataBR } from "@/components/FichaPartes";
 import { inputCls } from "@/components/Form";
 import { fichaQuery, type Ficha, type MudancaRow } from "@/lib/pessoas";
-import { NOME_DOC, NOME_SECAO, TIPOS_EXTRA, TIPOS_VISTO, passosDoModo, type Secao } from "@/lib/cadastro-tipos";
+import {
+  NOME_DOC,
+  NOME_SECAO,
+  TIPOS_EXTRA,
+  TIPOS_VISTO,
+  passosDoModo,
+  type Secao,
+} from "@/lib/cadastro-tipos";
 import { abrirWhatsApp } from "@/lib/links";
 
 export const Route = createFileRoute("/pessoas/$pid/conferir")({
@@ -29,12 +36,32 @@ export const Route = createFileRoute("/pessoas/$pid/conferir")({
 const db = supabase as unknown as { from: (t: string) => any };
 const MOTIVOS = ["Foto escura", "Falta validade", "Foto cortada"];
 const NOME_CAMPO: Record<string, string> = {
-  apelido: "Apelido", cpf: "CPF", telefone: "WhatsApp", email: "E-mail", foto_url: "Foto", sexo: "Sexo",
-  data_nascimento: "Nascimento", nome_como_no_documento: "Nome no passaporte", endereco: "Endereço",
-  emergencia_nome: "Contato", emergencia_parentesco: "Parentesco", emergencia_telefone: "Telefone",
-  numero: "Número", validade: "Validade", emissao: "Emissão", pais_emissor: "País", nome_no_documento: "Nome",
-  detalhe: "Detalhe", arquivo_path: "Foto", tipo: "Novo documento", programa: "Novo programa",
-  deleted_at: "Removido", assento: "Assento", quarto: "Quarto", bebe_alcool: "Bebe álcool", restricoes: "Comida",
+  apelido: "Apelido",
+  cpf: "CPF",
+  telefone: "WhatsApp",
+  email: "E-mail",
+  foto_url: "Foto",
+  sexo: "Sexo",
+  data_nascimento: "Nascimento",
+  nome_como_no_documento: "Nome no passaporte",
+  endereco: "Endereço",
+  emergencia_nome: "Contato",
+  emergencia_parentesco: "Parentesco",
+  emergencia_telefone: "Telefone",
+  numero: "Número",
+  validade: "Validade",
+  emissao: "Emissão",
+  pais_emissor: "País",
+  nome_no_documento: "Nome",
+  detalhe: "Detalhe",
+  arquivo_path: "Foto",
+  tipo: "Novo documento",
+  programa: "Novo programa",
+  deleted_at: "Removido",
+  assento: "Assento",
+  quarto: "Quarto",
+  bebe_alcool: "Bebe álcool",
+  restricoes: "Comida",
   nacionalidades: "Nacionalidade",
 };
 
@@ -53,9 +80,12 @@ function Conferir() {
   const temMudancas = f.mudancas.length > 0;
   const secoes: Secao[] = temMudancas
     ? Array.from(new Set(f.mudancas.map((m) => m.secao)))
-    : passosDoModo(p.modo).filter((s) => f.revisoes.find((r) => r.secao === s)?.status !== "aprovado");
+    : passosDoModo(p.modo).filter(
+        (s) => f.revisoes.find((r) => r.secao === s)?.status !== "aprovado",
+      );
 
-  const d = (s: string): Decisao => dec[s] ?? { aprovado: false, corrigir: false, motivos: [], texto: "" };
+  const d = (s: string): Decisao =>
+    dec[s] ?? { aprovado: false, corrigir: false, motivos: [], texto: "" };
   const set = (s: string, v: Partial<Decisao>) => setDec({ ...dec, [s]: { ...d(s), ...v } });
   const nAprovar = secoes.filter((s) => d(s).aprovado).length;
   const nDevolver = secoes.filter((s) => d(s).corrigir).length;
@@ -71,31 +101,61 @@ function Conferir() {
         const x = d(s);
         if (!x.aprovado && !x.corrigir) continue;
         const recado = [...x.motivos, x.texto.trim()].filter(Boolean).join(" · ") || null;
-        await db.from("person_section_review").upsert(
-          { person_id: pid, secao: s, status: x.aprovado ? "aprovado" : "correcao", recado: x.aprovado ? null : recado, revisado_por: u.user?.email, revisado_em: agora },
-          { onConflict: "person_id,secao" },
-        );
+        await db
+          .from("person_section_review")
+          .upsert(
+            {
+              person_id: pid,
+              secao: s,
+              status: x.aprovado ? "aprovado" : "correcao",
+              recado: x.aprovado ? null : recado,
+              revisado_por: u.user?.email,
+              revisado_em: agora,
+            },
+            { onConflict: "person_id,secao" },
+          );
         const mud = f!.mudancas.filter((m) => m.secao === s);
         if (mud.length) {
           if (!x.aprovado) await reverter(mud);
-          await db.from("person_change").update({ status: x.aprovado ? "aprovado" : "recusado" }).in("id", mud.map((m) => m.id));
+          await db
+            .from("person_change")
+            .update({ status: x.aprovado ? "aprovado" : "recusado" })
+            .in(
+              "id",
+              mud.map((m) => m.id),
+            );
         }
         if (x.corrigir) devolvidas.push({ secao: s, recado: recado ?? "" });
       }
       // Status geral
-      const { data: revs } = await db.from("person_section_review").select("secao, status").eq("person_id", pid);
+      const { data: revs } = await db
+        .from("person_section_review")
+        .select("secao, status")
+        .eq("person_id", pid);
       const obrig = passosDoModo(p.modo);
-      const todas = obrig.every((s) => (revs ?? []).find((r: { secao: string; status: string }) => r.secao === s)?.status !== "correcao");
-      const aprovadas = (revs ?? []).filter((r: { status: string }) => r.status === "aprovado").length;
+      const todas = obrig.every(
+        (s) =>
+          (revs ?? []).find((r: { secao: string; status: string }) => r.secao === s)?.status !==
+          "correcao",
+      );
+      const aprovadas = (revs ?? []).filter(
+        (r: { status: string }) => r.status === "aprovado",
+      ).length;
       const novo = devolvidas.length ? "correcao" : todas && aprovadas > 0 ? "aprovado" : p.status;
       await db.from("person").update({ status: novo }).eq("id", pid);
-      await Promise.all([qc.invalidateQueries({ queryKey: ["pessoas"] }), qc.invalidateQueries({ queryKey: ["ficha", pid] })]);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["pessoas"] }),
+        qc.invalidateQueries({ queryKey: ["ficha", pid] }),
+      ]);
 
       if (devolvidas.length) {
         // Correção acontece no WhatsApp: a pessoa responde lá e o admin atualiza a ficha. Sem link.
         const nome = p.apelido || p.nome.split(" ")[0];
         const recado = devolvidas
-          .map((x) => `${NOME_SECAO[x.secao][p.idioma].toLowerCase()}: ${(x.recado || (p.idioma === "en" ? "please check" : "confira, por favor")).toLowerCase()}`)
+          .map(
+            (x) =>
+              `${NOME_SECAO[x.secao][p.idioma].toLowerCase()}: ${(x.recado || (p.idioma === "en" ? "please check" : "confira, por favor")).toLowerCase()}`,
+          )
           .join("; ");
         const txt =
           p.idioma === "en"
@@ -114,18 +174,26 @@ function Conferir() {
 
   const rotuloBotao =
     nAprovar || nDevolver
-      ? [nAprovar ? `Aprovar ${nAprovar}` : "", nDevolver ? `devolver ${nDevolver}` : ""].filter(Boolean).join(" · ")
+      ? [nAprovar ? `Aprovar ${nAprovar}` : "", nDevolver ? `devolver ${nDevolver}` : ""]
+          .filter(Boolean)
+          .join(" · ")
       : "Marque as partes";
 
   return (
     <div className="min-h-screen bg-background pb-36">
-      <Topo titulo={temMudancas ? "Conferir mudança" : "Conferir ficha"} voltarPara="/pessoas/$pid" voltarParams={{ pid }} />
+      <Topo
+        titulo={temMudancas ? "Conferir mudança" : "Conferir ficha"}
+        voltarPara="/pessoas/$pid"
+        voltarParams={{ pid }}
+      />
       <main className="space-y-4 px-4 pt-4">
         <div className="flex items-center gap-4">
           <AvatarPessoa nome={p.nome} foto={p.foto_url} tamanho={64} />
           <p className="text-2xl font-bold text-foreground">{p.nome}</p>
         </div>
-        {secoes.length === 0 && <p className="text-lg text-muted-foreground">Nada para conferir agora.</p>}
+        {secoes.length === 0 && (
+          <p className="text-lg text-muted-foreground">Nada para conferir agora.</p>
+        )}
         {secoes.map((s) => {
           const x = d(s);
           return (
@@ -136,14 +204,22 @@ function Conferir() {
                   aria-pressed={x.aprovado}
                   onClick={() => set(s, { aprovado: !x.aprovado, corrigir: false })}
                   className={`tap flex items-center gap-2 rounded-xl border-2 px-4 text-lg font-bold ${
-                    x.aprovado ? "border-ok bg-ok text-ok-foreground" : "border-border text-foreground"
+                    x.aprovado
+                      ? "border-ok bg-ok text-ok-foreground"
+                      : "border-border text-foreground"
                   }`}
                 >
                   <Check size={24} strokeWidth={2.2} />
                   {x.aprovado ? "Aprovado" : "Aprovar"}
                 </button>
               </div>
-              <div className="mt-2">{temMudancas ? <Mudancas lista={f.mudancas.filter((m) => m.secao === s)} /> : <ConteudoSecao f={f} secao={s} />}</div>
+              <div className="mt-2">
+                {temMudancas ? (
+                  <Mudancas lista={f.mudancas.filter((m) => m.secao === s)} />
+                ) : (
+                  <ConteudoSecao f={f} secao={s} />
+                )}
+              </div>
               {!x.corrigir ? (
                 <button
                   onClick={() => set(s, { corrigir: true, aprovado: false })}
@@ -159,9 +235,17 @@ function Conferir() {
                       <button
                         key={m}
                         aria-pressed={x.motivos.includes(m)}
-                        onClick={() => set(s, { motivos: x.motivos.includes(m) ? x.motivos.filter((y) => y !== m) : [...x.motivos, m] })}
+                        onClick={() =>
+                          set(s, {
+                            motivos: x.motivos.includes(m)
+                              ? x.motivos.filter((y) => y !== m)
+                              : [...x.motivos, m],
+                          })
+                        }
                         className={`tap rounded-full border-2 px-4 text-base font-bold ${
-                          x.motivos.includes(m) ? "border-warn bg-warn text-warn-foreground" : "border-border bg-card text-foreground"
+                          x.motivos.includes(m)
+                            ? "border-warn bg-warn text-warn-foreground"
+                            : "border-border bg-card text-foreground"
                         }`}
                       >
                         {m}
@@ -175,7 +259,10 @@ function Conferir() {
                     onChange={(e) => set(s, { texto: e.target.value })}
                     className={inputCls}
                   />
-                  <button onClick={() => set(s, { corrigir: false, motivos: [], texto: "" })} className="tap text-base font-bold text-muted-foreground underline">
+                  <button
+                    onClick={() => set(s, { corrigir: false, motivos: [], texto: "" })}
+                    className="tap text-base font-bold text-muted-foreground underline"
+                  >
                     Cancelar correção
                   </button>
                 </div>
@@ -183,7 +270,11 @@ function Conferir() {
             </section>
           );
         })}
-        {temMudancas && <p className="text-center text-base text-muted-foreground">O resto da ficha continua igual.</p>}
+        {temMudancas && (
+          <p className="text-center text-base text-muted-foreground">
+            O resto da ficha continua igual.
+          </p>
+        )}
       </main>
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <button
@@ -208,11 +299,26 @@ async function reverter(mud: MudancaRow[]) {
     } else if (coluna === "deleted_at") {
       await db.from(tabela).update({ deleted_at: null }).eq("id", id);
     } else if (tabela === "person_preferences") {
-      const v = coluna === "restricoes" ? (antigo ? antigo.split(", ") : []) : coluna === "bebe_alcool" ? (antigo == null ? null : antigo === "true") : antigo;
-      await db.from(tabela).update({ [coluna]: v }).eq("person_id", id);
+      const v =
+        coluna === "restricoes"
+          ? antigo
+            ? antigo.split(", ")
+            : []
+          : coluna === "bebe_alcool"
+            ? antigo == null
+              ? null
+              : antigo === "true"
+            : antigo;
+      await db
+        .from(tabela)
+        .update({ [coluna]: v })
+        .eq("person_id", id);
     } else {
       const v = coluna === "nacionalidades" ? (antigo ? antigo.split(", ") : []) : antigo;
-      await db.from(tabela).update({ [coluna]: v }).eq("id", id);
+      await db
+        .from(tabela)
+        .update({ [coluna]: v })
+        .eq("id", id);
     }
   }
 }
@@ -230,7 +336,11 @@ function Mudancas({ lista }: { lista: MudancaRow[] }) {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <p className="text-sm text-muted-foreground">Antes</p>
-                  {m.arquivo_antigo ? <VerFoto path={m.arquivo_antigo} rotulo="Foto antiga" /> : <p>—</p>}
+                  {m.arquivo_antigo ? (
+                    <VerFoto path={m.arquivo_antigo} rotulo="Foto antiga" />
+                  ) : (
+                    <p>—</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-ok">Nova</p>
@@ -241,9 +351,14 @@ function Mudancas({ lista }: { lista: MudancaRow[] }) {
           );
         }
         return (
-          <div key={m.id} className="flex flex-wrap items-center gap-2 border-b border-border py-2 last:border-0">
+          <div
+            key={m.id}
+            className="flex flex-wrap items-center gap-2 border-b border-border py-2 last:border-0"
+          >
             <span className="w-full text-base text-muted-foreground">{rot}</span>
-            <span className="text-lg text-muted-foreground line-through">{m.valor_antigo || "—"}</span>
+            <span className="text-lg text-muted-foreground line-through">
+              {m.valor_antigo || "—"}
+            </span>
             <ArrowRight size={20} strokeWidth={2.2} aria-hidden />
             <span className="text-lg font-bold text-ok">{m.valor_novo || "—"}</span>
           </div>
@@ -301,7 +416,11 @@ function ConteudoSecao({ f, secao }: { f: Ficha; secao: Secao }) {
       return <>{listaDocs(TIPOS_VISTO)}</>;
     case "fidelidade":
       return f.contas.length ? (
-        <>{f.contas.map((c) => <Dado key={c.id} rotulo={c.programa} valor={c.numero} />)}</>
+        <>
+          {f.contas.map((c) => (
+            <Dado key={c.id} rotulo={c.programa} valor={c.numero} />
+          ))}
+        </>
       ) : (
         <p className="text-base text-muted-foreground">Não tem.</p>
       );
@@ -310,7 +429,10 @@ function ConteudoSecao({ f, secao }: { f: Ficha; secao: Secao }) {
         <>
           <Dado rotulo="Assento" valor={f.prefs?.assento} />
           <Dado rotulo="Quarto" valor={f.prefs?.quarto} />
-          <Dado rotulo="Bebe álcool" valor={f.prefs?.bebe_alcool == null ? null : f.prefs.bebe_alcool ? "Sim" : "Não"} />
+          <Dado
+            rotulo="Bebe álcool"
+            valor={f.prefs?.bebe_alcool == null ? null : f.prefs.bebe_alcool ? "Sim" : "Não"}
+          />
           <Dado rotulo="Comida" valor={f.prefs?.restricoes.join(", ")} />
         </>
       );

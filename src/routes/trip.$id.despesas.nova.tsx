@@ -2,11 +2,36 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Camera, Check, ChevronLeft, ChevronRight, User, UserPlus, CalendarDays, Link2 } from "lucide-react";
-import { buscarCotacaoDetalhe, expensesQuery, membersQuery, tripMembrosQuery, tripQuery, type Cotacao, type Expense, type Membro, type MembroTrip } from "@/lib/data";
+import {
+  Camera,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  UserPlus,
+  CalendarDays,
+  Link2,
+} from "lucide-react";
+import {
+  buscarCotacaoDetalhe,
+  expensesQuery,
+  membersQuery,
+  tripMembrosQuery,
+  tripQuery,
+  type Cotacao,
+  type Expense,
+  type Membro,
+  type MembroTrip,
+} from "@/lib/data";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { AvatarPessoa } from "@/components/Pessoa";
-import { FolhaDivisao, calcularDivisao, fraseCentavos, type Divisao, type PessoaDiv } from "@/components/FolhaDivisao";
+import {
+  FolhaDivisao,
+  calcularDivisao,
+  fraseCentavos,
+  type Divisao,
+  type PessoaDiv,
+} from "@/components/FolhaDivisao";
 import { fmtMoney } from "@/lib/format";
 import { CATEGORIAS, normalizarCategoria } from "@/lib/categorias";
 import { mutar } from "@/lib/outbox";
@@ -20,24 +45,47 @@ import { comprimir } from "@/lib/imagem";
 
 const s = (v: unknown) => {
   if (typeof v !== "string") return "";
-  try { const x = JSON.parse(v); return typeof x === "string" ? x : v; } catch { return v; }
+  try {
+    const x = JSON.parse(v);
+    return typeof x === "string" ? x : v;
+  } catch {
+    return v;
+  }
 };
 
 export const Route = createFileRoute("/trip/$id/despesas/nova")({
   validateSearch: (q: Record<string, unknown>) => ({
-    editar: s(q.editar), itemTipo: s(q.itemTipo), itemId: s(q.itemId), descricao: s(q.descricao), valor: s(q.valor), moeda: s(q.moeda),
-    data: s(q.data), categoria: s(q.categoria), pessoas: s(q.pessoas), origemNome: s(q.origemNome),
+    editar: s(q.editar),
+    itemTipo: s(q.itemTipo),
+    itemId: s(q.itemId),
+    descricao: s(q.descricao),
+    valor: s(q.valor),
+    moeda: s(q.moeda),
+    data: s(q.data),
+    categoria: s(q.categoria),
+    pessoas: s(q.pessoas),
+    origemNome: s(q.origemNome),
   }),
   head: () => ({
     meta: [
       { title: "Lançar despesa — Evoque Viagens" },
-      { name: "description", content: "Valor, categoria e salvar. A despesa já nasce dividida igual." },
+      {
+        name: "description",
+        content: "Valor, categoria e salvar. A despesa já nasce dividida igual.",
+      },
       { property: "og:title", content: "Lançar despesa — Evoque Viagens" },
-      { property: "og:description", content: "Valor, categoria e salvar. A despesa já nasce dividida igual." },
+      {
+        property: "og:description",
+        content: "Valor, categoria e salvar. A despesa já nasce dividida igual.",
+      },
     ],
   }),
   component: NovaDespesa,
-  errorComponent: ({ error }) => <div role="alert" className="p-6 text-lg">{error.message}</div>,
+  errorComponent: ({ error }) => (
+    <div role="alert" className="p-6 text-lg">
+      {error.message}
+    </div>
+  ),
   notFoundComponent: () => <div className="p-6 text-lg">Viagem não encontrada.</div>,
 });
 
@@ -53,12 +101,24 @@ function NovaDespesa() {
   const { data: despesas } = useSuspenseQuery(expensesQuery(id));
   const { data: membros } = useSuspenseQuery(membersQuery(id));
   const { data: tripMembros } = useSuspenseQuery(tripMembrosQuery(id));
-  const editando: Expense | undefined = q.editar ? despesas.find((d) => d.id === q.editar) : undefined;
-  const eu = membros.find((m) => m.meu)?.person_id ?? membros.find((m) => m.papel === "owner")?.person_id ?? null;
+  const editando: Expense | undefined = q.editar
+    ? despesas.find((d) => d.id === q.editar)
+    : undefined;
+  const eu =
+    membros.find((m) => m.meu)?.person_id ??
+    membros.find((m) => m.papel === "owner")?.person_id ??
+    null;
 
-  const [valorTxt, setValorTxt] = useState(() => editando ? String(editando.valor_original) : q.valor || "");
-  const [moeda, setMoeda] = useState(() => editando?.moeda_original ?? (moedaValida(q.moeda) ? q.moeda.toUpperCase() : trip.moeda_base));
-  const [cat, setCat] = useState<string>(() => editando?.categoria ?? normalizarCategoria(q.categoria) ?? "comida");
+  const [valorTxt, setValorTxt] = useState(() =>
+    editando ? String(editando.valor_original) : q.valor || "",
+  );
+  const [moeda, setMoeda] = useState(
+    () =>
+      editando?.moeda_original ?? (moedaValida(q.moeda) ? q.moeda.toUpperCase() : trip.moeda_base),
+  );
+  const [cat, setCat] = useState<string>(
+    () => editando?.categoria ?? normalizarCategoria(q.categoria) ?? "comida",
+  );
   const [data, setData] = useState(() => editando?.data ?? (q.data || hoje()));
   const [descricao, setDescricao] = useState(() => editando?.descricao ?? q.descricao);
   const [comprovante, setComprovante] = useState<string | null>(editando?.comprovante_url ?? null);
@@ -68,72 +128,147 @@ function NovaDespesa() {
   const [recibo, setRecibo] = useState<{ texto: string; path: string } | null>(null);
   async function anexarRecibo(f: File) {
     const melhor = await comprimir(f, 1600, 0.8).catch(() => f);
-    const url = await new Promise<string>((ok) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.readAsDataURL(melhor); });
-    setComprovante(url); setRecibo(null);
-    if (!navigator.onLine) { toast("Recibo anexado · a conta será lida quando abrir a despesa com internet."); return; }
+    const url = await new Promise<string>((ok) => {
+      const fr = new FileReader();
+      fr.onload = () => ok(String(fr.result));
+      fr.readAsDataURL(melhor);
+    });
+    setComprovante(url);
+    setRecibo(null);
+    if (!navigator.onLine) {
+      toast("Recibo anexado · a conta será lida quando abrir a despesa com internet.");
+      return;
+    }
     setLendoConta(true);
     try {
       const r = await lerConta({ data: { imagem: url } });
-      if (r.ok) { setRecibo({ texto: r.texto, path: impressao(url)! }); toast.success("Conta lida · o texto fica na despesa."); }
-      else toast("Não conseguimos ler a conta. Veja se a foto está nítida.");
-    } catch { toast("Não conseguimos ler a conta agora."); }
-    finally { setLendoConta(false); }
+      if (r.ok) {
+        setRecibo({ texto: r.texto, path: impressao(url)! });
+        toast.success("Conta lida · o texto fica na despesa.");
+      } else toast("Não conseguimos ler a conta. Veja se a foto está nítida.");
+    } catch {
+      toast("Não conseguimos ler a conta agora.");
+    } finally {
+      setLendoConta(false);
+    }
   }
   const [pagadores, setPagadores] = useState<Record<string, string>>(() =>
-    editando ? Object.fromEntries(editando.pagadores.map((p) => [p.person_id, String(p.valor_original)])) : eu ? { [eu]: "" } : {});
+    editando
+      ? Object.fromEntries(editando.pagadores.map((p) => [p.person_id, String(p.valor_original)]))
+      : eu
+        ? { [eu]: "" }
+        : {},
+  );
   const [pessoal, setPessoal] = useState(editando?.pessoal ?? false);
   const [pessoalDe, setPessoalDe] = useState<string | null>(editando?.pessoal_de ?? null);
   const [taxaTxt, setTaxaTxt] = useState(editando ? String(editando.taxa_cambio) : "1");
-  const [fonte, setFonte] = useState<Cotacao | null>(editando?.taxa_fonte ? { taxa: Number(editando.taxa_cambio), fonte: editando.taxa_fonte, data: editando.taxa_data ?? "" } : null);
+  const [fonte, setFonte] = useState<Cotacao | null>(
+    editando?.taxa_fonte
+      ? {
+          taxa: Number(editando.taxa_cambio),
+          fonte: editando.taxa_fonte,
+          data: editando.taxa_data ?? "",
+        }
+      : null,
+  );
   const [provisoria, setProvisoria] = useState(editando?.taxa_provisoria ?? false);
   const [folha, setFolha] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const padrao = useMemo(() => participantesPadrao(tripMembros, data), [tripMembros, data]);
-  const doItem = q.pessoas ? q.pessoas.split(",").filter((p) => padrao.some((m) => m.person_id === p)) : [];
-  const [divisao, setDivisao] = useState<Divisao | null>(() => editando && !editando.pessoal
-    ? { modo: editando.divisao ?? "igual", incluidos: editando.partes.map((p) => p.person_id), pesos: Object.fromEntries(editando.partes.map((p) => [p.person_id, String(editando.divisao === "valor" ? p.valor_moeda_base : p.peso)])) }
-    : null);
+  const doItem = q.pessoas
+    ? q.pessoas.split(",").filter((p) => padrao.some((m) => m.person_id === p))
+    : [];
+  const [divisao, setDivisao] = useState<Divisao | null>(() =>
+    editando && !editando.pessoal
+      ? {
+          modo: editando.divisao ?? "igual",
+          incluidos: editando.partes.map((p) => p.person_id),
+          pesos: Object.fromEntries(
+            editando.partes.map((p) => [
+              p.person_id,
+              String(editando.divisao === "valor" ? p.valor_moeda_base : p.peso),
+            ]),
+          ),
+        }
+      : null,
+  );
   // Quem participa da despesa: quem sai daqui não aparece na divisão.
-  const [participantes, setParticipantes] = useState<string[] | null>(editando && !editando.pessoal ? editando.partes.map((p) => p.person_id) : null);
+  const [participantes, setParticipantes] = useState<string[] | null>(
+    editando && !editando.pessoal ? editando.partes.map((p) => p.person_id) : null,
+  );
   // Sem escolha manual, a divisão segue a data: igual entre quem já estava na viagem.
-  const div: Divisao = divisao ?? { modo: "igual", incluidos: doItem.length ? doItem : padrao.map((m) => m.person_id), pesos: {} };
+  const div: Divisao = divisao ?? {
+    modo: "igual",
+    incluidos: doItem.length ? doItem : padrao.map((m) => m.person_id),
+    pesos: {},
+  };
 
   const valor = Number(valorTxt.replace(",", ".")) || 0;
   const diferente = moeda !== trip.moeda_base;
   const taxa = diferente ? Number(taxaTxt.replace(",", ".")) || 0 : 1;
   const totalC = Math.round(valor * taxa * 100);
   const nomes = (pid: string) => nomeCurto(membros, pid);
-  const todosAtivos: PessoaDiv[] = tripMembros.filter((m) => m.status !== "recusado" && m.status !== "saiu").map((m) => ({ id: m.person_id, nome: nomes(m.person_id), fora: !padrao.some((p) => p.person_id === m.person_id) }));
+  const todosAtivos: PessoaDiv[] = tripMembros
+    .filter((m) => m.status !== "recusado" && m.status !== "saiu")
+    .map((m) => ({
+      id: m.person_id,
+      nome: nomes(m.person_id),
+      fora: !padrao.some((p) => p.person_id === m.person_id),
+    }));
   const partIds = participantes ?? div.incluidos;
   const pessoasDiv: PessoaDiv[] = todosAtivos.filter((p) => partIds.includes(p.id));
-  const r = calcularDivisao(totalC, pessoasDiv, { ...div, incluidos: div.incluidos.filter((x) => partIds.includes(x)) });
+  const r = calcularDivisao(totalC, pessoasDiv, {
+    ...div,
+    incluidos: div.incluidos.filter((x) => partIds.includes(x)),
+  });
 
   function tocarParticipante(pid: string) {
     const atuais = partIds;
-    const novos = atuais.includes(pid) ? atuais.filter((x) => x !== pid) : [...todosAtivos.map((p) => p.id).filter((x) => atuais.includes(x) || x === pid)];
+    const novos = atuais.includes(pid)
+      ? atuais.filter((x) => x !== pid)
+      : [...todosAtivos.map((p) => p.id).filter((x) => atuais.includes(x) || x === pid)];
     setParticipantes(novos);
-    if (divisao) setDivisao({ ...divisao, incluidos: divisao.incluidos.filter((x) => novos.includes(x)), pesos: Object.fromEntries(Object.entries(divisao.pesos).filter(([k]) => novos.includes(k))) });
+    if (divisao)
+      setDivisao({
+        ...divisao,
+        incluidos: divisao.incluidos.filter((x) => novos.includes(x)),
+        pesos: Object.fromEntries(Object.entries(divisao.pesos).filter(([k]) => novos.includes(k))),
+      });
   }
 
   // Câmbio: busca com internet; sem internet usa a última taxa guardada e marca provisória.
   useEffect(() => {
-    if (!diferente || (editando && editando.moeda_original === moeda && editando.data === data)) return;
+    if (!diferente || (editando && editando.moeda_original === moeda && editando.data === data))
+      return;
     let vivo = true;
     (async () => {
       const c = navigator.onLine ? await buscarCotacaoDetalhe(moeda, trip.moeda_base, data) : null;
       if (!vivo) return;
-      if (c) { setTaxaTxt(String(c.taxa)); setFonte(c); setProvisoria(false); guardarTaxa(moeda, trip.moeda_base, c.taxa, c.data); return; }
+      if (c) {
+        setTaxaTxt(String(c.taxa));
+        setFonte(c);
+        setProvisoria(false);
+        guardarTaxa(moeda, trip.moeda_base, c.taxa, c.data);
+        return;
+      }
       const u = ultimaTaxa(moeda, trip.moeda_base);
       setFonte(null);
-      if (u) { setTaxaTxt(String(u.taxa)); setProvisoria(true); } else setTaxaTxt("");
+      if (u) {
+        setTaxaTxt(String(u.taxa));
+        setProvisoria(true);
+      } else setTaxaTxt("");
     })();
-    return () => { vivo = false; };
+    return () => {
+      vivo = false;
+    };
   }, [moeda, trip.moeda_base, diferente, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const idsPag = Object.keys(pagadores);
   const variosPag = idsPag.length > 1;
-  const somaPag = variosPag ? idsPag.reduce((a, p) => a + (Number((pagadores[p] ?? "").replace(",", ".")) || 0), 0) : valor;
+  const somaPag = variosPag
+    ? idsPag.reduce((a, p) => a + (Number((pagadores[p] ?? "").replace(",", ".")) || 0), 0)
+    : valor;
   const pagFecha = idsPag.length > 0 && Math.round(somaPag * 100) === Math.round(valor * 100);
 
   const [novaPessoa, setNovaPessoa] = useState<string | null>(null);
@@ -141,28 +276,71 @@ function NovaDespesa() {
   async function adicionarPessoa() {
     const nome = (novaPessoa ?? "").trim();
     if (!nome) return;
-    const person = novoId(), member = novoId(), agora = new Date().toISOString();
+    const person = novoId(),
+      member = novoId(),
+      agora = new Date().toISOString();
     const entrou = trip.data_inicio < hoje() ? trip.data_inicio : hoje();
-    qc.setQueryData<Membro[]>(membersQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", nome, apelido: nome.split(/\s+/)[0] ?? nome, nome_como_no_documento: null, kind: "precadastro", meu: false }]);
-    qc.setQueryData<MembroTrip[]>(tripMembrosQuery(id).queryKey, (l) => [...(l ?? []), { id: member, person_id: person, papel: "membro", status: "aceito", entrou_em: entrou, created_at: agora, deleted_at: null }]);
-    if (divisao?.modo === "igual") setDivisao({ ...divisao, incluidos: [...divisao.incluidos, person] });
+    qc.setQueryData<Membro[]>(membersQuery(id).queryKey, (l) => [
+      ...(l ?? []),
+      {
+        id: member,
+        person_id: person,
+        papel: "membro",
+        status: "aceito",
+        nome,
+        apelido: nome.split(/\s+/)[0] ?? nome,
+        nome_como_no_documento: null,
+        kind: "precadastro",
+        meu: false,
+      },
+    ]);
+    qc.setQueryData<MembroTrip[]>(tripMembrosQuery(id).queryKey, (l) => [
+      ...(l ?? []),
+      {
+        id: member,
+        person_id: person,
+        papel: "membro",
+        status: "aceito",
+        entrou_em: entrou,
+        created_at: agora,
+        deleted_at: null,
+      },
+    ]);
+    if (divisao?.modo === "igual")
+      setDivisao({ ...divisao, incluidos: [...divisao.incluidos, person] });
     if (participantes) setParticipantes([...participantes, person]);
     setNovaPessoa(null);
     try {
-      await mutar({ tipo: "rpc", funcao: "adicionar_pessoa_so_nome", args: { _trip: id, _member: member, _person: person, _nome: nome } });
+      await mutar({
+        tipo: "rpc",
+        funcao: "adicionar_pessoa_so_nome",
+        args: { _trip: id, _member: member, _person: person, _nome: nome },
+      });
       toast.success(`${nome} entrou nas despesas`);
-    } catch (e) { toast.error((e as Error).message); void qc.invalidateQueries({ queryKey: membersQuery(id).queryKey }); void qc.invalidateQueries({ queryKey: tripMembrosQuery(id).queryKey }); }
+    } catch (e) {
+      toast.error((e as Error).message);
+      void qc.invalidateQueries({ queryKey: membersQuery(id).queryKey });
+      void qc.invalidateQueries({ queryKey: tripMembrosQuery(id).queryKey });
+    }
   }
 
   function tocarPagador(pid: string) {
     setPagadores((p) => {
       const n = { ...p };
-      if (pid in n) { if (Object.keys(n).length > 1) delete n[pid]; } else n[pid] = "";
+      if (pid in n) {
+        if (Object.keys(n).length > 1) delete n[pid];
+      } else n[pid] = "";
       return n;
     });
   }
 
-  const podeSalvar = descricao.trim().length > 0 && valor > 0 && taxa > 0 && pagFecha && (pessoal ? !!pessoalDe : r.fecha && r.lista.length > 0) && uid === trip.owner_id;
+  const podeSalvar =
+    descricao.trim().length > 0 &&
+    valor > 0 &&
+    taxa > 0 &&
+    pagFecha &&
+    (pessoal ? !!pessoalDe : r.fecha && r.lista.length > 0) &&
+    uid === trip.owner_id;
 
   async function salvar() {
     if (!podeSalvar) return;
@@ -176,27 +354,81 @@ function NovaDespesa() {
       });
       const dif = totalC - pags.reduce((a, p) => a + p.c, 0);
       pags[pags.length - 1]!.c += dif;
-      const pagadoresJ = pags.map((p) => ({ person_id: p.person_id, valor_original: p.valor_original, valor_moeda_base: p.c / 100 }));
-      const partesJ = pessoal ? [] : r.lista.map((p) => ({ person_id: p.id, peso: div.modo === "valor" ? centavos(p.peso) / 100 : p.peso, valor_moeda_base: (r.partes.get(p.id) ?? 0) / 100 }));
+      const pagadoresJ = pags.map((p) => ({
+        person_id: p.person_id,
+        valor_original: p.valor_original,
+        valor_moeda_base: p.c / 100,
+      }));
+      const partesJ = pessoal
+        ? []
+        : r.lista.map((p) => ({
+            person_id: p.id,
+            peso: div.modo === "valor" ? centavos(p.peso) / 100 : p.peso,
+            valor_moeda_base: (r.partes.get(p.id) ?? 0) / 100,
+          }));
       const autoTaxa = fonte && String(fonte.taxa) === taxaTxt;
       const d = {
-        id: expenseId, trip_id: id,
+        id: expenseId,
+        trip_id: id,
         descricao: descricao.trim(),
-        categoria: cat, data, valor_original: valor, moeda_original: moeda, taxa_cambio: taxa, valor_moeda_base: totalC / 100,
-        taxa_fonte: diferente ? (autoTaxa ? fonte!.fonte : provisoria ? "última guardada" : "manual") : null,
+        categoria: cat,
+        data,
+        valor_original: valor,
+        moeda_original: moeda,
+        taxa_cambio: taxa,
+        valor_moeda_base: totalC / 100,
+        taxa_fonte: diferente
+          ? autoTaxa
+            ? fonte!.fonte
+            : provisoria
+              ? "última guardada"
+              : "manual"
+          : null,
         taxa_data: diferente ? (autoTaxa ? fonte!.data : data) : null,
         taxa_provisoria: diferente && provisoria && !autoTaxa,
-        comprovante_url: comprovante, pessoal, pessoal_de: pessoal ? pessoalDe : null, divisao: pessoal ? "igual" : div.modo,
-        item_tipo: editando?.item_tipo ?? (["ticket", "lodging", "reservation"].includes(q.itemTipo) ? q.itemTipo : null),
+        comprovante_url: comprovante,
+        pessoal,
+        pessoal_de: pessoal ? pessoalDe : null,
+        divisao: pessoal ? "igual" : div.modo,
+        item_tipo:
+          editando?.item_tipo ??
+          (["ticket", "lodging", "reservation"].includes(q.itemTipo) ? q.itemTipo : null),
         item_id: editando?.item_id ?? (q.itemId || null),
       };
-      const res = await mutar({ tipo: "rpc", funcao: "salvar_despesa", args: { _d: d, _pagadores: pagadoresJ, _partes: partesJ } });
-      if (recibo && comprovante && impressao(comprovante) === recibo.path) await mutar({ tipo: "update", tabela: "expense", id: expenseId, valores: { recibo_texto: recibo.texto, recibo_path: recibo.path } }).catch(() => null);
-      const local: Expense = { ...(editando ?? {}), ...d, pago_por: pagadoresJ[0]!.person_id, criado_por: editando?.criado_por ?? uid ?? null, editado_em: editando ? new Date().toISOString() : null,
-        pagadores: pagadoresJ.map((p, i) => ({ id: `l${i}`, deleted_at: null, ...p })), partes: partesJ.map((p, i) => ({ id: `p${i}`, deleted_at: null, ...p })) } as Expense;
-      qc.setQueryData<Expense[]>(expensesQuery(id).queryKey, (l) => [local, ...(l ?? []).filter((e) => e.id !== expenseId)].sort((a, b) => b.data.localeCompare(a.data)));
+      const res = await mutar({
+        tipo: "rpc",
+        funcao: "salvar_despesa",
+        args: { _d: d, _pagadores: pagadoresJ, _partes: partesJ },
+      });
+      if (recibo && comprovante && impressao(comprovante) === recibo.path)
+        await mutar({
+          tipo: "update",
+          tabela: "expense",
+          id: expenseId,
+          valores: { recibo_texto: recibo.texto, recibo_path: recibo.path },
+        }).catch(() => null);
+      const local: Expense = {
+        ...(editando ?? {}),
+        ...d,
+        pago_por: pagadoresJ[0]!.person_id,
+        criado_por: editando?.criado_por ?? uid ?? null,
+        editado_em: editando ? new Date().toISOString() : null,
+        pagadores: pagadoresJ.map((p, i) => ({ id: `l${i}`, deleted_at: null, ...p })),
+        partes: partesJ.map((p, i) => ({ id: `p${i}`, deleted_at: null, ...p })),
+      } as Expense;
+      qc.setQueryData<Expense[]>(expensesQuery(id).queryKey, (l) =>
+        [local, ...(l ?? []).filter((e) => e.id !== expenseId)].sort((a, b) =>
+          b.data.localeCompare(a.data),
+        ),
+      );
       if (res === "salvo") void qc.invalidateQueries({ queryKey: expensesQuery(id).queryKey });
-      toast.success(res === "fila" ? "Sem internet · salva no aparelho" : editando ? "Despesa atualizada" : "Despesa lançada");
+      toast.success(
+        res === "fila"
+          ? "Sem internet · salva no aparelho"
+          : editando
+            ? "Despesa atualizada"
+            : "Despesa lançada",
+      );
       navigate({ to: "/trip/$id/despesas", params: { id } });
     } catch (e) {
       toast.error((e as Error).message);
@@ -204,47 +436,98 @@ function NovaDespesa() {
     }
   }
 
-  const resumoDiv = div.modo === "igual"
-    ? `Dividido igual entre ${r.lista.length}${r.lista.length ? ` · ${fmtMoney((r.partes.get(r.lista[r.lista.length - 1]!.id) ?? 0) / 100, trip.moeda_base)} cada` : ""}`
-    : `Dividido por ${div.modo === "valor" ? "valor" : div.modo === "pct" ? "%" : "cotas"} entre ${r.lista.length}`;
+  const resumoDiv =
+    div.modo === "igual"
+      ? `Dividido igual entre ${r.lista.length}${r.lista.length ? ` · ${fmtMoney((r.partes.get(r.lista[r.lista.length - 1]!.id) ?? 0) / 100, trip.moeda_base)} cada` : ""}`
+      : `Dividido por ${div.modo === "valor" ? "valor" : div.modo === "pct" ? "%" : "cotas"} entre ${r.lista.length}`;
 
   return (
     <div className="min-h-screen bg-background pb-10">
       <header className="flex items-center gap-2 px-3 py-2">
-        <button onClick={() => navigate({ to: "/trip/$id/despesas", params: { id } })} className="tap flex flex-col items-center justify-center rounded-xl text-foreground" aria-label="Voltar">
-          <ChevronLeft size={28} strokeWidth={2.2} /><span className="text-xs font-semibold">Voltar</span>
+        <button
+          onClick={() => navigate({ to: "/trip/$id/despesas", params: { id } })}
+          className="tap flex flex-col items-center justify-center rounded-xl text-foreground"
+          aria-label="Voltar"
+        >
+          <ChevronLeft size={28} strokeWidth={2.2} />
+          <span className="text-xs font-semibold">Voltar</span>
         </button>
         <h1 className="flex-1 text-2xl">{editando ? "Editar despesa" : "Nova despesa"}</h1>
       </header>
 
       <main className="space-y-5 px-4">
         {q.origemNome && !editando && (
-          <p className="flex items-center gap-2 rounded-xl bg-muted px-3 py-3 text-base font-bold text-foreground"><Link2 size={22} strokeWidth={2.2} /> Veio do {q.origemNome}</p>
+          <p className="flex items-center gap-2 rounded-xl bg-muted px-3 py-3 text-base font-bold text-foreground">
+            <Link2 size={22} strokeWidth={2.2} /> Veio do {q.origemNome}
+          </p>
         )}
 
         <label className="block text-lg font-bold text-foreground">
-          Descrição da despesa <span className="text-danger" aria-hidden>*</span>
-          <input autoFocus required aria-required="true" placeholder="Ex.: jantar, táxi, ingresso" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="tap mt-2 w-full rounded-xl border-2 border-input bg-card px-4 text-lg font-normal text-foreground" />
+          Descrição da despesa{" "}
+          <span className="text-danger" aria-hidden>
+            *
+          </span>
+          <input
+            autoFocus
+            required
+            aria-required="true"
+            placeholder="Ex.: jantar, táxi, ingresso"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="tap mt-2 w-full rounded-xl border-2 border-input bg-card px-4 text-lg font-normal text-foreground"
+          />
         </label>
 
         <section className="rounded-3xl border border-border bg-card p-4 text-center">
           <label className="block text-left text-lg font-bold text-foreground">
-            Valor em {moeda} <span className="text-danger" aria-hidden>*</span>
+            Valor em {moeda}{" "}
+            <span className="text-danger" aria-hidden>
+              *
+            </span>
             <input
-              id="valor-despesa" inputMode="decimal" placeholder="0,00"
-              value={valorTxt} onChange={(e) => setValorTxt(e.target.value.replace(/[^\d.,]/g, ""))}
+              id="valor-despesa"
+              inputMode="decimal"
+              placeholder="0,00"
+              value={valorTxt}
+              onChange={(e) => setValorTxt(e.target.value.replace(/[^\d.,]/g, ""))}
               className="num mt-2 w-full rounded-2xl border-2 border-primary bg-background px-3 text-center text-[44px] leading-tight text-foreground"
             />
           </label>
-          <div className="mx-auto mt-2 max-w-xs"><CampoMoeda value={moeda} onChange={(m) => { setMoeda(m); setTimeout(() => document.getElementById("valor-despesa")?.focus(), 50); }} rotulo="Moeda" /></div>
+          <div className="mx-auto mt-2 max-w-xs">
+            <CampoMoeda
+              value={moeda}
+              onChange={(m) => {
+                setMoeda(m);
+                setTimeout(() => document.getElementById("valor-despesa")?.focus(), 50);
+              }}
+              rotulo="Moeda"
+            />
+          </div>
           {diferente && (
             <div className="mt-3 space-y-1 text-left">
-              <label className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">Câmbio 1 {moeda} =
-                <input inputMode="decimal" aria-label={`Câmbio ${moeda} para ${trip.moeda_base}`} value={taxaTxt} onChange={(e) => { setTaxaTxt(e.target.value.replace(",", ".")); setProvisoria(false); }} className="h-10 w-24 rounded-lg border border-input bg-background px-2 text-base font-semibold text-foreground" />
+              <label className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                Câmbio 1 {moeda} =
+                <input
+                  inputMode="decimal"
+                  aria-label={`Câmbio ${moeda} para ${trip.moeda_base}`}
+                  value={taxaTxt}
+                  onChange={(e) => {
+                    setTaxaTxt(e.target.value.replace(",", "."));
+                    setProvisoria(false);
+                  }}
+                  className="h-10 w-24 rounded-lg border border-input bg-background px-2 text-base font-semibold text-foreground"
+                />
                 {trip.moeda_base}
               </label>
               <p className="text-base text-muted-foreground">
-                = {fmtMoney(totalC / 100, trip.moeda_base)} · {fonte && String(fonte.taxa) === taxaTxt ? `${fonte.fonte} · ${fonte.data.slice(8, 10)}/${fonte.data.slice(5, 7)}` : provisoria ? "Taxa provisória (sem internet)" : taxaTxt ? "Taxa manual" : "Digite a taxa"}
+                = {fmtMoney(totalC / 100, trip.moeda_base)} ·{" "}
+                {fonte && String(fonte.taxa) === taxaTxt
+                  ? `${fonte.fonte} · ${fonte.data.slice(8, 10)}/${fonte.data.slice(5, 7)}`
+                  : provisoria
+                    ? "Taxa provisória (sem internet)"
+                    : taxaTxt
+                      ? "Taxa manual"
+                      : "Digite a taxa"}
               </p>
             </div>
           )}
@@ -252,9 +535,14 @@ function NovaDespesa() {
 
         <div className="grid grid-cols-3 gap-3">
           {CATEGORIAS.map(({ id: cid, rotulo, Icone }) => (
-            <button key={cid} onClick={() => setCat(cid)} aria-pressed={cat === cid}
-              className={`flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl border-2 ${cat === cid ? "border-navy bg-navy text-primary-foreground" : "border-border bg-card text-foreground"}`}>
-              <Icone size={30} strokeWidth={2.2} /><span className="text-base font-bold">{rotulo}</span>
+            <button
+              key={cid}
+              onClick={() => setCat(cid)}
+              aria-pressed={cat === cid}
+              className={`flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-2xl border-2 ${cat === cid ? "border-navy bg-navy text-primary-foreground" : "border-border bg-card text-foreground"}`}
+            >
+              <Icone size={30} strokeWidth={2.2} />
+              <span className="text-base font-bold">{rotulo}</span>
             </button>
           ))}
         </div>
@@ -265,34 +553,82 @@ function NovaDespesa() {
             {todosAtivos.map((p) => {
               const on = p.id in pagadores;
               return (
-                <button key={p.id} onClick={() => tocarPagador(p.id)} aria-pressed={on} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
-                  <span className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : ""}`}><AvatarPessoa nome={p.nome} foto={null} tamanho={56} /></span>
-                  <span className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}>{p.nome}</span>
+                <button
+                  key={p.id}
+                  onClick={() => tocarPagador(p.id)}
+                  aria-pressed={on}
+                  className="flex w-[68px] shrink-0 flex-col items-center gap-1"
+                >
+                  <span className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : ""}`}>
+                    <AvatarPessoa nome={p.nome} foto={null} tamanho={56} />
+                  </span>
+                  <span
+                    className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                  >
+                    {p.nome}
+                  </span>
                 </button>
               );
             })}
             {uid === trip.owner_id && (
-              <button onClick={() => setNovaPessoa(novaPessoa === null ? "" : null)} aria-label="Adicionar pessoa só com o nome" className="flex w-[68px] shrink-0 flex-col items-center gap-1">
-                <span className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-dashed border-border text-foreground"><UserPlus size={26} strokeWidth={2.2} /></span>
-                <span className="w-full truncate text-center text-sm text-muted-foreground">Pessoa</span>
+              <button
+                onClick={() => setNovaPessoa(novaPessoa === null ? "" : null)}
+                aria-label="Adicionar pessoa só com o nome"
+                className="flex w-[68px] shrink-0 flex-col items-center gap-1"
+              >
+                <span className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-dashed border-border text-foreground">
+                  <UserPlus size={26} strokeWidth={2.2} />
+                </span>
+                <span className="w-full truncate text-center text-sm text-muted-foreground">
+                  Pessoa
+                </span>
               </button>
             )}
           </div>
           {novaPessoa !== null && (
             <div className="mt-2 flex gap-2">
-              <input autoFocus value={novaPessoa} onChange={(e) => setNovaPessoa(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void adicionarPessoa()} placeholder="Nome, ex.: Gabriela Helito" aria-label="Nome da pessoa" className="h-14 min-w-0 flex-1 rounded-2xl border-2 border-input bg-background px-3 text-lg" />
-              <button disabled={!novaPessoa.trim()} onClick={() => void adicionarPessoa()} className="tap flex items-center justify-center gap-1 rounded-2xl bg-navy px-4 text-lg font-bold text-primary-foreground disabled:opacity-40"><Check size={24} strokeWidth={2.2} /> Pôr</button>
+              <input
+                autoFocus
+                value={novaPessoa}
+                onChange={(e) => setNovaPessoa(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && void adicionarPessoa()}
+                placeholder="Nome, ex.: Gabriela Helito"
+                aria-label="Nome da pessoa"
+                className="h-14 min-w-0 flex-1 rounded-2xl border-2 border-input bg-background px-3 text-lg"
+              />
+              <button
+                disabled={!novaPessoa.trim()}
+                onClick={() => void adicionarPessoa()}
+                className="tap flex items-center justify-center gap-1 rounded-2xl bg-navy px-4 text-lg font-bold text-primary-foreground disabled:opacity-40"
+              >
+                <Check size={24} strokeWidth={2.2} /> Pôr
+              </button>
             </div>
           )}
           {variosPag && (
             <div className="mt-2 space-y-2">
               {idsPag.map((pid) => (
-                <label key={pid} className="flex min-h-14 items-center gap-3 rounded-2xl border-2 border-border bg-card px-3">
+                <label
+                  key={pid}
+                  className="flex min-h-14 items-center gap-3 rounded-2xl border-2 border-border bg-card px-3"
+                >
                   <span className="flex-1 text-lg font-bold">{nomes(pid)} pagou</span>
-                  <input inputMode="decimal" value={pagadores[pid]} onChange={(e) => setPagadores({ ...pagadores, [pid]: e.target.value })} placeholder={moeda} className="h-12 w-28 rounded-xl border-2 border-input bg-background px-2 text-right text-lg font-bold" />
+                  <input
+                    inputMode="decimal"
+                    value={pagadores[pid]}
+                    onChange={(e) => setPagadores({ ...pagadores, [pid]: e.target.value })}
+                    placeholder={moeda}
+                    className="h-12 w-28 rounded-xl border-2 border-input bg-background px-2 text-right text-lg font-bold"
+                  />
                 </label>
               ))}
-              {!pagFecha && <p className="text-base font-bold text-danger">{somaPag < valor ? `Faltam ${fmtMoney(valor - somaPag, moeda)}` : `Sobram ${fmtMoney(somaPag - valor, moeda)}`}</p>}
+              {!pagFecha && (
+                <p className="text-base font-bold text-danger">
+                  {somaPag < valor
+                    ? `Faltam ${fmtMoney(valor - somaPag, moeda)}`
+                    : `Sobram ${fmtMoney(somaPag - valor, moeda)}`}
+                </p>
+              )}
             </div>
           )}
         </section>
@@ -304,25 +640,58 @@ function NovaDespesa() {
               {todosAtivos.map((p) => {
                 const on = partIds.includes(p.id);
                 return (
-                  <button key={p.id} onClick={() => tocarParticipante(p.id)} aria-pressed={on} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
-                    <span className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : "opacity-40"}`}><AvatarPessoa nome={p.nome} foto={null} tamanho={56} /></span>
-                    <span className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}>{p.nome}</span>
+                  <button
+                    key={p.id}
+                    onClick={() => tocarParticipante(p.id)}
+                    aria-pressed={on}
+                    className="flex w-[68px] shrink-0 flex-col items-center gap-1"
+                  >
+                    <span
+                      className={`rounded-full p-0.5 ${on ? "ring-4 ring-teal" : "opacity-40"}`}
+                    >
+                      <AvatarPessoa nome={p.nome} foto={null} tamanho={56} />
+                    </span>
+                    <span
+                      className={`w-full truncate text-center text-sm ${on ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {p.nome}
+                    </span>
                   </button>
                 );
               })}
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">Quem não participa não aparece na divisão.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Quem não participa não aparece na divisão.
+            </p>
           </section>
         )}
 
-        <button onClick={() => setPessoal(!pessoal)} role="switch" aria-checked={pessoal}
-          className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 text-left ${pessoal ? "border-pessoal-border bg-pessoal" : "border-border bg-card"}`}>
-          <User size={26} strokeWidth={2.2} className={pessoal ? "text-pessoal-foreground" : "text-foreground"} />
+        <button
+          onClick={() => setPessoal(!pessoal)}
+          role="switch"
+          aria-checked={pessoal}
+          className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 text-left ${pessoal ? "border-pessoal-border bg-pessoal" : "border-border bg-card"}`}
+        >
+          <User
+            size={26}
+            strokeWidth={2.2}
+            className={pessoal ? "text-pessoal-foreground" : "text-foreground"}
+          />
           <span className="flex-1">
-            <span className={`block text-lg font-bold ${pessoal ? "text-pessoal-foreground" : "text-foreground"}`}>Só de uma pessoa</span>
-            <span className="block text-sm text-muted-foreground">Não divide, não entra no saldo</span>
+            <span
+              className={`block text-lg font-bold ${pessoal ? "text-pessoal-foreground" : "text-foreground"}`}
+            >
+              Só de uma pessoa
+            </span>
+            <span className="block text-sm text-muted-foreground">
+              Não divide, não entra no saldo
+            </span>
           </span>
-          <span className={`flex h-8 w-14 items-center rounded-full p-1 ${pessoal ? "justify-end bg-pessoal-foreground" : "justify-start bg-muted-foreground/40"}`}><span className="h-6 w-6 rounded-full bg-card" /></span>
+          <span
+            className={`flex h-8 w-14 items-center rounded-full p-1 ${pessoal ? "justify-end bg-pessoal-foreground" : "justify-start bg-muted-foreground/40"}`}
+          >
+            <span className="h-6 w-6 rounded-full bg-card" />
+          </span>
         </button>
 
         {pessoal ? (
@@ -330,18 +699,40 @@ function NovaDespesa() {
             <h2 className="text-lg font-bold text-pessoal-foreground">De quem é?</h2>
             <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
               {pessoasDiv.map((p) => (
-                <button key={p.id} onClick={() => setPessoalDe(p.id)} aria-pressed={pessoalDe === p.id} className="flex w-[68px] shrink-0 flex-col items-center gap-1">
-                  <span className={`rounded-full p-0.5 ${pessoalDe === p.id ? "ring-4 ring-pessoal-foreground" : ""}`}><AvatarPessoa nome={p.nome} foto={null} tamanho={56} /></span>
-                  <span className="w-full truncate text-center text-sm font-bold text-pessoal-foreground">{p.nome}</span>
+                <button
+                  key={p.id}
+                  onClick={() => setPessoalDe(p.id)}
+                  aria-pressed={pessoalDe === p.id}
+                  className="flex w-[68px] shrink-0 flex-col items-center gap-1"
+                >
+                  <span
+                    className={`rounded-full p-0.5 ${pessoalDe === p.id ? "ring-4 ring-pessoal-foreground" : ""}`}
+                  >
+                    <AvatarPessoa nome={p.nome} foto={null} tamanho={56} />
+                  </span>
+                  <span className="w-full truncate text-center text-sm font-bold text-pessoal-foreground">
+                    {p.nome}
+                  </span>
                 </button>
               ))}
             </div>
           </section>
         ) : (
-          <button onClick={() => setFolha(true)} className="flex min-h-14 w-full items-center gap-2 rounded-2xl border-2 border-border bg-card px-4 text-left">
+          <button
+            onClick={() => setFolha(true)}
+            className="flex min-h-14 w-full items-center gap-2 rounded-2xl border-2 border-border bg-card px-4 text-left"
+          >
             <span className="flex-1">
-              <span className={`block text-lg font-bold ${r.fecha ? "text-foreground" : "text-danger"}`}>{r.fecha ? resumoDiv : "A divisão não fecha · ajuste"}</span>
-              {r.fecha && r.extras > 0 && <span className="block text-sm text-muted-foreground">{fraseCentavos(r.extras)}</span>}
+              <span
+                className={`block text-lg font-bold ${r.fecha ? "text-foreground" : "text-danger"}`}
+              >
+                {r.fecha ? resumoDiv : "A divisão não fecha · ajuste"}
+              </span>
+              {r.fecha && r.extras > 0 && (
+                <span className="block text-sm text-muted-foreground">
+                  {fraseCentavos(r.extras)}
+                </span>
+              )}
             </span>
             <ChevronRight size={26} strokeWidth={2.2} />
           </button>
@@ -349,24 +740,60 @@ function NovaDespesa() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-foreground">
-            <Camera size={24} strokeWidth={2.2} /> {lendoConta ? "Lendo a conta…" : recibo ? "Conta lida ✓" : comprovante ? "Recibo anexado" : "Foto do recibo"}
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
-              const f = e.target.files?.[0]; e.target.value = ""; if (f) void anexarRecibo(f);
-            }} />
+            <Camera size={24} strokeWidth={2.2} />{" "}
+            {lendoConta
+              ? "Lendo a conta…"
+              : recibo
+                ? "Conta lida ✓"
+                : comprovante
+                  ? "Recibo anexado"
+                  : "Foto do recibo"}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void anexarRecibo(f);
+              }}
+            />
           </label>
           <label className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-2 text-base font-bold text-foreground">
             <CalendarDays size={24} strokeWidth={2.2} />
-            <input type="date" aria-label="Data" value={data} max="2099-12-31" onChange={(e) => e.target.value && setData(e.target.value)} className="min-w-0 bg-transparent text-base font-bold" />
+            <input
+              type="date"
+              aria-label="Data"
+              value={data}
+              max="2099-12-31"
+              onChange={(e) => e.target.value && setData(e.target.value)}
+              className="min-w-0 bg-transparent text-base font-bold"
+            />
           </label>
         </div>
 
-        <button onClick={salvar} disabled={!podeSalvar || salvando || lendoConta} className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-40">
+        <button
+          onClick={salvar}
+          disabled={!podeSalvar || salvando || lendoConta}
+          className="gradient-hero shadow-medium tap flex w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-40"
+        >
           <Check size={28} strokeWidth={2.2} /> Salvar
         </button>
-        <p className="text-center text-base text-muted-foreground">Sem internet? Salva no aparelho e sobe depois.</p>
+        <p className="text-center text-base text-muted-foreground">
+          Sem internet? Salva no aparelho e sobe depois.
+        </p>
       </main>
 
-      <FolhaDivisao aberta={folha} onFechar={() => setFolha(false)} totalC={totalC} moeda={trip.moeda_base} pessoas={pessoasDiv} valor={div} onPronto={setDivisao} />
+      <FolhaDivisao
+        aberta={folha}
+        onFechar={() => setFolha(false)}
+        totalC={totalC}
+        moeda={trip.moeda_base}
+        pessoas={pessoasDiv}
+        valor={div}
+        onPronto={setDivisao}
+      />
     </div>
   );
 }
