@@ -169,7 +169,6 @@ function FotosViagem() {
     }
   }
 
-  const [baixando, setBaixando] = useState(false);
 
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selecionando, setSelecionando] = useState(false);
