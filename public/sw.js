@@ -81,6 +81,11 @@ if (!HOST_SEM_APP) self.addEventListener("activate", (event) => {
       const nomes = await caches.keys();
       await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== ANEXOS && n !== LOGOS).map((n) => caches.delete(n)));
       await self.clients.claim();
+      // Uma versão nova pode assumir enquanto o app instalado ainda exibe a
+      // casca anterior. Reabre cada tela controlada uma vez para ela carregar
+      // os arquivos que acabaram de ser instalados.
+      const abas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      await Promise.allSettled(abas.map((c) => c.navigate(c.url)));
     })(),
   );
 });
