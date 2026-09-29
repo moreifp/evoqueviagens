@@ -2,7 +2,7 @@ import { usuarioLocal } from "@/lib/sessao";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, ChevronDown, ChevronLeft, Download, Images, Trash2, X } from "lucide-react";
+import { Camera, Check, CheckCheck, ChevronDown, ChevronLeft, Download, Images, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
@@ -435,16 +435,36 @@ function FotosViagem() {
                   ? ` · ${baixadas.size} já baixada${baixadas.size === 1 ? "" : "s"}`
                   : ""}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelecionando((s) => !s);
-                  setSel(new Set());
-                }}
-                className="tap min-h-12 rounded-xl px-4 text-lg font-semibold text-accent"
-              >
-                {selecionando ? "Cancelar" : "Selecionar"}
-              </button>
+              <div className="flex items-center">
+                {selecionando && (
+                  <button
+                    type="button"
+                    aria-label="Selecionar todas as fotos"
+                    onClick={() => {
+                      setConfApagar(false);
+                      const todas = mostradas.every((f) => sel.has(f.id));
+                      setSel(todas ? new Set() : new Set(mostradas.map((f) => f.id)));
+                    }}
+                    className="tap flex min-h-12 items-center justify-center rounded-xl px-3 text-accent"
+                  >
+                    {mostradas.length > 0 && mostradas.every((f) => sel.has(f.id)) ? (
+                      <X size={24} strokeWidth={2.2} />
+                    ) : (
+                      <CheckCheck size={26} strokeWidth={2.2} />
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelecionando((s) => !s);
+                    setSel(new Set());
+                  }}
+                  className="tap min-h-12 rounded-xl px-4 text-lg font-semibold text-accent"
+                >
+                  {selecionando ? "Cancelar" : "Selecionar"}
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
               {mostradas.map((f) => {
