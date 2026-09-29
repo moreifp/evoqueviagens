@@ -360,29 +360,3 @@
   letter-spacing: 0.06em;
 }
 
-/* Chave "Visual" → Clássico: volta ao visual anterior (cartões azul-marinho, blocos neutros). */
-html.visual-classico .cartao-voo,
-html.visual-classico .cartao-hosp,
-html.visual-classico .cartao-reserva {
-  background-image: none;
-  background-color: var(--color-primary);
-}
-html.visual-classico .novo-cor {
-  background-color: var(--color-card) !important;
-  background-image: none !important;
-  border-color: var(--color-border) !important;
-}
-html.visual-classico .novo-cor-icone {
-  color: var(--color-accent) !important;
-}
-html.visual-classico .novo-botao {
-  background-color: var(--color-primary) !important;
-  color: var(--color-primary-foreground) !important;
-}
-html.visual-classico .novo-cat {
-  background-color: transparent !important;
-  color: var(--color-muted-foreground) !important;
-}
-html.visual-classico .novo-some {
-  display: none !important;
-}
