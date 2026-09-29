@@ -183,7 +183,7 @@ const APELIDO: Record<string, string> = { US: "EUA", GB: "Reino Unido" };
 /** Nome do país em português a partir do pais_emissor (BR, BRA ou nome livre). */
 export function paisPt(v: string | null | undefined): string {
   const t = (v ?? "").trim(); if (!t) return "";
-  const up = t.toUpperCase(); const c2 = up.length === 3 ? A3_A2[up] : up.length === 2 ? up : null;
+  const up = t.toUpperCase(); const c2 = A3_A2[up] ?? (up.length === 2 ? up : null);
   if (!c2) return t;
   if (APELIDO[c2]) return APELIDO[c2];
   try { return new Intl.DisplayNames(["pt-BR"], { type: "region" }).of(c2) ?? t; } catch { return t; }
