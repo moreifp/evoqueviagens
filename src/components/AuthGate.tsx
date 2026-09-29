@@ -1,3 +1,4 @@
+import { TravaFaceId } from "@/components/TravaFaceId";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,7 +76,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return <div className="min-h-screen bg-background" />;
   }
   if (!session) return <Entrar />;
-  return <>{children}</>;
+  return <TravaFaceId>{children}</TravaFaceId>;
 }
 
 /** Sessão salva pelo login no aparelho (mesmo vencida), para o modo leitura sem internet. */
