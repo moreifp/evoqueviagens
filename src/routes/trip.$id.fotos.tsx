@@ -169,6 +169,43 @@ function FotosViagem() {
     }
   }
 
+  // Abre a folha de compartilhar do iPhone com os originais: "Salvar N imagens" guarda no app Fotos.
+  async function salvarNoAparelho() {
+    const files = novas.map(
+      (f, i) =>
+        new File([f], f.name || `${nomePasta} ${String(i + 1).padStart(3, "0")}.jpg`, {
+          type: f.type || "image/jpeg",
+        }),
+    );
+    if (!files.length) return;
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (nav.share && nav.canShare?.({ files })) {
+      try {
+        await nav.share({ files });
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        toast.error("Não consegui abrir o salvar do aparelho.");
+        return;
+      }
+    } else {
+      for (const f of files) {
+        const url = URL.createObjectURL(f);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = f.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+    }
+    while (uploads.current.length) await Promise.all([...uploads.current]);
+    if (idsNovas.current.length) {
+      salvarBaixadas(new Set([...baixadas, ...idsNovas.current]));
+      idsNovas.current = [];
+    }
+    setNovas([]);
+    toast.success("Fotos entregues ao aparelho · o iCloud sincroniza sozinho");
+  }
+
 
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selecionando, setSelecionando] = useState(false);
@@ -320,10 +357,17 @@ function FotosViagem() {
               <Download size={24} strokeWidth={2.2} />{" "}
               {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
             </button>
+            <button
+              type="button"
+              onClick={salvarNoAparelho}
+              disabled={salvandoNovas}
+              className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-accent bg-card text-lg font-bold"
+            >
+              <Download size={24} strokeWidth={2.2} /> Salvar no iPhone (iCloud Fotos)
+            </button>
             <p className="text-base text-muted-foreground">
-              Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive (precisa
-              de internet). No app fica só a cópia pequena, para ver na tela — ela não é reenviada
-              ao Drive depois.
+              Originais vão em tamanho real para o Drive ou para o app Fotos do aparelho — o iCloud
+              sincroniza sozinho. No app fica só a cópia pequena, para ver na tela.
             </p>
           </div>
         )}
