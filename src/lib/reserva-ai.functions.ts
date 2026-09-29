@@ -12,6 +12,9 @@ const input = z.object({
   esperado: z.enum(["voo", "hotel", "reserva", "despesa"]).optional(),
 });
 
+/** Modelo da leitura de reservas (trocar aqui). Comparado com google/gemini-2.5-flash em 29/09: ver AGENTS.md. */
+export const MODELO_LEITURA = "openai/gpt-6-astra";
+
 const TIPOS = ["voo", "trem", "onibus", "hotel", "carro", "passeio", "restaurante", "outro", "despesa"] as const;
 const s = { type: ["string", "null"] };
 
@@ -98,7 +101,7 @@ async function chamarIA(key: string, content: Record<string, unknown>[], nome: s
       method: "POST",
       headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra", stream: true,
+        model: MODELO_LEITURA, stream: true,
         input: [{ role: "user", content }],
         reasoning: { effort: "low" }, store: false,
         text: { format: { type: "json_schema", name: nome, strict: true, schema: sch } },
