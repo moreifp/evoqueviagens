@@ -9,6 +9,7 @@ import { tripQuery } from "@/lib/data";
 import { comprimir } from "@/lib/imagem";
 import { useServerFn } from "@tanstack/react-start";
 import { fotoDrive, pastaDrive } from "@/lib/drive.functions";
+import { gravarPendentes, lerPendentes } from "@/lib/fotos-pendentes";
 
 export const Route = createFileRoute("/trip/$id/fotos")({
   head: () => ({
@@ -70,6 +71,27 @@ function FotosViagem() {
   // Uploads em andamento e ids das fotos recém-enviadas (para marcá-las como "já no Drive").
   const uploads = useRef<Promise<void>[]>([]);
   const idsNovas = useRef<string[]>([]);
+  // Originais pendentes ficam guardados no aparelho até serem salvos (sobrevivem a fechar o app).
+  const restaurado = useRef(false);
+  useEffect(() => {
+    void lerPendentes(id).then((p) => {
+      if (p.files.length) {
+        setNovas((a) => [...p.files, ...a]);
+        idsNovas.current = [...p.ids, ...idsNovas.current];
+      }
+      restaurado.current = true;
+    });
+  }, [id]);
+  useEffect(() => {
+    if (!restaurado.current) return;
+    void gravarPendentes(id, { files: novas, ids: idsNovas.current });
+  }, [id, novas, enviando]);
+  useEffect(() => {
+    if (!novas.length) return;
+    const aviso = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [novas.length]);
 
   function enviar(f: File) {
     const p = (async () => {
