@@ -36,3 +36,7 @@ export const reciboUrlQuery = (expenseId: string, reciboPath: string | null | un
       return data?.comprovante_url ?? null;
     },
   });
+
+/** Esta despesa tem recibo (qualquer formato)? */
+export const temRecibo = (e: { recibo_path?: string | null; tem_comprovante?: boolean; comprovante_url?: string | null }) =>
+  ehReciboStorage(e.recibo_path) || !!e.tem_comprovante || !!e.comprovante_url;
