@@ -72,20 +72,20 @@ function FotosViagem() {
   const uploads = useRef<Promise<void>[]>([]);
   const idsNovas = useRef<string[]>([]);
   // Originais pendentes ficam guardados no aparelho até serem salvos (sobrevivem a fechar o app).
-  const restaurado = useRef(false);
+  const [restaurado, setRestaurado] = useState(false);
   useEffect(() => {
     void lerPendentes(id).then((p) => {
       if (p.files.length) {
         setNovas((a) => [...p.files, ...a]);
         idsNovas.current = [...p.ids, ...idsNovas.current];
       }
-      restaurado.current = true;
+      setRestaurado(true);
     });
   }, [id]);
   useEffect(() => {
-    if (!restaurado.current) return;
+    if (!restaurado) return;
     void gravarPendentes(id, { files: novas, ids: idsNovas.current });
-  }, [id, novas, enviando]);
+  }, [id, novas, enviando, restaurado]);
   useEffect(() => {
     if (!novas.length) return;
     const aviso = (e: BeforeUnloadEvent) => e.preventDefault();
