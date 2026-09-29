@@ -21,7 +21,24 @@ export async function registrarServiceWorker() {
     return;
   }
   try {
-    await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+    let trocouControle = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (trocouControle) return;
+      trocouControle = true;
+      window.location.reload();
+    });
+
+    const registro = await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+    // Safari/iOS pode manter o app instalado aberto por muitos dias. A busca
+    // explícita evita depender apenas da verificação periódica do navegador.
+    await registro.update().catch(() => {});
+
+    const verificar = () => void registro.update().catch(() => {});
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") verificar();
+    };
+    window.addEventListener("online", verificar);
+    document.addEventListener("visibilitychange", aoVoltar);
   } catch {
     /* segue sem modo offline */
   }
