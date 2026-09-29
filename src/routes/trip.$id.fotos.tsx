@@ -357,21 +357,32 @@ function FotosViagem() {
               <Download size={24} strokeWidth={2.2} />{" "}
               {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
             </button>
+          </div>
+        )}
+
+        {souDono && !camera && (
+          <div className="space-y-2 rounded-2xl border-2 border-accent bg-card p-4">
             <button
               type="button"
               onClick={salvarNoAparelho}
-              disabled={salvandoNovas}
-              className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-accent bg-card text-lg font-bold"
+              disabled={novas.length === 0 || salvandoNovas}
+              className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-accent bg-card text-lg font-bold disabled:opacity-50"
             >
               <Download size={24} strokeWidth={2.2} /> Salvar no iPhone (iCloud Fotos)
             </button>
-            <p className="text-base text-muted-foreground">
-              No iPhone: toque acima e escolha{" "}
-              <strong className="text-foreground">
-                “Salvar {novas.length} {novas.length === 1 ? "imagem" : "imagens"}”
-              </strong>
-              . O iCloud Fotos sincroniza sozinho. No app fica só a cópia pequena.
-            </p>
+            {novas.length > 0 ? (
+              <p className="text-base text-muted-foreground">
+                No iPhone: toque acima e escolha{" "}
+                <strong className="text-foreground">
+                  “Salvar {novas.length} {novas.length === 1 ? "imagem" : "imagens"}”
+                </strong>
+                . O iCloud Fotos sincroniza sozinho. No app fica só a cópia pequena.
+              </p>
+            ) : (
+              <p className="text-base text-muted-foreground">
+                Tire ou escolha fotos primeiro. Depois, salve no iPhone e o iCloud Fotos sincroniza sozinho.
+              </p>
+            )}
           </div>
         )}
 
