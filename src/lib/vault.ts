@@ -20,7 +20,7 @@ export function useVaultUnlocked(accountId: string | undefined) {
 
 type VaultMeta = { account_id: string; kdf_salt: string; kdf_iterations: number; verifier_ciphertext: string; verifier_iv: string };
 export type VaultItem = { id: string; account_id: string; loyalty_account_id: string; encrypted_payload: string; iv: string; created_at: string; updated_at: string };
-export type VaultDocument = { id: string; person_id: string; account_id: string; encrypted_payload: string; iv: string; created_at: string; deleted_at: string | null };
+export type VaultDocument = { id: string; person_id: string; account_id: string; encrypted_payload: string; iv: string; created_at: string; updated_at?: string; deleted_at: string | null };
 export type VaultDocumentContents = { fields: Record<string, string>; file?: { name: string; type: string; data: string } };
 const documentCache = (accountId: string, personId: string) => `${CACHE_PREFIX}docs:${accountId}:${personId}`;
 const vaultDb = supabase as unknown as { from: (table: string) => any };
