@@ -44,7 +44,8 @@ function preCacheOffline(): Plugin {
         publicos = [];
       }
       // Primeira instalação leve: arquivos pesados e da landing ficam para o cache em tempo de uso.
-      const pesado = /(pdf\.worker|pdf[.-]|exceljs|jspdf|html2canvas|purify|og-|marketing|Marketing|Landing|landing|coast-editorial|train-editorial|\.woff2$.*marketing)/;
+      // index.es-* (canvg + polyfills do gerador de PDF) e o drawer (vaul) carregam sob demanda.
+      const pesado = /(index\.es-|polyfill|drawer-|vaul|pdf\.worker|pdf[.-]|exceljs|jspdf|html2canvas|purify|og-|marketing|Marketing|Landing|landing|coast-editorial|train-editorial|\.woff2$.*marketing)/;
       const lista = [...new Set([...arquivos, ...publicos, "/manifest.webmanifest"])].filter((f) => !pesado.test(f)).sort();
       const versao = createHash("sha256").update(lista.join("\n")).update(String(Date.now())).digest("hex").slice(0, 12);
       this.emitFile({
