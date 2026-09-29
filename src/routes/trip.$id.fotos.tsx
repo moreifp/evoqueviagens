@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
 import { comprimir } from "@/lib/imagem";
 import { useServerFn } from "@tanstack/react-start";
-import { fotoDrive, pastaDrive } from "@/lib/drive.functions";
+import { fotoDrive, pastaDrive, listarDrive, baixarDrive } from "@/lib/drive.functions";
 
 export const Route = createFileRoute("/trip/$id/fotos")({
   head: () => ({
@@ -130,6 +130,53 @@ function FotosViagem() {
   }
 
   const [baixando, setBaixando] = useState(false);
+  const listar = useServerFn(listarDrive);
+  const baixarUma = useServerFn(baixarDrive);
+  const [salvandoAlbum, setSalvandoAlbum] = useState(false);
+  // A viagem terminou? (data_fim anterior a hoje)
+  const viagemTerminou = Boolean(trip?.data_fim && trip.data_fim < new Date().toISOString().slice(0, 10));
+
+  // Fim da viagem: baixa os ORIGINAIS da pasta do Drive e oferece salvar no app Fotos do iPhone.
+  async function salvarAlbumNoFotos() {
+    if (!navigator.onLine) return void toast.error("Sem internet · o álbum só baixa com conexão.");
+    setSalvandoAlbum(true);
+    try {
+      const { nome, arquivos } = await listar({ data: { tripId: id } });
+      if (!arquivos.length) return void toast.error(`Não achei fotos na pasta "${nome}" do Google Drive.`);
+      const podeCompartilhar = typeof navigator.canShare === "function";
+      const LOTE = 8;
+      for (let i = 0; i < arquivos.length; i += LOTE) {
+        const pedaco = arquivos.slice(i, i + LOTE);
+        const files: File[] = [];
+        for (let j = 0; j < pedaco.length; j++) {
+          setProgresso(`${i + j + 1} de ${arquivos.length}`);
+          const { base64 } = await baixarUma({ data: { tripId: id, fileId: pedaco[j]!.id } });
+          const bin = atob(base64);
+          const buf = new Uint8Array(bin.length);
+          for (let k = 0; k < bin.length; k++) buf[k] = bin.charCodeAt(k);
+          files.push(new File([buf], pedaco[j]!.nome, { type: "image/jpeg" }));
+        }
+        if (podeCompartilhar && navigator.canShare({ files })) {
+          // No iPhone, a folha de compartilhamento oferece "Salvar N imagens" no app Fotos.
+          await navigator.share({ files });
+        } else {
+          // Computador: baixa os arquivos um a um.
+          for (const f of files) {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(f);
+            a.download = f.name;
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }
+        }
+      }
+      toast.success(`${arquivos.length} ${arquivos.length === 1 ? "foto pronta" : "fotos prontas"} — no iPhone, toque em "Salvar imagens" para guardar no app Fotos.`);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return; // usuário fechou a folha de compartilhamento
+      toast.error(e instanceof Error ? e.message : "Não consegui baixar o álbum do Google Drive.");
+    } finally { setSalvandoAlbum(false); setProgresso(""); }
+  }
+
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selecionando, setSelecionando] = useState(false);
   const [confApagar, setConfApagar] = useState(false);
