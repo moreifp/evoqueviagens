@@ -41,6 +41,7 @@ import { impressao, guardarTaxa, nomeCurto, ultimaTaxa, useUid } from "@/lib/des
 import { moedaValida } from "@/lib/moedas";
 import { useServerFn } from "@tanstack/react-start";
 import { transcreverRecibo } from "@/lib/recibo.functions";
+import { subirRecibo, temRecibo } from "@/lib/reciboArquivo";
 import { comprimir } from "@/lib/imagem";
 
 const s = (v: unknown) => {
@@ -121,7 +122,10 @@ function NovaDespesa() {
   );
   const [data, setData] = useState(() => editando?.data ?? (q.data || hoje()));
   const [descricao, setDescricao] = useState(() => editando?.descricao ?? q.descricao);
-  const [comprovante, setComprovante] = useState<string | null>(editando?.comprovante_url ?? null);
+  // Prévia local (data URL) + o arquivo reduzido, que sobe para o storage ao salvar.
+  const [comprovante, setComprovante] = useState<string | null>(null);
+  const [reciboBlob, setReciboBlob] = useState<Blob | null>(null);
+  const jaTinhaRecibo = !!editando && temRecibo(editando);
   // Leitura automática da conta assim que a foto é anexada (texto vai junto com a despesa).
   const lerConta = useServerFn(transcreverRecibo);
   const [lendoConta, setLendoConta] = useState(false);
@@ -134,6 +138,7 @@ function NovaDespesa() {
       fr.readAsDataURL(melhor);
     });
     setComprovante(url);
+    setReciboBlob(melhor);
     setRecibo(null);
     if (!navigator.onLine) {
       toast("Recibo anexado · a conta será lida quando abrir a despesa com internet.");
@@ -386,7 +391,9 @@ function NovaDespesa() {
           : null,
         taxa_data: diferente ? (autoTaxa ? fonte!.data : data) : null,
         taxa_provisoria: diferente && provisoria && !autoTaxa,
-        comprovante_url: comprovante,
+        comprovante_url: null as string | null,
+        recibo_path: null as string | null,
+        recibo_texto: null as string | null,
         pessoal,
         pessoal_de: pessoal ? pessoalDe : null,
         divisao: pessoal ? "igual" : div.modo,
@@ -395,12 +402,20 @@ function NovaDespesa() {
           (["ticket", "lodging", "reservation"].includes(q.itemTipo) ? q.itemTipo : null),
         item_id: editando?.item_id ?? (q.itemId || null),
       };
+      // Recibo novo: com internet vai para o storage; sem internet fica em data URL (formato antigo).
+      if (reciboBlob && comprovante) {
+        const caminho = await subirRecibo(id, expenseId, reciboBlob);
+        if (caminho) {
+          d.recibo_path = caminho;
+          d.recibo_texto = recibo?.texto ?? null;
+        } else d.comprovante_url = comprovante;
+      }
       const res = await mutar({
         tipo: "rpc",
         funcao: "salvar_despesa",
         args: { _d: d, _pagadores: pagadoresJ, _partes: partesJ },
       });
-      if (recibo && comprovante && impressao(comprovante) === recibo.path)
+      if (recibo && d.comprovante_url && impressao(d.comprovante_url) === recibo.path)
         await mutar({
           tipo: "update",
           tabela: "expense",
@@ -745,7 +760,7 @@ function NovaDespesa() {
               ? "Lendo a conta…"
               : recibo
                 ? "Conta lida ✓"
-                : comprovante
+                : comprovante || jaTinhaRecibo
                   ? "Recibo anexado"
                   : "Foto do recibo"}
             <input
