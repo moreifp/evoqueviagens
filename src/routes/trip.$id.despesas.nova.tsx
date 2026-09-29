@@ -425,6 +425,10 @@ function NovaDespesa() {
       const local: Expense = {
         ...(editando ?? {}),
         ...d,
+        recibo_path: d.recibo_path ?? editando?.recibo_path ?? null,
+        recibo_texto: d.recibo_path ? d.recibo_texto : (editando?.recibo_texto ?? null),
+        tem_comprovante: !!d.comprovante_url || (!d.recibo_path && !!editando?.tem_comprovante),
+        comprovante_url: d.comprovante_url ?? (d.recibo_path ? null : (editando?.comprovante_url ?? null)),
         pago_por: pagadoresJ[0]!.person_id,
         criado_por: editando?.criado_por ?? uid ?? null,
         editado_em: editando ? new Date().toISOString() : null,
