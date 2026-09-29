@@ -366,8 +366,11 @@ function FotosViagem() {
               <Download size={24} strokeWidth={2.2} /> Salvar no iPhone (iCloud Fotos)
             </button>
             <p className="text-base text-muted-foreground">
-              Originais vão em tamanho real para o Drive ou para o app Fotos do aparelho — o iCloud
-              sincroniza sozinho. No app fica só a cópia pequena, para ver na tela.
+              No iPhone: toque acima e escolha{" "}
+              <strong className="text-foreground">
+                “Salvar {novas.length} {novas.length === 1 ? "imagem" : "imagens"}”
+              </strong>
+              . O iCloud Fotos sincroniza sozinho. No app fica só a cópia pequena.
             </p>
           </div>
         )}
