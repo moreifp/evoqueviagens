@@ -186,3 +186,4 @@
 - [x] Validação de foto de fidelidade: limpar cartao_path quando o arquivo não existe (auto-cura na tela)
 - [x] Verificar referências órfãs no banco (resultado: zero após limpeza dos cartões)
 - [x] Forçar a troca segura da versão no app instalado ao abrir, voltar ao app ou recuperar a internet
+- [ ] Face ID ao abrir o app (trava local, login por e-mail na 1ª vez)

@@ -33,6 +33,13 @@ import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
 import { DocumentosCofre } from "./DocumentosCofre";
 import { mudarVisual, useVisual } from "@/lib/visual";
+import { ScanFace } from "lucide-react";
+import {
+  desligarFaceId,
+  faceIdDisponivel,
+  ligarFaceId,
+  useFaceIdLigado,
+} from "@/components/TravaFaceId";
 
 const LISTA_VAZIA: never[] = [];
 
@@ -465,6 +472,7 @@ function EuDashboardConteudo({
         <ItensQueNaoTem personId={p.id} itens={progresso.itens} owner={owner} />
 
         {self && <ChaveVisual />}
+        {self && <ChaveFaceId />}
         {self && (
           <div className="flex items-center gap-3">
             <Link
@@ -549,6 +557,52 @@ function LinhaDrive({ pastaViagem }: { pastaViagem: string | null }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Chave "Face ID ao abrir": só neste aparelho. */
+function ChaveFaceId() {
+  const ligado = useFaceIdLigado();
+  const [pode, setPode] = useState(false);
+  useEffect(() => {
+    void faceIdDisponivel().then(setPode);
+  }, []);
+  if (!pode && !ligado) return null;
+  async function alternar() {
+    if (ligado) {
+      desligarFaceId();
+      toast.success("Face ID desligado neste aparelho");
+      return;
+    }
+    try {
+      const { data } = await supabase.auth.getUser();
+      await ligarFaceId(data.user?.email ?? "");
+      toast.success("Pronto: o app vai pedir Face ID ao abrir");
+    } catch {
+      toast.error("Face ID não foi ativado.");
+    }
+  }
+  return (
+    <section aria-label="Face ID" className="space-y-2">
+      <h2 className="text-2xl">Face ID ao abrir</h2>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={ligado}
+        onClick={alternar}
+        className="tap flex w-full items-center gap-3 rounded-2xl bg-muted px-4 text-left"
+      >
+        <ScanFace size={26} strokeWidth={2.2} />
+        <span className="flex-1 text-lg font-bold">{ligado ? "Ligado" : "Desligado"}</span>
+        <span
+          className={`h-8 w-14 rounded-full p-1 transition-colors ${ligado ? "bg-primary" : "bg-border"}`}
+        >
+          <span
+            className={`block size-6 rounded-full bg-card shadow-soft transition-transform ${ligado ? "translate-x-6" : ""}`}
+          />
+        </span>
+      </button>
+    </section>
   );
 }
 
