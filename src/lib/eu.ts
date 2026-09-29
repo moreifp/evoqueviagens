@@ -1,4 +1,5 @@
 import { usuarioLocal } from "@/lib/sessao";
+import { A3_A2 } from "./paises3";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NOME_DOC, TIPOS_VISTO } from "./cadastro-tipos";
