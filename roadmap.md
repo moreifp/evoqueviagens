@@ -180,3 +180,8 @@
 - [x] Toggle para mostrar/esconder fotos já baixadas (sem voltar ao estado de baixar)
 - [x] Conferido: fotos CHEGARAM ao Drive (9 na pasta "Africa do Sul"); usuário não as via (conta/local)
 - [x] Linha "Google Drive" em Eu → Mais sobre você: conta conectada + pasta de destino
+
+## Manutenção 29/09
+- [ ] Corrigir loop de "Atualizando o app…" (recarregar no máx. 2×/10 min, zerar ao carregar bem)
+- [ ] Validação de foto de fidelidade: limpar cartao_path quando o arquivo não existe (auto-cura na tela)
+- [ ] Verificar referências órfãs no banco (resultado: zero após limpeza dos cartões)

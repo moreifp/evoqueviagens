@@ -93,8 +93,26 @@ function Programa() {
     void supabase.storage
       .from("documentos")
       .createSignedUrl(item.cartao_path, 600)
-      .then(({ data: s }) => setCardUrl(s?.signedUrl ?? null));
-  }, [item?.cartao_path]);
+      .then(async ({ data: s, error }) => {
+        if (s?.signedUrl) {
+          setCardUrl(s.signedUrl);
+          return;
+        }
+        // O arquivo não existe mais (apagado fora do app): limpa a referência
+        // para o cartão não ficar apontando para uma imagem inexistente.
+        if (error) {
+          setCardUrl(null);
+          const { error: eUpd } = await supabase
+            .from("loyalty_account")
+            .update({ cartao_path: null })
+            .eq("id", fid);
+          if (!eUpd) {
+            await qc.invalidateQueries({ queryKey: ["eu", pid] });
+            toast("A foto deste cartão não foi encontrada; a referência foi limpa.");
+          }
+        }
+      });
+  }, [item?.cartao_path]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!show) return;
     const t = setTimeout(() => setShow(false), 30000);
