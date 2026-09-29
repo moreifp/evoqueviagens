@@ -48,11 +48,24 @@ if (!HOST_SEM_APP) self.addEventListener("install", (event) => {
     (async () => {
       const cache = await caches.open(CACHE);
       const lista = [OFFLINE, ...(self.__EVOQUE_PRECACHE || [])];
+      // Caches de versões anteriores: arquivo com o mesmo nome com hash (/assets/x-AbC123.js) tem o mesmo conteúdo,
+      // então é copiado de lá em vez de baixar de novo. Arquivos sem hash (ícones, offline.html) sempre vão à rede.
+      const nomes = (await caches.keys()).filter((n) => (n.startsWith("evoque-app-") && n !== CACHE) || n === RUNTIME);
+      const velhos = await Promise.all(nomes.map((n) => caches.open(n)));
+      const comHash = (u) => /^\/assets\/.+-[A-Za-z0-9_-]{8,}\.[a-z0-9]+$/.test(u);
+      let copiados = 0, baixados = 0;
       // Um arquivo que falhar não impede os outros.
       await Promise.allSettled(lista.map(async (u) => {
+        if (comHash(u)) {
+          for (const c of velhos) {
+            const g = await c.match(u, { ignoreVary: true, ignoreSearch: true });
+            if (g && g.ok) { await cache.put(u, g); copiados++; return; }
+          }
+        }
         const r = await fetch(new Request(u, { cache: "reload" }));
-        if (confiavel(r)) await cache.put(u, await limpar(r));
+        if (confiavel(r)) { await cache.put(u, await limpar(r)); baixados++; }
       }));
+      console.info("[sw] instalação", VERSAO, "· copiados do cache:", copiados, "· baixados:", baixados);
       try {
         const r = await fetch("/", { cache: "reload", credentials: "same-origin" });
         if (confiavel(r)) await cache.put(SHELL, await limpar(r));

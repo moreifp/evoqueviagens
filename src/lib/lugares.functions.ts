@@ -50,10 +50,10 @@ export type Lugar = { place_id: string; nome: string; endereco: string; cidade: 
 
 export const detalhesLugar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ place_id: z.string().min(5).max(300).regex(/^[\w-]+$/), sessao: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) => z.object({ place_id: z.string().min(5).max(300).regex(/^[\w-]+$/), sessao: z.string().uuid(), comSite: z.boolean().optional() }).parse(d))
   .handler(async ({ data }): Promise<Lugar> => {
     const r = await fetch(`${GATEWAY_URL}/places/v1/places/${data.place_id}?sessionToken=${data.sessao}&languageCode=pt-BR`, {
-      headers: cabecalhos({ "X-Goog-FieldMask": "id,displayName,formattedAddress,addressComponents,location,websiteUri" }),
+      headers: cabecalhos({ "X-Goog-FieldMask": "id,displayName,formattedAddress,addressComponents,location,timeZone" }),
     });
     await checar(r, "detalhes");
     const p = (await r.json()) as {
@@ -62,21 +62,34 @@ export const detalhesLugar = createServerFn({ method: "POST" })
       formattedAddress?: string;
       addressComponents?: { longText: string; types: string[] }[];
       location: { latitude: number; longitude: number };
-      websiteUri?: string;
+      timeZone?: { id?: string };
     };
     const comp = (t: string) => p.addressComponents?.find((c) => c.types.includes(t))?.longText ?? null;
     const cidade = comp("locality") ?? comp("postal_town") ?? comp("administrative_area_level_2");
-    let tz: string | null = null;
-    try {
-      const t = await fetch(
-        `${GATEWAY_URL}/maps/api/timezone/json?location=${p.location.latitude},${p.location.longitude}&timestamp=${Math.floor(Date.now() / 1000)}`,
-        { headers: cabecalhos() },
-      );
-      await checar(t, "fuso");
-      const tj = (await t.json()) as { status: string; timeZoneId?: string };
-      if (tj.status === "OK") tz = tj.timeZoneId ?? null;
-    } catch (e) {
-      console.error("fuso", e);
+    // Fuso vem no próprio detalhe (Places New); a Time Zone API fica só de reserva se faltar.
+    let tz: string | null = p.timeZone?.id ?? null;
+    if (!tz) {
+      try {
+        const t = await fetch(
+          `${GATEWAY_URL}/maps/api/timezone/json?location=${p.location.latitude},${p.location.longitude}&timestamp=${Math.floor(Date.now() / 1000)}`,
+          { headers: cabecalhos() },
+        );
+        await checar(t, "fuso");
+        const tj = (await t.json()) as { status: string; timeZoneId?: string };
+        if (tj.status === "OK") tz = tj.timeZoneId ?? null;
+      } catch (e) {
+        console.error("fuso", e);
+      }
+    }
+    // Site (campo caro do Google) só quando serve para o logo do hotel: pedido à parte, sem sessão.
+    let site: string | null = null;
+    if (data.comSite) {
+      try {
+        const w = await fetch(`${GATEWAY_URL}/places/v1/places/${data.place_id}`, { headers: cabecalhos({ "X-Goog-FieldMask": "websiteUri" }) });
+        if (w.ok) site = ((await w.json()) as { websiteUri?: string }).websiteUri ?? null;
+      } catch (e) {
+        console.error("site", e);
+      }
     }
     return {
       place_id: p.id,
@@ -85,7 +98,7 @@ export const detalhesLugar = createServerFn({ method: "POST" })
       cidade,
       lat: p.location.latitude,
       lng: p.location.longitude,
-      site: p.websiteUri ?? null,
+      site,
       tz,
     };
   });

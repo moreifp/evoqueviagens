@@ -22,6 +22,7 @@ export function CampoLugar({
   perto,
   placeholder,
   mono,
+  comSite,
 }: {
   valor: string;
   onTexto: (v: string) => void;
@@ -29,6 +30,8 @@ export function CampoLugar({
   perto?: string;
   placeholder?: string;
   mono?: boolean;
+  /** Hotel: busca também o site (para o logo). */
+  comSite?: boolean;
 }) {
   const buscar = useServerFn(autocompletarLugar);
   const detalhar = useServerFn(detalhesLugar);
@@ -77,7 +80,7 @@ export function CampoLugar({
     const tok = sessao.current ?? crypto.randomUUID();
     sessao.current = null;
     try {
-      onEscolher(await detalhar({ data: { place_id: s.place_id, sessao: tok } }));
+      onEscolher(await detalhar({ data: { place_id: s.place_id, sessao: tok, comSite } }));
     } catch (e) {
       onTexto(s.texto);
       toast.error((e as Error).message || "Não deu para buscar o endereço. Fica o texto.");

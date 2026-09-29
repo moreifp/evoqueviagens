@@ -1,0 +1,1 @@
+ALTER TABLE public.expense ADD COLUMN IF NOT EXISTS tem_comprovante boolean GENERATED ALWAYS AS (comprovante_url IS NOT NULL) STORED;

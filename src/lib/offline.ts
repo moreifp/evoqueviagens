@@ -1,7 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, settlementsQuery, tripMembrosQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, caixaClaudeQuery, avisosMeusQuery, pedidosRecebidosQuery, pontosQuery } from "./data";
+import { anexosQuery, apiAlertaQuery, conferenciaNomesQuery, expensesQuery, settlementsQuery, tripMembrosQuery, reservasQuery, roteiroQuery, findingsQuery, flightStatusQuery, lodgingsQuery, membersQuery, peopleQuery, ticketsQuery, tripQuery, tripsQuery, type Trip, convitesQuery, confiancaQuery, autoriaQuery, pedidosQuery, conferirQuery, entryRulesQuery, caixaClaudeQuery, avisosMeusQuery, pedidosRecebidosQuery, pontosQuery, type Autoria, type ConferenciaNome } from "./data";
+import { supabase } from "@/integrations/supabase/client";
 import { logoCia, logoSite } from "./logos";
 import { documentoQuery, euQuery, minhaPessoaQuery, type EuDados } from "./eu";
 import { pessoasQuery } from "./pessoas";
@@ -27,6 +28,30 @@ export function viagensParaBaixar(trips: Trip[]) {
   const hoje = hojeISO();
   const limite = new Date(Date.now() + DIAS_A_FRENTE * 864e5).toISOString().slice(0, 10);
   return trips.filter((t) => !t.arquivada_em && t.data_fim >= hoje && t.data_inicio <= limite);
+}
+
+type Pacote = {
+  autoria: ({ tipo: string; id: string } & Autoria)[];
+  conferencia: ({ ticket_id: string } & ConferenciaNome)[];
+  tickets: string[];
+};
+
+/** Preenche o cache com as mesmas chaves de autoriaQuery e conferenciaNomesQuery. Se a RPC falhar, cai no jeito antigo. */
+async function preencherPacote(qc: QueryClient, tripId: string, bilhetes: string[], itens: { item_tipo: string; item_id: string }[]) {
+  const { data, error } = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: Pacote | null; error: unknown }> }).rpc("pacote_offline_viagem", { _tid: tripId });
+  if (error || !data) {
+    await Promise.all(bilhetes.map((b) => qc.fetchQuery({ ...conferenciaNomesQuery(b), staleTime: 0 }).catch(() => [])));
+    await Promise.all(itens.map((r) => qc.fetchQuery({ ...autoriaQuery(r.item_tipo, r.item_id), staleTime: 0 }).catch(() => null)));
+    return;
+  }
+  for (const b of new Set([...bilhetes, ...data.tickets])) {
+    const linhas: ConferenciaNome[] = data.conferencia.filter((c) => c.ticket_id === b).map((c) => ({ person_id: c.person_id, estado: c.estado }));
+    qc.setQueryData(conferenciaNomesQuery(b).queryKey, linhas);
+  }
+  for (const r of itens) {
+    const a = data.autoria.find((x) => x.tipo === r.item_tipo && x.id === r.item_id);
+    qc.setQueryData(autoriaQuery(r.item_tipo, r.item_id).queryKey, a ? { autor: a.autor, sou_eu: a.sou_eu, editar: a.editar } : null);
+  }
 }
 
 let rodando = false;
@@ -101,9 +126,9 @@ export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: stri
         anexos.forEach((a) => manter.add(a.storage_path));
         await Promise.all(anexos.map((a) => guardarAnexo(a.storage_path)));
         const bilhetes = await qc.fetchQuery({ ...ticketsQuery(t.id), staleTime: 0 });
-        await Promise.all(bilhetes.map((b) => qc.fetchQuery({ ...conferenciaNomesQuery(b.id), staleTime: 0 }).catch(() => [])));
+        // Autoria de cada item e conferência de nomes de cada bilhete numa chamada só.
         const roteiroT = qc.getQueryData(roteiroQuery(t.id).queryKey) ?? [];
-        await Promise.all(roteiroT.filter((r) => r.detalhe).map((r) => qc.fetchQuery({ ...autoriaQuery(r.item_tipo, r.item_id), staleTime: 0 }).catch(() => null)));
+        await preencherPacote(qc, t.id, bilhetes.map((b) => b.id), roteiroT.filter((r) => r.detalhe));
         await qc.fetchQuery({ ...pedidosQuery(t.id), staleTime: 0 }).catch(() => null);
         await qc.fetchQuery({ ...conferirQuery(t.id), staleTime: 0 }).catch(() => null);
         const hoteis = qc.getQueryData(lodgingsQuery(t.id).queryKey) ?? [];

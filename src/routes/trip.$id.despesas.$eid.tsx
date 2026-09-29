@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import { AvatarPessoa } from "@/components/Pessoa";
 import { comprimir } from "@/lib/imagem";
 import { impressao } from "@/lib/despesas";
 import { transcreverRecibo } from "@/lib/recibo.functions";
+import { ehReciboStorage, reciboUrlQuery, subirRecibo, temRecibo } from "@/lib/reciboArquivo";
 
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
   head: () => ({
@@ -61,18 +62,17 @@ function Detalhe() {
   const [mostrarTexto, setMostrarTexto] = useState(false);
   const [lendoConta, setLendoConta] = useState(false);
   const lerConta = useServerFn(transcreverRecibo);
-  // Texto lido fica na própria despesa (recibo_texto), ligado à foto por uma impressão (recibo_path).
-  const dRec = despesas.find((x) => x.id === eid) as
-    (Expense & { recibo_texto?: string | null; recibo_path?: string | null }) | undefined;
+  // Recibo: no storage (recibo_path "trip/…", URL assinada de 10 min) ou, no formato antigo, data URL buscada só desta despesa.
+  const comRecibo = !!d && temRecibo(d);
+  const { data: reciboUrl } = useQuery({ ...reciboUrlQuery(eid, d?.recibo_path), enabled: comRecibo });
+  const urlRecibo = comRecibo ? (d?.comprovante_url ?? reciboUrl ?? null) : null;
+  // Texto lido fica na própria despesa (recibo_texto). No formato antigo, ligado à foto por uma impressão.
   useEffect(() => {
-    if (
-      dRec?.recibo_texto &&
-      dRec.recibo_path &&
-      dRec.recibo_path === impressao(dRec.comprovante_url)
-    )
-      setTextoConta(dRec.recibo_texto);
+    if (!d?.recibo_texto) setTextoConta(null);
+    else if (ehReciboStorage(d.recibo_path)) setTextoConta(d.recibo_texto);
+    else if (d.recibo_path && urlRecibo && d.recibo_path === impressao(urlRecibo)) setTextoConta(d.recibo_texto);
     else setTextoConta(null);
-  }, [dRec?.recibo_texto, dRec?.recibo_path, dRec?.comprovante_url]);
+  }, [d?.recibo_texto, d?.recibo_path, urlRecibo]);
   useEffect(() => {
     const f = () => setOnline(navigator.onLine);
     f();
@@ -85,32 +85,47 @@ function Detalhe() {
   }, []);
   const key = expensesQuery(id).queryKey;
 
-  async function trocarRecibo(novo: string | null) {
+  type EstadoRecibo = { recibo_path: string | null; comprovante_url: string | null };
+  async function aplicarRecibo(v: EstadoRecibo) {
     if (!d) return;
-    const antes = d.comprovante_url;
-    const aplicar = async (v: string | null) => {
-      qc.setQueryData<Expense[]>(key, (l) =>
-        (l ?? []).map((e) =>
-          e.id === d.id ? { ...e, comprovante_url: v, recibo_texto: null, recibo_path: null } : e,
-        ),
-      );
-      await mutar({
-        tipo: "update",
-        tabela: "expense",
-        id: d.id,
-        valores: { comprovante_url: v, recibo_texto: null, recibo_path: null },
-      });
+    qc.setQueryData<Expense[]>(key, (l) =>
+      (l ?? []).map((e) =>
+        e.id === d.id ? { ...e, ...v, tem_comprovante: !!v.comprovante_url, recibo_texto: null } : e,
+      ),
+    );
+    await mutar({ tipo: "update", tabela: "expense", id: d.id, valores: { ...v, recibo_texto: null } });
+  }
+
+  /** Troca ou tira o recibo. Com internet vai para o storage; sem internet fica em data URL (formato antigo). */
+  async function trocarRecibo(novo: Blob | null) {
+    if (!d) return;
+    const antes: EstadoRecibo = {
+      recibo_path: ehReciboStorage(d.recibo_path) ? d.recibo_path : null,
+      comprovante_url: ehReciboStorage(d.recibo_path) ? null : (urlRecibo ?? null),
     };
-    await aplicar(novo);
+    let v: EstadoRecibo = { recibo_path: null, comprovante_url: null };
+    if (novo) {
+      const caminho = await subirRecibo(id, d.id, novo);
+      if (caminho) v = { recibo_path: caminho, comprovante_url: null };
+      else {
+        const dataUrl = await new Promise<string>((ok) => {
+          const fr = new FileReader();
+          fr.onload = () => ok(String(fr.result));
+          fr.readAsDataURL(novo);
+        });
+        v = { recibo_path: null, comprovante_url: dataUrl };
+      }
+    }
+    await aplicarRecibo(v);
     toast(novo ? "Recibo trocado" : "Recibo tirado", {
       duration: 10_000,
-      action: { label: "Desfazer", onClick: () => void aplicar(antes) },
+      action: { label: "Desfazer", onClick: () => void aplicarRecibo(antes) },
     });
   }
 
   /** Lê a foto do recibo e vira texto organizado, fácil de ler em tela pequena. Guarda no aparelho para ler offline. */
   async function lerAConta() {
-    if (!d?.comprovante_url || lendoConta) return;
+    if (!d || !urlRecibo || lendoConta) return;
     if (textoConta) {
       setMostrarTexto(true);
       return;
@@ -121,7 +136,7 @@ function Detalhe() {
     }
     setLendoConta(true);
     try {
-      const blob = await (await fetch(d.comprovante_url)).blob();
+      const blob = await (await fetch(urlRecibo)).blob();
       const melhor = await comprimir(
         new File([blob], "recibo.jpg", { type: blob.type || "image/jpeg" }),
         1600,
@@ -136,7 +151,8 @@ function Detalhe() {
       if (r.ok) {
         setTextoConta(r.texto);
         setMostrarTexto(true);
-        const rp = impressao(d.comprovante_url);
+        // No storage o caminho já identifica a foto; no formato antigo guarda a impressão.
+        const rp = ehReciboStorage(d.recibo_path) ? d.recibo_path : impressao(urlRecibo);
         qc.setQueryData<Expense[]>(key, (l) =>
           (l ?? []).map((e) =>
             e.id === d.id ? { ...e, recibo_texto: r.texto, recibo_path: rp } : e,
@@ -344,16 +360,16 @@ function Detalhe() {
           </section>
         )}
 
-        {d.comprovante_url && (
+        {urlRecibo && (
           <button
             onClick={() => setTelaCheia(true)}
             aria-label="Ver recibo em tela cheia"
             className="block w-full overflow-hidden rounded-2xl border border-border bg-card"
           >
-            <img src={d.comprovante_url} alt="Recibo" className="max-h-80 w-full object-contain" />
+            <img src={urlRecibo} alt="Recibo" className="max-h-80 w-full object-contain" />
           </button>
         )}
-        {d.comprovante_url && (
+        {urlRecibo && (
           <div>
             <button
               onClick={() => (mostrarTexto ? setMostrarTexto(false) : void lerAConta())}
@@ -382,10 +398,10 @@ function Detalhe() {
           </div>
         )}
         {org && (
-          <div className={`grid gap-3 ${d.comprovante_url ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div className={`grid gap-3 ${comRecibo ? "grid-cols-2" : "grid-cols-1"}`}>
             <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold">
               <Camera size={24} strokeWidth={2.2} />{" "}
-              {d.comprovante_url ? "Trocar recibo" : "Foto do recibo"}
+              {comRecibo ? "Trocar recibo" : "Foto do recibo"}
               <input
                 type="file"
                 accept="image/*"
@@ -397,14 +413,12 @@ function Detalhe() {
                   void (async () => {
                     // Reduz a foto (máx. 1600 px, JPEG 0,8) antes de guardar, como na nova despesa.
                     const menor = await comprimir(f, 1600, 0.8).catch(() => f as Blob);
-                    const fr = new FileReader();
-                    fr.onload = () => void trocarRecibo(String(fr.result));
-                    fr.readAsDataURL(menor);
+                    await trocarRecibo(menor);
                   })();
                 }}
               />
             </label>
-            {d.comprovante_url && (
+            {comRecibo && (
               <button
                 onClick={() => void trocarRecibo(null)}
                 className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-danger"
@@ -414,7 +428,7 @@ function Detalhe() {
             )}
           </div>
         )}
-        {telaCheia && d.comprovante_url && (
+        {telaCheia && urlRecibo && (
           <div
             role="dialog"
             aria-label="Recibo"
@@ -427,7 +441,7 @@ function Detalhe() {
               <X size={26} strokeWidth={2.2} /> Fechar
             </button>
             <img
-              src={d.comprovante_url}
+              src={urlRecibo}
               alt="Recibo"
               className="min-h-0 flex-1 object-contain p-2"
             />

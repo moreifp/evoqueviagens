@@ -362,6 +362,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
                   valor={f.nome}
                   onTexto={textoMudou("nome")}
                   onEscolher={(l) => escolherLugar(l, false)}
+                  comSite
                   perto={f.cidade}
                   placeholder="Digite o nome para buscar"
                 />
@@ -374,6 +375,7 @@ export function FormHotel({ tripId, inicial }: { tripId: string; inicial?: Lodgi
                   valor={f.endereco}
                   onTexto={textoMudou("endereco")}
                   onEscolher={(l) => escolherLugar(l, true)}
+                  comSite
                   perto={f.cidade}
                   placeholder="Rua, número"
                 />

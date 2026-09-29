@@ -527,6 +527,7 @@ export type Database = {
           taxa_data: string | null
           taxa_fonte: string | null
           taxa_provisoria: boolean
+          tem_comprovante: boolean | null
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -554,6 +555,7 @@ export type Database = {
           taxa_data?: string | null
           taxa_fonte?: string | null
           taxa_provisoria?: boolean
+          tem_comprovante?: boolean | null
           trip_id: string
           valor_moeda_base: number
           valor_original: number
@@ -581,6 +583,7 @@ export type Database = {
           taxa_data?: string | null
           taxa_fonte?: string | null
           taxa_provisoria?: boolean
+          tem_comprovante?: boolean | null
           trip_id?: string
           valor_moeda_base?: number
           valor_original?: number
@@ -2570,6 +2573,7 @@ export type Database = {
         }[]
       }
       nivel_nome: { Args: { _bil: string; _doc: string }; Returns: string }
+      pacote_offline_viagem: { Args: { _tid: string }; Returns: Json }
       pedidos_recebidos: {
         Args: never
         Returns: {
