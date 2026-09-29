@@ -35,19 +35,18 @@ function escolherTrecho(lista: any[], t: TicketVoo) {
   );
 }
 
-/** Consulta a AeroDataBox (só número + data) e grava. Nunca envia nome, localizador ou e-mail. */
-export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", forcarCache = true): Promise<Resultado> {
-  const db = await admin();
-  const ultimo = await ultimoStatus(db, t.id);
-  if (forcarCache && ultimo && Date.now() - Date.parse(ultimo.consultado_em) < CACHE_MIN * 60_000) return { status: ultimo, daCache: true };
+type Linha = Omit<StatusVoo, "id" | "ticket_id" | "consultado_em"> & { origem: string; payload_json: unknown };
+type Consulta = { linha: Linha | null; aviso?: string; numero: string | null };
 
+/** Uma chamada à AeroDataBox (só número + data), sem gravar. Serve para todos os bilhetes do mesmo voo. */
+export async function consultarVoo(db: Admin, t: TicketVoo, origem: "auto" | "manual"): Promise<Consulta> {
   const numero = numeroVoo(t.companhia, t.numero);
-  if (!numero) return { status: ultimo, aviso: "Não consegui identificar a companhia e o número deste voo.", numero };
+  if (!numero) return { linha: null, aviso: "Não consegui identificar a companhia e o número deste voo.", numero };
   const data = dataLocalPartida(t.partida_utc, t.partida_tz);
   const aPartir = statusDisponivelEm(t.partida_utc, t.partida_tz);
-  if (aPartir) return { status: null, aviso: `O status aparece perto do voo (a partir de ${ddmm(aPartir)}).`, numero };
+  if (aPartir) return { linha: null, aviso: `O status aparece perto do voo (a partir de ${ddmm(aPartir)}).`, numero };
   const key = process.env["AERODATABOX_KEY"];
-  if (!key) return { status: ultimo, aviso: "Não consegui atualizar agora.", numero };
+  if (!key) return { linha: null, aviso: "Não consegui atualizar agora.", numero };
 
   let res: Response;
   try {
@@ -56,14 +55,14 @@ export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", f
     });
   } catch (e) {
     console.error("aerodatabox fetch", e);
-    return { status: ultimo, aviso: "Não consegui atualizar agora.", numero };
+    return { linha: null, aviso: "Não consegui atualizar agora.", numero };
   }
   // Toda resposta do servidor da API conta no plano, inclusive "não encontrado".
   if (res.ok || res.status === 404) await db.rpc("somar_uso_api", { _mes: mesAtual(), _n: UNIDADES_POR_CHAMADA });
-  if (res.status === 204 || res.status === 404) return { status: ultimo, aviso: `Não encontrei o voo ${numero} em ${data.split("-").reverse().join("/")}.`, numero };
+  if (res.status === 204 || res.status === 404) return { linha: null, aviso: `Não encontrei o voo ${numero} em ${data.split("-").reverse().join("/")}.`, numero };
   if (!res.ok) {
     console.error("aerodatabox", res.status, (await res.text()).slice(0, 300));
-    return { status: ultimo, aviso: "Não consegui atualizar agora.", numero };
+    return { linha: null, aviso: "Não consegui atualizar agora.", numero };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lista = (await res.json().catch(() => [])) as any[];
@@ -71,21 +70,38 @@ export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", f
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doDia = Array.isArray(lista) ? lista.filter((x: any) => { const u = utc(x.departure?.scheduledTime); return !u || dataLocalPartida(u, t.partida_tz) === data; }) : [];
   const f = doDia.length ? escolherTrecho(doDia, t) : null;
-  if (!f) return { status: ultimo, aviso: `Não encontrei o voo ${numero} nesta data.`, numero };
+  if (!f) return { linha: null, aviso: `Não encontrei o voo ${numero} nesta data.`, numero };
 
   const dep = f.departure ?? {}, arr = f.arrival ?? {};
   const pPrev = utc(dep.scheduledTime), pRev = utc(dep.revisedTime) ?? utc(dep.predictedTime), pReal = utc(dep.runwayTime) ?? utc(dep.actualTime);
   const cPrev = utc(arr.scheduledTime), cRev = utc(arr.revisedTime) ?? utc(arr.predictedTime), cReal = utc(arr.runwayTime) ?? utc(arr.actualTime);
   const linha = {
-    ticket_id: t.id, origem, status: f.status ?? null,
+    origem, status: f.status ?? null,
     partida_prevista_utc: pPrev, partida_revista_utc: pRev, partida_real_utc: pReal,
     chegada_prevista_utc: cPrev, chegada_revista_utc: cRev, chegada_real_utc: cReal,
     terminal_partida: dep.terminal ?? null, portao_partida: dep.gate ?? null,
     terminal_chegada: arr.terminal ?? null, portao_chegada: arr.gate ?? null, esteira: arr.baggageBelt ?? null,
     atraso_partida_min: diffMin(pReal ?? pRev, pPrev), atraso_chegada_min: diffMin(cReal ?? cRev, cPrev),
     payload_json: f,
-  };
-  const { data: salvo, error } = await db.from("flight_status").insert(linha).select("*").single();
-  if (error) { console.error("flight_status insert", error); return { status: ultimo, aviso: "Não consegui atualizar agora.", numero }; }
-  return { status: salvo as StatusVoo, numero };
+  } as Linha;
+  return { linha, numero };
+}
+
+/** Grava o resultado de uma consulta para um bilhete. */
+export async function gravarStatus(db: Admin, ticketId: string, linha: Linha): Promise<StatusVoo | null> {
+  const { data: salvo, error } = await db.from("flight_status").insert({ ...linha, ticket_id: ticketId }).select("*").single();
+  if (error) { console.error("flight_status insert", error); return null; }
+  return salvo as StatusVoo;
+}
+
+/** Consulta a AeroDataBox (só número + data) e grava. Nunca envia nome, localizador ou e-mail. */
+export async function atualizarTicket(t: TicketVoo, origem: "auto" | "manual", forcarCache = true): Promise<Resultado> {
+  const db = await admin();
+  const ultimo = await ultimoStatus(db, t.id);
+  if (forcarCache && ultimo && Date.now() - Date.parse(ultimo.consultado_em) < CACHE_MIN * 60_000) return { status: ultimo, daCache: true };
+  const c = await consultarVoo(db, t, origem);
+  if (!c.linha) return { status: c.aviso?.startsWith("O status aparece") ? null : ultimo, aviso: c.aviso, numero: c.numero };
+  const salvo = await gravarStatus(db, t.id, c.linha);
+  if (!salvo) return { status: ultimo, aviso: "Não consegui atualizar agora.", numero: c.numero };
+  return { status: salvo, numero: c.numero };
 }
