@@ -33,7 +33,6 @@ import { carregarAeroportos, porIata } from "@/lib/aeroportos";
 import { TIPOS_VISTO } from "@/lib/cadastro-tipos";
 import { versaoBuild } from "@/lib/versao";
 import { DocumentosCofre } from "./DocumentosCofre";
-import { mudarVisual, useVisual } from "@/lib/visual";
 import { ScanFace } from "lucide-react";
 import {
   desligarFaceId,
@@ -472,7 +471,6 @@ function EuDashboardConteudo({
 
         <ItensQueNaoTem personId={p.id} itens={progresso.itens} owner={owner} />
 
-        {self && <ChaveVisual />}
         {self && <ChaveFaceId />}
         {self && (
           <div className="flex items-center gap-3">
@@ -607,25 +605,3 @@ function ChaveFaceId() {
   );
 }
 
-/** Chave "Visual": Colorido (padrão) | Clássico (visual anterior). Só neste aparelho. */
-function ChaveVisual() {
-  const v = useVisual();
-  return (
-    <section aria-label="Visual" className="space-y-2">
-      <h2 className="text-2xl">Visual</h2>
-      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
-        {(["colorido", "classico"] as const).map((x) => (
-          <button
-            key={x}
-            type="button"
-            onClick={() => mudarVisual(x)}
-            aria-pressed={v === x}
-            className={`min-h-12 rounded-xl text-base font-bold ${v === x ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}
-          >
-            {x === "colorido" ? "Colorido" : "Clássico"}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}

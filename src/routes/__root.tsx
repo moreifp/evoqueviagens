@@ -12,7 +12,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
 import { AbasApp, AvisoConexao, AvisoFalhas } from "@/components/Chrome";
-import { aplicarVisual } from "@/lib/visual";
 import { ConviteInstalar } from "@/components/ConviteInstalar";
 import { BaixarOffline } from "@/components/BaixarOffline";
 
@@ -210,7 +209,6 @@ function RootApp() {
   const [instalavel, setInstalavel] = useState(false);
   useEffect(() => {
     setInstalavel(hostComApp());
-    aplicarVisual();
     // App carregou sem erro: zera o contador de recarregamentos automáticos.
     try {
       sessionStorage.removeItem("evoque-recarregou");
