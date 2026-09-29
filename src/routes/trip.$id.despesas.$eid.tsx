@@ -187,8 +187,12 @@ function Detalhe() {
               <Camera size={24} strokeWidth={2.2} /> {d.comprovante_url ? "Trocar recibo" : "Foto do recibo"}
               <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                 const f = e.target.files?.[0]; if (!f) return;
-                const fr = new FileReader(); fr.onload = () => void trocarRecibo(String(fr.result)); fr.readAsDataURL(f);
                 e.target.value = "";
+                void (async () => {
+                  // Reduz a foto (máx. 1600 px, JPEG 0,8) antes de guardar, como na nova despesa.
+                  const menor = await comprimir(f, 1600, 0.8).catch(() => f as Blob);
+                  const fr = new FileReader(); fr.onload = () => void trocarRecibo(String(fr.result)); fr.readAsDataURL(menor);
+                })();
               }} />
             </label>
             {d.comprovante_url && <button onClick={() => void trocarRecibo(null)} className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-danger"><X size={24} strokeWidth={2.2} /> Tirar recibo</button>}
