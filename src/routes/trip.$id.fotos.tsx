@@ -323,6 +323,14 @@ function FotosViagem() {
             <Download size={24} strokeWidth={2.2} /> {baixando ? `Enviando ${progresso}…` : sel.size ? `Enviar ${sel.size} ao Google Drive` : `Enviar todas (${pendentes.length}) ao Google Drive`}
           </button>
         )}
+        {souDono && viagemTerminou && fotos.length > 0 && (
+          <div className="space-y-2 rounded-2xl border-2 border-accent bg-card p-4">
+            <button type="button" onClick={salvarAlbumNoFotos} disabled={salvandoAlbum} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
+              <Download size={24} strokeWidth={2.2} /> {salvandoAlbum ? `Baixando ${progresso}…` : "Salvar álbum no app Fotos"}
+            </button>
+            <p className="text-base text-muted-foreground">A viagem terminou: baixa os originais da pasta "{nomePasta}" do Google Drive. No iPhone, toque em "Salvar imagens" na folha que abrir. Precisa de internet.</p>
+          </div>
+        )}
         {fotos.length > 0 && pendentes.length === 0 && !verBaixadas && <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-lg">Todas as fotos já foram para o Google Drive.</p>}
         {baixadas.size > 0 && (
           <button type="button" onClick={() => setVerBaixadas((v) => !v)} aria-pressed={verBaixadas} className="tap min-h-12 w-full text-base font-semibold text-muted-foreground underline">
