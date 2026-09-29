@@ -62,12 +62,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       )
       .catch(() => {});
     // Erro de tela logo após uma publicação quase sempre é versão velha guardada no
-    // aparelho (arquivos do app trocados no servidor). Recarrega uma vez, limpando
-    // o service worker, para buscar a versão nova — em vez de só mostrar o erro.
+    // aparelho (arquivos do app trocados no servidor). Recarrega — no máximo 2 vezes
+    // a cada 10 minutos, para nunca ficar em loop — limpando o service worker para
+    // buscar a versão nova; depois só mostra o erro.
     try {
-      const marca = Number(sessionStorage.getItem("evoque-recarregou") ?? 0);
-      if (navigator.onLine && Date.now() - marca > 60_000) {
-        sessionStorage.setItem("evoque-recarregou", String(Date.now()));
+      const brutos = sessionStorage.getItem("evoque-recarregou");
+      let tentativas: number[] = [];
+      try {
+        const lido: unknown = JSON.parse(brutos ?? "[]");
+        if (Array.isArray(lido)) tentativas = lido.filter((t): t is number => typeof t === "number");
+        else if (typeof lido === "number" && Date.now() - lido < 600_000) tentativas = [lido];
+      } catch {
+        /* registro corrompido: começa do zero */
+      }
+      const recentes = tentativas.filter((t) => Date.now() - t < 600_000);
+      if (navigator.onLine && recentes.length < 2) {
+        sessionStorage.setItem("evoque-recarregou", JSON.stringify([...recentes, Date.now()]));
         setAtualizando(true);
         void (async () => {
           try {
@@ -201,6 +211,12 @@ function RootApp() {
   useEffect(() => {
     setInstalavel(hostComApp());
     aplicarVisual();
+    // App carregou sem erro: zera o contador de recarregamentos automáticos.
+    try {
+      sessionStorage.removeItem("evoque-recarregou");
+    } catch {
+      /* sem storage */
+    }
   }, []);
   // Só desenha as telas depois de trazer do aparelho os dados guardados:
   // sem isso, uma tela aberta sem internet ficaria esperando a rede.
