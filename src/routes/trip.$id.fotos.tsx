@@ -169,6 +169,10 @@ function FotosViagem() {
     }
   }
 
+  // iPhone/iPad: o botão entrega ao app Fotos; em outros aparelhos, salva na pasta.
+  const ehIphone =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   // Abre a folha de compartilhar do iPhone com os originais: "Salvar N imagens" guarda no app Fotos.
   async function salvarNoAparelho() {
     const files = novas.map(
@@ -368,19 +372,27 @@ function FotosViagem() {
               disabled={novas.length === 0 || salvandoNovas}
               className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-accent bg-card text-lg font-bold disabled:opacity-50"
             >
-              <Download size={24} strokeWidth={2.2} /> Salvar no iPhone (iCloud Fotos)
+              <Download size={24} strokeWidth={2.2} />{" "}
+              {ehIphone ? "Salvar no iPhone (iCloud Fotos)" : "Salvar no computador"}
             </button>
             {novas.length > 0 ? (
-              <p className="text-base text-muted-foreground">
-                No iPhone: toque acima e escolha{" "}
-                <strong className="text-foreground">
-                  “Salvar {novas.length} {novas.length === 1 ? "imagem" : "imagens"}”
-                </strong>
-                . O iCloud Fotos sincroniza sozinho. No app fica só a cópia pequena.
-              </p>
+              ehIphone ? (
+                <p className="text-base text-muted-foreground">
+                  No iPhone: toque acima e escolha{" "}
+                  <strong className="text-foreground">
+                    “Salvar {novas.length} {novas.length === 1 ? "imagem" : "imagens"}”
+                  </strong>
+                  . O iCloud Fotos sincroniza sozinho. No app fica só a cópia pequena.
+                </p>
+              ) : (
+                <p className="text-base text-muted-foreground">
+                  No computador: escolha a pasta ao salvar. Para o iCloud, abra o app{" "}
+                  <strong className="text-foreground">Fotos</strong> do Mac e importe as fotos dessa pasta.
+                </p>
+              )
             ) : (
               <p className="text-base text-muted-foreground">
-                Tire ou escolha fotos primeiro. Depois, salve no iPhone e o iCloud Fotos sincroniza sozinho.
+                Tire ou escolha fotos primeiro. Depois, salve no aparelho e o iCloud Fotos sincroniza sozinho.
               </p>
             )}
           </div>
