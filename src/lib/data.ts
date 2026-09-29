@@ -310,7 +310,10 @@ export const expensesQuery = (tripId: string) =>
       unwrap<Expense[]>(
         db
           .from("expense")
-          .select("*, pagadores:expense_payer(*), partes:expense_share(*)")
+          // Sem comprovante_url (recibo antigo pesado): a tela da despesa busca o recibo à parte.
+          .select(
+            "id, trip_id, descricao, categoria, data, valor_original, moeda_original, taxa_cambio, valor_moeda_base, pago_por, criado_por, created_at, editado_em, taxa_fonte, taxa_data, pessoal, pessoal_de, divisao, taxa_provisoria, item_tipo, item_id, recibo_path, recibo_texto, tem_recibo:comprovante_url.not.is.null, pagadores:expense_payer(*), partes:expense_share(*)",
+          )
           .eq("trip_id", tripId)
           .is("deleted_at", null)
           .order("data", { ascending: false })
