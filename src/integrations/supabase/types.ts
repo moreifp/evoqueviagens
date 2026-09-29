@@ -2570,6 +2570,7 @@ export type Database = {
         }[]
       }
       nivel_nome: { Args: { _bil: string; _doc: string }; Returns: string }
+      pacote_offline_viagem: { Args: { _tid: string }; Returns: Json }
       pedidos_recebidos: {
         Args: never
         Returns: {
