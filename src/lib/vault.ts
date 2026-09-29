@@ -185,9 +185,19 @@ export async function listVaultDocuments(accountId: string, personId: string) {
   const cache = documentCache(accountId, personId);
   const local = ((await get(cache)) as VaultDocument[] | undefined) ?? [];
   if (!navigator.onLine) return local.filter((row) => !row.deleted_at);
-  const { data, error } = await vaultDb.from("vault_document").select("*").eq("account_id", accountId).eq("person_id", personId).is("deleted_at", null).order("created_at", { ascending: false });
+  // 1º só a lista leve (id, updated_at, deleted_at); o conteúdo cifrado só dos novos ou alterados em relação ao aparelho.
+  const { data: meta, error } = await vaultDb.from("vault_document").select("id, updated_at, deleted_at").eq("account_id", accountId).eq("person_id", personId).is("deleted_at", null).order("created_at", { ascending: false });
   if (error) return local.filter((row) => !row.deleted_at);
-  const remote = data as VaultDocument[];
+  const lista = meta as Pick<VaultDocument, "id" | "updated_at" | "deleted_at">[];
+  const iguais = new Map(local.filter((l) => !l.deleted_at).map((l) => [l.id, l]));
+  const faltam = lista.filter((m) => iguais.get(m.id)?.updated_at !== m.updated_at).map((m) => m.id);
+  let novos: VaultDocument[] = [];
+  if (faltam.length) {
+    const r = await vaultDb.from("vault_document").select("*").in("id", faltam);
+    if (r.error) return local.filter((row) => !row.deleted_at);
+    novos = r.data as VaultDocument[];
+  }
+  const remote = lista.map((m) => novos.find((n) => n.id === m.id) ?? iguais.get(m.id)).filter((x): x is VaultDocument => !!x);
   const merged = [...local.filter((row) => !remote.some((r) => r.id === row.id)), ...remote.filter((row) => !local.some((l) => l.id === row.id && l.deleted_at))];
   await set(cache, merged);
   return merged.filter((row) => !row.deleted_at);
