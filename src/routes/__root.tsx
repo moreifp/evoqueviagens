@@ -210,7 +210,6 @@ function RootApp() {
   const [instalavel, setInstalavel] = useState(false);
   useEffect(() => {
     setInstalavel(hostComApp());
-    aplicarVisual();
     // App carregou sem erro: zera o contador de recarregamentos automáticos.
     try {
       sessionStorage.removeItem("evoque-recarregou");
