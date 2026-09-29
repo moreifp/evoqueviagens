@@ -89,6 +89,7 @@ function FotosViagem() {
   // Manda direto para a pasta com o nome da viagem no Google Drive, uma foto por vez.
   async function baixarPasta(files: Blob[]) {
     if (!files.length) return;
+    if (!navigator.onLine) throw new Error("Sem internet · os originais só vão ao Drive com conexão. As cópias pequenas ficam na nuvem do app.");
     const pasta = await criarPasta({ data: { tripId: id } });
     const carimbo = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
     for (let i = 0; i < files.length; i++) {
@@ -216,7 +217,7 @@ function FotosViagem() {
             <button type="button" onClick={salvarNoFotos} disabled={salvandoNovas} className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground">
               <Download size={24} strokeWidth={2.2} /> {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
             </button>
-            <p className="text-base text-muted-foreground">Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive.</p>
+            <p className="text-base text-muted-foreground">Vão em tamanho original para a pasta com o nome da viagem no seu Google Drive (precisa de internet). No app fica só a cópia pequena.</p>
           </div>
         )}
 
