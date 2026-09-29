@@ -77,7 +77,9 @@ export function EscolherBlocos({
                   className="tap flex w-full items-center gap-3 rounded-xl border-2 border-border bg-card p-3 text-left"
                 >
                   <Marca on={todas} />
-                  <span className="text-lg font-bold text-foreground">Todas (inclui as próximas)</span>
+                  <span className="text-lg font-bold text-foreground">
+                    Todas (inclui as próximas)
+                  </span>
                 </button>
                 {(minhas ?? []).map((t) => {
                   const m = todas || sel.includes(t.id);
@@ -96,8 +98,14 @@ export function EscolherBlocos({
                     </button>
                   );
                 })}
-                {minhas && !minhas.length && <p className="text-base text-muted-foreground">Você ainda não tem viagens.</p>}
-                {!todas && !sel.length && <p className="text-base text-muted-foreground">Nenhuma viagem marcada: nada de viagem será mostrado.</p>}
+                {minhas && !minhas.length && (
+                  <p className="text-base text-muted-foreground">Você ainda não tem viagens.</p>
+                )}
+                {!todas && !sel.length && (
+                  <p className="text-base text-muted-foreground">
+                    Nenhuma viagem marcada: nada de viagem será mostrado.
+                  </p>
+                )}
               </div>
             )}
           </div>

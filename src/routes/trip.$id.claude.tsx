@@ -6,7 +6,10 @@ export const Route = createFileRoute("/trip/$id/claude")({
   head: () => ({
     meta: [
       { title: "Chegou pelo Claude — Evoque Viagens" },
-      { name: "description", content: "Confirme com um toque os voos, hotéis e reservas que o Claude trouxe." },
+      {
+        name: "description",
+        content: "Confirme com um toque os voos, hotéis e reservas que o Claude trouxe.",
+      },
       { property: "og:title", content: "Chegou pelo Claude" },
       { property: "og:description", content: "Itens pendentes para confirmar na viagem." },
       { property: "og:type", content: "website" },

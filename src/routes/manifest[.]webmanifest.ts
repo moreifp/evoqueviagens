@@ -7,14 +7,18 @@ export const Route = createFileRoute("/manifest.webmanifest")({
     handlers: {
       GET: ({ request }) => {
         const url = new URL(request.url);
-        const host = limparHost(request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host);
-        if (HOSTS_LANDING.has(host) || HOSTS_SO_REDIRECIONA.has(host)) return new Response("Not found", { status: 404 });
+        const host = limparHost(
+          request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host,
+        );
+        if (HOSTS_LANDING.has(host) || HOSTS_SO_REDIRECIONA.has(host))
+          return new Response("Not found", { status: 404 });
         const base = host === APP_HOST ? `https://${APP_HOST}/` : "/";
         const manifest = {
           id: base,
           name: "Evoque Viagens",
           short_name: "Evoque",
-          description: "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência de datas.",
+          description:
+            "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência de datas.",
           start_url: base,
           scope: base,
           display: "standalone",
@@ -29,7 +33,10 @@ export const Route = createFileRoute("/manifest.webmanifest")({
           ],
         };
         return new Response(JSON.stringify(manifest), {
-          headers: { "content-type": "application/manifest+json; charset=utf-8", "cache-control": "public, max-age=600" },
+          headers: {
+            "content-type": "application/manifest+json; charset=utf-8",
+            "cache-control": "public, max-age=600",
+          },
         });
       },
     },

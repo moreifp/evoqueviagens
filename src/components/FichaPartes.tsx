@@ -1,6 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, Eye, EyeOff, FileText, Image as ImageIcon, Loader2, Pencil, RefreshCw, Trash2, Check, X } from "lucide-react";
-import { DicaArrastar, Miniatura, TirarFoto, ZonaArquivo, previaDe } from "@/components/ArquivoFoto";
+import {
+  Camera,
+  Eye,
+  EyeOff,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  Pencil,
+  RefreshCw,
+  Trash2,
+  Check,
+  X,
+} from "lucide-react";
+import {
+  DicaArrastar,
+  Miniatura,
+  TirarFoto,
+  ZonaArquivo,
+  previaDe,
+} from "@/components/ArquivoFoto";
 import { toast } from "sonner";
 import { inputCls } from "@/components/Form";
 import { mascarar, urlAssinada } from "@/lib/pessoas";
@@ -24,13 +42,21 @@ export function Cartao({
         <h2 className="flex-1 text-xl">{titulo}</h2>
         {extra}
         {onEditar && (
-          <button onClick={onEditar} aria-label={`Editar ${titulo}`} className="tap flex flex-col items-center justify-center rounded-xl text-foreground">
+          <button
+            onClick={onEditar}
+            aria-label={`Editar ${titulo}`}
+            className="tap flex flex-col items-center justify-center rounded-xl text-foreground"
+          >
             <Pencil size={24} strokeWidth={2.2} />
             <span className="text-sm font-bold">Editar</span>
           </button>
         )}
         {onApagar && (
-          <button onClick={onApagar} aria-label={`Apagar ${titulo}`} className="tap flex flex-col items-center justify-center rounded-xl text-destructive">
+          <button
+            onClick={onApagar}
+            aria-label={`Apagar ${titulo}`}
+            className="tap flex flex-col items-center justify-center rounded-xl text-destructive"
+          >
             <Trash2 size={24} strokeWidth={2.2} />
             <span className="text-sm font-bold">Apagar</span>
           </button>
@@ -74,7 +100,12 @@ export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; ro
   return (
     <div className="mt-2">
       {url && !pdf ? (
-        <img src={url} alt="Foto do documento" className="w-full rounded-xl border border-border" onError={() => setUrl(null)} />
+        <img
+          src={url}
+          alt="Foto do documento"
+          className="w-full rounded-xl border border-border"
+          onError={() => setUrl(null)}
+        />
       ) : (
         <button
           onClick={async () => {
@@ -86,7 +117,11 @@ export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; ro
           }}
           className="tap flex items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-bold text-foreground"
         >
-          {pdf ? <FileText size={24} strokeWidth={2.2} /> : <ImageIcon size={24} strokeWidth={2.2} />}
+          {pdf ? (
+            <FileText size={24} strokeWidth={2.2} />
+          ) : (
+            <ImageIcon size={24} strokeWidth={2.2} />
+          )}
           {pdf ? "Abrir PDF" : rotulo}
         </button>
       )}
@@ -100,8 +135,18 @@ export function VerFoto({ path, rotulo = "Ver foto" }: { path: string | null; ro
  * aparece "Vazio · toque para escolher".) Tem botão para limpar.
  */
 export function CampoData({
-  value, onChange, className, ariaLabel, en,
-}: { value: string; onChange: (v: string) => void; className: string; ariaLabel?: string; en?: boolean }) {
+  value,
+  onChange,
+  className,
+  ariaLabel,
+  en,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  className: string;
+  ariaLabel?: string;
+  en?: boolean;
+}) {
   const vazio = !value;
   return (
     <div className="relative">
@@ -131,7 +176,12 @@ export function CampoData({
   );
 }
 
-export type CampoEd = { chave: string; rotulo: string; tipo?: "text" | "date" | "tel" | "email"; opcoes?: [string, string][] };
+export type CampoEd = {
+  chave: string;
+  rotulo: string;
+  tipo?: "text" | "date" | "tel" | "email";
+  opcoes?: [string, string][];
+};
 
 function paraTexto(x: unknown): string {
   if (x == null) return "";
@@ -177,7 +227,8 @@ export function Editor({
 
   useEffect(() => {
     let vivo = true;
-    if (foto?.path && navigator.onLine) urlAssinada(foto.path).then((u) => vivo && u && setPrevia(u));
+    if (foto?.path && navigator.onLine)
+      urlAssinada(foto.path).then((u) => vivo && u && setPrevia(u));
     return () => {
       vivo = false;
     };
@@ -229,34 +280,52 @@ export function Editor({
         <div className="space-y-2">
           <span className="text-base font-bold text-foreground">Foto</span>
           {orientacaoFoto && (
-            <p className="rounded-xl border border-border bg-muted p-3 text-base text-foreground">{orientacaoFoto}</p>
+            <p className="rounded-xl border border-border bg-muted p-3 text-base text-foreground">
+              {orientacaoFoto}
+            </p>
           )}
           {mostraFoto ? (
             mostraFoto === "pdf" || /\.pdf(\?|$)/i.test(mostraFoto) ? (
               <Miniatura src="pdf" className="h-24 w-full rounded-xl" />
             ) : (
-              <img src={mostraFoto} alt="Foto do documento" className="w-full rounded-xl border border-border" />
+              <img
+                src={mostraFoto}
+                alt="Foto do documento"
+                className="w-full rounded-xl border border-border"
+              />
             )
           ) : (
             <p className="text-base text-muted-foreground">
-              {novaFoto === null ? "Foto será removida ao salvar." : foto.path ? "Foto guardada (abre com internet)." : "Sem foto."}
+              {novaFoto === null
+                ? "Foto será removida ao salvar."
+                : foto.path
+                  ? "Foto guardada (abre com internet)."
+                  : "Sem foto."}
             </p>
           )}
           {leitura === "lendo" && (
-            <p className="flex items-center gap-2 rounded-xl bg-muted p-3 text-base font-bold text-foreground" role="status">
+            <p
+              className="flex items-center gap-2 rounded-xl bg-muted p-3 text-base font-bold text-foreground"
+              role="status"
+            >
               <Loader2 size={24} strokeWidth={2.2} className="animate-spin" aria-hidden />
               Lendo a foto… pode levar alguns segundos.
             </p>
           )}
           {leitura === "ok" && (
-            <p className="flex items-center gap-2 rounded-xl bg-ok/10 p-3 text-base font-bold text-ok" role="status">
+            <p
+              className="flex items-center gap-2 rounded-xl bg-ok/10 p-3 text-base font-bold text-ok"
+              role="status"
+            >
               <Check size={24} strokeWidth={2.2} aria-hidden />
               Lemos a foto · confira os campos e toque Salvar
             </p>
           )}
           {leitura === "falhou" && (
             <div className="space-y-2 rounded-xl bg-warn/10 p-3" role="alert">
-              <p className="text-base font-bold text-warn">Não deu para ler a foto. Você pode preencher à mão ou tentar de novo.</p>
+              <p className="text-base font-bold text-warn">
+                Não deu para ler a foto. Você pode preencher à mão ou tentar de novo.
+              </p>
               {ultimaFoto && (
                 <button
                   type="button"
@@ -320,7 +389,9 @@ export function Editor({
                   aria-pressed={v[c.chave] === k}
                   onClick={() => setV({ ...v, [c.chave]: k })}
                   className={`tap rounded-full border-2 px-4 text-base font-bold ${
-                    v[c.chave] === k ? "border-accent bg-accent text-accent-foreground" : "border-border bg-card text-foreground"
+                    v[c.chave] === k
+                      ? "border-accent bg-accent text-accent-foreground"
+                      : "border-border bg-card text-foreground"
                   }`}
                 >
                   {r}
@@ -329,7 +400,12 @@ export function Editor({
             </div>
           ) : c.tipo === "date" ? (
             <div className="mt-2">
-              <CampoData ariaLabel={c.rotulo} value={v[c.chave] ?? ""} onChange={(x) => setV({ ...v, [c.chave]: x })} className={inputCls} />
+              <CampoData
+                ariaLabel={c.rotulo}
+                value={v[c.chave] ?? ""}
+                onChange={(x) => setV({ ...v, [c.chave]: x })}
+                className={inputCls}
+              />
             </div>
           ) : (
             <input

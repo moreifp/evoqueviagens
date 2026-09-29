@@ -1,0 +1,12 @@
+CREATE INDEX IF NOT EXISTS traveler_document_person_id_idx ON public.traveler_document (person_id);
+CREATE INDEX IF NOT EXISTS loyalty_account_person_id_idx ON public.loyalty_account (person_id);
+CREATE INDEX IF NOT EXISTS document_attachment_person_id_idx ON public.document_attachment (person_id);
+CREATE INDEX IF NOT EXISTS expense_payer_person_id_idx ON public.expense_payer (person_id);
+CREATE INDEX IF NOT EXISTS expense_share_person_id_idx ON public.expense_share (person_id);
+CREATE INDEX IF NOT EXISTS share_invite_person_id_idx ON public.share_invite (person_id);
+CREATE INDEX IF NOT EXISTS share_invite_trip_id_idx ON public.share_invite (trip_id);
+CREATE INDEX IF NOT EXISTS share_grant_trip_id_idx ON public.share_grant (trip_id);
+CREATE INDEX IF NOT EXISTS trip_owner_id_idx ON public.trip (owner_id);
+CREATE INDEX IF NOT EXISTS vault_document_person_id_idx ON public.vault_document (person_id);
+CREATE INDEX IF NOT EXISTS agent_inbox_trip_id_idx ON public.agent_inbox (trip_id);
+CREATE INDEX IF NOT EXISTS trip_oculta_trip_id_idx ON public.trip_oculta (trip_id);

@@ -52,7 +52,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         relatarErro({
           data: {
             onde: `tela:${location.pathname.slice(0, 50)}`,
-            msg: `${String(error?.message ?? error)} | ${String(error?.stack ?? "").slice(0, 850)}`.slice(0, 1000),
+            msg: `${String(error?.message ?? error)} | ${String(error?.stack ?? "").slice(0, 850)}`.slice(
+              0,
+              1000,
+            ),
             ua: navigator.userAgent.slice(0, 300),
           },
         }),
@@ -93,7 +96,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-2xl text-foreground">Esta tela não carregou</h1>
-        <p className="mt-3 break-words text-base text-muted-foreground">{String(error?.message ?? error).slice(0, 200)}</p>
+        <p className="mt-3 break-words text-base text-muted-foreground">
+          {String(error?.message ?? error).slice(0, 200)}
+        </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
             onClick={() => {
@@ -135,8 +140,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preload", href: "/fonts/inter-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
-      { rel: "preload", href: "/fonts/outfit-latin.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      {
+        rel: "preload",
+        href: "/fonts/inter-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        href: "/fonts/outfit-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
       ...(loaderData?.landing ? [] : [{ rel: "manifest", href: "/manifest.webmanifest" }]),
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
@@ -181,7 +198,10 @@ function hostComApp() {
 function RootApp() {
   const { queryClient } = Route.useRouteContext();
   const [instalavel, setInstalavel] = useState(false);
-  useEffect(() => { setInstalavel(hostComApp()); aplicarVisual(); }, []);
+  useEffect(() => {
+    setInstalavel(hostComApp());
+    aplicarVisual();
+  }, []);
   // Só desenha as telas depois de trazer do aparelho os dados guardados:
   // sem isso, uma tela aberta sem internet ficaria esperando a rede.
   const [restaurado, setRestaurado] = useState(false);
@@ -201,9 +221,15 @@ function RootApp() {
         const [, restaurando] = persistQueryClient({
           // Casts: bun resolve @tanstack/query-persist-client-core em duas cópias
           // (direta e aninhada em react-query-persist-client); os tipos colidem.
-          queryClient: queryClient as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
+          queryClient: queryClient as unknown as Parameters<
+            typeof persistQueryClient
+          >[0]["queryClient"],
           persister: createAsyncStoragePersister({
-            storage: { getItem: (k: string) => idb.get(k), setItem: (k: string, v: string) => idb.set(k, v), removeItem: (k: string) => idb.del(k) },
+            storage: {
+              getItem: (k: string) => idb.get(k),
+              setItem: (k: string, v: string) => idb.set(k, v),
+              removeItem: (k: string) => idb.del(k),
+            },
             key: "evoque-cache-v5",
           }) as unknown as Parameters<typeof persistQueryClient>[0]["persister"],
           maxAge: 1000 * 60 * 60 * 24 * 30,
@@ -235,7 +261,11 @@ function RootApp() {
 function Conteudo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   if (path.startsWith("/c/") || path.startsWith("/d/")) return <Outlet />;
-  const mostraAbas = !path.startsWith("/.lovable/") && !path.startsWith("/trip/") && !path.startsWith("/pessoas/") && path !== "/nova-viagem";
+  const mostraAbas =
+    !path.startsWith("/.lovable/") &&
+    !path.startsWith("/trip/") &&
+    !path.startsWith("/pessoas/") &&
+    path !== "/nova-viagem";
   return (
     <AuthGate>
       <BaixarOffline />

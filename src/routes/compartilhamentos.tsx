@@ -6,34 +6,326 @@ import { Copy, Send, Share2, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { EscolherBlocos } from "@/components/EscolherBlocos";
-import { compartilharDeVolta, criarConvite, listarCompartilhamentos, mudarBlocos, revogar } from "@/lib/compartilhar.functions";
+import {
+  compartilharDeVolta,
+  criarConvite,
+  listarCompartilhamentos,
+  mudarBlocos,
+  revogar,
+} from "@/lib/compartilhar.functions";
 import { TODOS_BLOCOS, nomeBloco, type Bloco } from "@/lib/blocos";
 import { abrirWhatsApp } from "@/lib/links";
 
 import { ConfiancaViagens } from "@/components/ConvitesRecebidos";
 import { origemApp } from "@/lib/site";
-export const Route = createFileRoute("/compartilhamentos")({ head: () => ({ meta: [
-  { title: "Quem vê seus dados — Evoque Viagens" }, { name: "description", content: "Controle quem vê seus dados e viagens." },
-  { property: "og:title", content: "Quem vê seus dados — Evoque Viagens" }, { property: "og:description", content: "Compartilhamento privado, revogável e somente leitura." },
-] }), component: Compartilhamentos });
+export const Route = createFileRoute("/compartilhamentos")({
+  head: () => ({
+    meta: [
+      { title: "Quem vê seus dados — Evoque Viagens" },
+      { name: "description", content: "Controle quem vê seus dados e viagens." },
+      { property: "og:title", content: "Quem vê seus dados — Evoque Viagens" },
+      {
+        property: "og:description",
+        content: "Compartilhamento privado, revogável e somente leitura.",
+      },
+    ],
+  }),
+  component: Compartilhamentos,
+});
 
 function Compartilhamentos() {
-  const qc=useQueryClient(); const load=useServerFn(listarCompartilhamentos); const invite=useServerFn(criarConvite); const change=useServerFn(mudarBlocos); const revoke=useServerFn(revogar); const back=useServerFn(compartilharDeVolta); const [volta,setVolta]=useState<string|null>(null);
-  const {data}=useQuery({queryKey:["compartilhamentos"],queryFn:()=>load()}); const [tab,setTab]=useState<"dou"|"recebo">("dou"); const [creating,setCreating]=useState(false); const [mode,setMode]=useState<"oferta"|"pedido">("oferta"); const [blocks,setBlocks]=useState<Bloco[]>(TODOS_BLOCOS); const [tripIds,setTripIds]=useState<string[]|null>(null); const [url,setUrl]=useState<string|null>(null); const [editing,setEditing]=useState<string|null>(null);
-  const given=(data?.grants??[]).filter((g)=>g.owner_id===data?.uid); const received=(data?.grants??[]).filter((g)=>g.grantee_id===data?.uid); const list=tab==="dou"?given:received;
-  const tripName=(id:string)=>data?.trips.find((t)=>t.id===id)?.nome??"Viagem";
-  function summary(g:(typeof list)[number]){return g.blocos.map((b)=>b==="viagens"?(g.trip_ids===null?"Viagens: todas":`Viagens: ${g.trip_ids.map(tripName).join(", ")}`):nomeBloco(b)).join(" · ");}
-  async function generate(){try{const r=await invite({data:{direcao:mode,blocos:mode==="oferta"?blocks:TODOS_BLOCOS,tripIds:mode==="oferta"?tripIds:null}});setUrl(`${origemApp()}/convite/${r.token}`);}catch{toast.error("Não foi possível criar o convite.");}}
-  async function cut(id:string){await revoke({data:{id}});await qc.invalidateQueries({queryKey:["compartilhamentos"]});toast.success("Acesso revogado");}
-  async function devolver(id:string){if(!blocks.length){toast.error("Escolha ao menos um item.");return;}try{await back({data:{grantId:id,blocos:blocks,tripIds}});setVolta(null);await qc.invalidateQueries({queryKey:["compartilhamentos"]});toast.success("Pronto, você compartilhou de volta");}catch{toast.error("Não foi possível compartilhar.");}}
-  async function save(id:string){await change({data:{id,blocos:blocks,tripIds}});setEditing(null);await qc.invalidateQueries({queryKey:["compartilhamentos"]});toast.success("Acesso atualizado");}
-  return <div className="min-h-screen bg-background pb-24"><Topo titulo="Quem vê seus dados" voltarPara="/"/><main className="mx-auto max-w-2xl space-y-5 px-4 pt-4"><ConfiancaViagens />
-    <div className="grid grid-cols-2 rounded-lg bg-muted p-1"><button onClick={()=>setTab("dou")} className={`tap rounded-lg text-lg font-bold ${tab==="dou"?"bg-card shadow-soft":"text-muted-foreground"}`}>Eu compartilho</button><button onClick={()=>setTab("recebo")} className={`tap rounded-lg text-lg font-bold ${tab==="recebo"?"bg-card shadow-soft":"text-muted-foreground"}`}>Comigo ({received.length})</button></div>
-    <p className="rounded-lg border border-border p-3 text-base font-semibold"><strong>Senhas do cofre nunca são compartilhadas.</strong> Os demais dados ficam somente leitura.</p>
-    {list.map((g)=><section key={g.id} className="rounded-lg border border-border bg-card p-4"><div className="flex items-start gap-3"><span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-bold">{(tab==="dou"?g.grantee_nome:g.owner_nome)?.slice(0,2).toUpperCase()||"—"}</span><span className="min-w-0 flex-1"><strong className="block text-xl">{tab==="dou"?g.grantee_nome??"Alguém":g.owner_nome??"Alguém"}</strong><span className="text-base text-muted-foreground">Vê desde {new Date(g.created_at).toLocaleDateString("pt-BR")} · só leitura</span></span></div>{editing===g.id&&tab==="dou"?<div className="mt-4 space-y-3"><EscolherBlocos valor={blocks} onChange={setBlocks} tripIds={tripIds} onTrips={setTripIds}/><div className="grid grid-cols-2 gap-2"><button onClick={()=>void save(g.id)} className="tap rounded-lg bg-primary text-lg font-bold text-primary-foreground">Salvar</button><button onClick={()=>setEditing(null)} className="tap rounded-lg border-2 border-border text-lg font-bold">Cancelar</button></div></div>:<><p className="mt-3 text-base text-muted-foreground">{summary(g)}</p><div className="mt-3 grid grid-cols-2 gap-2">{tab==="recebo"?(g.owner_person_id?<Link to="/pessoas/$pid" params={{pid:g.owner_person_id}} className="tap flex items-center justify-center rounded-lg border-2 border-border text-lg font-bold">Abrir dados</Link>:<span className="tap flex items-center justify-center rounded-lg border-2 border-border text-base text-muted-foreground">Ficha ainda não criada</span>):<button onClick={()=>{setEditing(g.id);setBlocks(g.blocos as Bloco[]);setTripIds(g.trip_ids??null);}} className="tap rounded-lg border-2 border-border text-lg font-bold">Mudar</button>}<button onClick={()=>void cut(g.id)} className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"><UserX size={24}/> {tab==="dou"?"Revogar":"Deixar de ver"}</button></div>{tab==="recebo"&&(given.some((x)=>x.grantee_id===g.owner_id)?<button onClick={()=>setTab("dou")} className="tap mt-2 w-full rounded-lg text-lg font-bold text-accent">Você já compartilha · Mudar</button>:volta===g.id?<div className="mt-4 space-y-3"><EscolherBlocos valor={blocks} onChange={setBlocks} tripIds={tripIds} onTrips={setTripIds}/><p className="text-base">Ele só vê. Não edita nada seu. Senhas do cofre nunca vão.</p><div className="grid grid-cols-2 gap-2"><button onClick={()=>void devolver(g.id)} className="tap rounded-lg bg-primary text-lg font-bold text-primary-foreground">Compartilhar</button><button onClick={()=>setVolta(null)} className="tap rounded-lg border-2 border-border text-lg font-bold">Cancelar</button></div></div>:<button onClick={()=>{setVolta(g.id);setBlocks(TODOS_BLOCOS);setTripIds(null);}} className="gradient-hero tap mt-2 flex w-full items-center justify-center gap-2 rounded-lg text-lg font-bold"><Share2 size={24}/> Compartilhar de volta</button>)}</>}</section>)}
-    {!list.length&&<p className="py-6 text-center text-lg text-muted-foreground">Nenhum compartilhamento nesta lista.</p>}
-    {tab==="dou"&&!creating&&<button onClick={()=>setCreating(true)} className="gradient-hero tap flex w-full items-center justify-center gap-2 rounded-lg text-xl font-bold"><Share2 size={27}/> Compartilhar com alguém</button>}
-    {creating&&!url&&<section className="space-y-4 border-t border-border pt-5"><div className="grid grid-cols-2 rounded-lg bg-muted p-1"><button onClick={()=>setMode("oferta")} className={`tap rounded-lg text-lg font-bold ${mode==="oferta"?"bg-card":""}`}>Compartilhar</button><button onClick={()=>setMode("pedido")} className={`tap rounded-lg text-lg font-bold ${mode==="pedido"?"bg-card":""}`}>Pedir acesso</button></div>{mode==="oferta"&&<EscolherBlocos valor={blocks} onChange={setBlocks} tripIds={tripIds} onTrips={setTripIds}/>}<button onClick={()=>void generate()} className="gradient-hero tap w-full rounded-lg text-lg font-bold">Criar convite</button></section>}
-    {url&&<section className="rounded-lg border-2 border-accent bg-card p-4"><p className="text-lg font-bold">Link pronto. Vale por 30 dias e só uma pessoa pode usar.</p><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={()=>{void navigator.clipboard.writeText(url);toast.success("Link copiado");}} className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"><Copy size={24}/> Copiar</button><button onClick={()=>abrirWhatsApp(null,`${mode==="oferta"?"Compartilhei meus dados de viagem com você":"Compartilha seus dados de viagem comigo"} no Evoque: ${url}`)} className="tap flex items-center justify-center gap-2 rounded-lg bg-primary text-lg font-bold text-primary-foreground"><Send size={24}/> WhatsApp</button></div></section>}
-  </main></div>;
+  const qc = useQueryClient();
+  const load = useServerFn(listarCompartilhamentos);
+  const invite = useServerFn(criarConvite);
+  const change = useServerFn(mudarBlocos);
+  const revoke = useServerFn(revogar);
+  const back = useServerFn(compartilharDeVolta);
+  const [volta, setVolta] = useState<string | null>(null);
+  const { data } = useQuery({ queryKey: ["compartilhamentos"], queryFn: () => load() });
+  const [tab, setTab] = useState<"dou" | "recebo">("dou");
+  const [creating, setCreating] = useState(false);
+  const [mode, setMode] = useState<"oferta" | "pedido">("oferta");
+  const [blocks, setBlocks] = useState<Bloco[]>(TODOS_BLOCOS);
+  const [tripIds, setTripIds] = useState<string[] | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const given = (data?.grants ?? []).filter((g) => g.owner_id === data?.uid);
+  const received = (data?.grants ?? []).filter((g) => g.grantee_id === data?.uid);
+  const list = tab === "dou" ? given : received;
+  const tripName = (id: string) => data?.trips.find((t) => t.id === id)?.nome ?? "Viagem";
+  function summary(g: (typeof list)[number]) {
+    return g.blocos
+      .map((b) =>
+        b === "viagens"
+          ? g.trip_ids === null
+            ? "Viagens: todas"
+            : `Viagens: ${g.trip_ids.map(tripName).join(", ")}`
+          : nomeBloco(b),
+      )
+      .join(" · ");
+  }
+  async function generate() {
+    try {
+      const r = await invite({
+        data: {
+          direcao: mode,
+          blocos: mode === "oferta" ? blocks : TODOS_BLOCOS,
+          tripIds: mode === "oferta" ? tripIds : null,
+        },
+      });
+      setUrl(`${origemApp()}/convite/${r.token}`);
+    } catch {
+      toast.error("Não foi possível criar o convite.");
+    }
+  }
+  async function cut(id: string) {
+    await revoke({ data: { id } });
+    await qc.invalidateQueries({ queryKey: ["compartilhamentos"] });
+    toast.success("Acesso revogado");
+  }
+  async function devolver(id: string) {
+    if (!blocks.length) {
+      toast.error("Escolha ao menos um item.");
+      return;
+    }
+    try {
+      await back({ data: { grantId: id, blocos: blocks, tripIds } });
+      setVolta(null);
+      await qc.invalidateQueries({ queryKey: ["compartilhamentos"] });
+      toast.success("Pronto, você compartilhou de volta");
+    } catch {
+      toast.error("Não foi possível compartilhar.");
+    }
+  }
+  async function save(id: string) {
+    await change({ data: { id, blocos: blocks, tripIds } });
+    setEditing(null);
+    await qc.invalidateQueries({ queryKey: ["compartilhamentos"] });
+    toast.success("Acesso atualizado");
+  }
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      <Topo titulo="Quem vê seus dados" voltarPara="/" />
+      <main className="mx-auto max-w-2xl space-y-5 px-4 pt-4">
+        <ConfiancaViagens />
+        <div className="grid grid-cols-2 rounded-lg bg-muted p-1">
+          <button
+            onClick={() => setTab("dou")}
+            className={`tap rounded-lg text-lg font-bold ${tab === "dou" ? "bg-card shadow-soft" : "text-muted-foreground"}`}
+          >
+            Eu compartilho
+          </button>
+          <button
+            onClick={() => setTab("recebo")}
+            className={`tap rounded-lg text-lg font-bold ${tab === "recebo" ? "bg-card shadow-soft" : "text-muted-foreground"}`}
+          >
+            Comigo ({received.length})
+          </button>
+        </div>
+        <p className="rounded-lg border border-border p-3 text-base font-semibold">
+          <strong>Senhas do cofre nunca são compartilhadas.</strong> Os demais dados ficam somente
+          leitura.
+        </p>
+        {list.map((g) => (
+          <section key={g.id} className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-bold">
+                {(tab === "dou" ? g.grantee_nome : g.owner_nome)?.slice(0, 2).toUpperCase() || "—"}
+              </span>
+              <span className="min-w-0 flex-1">
+                <strong className="block text-xl">
+                  {tab === "dou" ? (g.grantee_nome ?? "Alguém") : (g.owner_nome ?? "Alguém")}
+                </strong>
+                <span className="text-base text-muted-foreground">
+                  Vê desde {new Date(g.created_at).toLocaleDateString("pt-BR")} · só leitura
+                </span>
+              </span>
+            </div>
+            {editing === g.id && tab === "dou" ? (
+              <div className="mt-4 space-y-3">
+                <EscolherBlocos
+                  valor={blocks}
+                  onChange={setBlocks}
+                  tripIds={tripIds}
+                  onTrips={setTripIds}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => void save(g.id)}
+                    className="tap rounded-lg bg-primary text-lg font-bold text-primary-foreground"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={() => setEditing(null)}
+                    className="tap rounded-lg border-2 border-border text-lg font-bold"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mt-3 text-base text-muted-foreground">{summary(g)}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {tab === "recebo" ? (
+                    g.owner_person_id ? (
+                      <Link
+                        to="/pessoas/$pid"
+                        params={{ pid: g.owner_person_id }}
+                        className="tap flex items-center justify-center rounded-lg border-2 border-border text-lg font-bold"
+                      >
+                        Abrir dados
+                      </Link>
+                    ) : (
+                      <span className="tap flex items-center justify-center rounded-lg border-2 border-border text-base text-muted-foreground">
+                        Ficha ainda não criada
+                      </span>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditing(g.id);
+                        setBlocks(g.blocos as Bloco[]);
+                        setTripIds(g.trip_ids ?? null);
+                      }}
+                      className="tap rounded-lg border-2 border-border text-lg font-bold"
+                    >
+                      Mudar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => void cut(g.id)}
+                    className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-destructive text-lg font-bold text-destructive"
+                  >
+                    <UserX size={24} /> {tab === "dou" ? "Revogar" : "Deixar de ver"}
+                  </button>
+                </div>
+                {tab === "recebo" &&
+                  (given.some((x) => x.grantee_id === g.owner_id) ? (
+                    <button
+                      onClick={() => setTab("dou")}
+                      className="tap mt-2 w-full rounded-lg text-lg font-bold text-accent"
+                    >
+                      Você já compartilha · Mudar
+                    </button>
+                  ) : volta === g.id ? (
+                    <div className="mt-4 space-y-3">
+                      <EscolherBlocos
+                        valor={blocks}
+                        onChange={setBlocks}
+                        tripIds={tripIds}
+                        onTrips={setTripIds}
+                      />
+                      <p className="text-base">
+                        Ele só vê. Não edita nada seu. Senhas do cofre nunca vão.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => void devolver(g.id)}
+                          className="tap rounded-lg bg-primary text-lg font-bold text-primary-foreground"
+                        >
+                          Compartilhar
+                        </button>
+                        <button
+                          onClick={() => setVolta(null)}
+                          className="tap rounded-lg border-2 border-border text-lg font-bold"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setVolta(g.id);
+                        setBlocks(TODOS_BLOCOS);
+                        setTripIds(null);
+                      }}
+                      className="gradient-hero tap mt-2 flex w-full items-center justify-center gap-2 rounded-lg text-lg font-bold"
+                    >
+                      <Share2 size={24} /> Compartilhar de volta
+                    </button>
+                  ))}
+              </>
+            )}
+          </section>
+        ))}
+        {!list.length && (
+          <p className="py-6 text-center text-lg text-muted-foreground">
+            Nenhum compartilhamento nesta lista.
+          </p>
+        )}
+        {tab === "dou" && !creating && (
+          <button
+            onClick={() => setCreating(true)}
+            className="gradient-hero tap flex w-full items-center justify-center gap-2 rounded-lg text-xl font-bold"
+          >
+            <Share2 size={27} /> Compartilhar com alguém
+          </button>
+        )}
+        {creating && !url && (
+          <section className="space-y-4 border-t border-border pt-5">
+            <div className="grid grid-cols-2 rounded-lg bg-muted p-1">
+              <button
+                onClick={() => setMode("oferta")}
+                className={`tap rounded-lg text-lg font-bold ${mode === "oferta" ? "bg-card" : ""}`}
+              >
+                Compartilhar
+              </button>
+              <button
+                onClick={() => setMode("pedido")}
+                className={`tap rounded-lg text-lg font-bold ${mode === "pedido" ? "bg-card" : ""}`}
+              >
+                Pedir acesso
+              </button>
+            </div>
+            {mode === "oferta" && (
+              <EscolherBlocos
+                valor={blocks}
+                onChange={setBlocks}
+                tripIds={tripIds}
+                onTrips={setTripIds}
+              />
+            )}
+            <button
+              onClick={() => void generate()}
+              className="gradient-hero tap w-full rounded-lg text-lg font-bold"
+            >
+              Criar convite
+            </button>
+          </section>
+        )}
+        {url && (
+          <section className="rounded-lg border-2 border-accent bg-card p-4">
+            <p className="text-lg font-bold">
+              Link pronto. Vale por 30 dias e só uma pessoa pode usar.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(url);
+                  toast.success("Link copiado");
+                }}
+                className="tap flex items-center justify-center gap-2 rounded-lg border-2 border-border text-lg font-bold"
+              >
+                <Copy size={24} /> Copiar
+              </button>
+              <button
+                onClick={() =>
+                  abrirWhatsApp(
+                    null,
+                    `${mode === "oferta" ? "Compartilhei meus dados de viagem com você" : "Compartilha seus dados de viagem comigo"} no Evoque: ${url}`,
+                  )
+                }
+                className="tap flex items-center justify-center gap-2 rounded-lg bg-primary text-lg font-bold text-primary-foreground"
+              >
+                <Send size={24} /> WhatsApp
+              </button>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
+  );
 }

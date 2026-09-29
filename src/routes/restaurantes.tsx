@@ -10,7 +10,10 @@ export const Route = createFileRoute("/restaurantes")({
       { title: "Restaurantes — Evoque Viagens" },
       { name: "description", content: "Seus restaurantes no Evoque, dentro do app de viagens." },
       { property: "og:title", content: "Restaurantes — Evoque Viagens" },
-      { property: "og:description", content: "Seus restaurantes no Evoque, dentro do app de viagens." },
+      {
+        property: "og:description",
+        content: "Seus restaurantes no Evoque, dentro do app de viagens.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -20,7 +23,9 @@ export const Route = createFileRoute("/restaurantes")({
 
 function expDe(token: string): number | null {
   try {
-    const p = JSON.parse(atob(token.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/"))) as { exp?: number };
+    const p = JSON.parse(atob(token.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/"))) as {
+      exp?: number;
+    };
     return typeof p.exp === "number" ? p.exp * 1000 : null;
   } catch {
     return null;
@@ -56,7 +61,9 @@ function Restaurantes() {
         }
         alvo.current = { url: r.url, clientId: r.clientId };
         if (inicial) {
-          setSrc(`${r.url}/embed?token=${encodeURIComponent(r.token)}&client_id=${encodeURIComponent(r.clientId)}`);
+          setSrc(
+            `${r.url}/embed?token=${encodeURIComponent(r.token)}&client_id=${encodeURIComponent(r.clientId)}`,
+          );
         } else {
           // Renovação sem recarregar: manda o token novo para o app aberto.
           iframeRef.current?.contentWindow?.postMessage(
@@ -65,7 +72,10 @@ function Restaurantes() {
           );
         }
         const vida = Math.max(0, (expDe(r.token) ?? Date.now() + 300_000) - Date.now());
-        timer.current = window.setTimeout(() => buscar(false), Math.min(Math.max(vida * 0.6, 30_000), 300_000));
+        timer.current = window.setTimeout(
+          () => buscar(false),
+          Math.min(Math.max(vida * 0.6, 30_000), 300_000),
+        );
       } catch (e) {
         console.error(e);
         if (!vivo) return;
@@ -84,7 +94,11 @@ function Restaurantes() {
     const ouvir = (e: MessageEvent) => {
       const a = alvo.current;
       if (!a || e.origin !== new URL(a.url).origin) return;
-      if (e.data?.type === "evoque:open-external" && typeof e.data.url === "string" && /^https:\/\//.test(e.data.url)) {
+      if (
+        e.data?.type === "evoque:open-external" &&
+        typeof e.data.url === "string" &&
+        /^https:\/\//.test(e.data.url)
+      ) {
         window.open(e.data.url, "_blank", "noopener");
       }
     };
@@ -99,7 +113,11 @@ function Restaurantes() {
           <h1 className="text-3xl">Restaurantes</h1>
         </header>
         <div className="mx-4 mt-10 flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-          {navigator.onLine ? <Utensils size={48} strokeWidth={2.2} className="text-accent" /> : <WifiOff size={48} strokeWidth={2.2} className="text-accent" />}
+          {navigator.onLine ? (
+            <Utensils size={48} strokeWidth={2.2} className="text-accent" />
+          ) : (
+            <WifiOff size={48} strokeWidth={2.2} className="text-accent" />
+          )}
           <p className="text-xl font-bold text-foreground">{erro}</p>
           <button
             onClick={() => {

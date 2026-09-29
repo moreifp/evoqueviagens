@@ -1,5 +1,5 @@
 /** Código de país de 3 letras (MRZ / ISO 3166 alfa-3) → nome em português. */
-const A3_A2: Record<string, string> = {
+export const A3_A2: Record<string, string> = {
   BRA: "BR", ITA: "IT", PRT: "PT", ESP: "ES", FRA: "FR", DEU: "DE", D: "DE", GBR: "GB", IRL: "IE", USA: "US", CAN: "CA", MEX: "MX",
   ARG: "AR", URY: "UY", PRY: "PY", CHL: "CL", BOL: "BO", PER: "PE", COL: "CO", VEN: "VE", ECU: "EC", CHE: "CH", AUT: "AT",
   BEL: "BE", NLD: "NL", LUX: "LU", DNK: "DK", SWE: "SE", NOR: "NO", FIN: "FI", ISL: "IS", POL: "PL", CZE: "CZ", HUN: "HU",

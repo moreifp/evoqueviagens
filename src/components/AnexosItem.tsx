@@ -37,10 +37,25 @@ export function AnexosItem({
       const id = novoId();
       const limpo = arq.name.replace(/[^\w.\-]+/g, "_").slice(-80);
       const path = `trip/${tripId}/${itemId}/${id}-${limpo}`;
-      const up = await supabase.storage.from("documentos").upload(path, arq, { contentType: arq.type || "application/octet-stream" });
+      const up = await supabase.storage
+        .from("documentos")
+        .upload(path, arq, { contentType: arq.type || "application/octet-stream" });
       if (up.error) throw new Error(up.error.message);
-      const row: Anexo = { id, item_tipo: itemTipo, item_id: itemId, storage_path: path, nome: arq.name, content_type: arq.type || "application/octet-stream", size_bytes: arq.size };
-      try { await mutar({ tipo: "insert", tabela: "item_attachment", valores: row }); } catch (e) { await supabase.storage.from("documentos").remove([path]); throw e; }
+      const row: Anexo = {
+        id,
+        item_tipo: itemTipo,
+        item_id: itemId,
+        storage_path: path,
+        nome: arq.name,
+        content_type: arq.type || "application/octet-stream",
+        size_bytes: arq.size,
+      };
+      try {
+        await mutar({ tipo: "insert", tabela: "item_attachment", valores: row });
+      } catch (e) {
+        await supabase.storage.from("documentos").remove([path]);
+        throw e;
+      }
       naTela<Anexo>(qc, key, (l) => [...l, row]);
       void guardarAnexo(path);
       toast.success("Anexo guardado");
@@ -53,14 +68,24 @@ export function AnexosItem({
 
   async function apagar(a: Anexo) {
     naTela<Anexo>(qc, key, (l) => l.filter((x) => x.id !== a.id));
-    const r = await mutar({ tipo: "update", tabela: "item_attachment", id: a.id, valores: { deleted_at: new Date().toISOString() } });
+    const r = await mutar({
+      tipo: "update",
+      tabela: "item_attachment",
+      id: a.id,
+      valores: { deleted_at: new Date().toISOString() },
+    });
     toast(aviso(r, "Anexo apagado"), {
       duration: 10_000,
       action: {
         label: "Desfazer",
         onClick: () => {
           naTela<Anexo>(qc, key, (l) => [...l, a]);
-          void mutar({ tipo: "update", tabela: "item_attachment", id: a.id, valores: { deleted_at: null } });
+          void mutar({
+            tipo: "update",
+            tabela: "item_attachment",
+            id: a.id,
+            valores: { deleted_at: null },
+          });
         },
       },
     });
@@ -69,19 +94,35 @@ export function AnexosItem({
   if (!anexos.length && !podeEditar) return null;
   return (
     <div className="border-t border-border">
-      {anexos.length > 0 && <p className="px-4 pt-3 text-base font-bold text-muted-foreground">Arquivo original e anexos</p>}
+      {anexos.length > 0 && (
+        <p className="px-4 pt-3 text-base font-bold text-muted-foreground">
+          Arquivo original e anexos
+        </p>
+      )}
       {anexos.map((a, i) => (
         <div key={a.id} className="flex items-stretch border-b border-border last:border-b-0">
           <button
-            onClick={() => void abrirAnexo(a.storage_path).then((ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."))}
+            onClick={() =>
+              void abrirAnexo(a.storage_path).then(
+                (ok) => !ok && toast.error("Sem internet e sem cópia guardada deste arquivo."),
+              )
+            }
             className="tap flex min-w-0 flex-1 items-center gap-3 px-4 text-left text-lg font-bold text-foreground"
           >
             <FileText size={26} strokeWidth={2.2} className="shrink-0 text-accent" />
             <span className="truncate">{a.nome}</span>
-            {i === 0 && <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">Original</span>}
+            {i === 0 && (
+              <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">
+                Original
+              </span>
+            )}
           </button>
           {podeEditar && (
-            <button onClick={() => void apagar(a)} aria-label={`Apagar ${a.nome}`} className="tap flex w-16 items-center justify-center text-destructive">
+            <button
+              onClick={() => void apagar(a)}
+              aria-label={`Apagar ${a.nome}`}
+              className="tap flex w-16 items-center justify-center text-destructive"
+            >
               <Trash2 size={24} strokeWidth={2.2} />
             </button>
           )}
@@ -124,7 +165,10 @@ export function AnexosItem({
             }}
           />
           <div
-            onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setArrastando(true);
+            }}
             onDragLeave={() => setArrastando(false)}
             onDrop={(e) => {
               e.preventDefault();

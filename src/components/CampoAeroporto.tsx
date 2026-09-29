@@ -44,7 +44,8 @@ export function CampoAeroporto({
           setTexto(v);
           const a = porIata(lista, v);
           if (a) onEscolher({ iata: a.iata, cidade: a.cidade || null, tz: a.tz });
-          else if (/^[A-Za-z]{3}$/.test(v)) onEscolher({ iata: v.toUpperCase(), cidade: null, tz: null });
+          else if (/^[A-Za-z]{3}$/.test(v))
+            onEscolher({ iata: v.toUpperCase(), cidade: null, tz: null });
         }}
         className={`${inputCls} mt-2 mono-code uppercase`}
       />
@@ -65,7 +66,9 @@ export function CampoAeroporto({
               >
                 <MapPin size={22} strokeWidth={2.2} className="shrink-0 text-accent" />
                 <span className="mono-code text-lg font-bold">{a.iata}</span>
-                <span className="truncate text-base text-muted-foreground">{a.cidade || a.nome}</span>
+                <span className="truncate text-base text-muted-foreground">
+                  {a.cidade || a.nome}
+                </span>
               </button>
             </li>
           ))}

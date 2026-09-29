@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { iniciais, urlAssinada, type Nivel } from "@/lib/pessoas";
 
-export function AvatarPessoa({ nome, foto, tamanho = 56 }: { nome: string; foto: string | null; tamanho?: number }) {
+export function AvatarPessoa({
+  nome,
+  foto,
+  tamanho = 56,
+}: {
+  nome: string;
+  foto: string | null;
+  tamanho?: number;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!foto || !navigator.onLine) return;
@@ -17,7 +25,11 @@ export function AvatarPessoa({ nome, foto, tamanho = 56 }: { nome: string; foto:
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-lg font-bold text-secondary-foreground"
       aria-hidden
     >
-      {url ? <img src={url} alt="" className="h-full w-full object-cover" onError={() => setUrl(null)} /> : iniciais(nome)}
+      {url ? (
+        <img src={url} alt="" className="h-full w-full object-cover" onError={() => setUrl(null)} />
+      ) : (
+        iniciais(nome)
+      )}
     </span>
   );
 }

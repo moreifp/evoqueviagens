@@ -8,7 +8,9 @@ export const Route = createFileRoute("/api/public/hooks/push-evento")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = /^Bearer ([a-f0-9]{64})$/.exec(request.headers.get("authorization") ?? "")?.[1];
+        const token = /^Bearer ([a-f0-9]{64})$/.exec(
+          request.headers.get("authorization") ?? "",
+        )?.[1];
         if (!token) return new Response("Unauthorized", { status: 401 });
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: ok } = await db.rpc("verificar_cron_voos", { _t: token });

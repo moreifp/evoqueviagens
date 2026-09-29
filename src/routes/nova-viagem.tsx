@@ -21,15 +21,20 @@ export const Route = createFileRoute("/nova-viagem")({
       { title: "Nova viagem — Evoque Viagens" },
       { name: "description", content: "Cadastre uma viagem com datas e moeda de referência." },
       { property: "og:title", content: "Nova viagem" },
-      { property: "og:description", content: "Cadastre uma viagem com datas e moeda de referência." },
+      {
+        property: "og:description",
+        content: "Cadastre uma viagem com datas e moeda de referência.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { duplicar?: string; editar?: string } => ({ ...(typeof s.duplicar === "string" ? { duplicar: s.duplicar } : {}), ...(typeof s.editar === "string" ? { editar: s.editar } : {}) }),
+  validateSearch: (s: Record<string, unknown>): { duplicar?: string; editar?: string } => ({
+    ...(typeof s.duplicar === "string" ? { duplicar: s.duplicar } : {}),
+    ...(typeof s.editar === "string" ? { editar: s.editar } : {}),
+  }),
   component: NovaViagem,
 });
-
 
 function NovaViagem() {
   const navigate = useNavigate();
@@ -37,7 +42,7 @@ function NovaViagem() {
   const qc = useQueryClient();
   const { data: origem } = useQuery({ ...tripQuery(duplicar ?? ""), enabled: Boolean(duplicar) });
   const { data: atual } = useQuery({ ...tripQuery(editar ?? ""), enabled: Boolean(editar) });
-  const [nome, setNome] = useState(() => duplicar ? "Cópia da viagem" : "");
+  const [nome, setNome] = useState(() => (duplicar ? "Cópia da viagem" : ""));
   const [cidades, setCidades] = useState<string[]>([]);
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
@@ -45,7 +50,9 @@ function NovaViagem() {
   const [salvando, setSalvando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<0 | 1 | 2>(0);
   const [meuId, setMeuId] = useState<string | null>(null);
-  useEffect(() => { void usuarioLocal().then(({ data }) => setMeuId(data.user?.id ?? null)); }, []);
+  useEffect(() => {
+    void usuarioLocal().then(({ data }) => setMeuId(data.user?.id ?? null));
+  }, []);
   const souDono = !atual || !meuId || (atual as Trip & { owner_id?: string }).owner_id === meuId;
 
   function isoDia(d: Date) {
@@ -66,13 +73,34 @@ function NovaViagem() {
   useEffect(() => {
     if (!origem) return;
     setNome(`Cópia de ${origem.nome}`);
-    setCidades(origem.cidades?.length ? origem.cidades : origem.destino ? origem.destino.split(",").map((x) => x.trim()).filter(Boolean) : []);
+    setCidades(
+      origem.cidades?.length
+        ? origem.cidades
+        : origem.destino
+          ? origem.destino
+              .split(",")
+              .map((x) => x.trim())
+              .filter(Boolean)
+          : [],
+    );
     setMoeda(origem.moeda_base);
   }, [origem]);
   useEffect(() => {
     if (!atual) return;
-    setNome(atual.nome); setInicio(atual.data_inicio); setFim(atual.data_fim); setMoeda(atual.moeda_base);
-    setCidades(atual.cidades?.length ? atual.cidades : atual.destino ? atual.destino.split(",").map((x) => x.trim()).filter(Boolean) : []);
+    setNome(atual.nome);
+    setInicio(atual.data_inicio);
+    setFim(atual.data_fim);
+    setMoeda(atual.moeda_base);
+    setCidades(
+      atual.cidades?.length
+        ? atual.cidades
+        : atual.destino
+          ? atual.destino
+              .split(",")
+              .map((x) => x.trim())
+              .filter(Boolean)
+          : [],
+    );
   }, [atual]);
 
   async function salvar(e: React.FormEvent) {
@@ -87,22 +115,85 @@ function NovaViagem() {
       const tripId = novoId();
       const destino = cidades.join(", ");
       if (atual) {
-        const valores = { nome, cidades, destino: destino || null, data_inicio: inicio, data_fim: fim, moeda_base: moeda };
+        const valores = {
+          nome,
+          cidades,
+          destino: destino || null,
+          data_inicio: inicio,
+          data_fim: fim,
+          moeda_base: moeda,
+        };
         const r = await enviar([{ tipo: "update", tabela: "trip", id: atual.id, valores }]);
-        naTela<Trip>(qc, tripsQuery().queryKey, (l) => l.map((t) => (t.id === atual.id ? { ...t, ...valores } : t)));
+        naTela<Trip>(qc, tripsQuery().queryKey, (l) =>
+          l.map((t) => (t.id === atual.id ? { ...t, ...valores } : t)),
+        );
         qc.setQueryData(tripQuery(atual.id).queryKey, { ...atual, ...valores });
-        toast.success(r === "fila" ? "Sem internet · alteração salva no aparelho" : "Viagem atualizada");
+        toast.success(
+          r === "fila" ? "Sem internet · alteração salva no aparelho" : "Viagem atualizada",
+        );
         navigate({ to: "/trip/$id", params: { id: atual.id } });
         return;
       }
       // Duplicar é uma operação única no servidor: viagem, participantes e reservas entram juntos ou nada entra.
       const ops: Op[] = origem
-        ? [{ tipo: "rpc", funcao: "duplicar_viagem", args: { _origem: origem.id, _novo: tripId, _nome: nome, _cidades: cidades, _inicio: inicio, _fim: fim, _moeda: moeda } }]
-        : [{ tipo: "insert", tabela: "trip", valores: { id: tripId, owner_id: auth.user?.id, nome, destino: destino || null, cidades, data_inicio: inicio, data_fim: fim, moeda_base: moeda, status: "planejada" } }];
+        ? [
+            {
+              tipo: "rpc",
+              funcao: "duplicar_viagem",
+              args: {
+                _origem: origem.id,
+                _novo: tripId,
+                _nome: nome,
+                _cidades: cidades,
+                _inicio: inicio,
+                _fim: fim,
+                _moeda: moeda,
+              },
+            },
+          ]
+        : [
+            {
+              tipo: "insert",
+              tabela: "trip",
+              valores: {
+                id: tripId,
+                owner_id: auth.user?.id,
+                nome,
+                destino: destino || null,
+                cidades,
+                data_inicio: inicio,
+                data_fim: fim,
+                moeda_base: moeda,
+                status: "planejada",
+              },
+            },
+          ];
       const resultado = await enviar(ops);
-      const nova = { id: tripId, owner_id: auth.user?.id ?? "", nome, destino: destino || null, cidades, data_inicio: inicio, data_fim: fim, moeda_base: moeda, status: "planejada", capa_url: null, arquivada_em: null, created_at: new Date().toISOString(), deleted_at: null } satisfies Trip;
-      naTela<Trip>(qc, tripsQuery().queryKey, (l) => [...l, nova].sort((a,b) => a.data_inicio.localeCompare(b.data_inicio)));
-      toast.success(resultado === "fila" ? "Sem internet · viagem salva no aparelho" : origem ? "Viagem duplicada" : "Viagem criada");
+      const nova = {
+        id: tripId,
+        owner_id: auth.user?.id ?? "",
+        nome,
+        destino: destino || null,
+        cidades,
+        data_inicio: inicio,
+        data_fim: fim,
+        moeda_base: moeda,
+        status: "planejada",
+        capa_url: null,
+        arquivada_em: null,
+        created_at: new Date().toISOString(),
+        deleted_at: null,
+      } satisfies Trip;
+      naTela<Trip>(qc, tripsQuery().queryKey, (l) =>
+        [...l, nova].sort((a, b) => a.data_inicio.localeCompare(b.data_inicio)),
+      );
+      toast.success(
+        resultado === "fila"
+          ? "Sem internet · viagem salva no aparelho"
+          : origem
+            ? "Viagem duplicada"
+            : "Viagem criada",
+      );
       navigate({ to: "/trip/$id", params: { id: tripId } });
     } catch (err) {
       toast.error((err as Error).message);
@@ -127,13 +218,22 @@ function NovaViagem() {
       if (error) throw error;
       if (!linhas?.length) {
         // Viagem vista só por compartilhamento: esconde apenas para mim, sem mexer na do organizador.
-        const { error: e2 } = await supabase.from("trip_oculta").upsert({ account_id: meuId, trip_id: atual.id });
+        const { error: e2 } = await supabase
+          .from("trip_oculta")
+          .upsert({ account_id: meuId, trip_id: atual.id });
         if (e2) throw e2;
       }
       for (const l of linhas) {
-        await mutar({ tipo: "update", tabela: "trip_member", id: l.id, valores: { status: "saiu", respondido_em: new Date().toISOString() } });
+        await mutar({
+          tipo: "update",
+          tabela: "trip_member",
+          id: l.id,
+          valores: { status: "saiu", respondido_em: new Date().toISOString() },
+        });
       }
-      naTela<Trip>(qc, tripsQuery().queryKey, (lista) => lista.filter((viagem) => viagem.id !== atual.id));
+      naTela<Trip>(qc, tripsQuery().queryKey, (lista) =>
+        lista.filter((viagem) => viagem.id !== atual.id),
+      );
       qc.removeQueries({ queryKey: tripQuery(atual.id).queryKey });
       toast.success("Você saiu da viagem");
       navigate({ to: "/viagens" });
@@ -152,10 +252,19 @@ function NovaViagem() {
     }
     setSalvando(true);
     try {
-      const resultado = await mutar({ tipo: "update", tabela: "trip", id: atual.id, valores: { deleted_at: new Date().toISOString() } });
-      naTela<Trip>(qc, tripsQuery().queryKey, (lista) => lista.filter((viagem) => viagem.id !== atual.id));
+      const resultado = await mutar({
+        tipo: "update",
+        tabela: "trip",
+        id: atual.id,
+        valores: { deleted_at: new Date().toISOString() },
+      });
+      naTela<Trip>(qc, tripsQuery().queryKey, (lista) =>
+        lista.filter((viagem) => viagem.id !== atual.id),
+      );
       qc.removeQueries({ queryKey: tripQuery(atual.id).queryKey });
-      toast.success(resultado === "fila" ? "Sem internet · viagem será apagada ao conectar" : "Viagem apagada");
+      toast.success(
+        resultado === "fila" ? "Sem internet · viagem será apagada ao conectar" : "Viagem apagada",
+      );
       navigate({ to: "/viagens" });
     } catch (erro) {
       toast.error((erro as Error).message || "Não consegui apagar a viagem.");
@@ -169,18 +278,43 @@ function NovaViagem() {
       <Topo titulo={editar ? "Editar viagem" : "Nova viagem"} voltarPara="/viagens" />
       <form onSubmit={salvar} className="space-y-5 px-4 pt-4">
         <Campo rotulo="Nome">
-          <input required value={nome} onChange={(e) => setNome(e.target.value)} className={inputCls} />
+          <input
+            required
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className={inputCls}
+          />
         </Campo>
         <div role="group" aria-labelledby="rotulo-cidades">
-          <span id="rotulo-cidades" className="text-base font-bold text-foreground">Cidades</span>
-          <div className="mt-2"><CampoCidades cidades={cidades} onChange={setCidades} /></div>
+          <span id="rotulo-cidades" className="text-base font-bold text-foreground">
+            Cidades
+          </span>
+          <div className="mt-2">
+            <CampoCidades cidades={cidades} onChange={setCidades} />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Campo rotulo="Início">
-            <input type="date" required value={inicio} min={minInicio} max="2099-12-31" onChange={(e) => mudarInicio(e.target.value)} className={inputCls} />
+            <input
+              type="date"
+              required
+              value={inicio}
+              min={minInicio}
+              max="2099-12-31"
+              onChange={(e) => mudarInicio(e.target.value)}
+              className={inputCls}
+            />
           </Campo>
           <Campo rotulo="Fim">
-            <input type="date" required value={fim} min={minFim} max="2099-12-31" onChange={(e) => setFim(e.target.value)} className={inputCls} />
+            <input
+              type="date"
+              required
+              value={fim}
+              min={minFim}
+              max="2099-12-31"
+              onChange={(e) => setFim(e.target.value)}
+              className={inputCls}
+            />
           </Campo>
         </div>
         <CampoMoeda rotulo="Moeda da viagem" value={moeda} onChange={setMoeda} />
@@ -193,13 +327,29 @@ function NovaViagem() {
           Salvar viagem
         </button>
         {atual && !souDono && (
-          <Button type="button" variant="destructive" disabled={salvando} onClick={() => void sair()} className="tap min-h-14 w-full gap-2 text-lg font-bold">
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={salvando}
+            onClick={() => void sair()}
+            className="tap min-h-14 w-full gap-2 text-lg font-bold"
+          >
             <LogOut size={24} strokeWidth={2.2} />
-            {confirmacao === 0 ? "Sair desta viagem" : confirmacao === 1 ? "Tem certeza?" : "Mesmo?"}
+            {confirmacao === 0
+              ? "Sair desta viagem"
+              : confirmacao === 1
+                ? "Tem certeza?"
+                : "Mesmo?"}
           </Button>
         )}
         {atual && souDono && (
-          <Button type="button" variant="destructive" disabled={salvando} onClick={() => void apagar()} className="tap min-h-14 w-full gap-2 text-lg font-bold">
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={salvando}
+            onClick={() => void apagar()}
+            className="tap min-h-14 w-full gap-2 text-lg font-bold"
+          >
             <Trash2 size={24} strokeWidth={2.2} />
             {confirmacao === 0 ? "Apagar viagem" : confirmacao === 1 ? "Tem certeza?" : "Mesmo?"}
           </Button>

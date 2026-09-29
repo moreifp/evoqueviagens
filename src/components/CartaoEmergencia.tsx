@@ -12,10 +12,14 @@ export function useOnline() {
   const [on, setOn] = useState(true);
   useEffect(() => {
     setOn(navigator.onLine);
-    const a = () => setOn(true), b = () => setOn(false);
+    const a = () => setOn(true),
+      b = () => setOn(false);
     window.addEventListener("online", a);
     window.addEventListener("offline", b);
-    return () => { window.removeEventListener("online", a); window.removeEventListener("offline", b); };
+    return () => {
+      window.removeEventListener("online", a);
+      window.removeEventListener("offline", b);
+    };
   }, []);
   return on;
 }
@@ -28,7 +32,9 @@ export function useBuscarEmergencia(tripId: string) {
     setBuscando(true);
     try {
       const snap = await fn({ data: { trip_id: tripId } });
-      qc.setQueryData<Trip>(tripQuery(tripId).queryKey, (t) => (t ? { ...t, emergencia: snap } : t));
+      qc.setQueryData<Trip>(tripQuery(tripId).queryKey, (t) =>
+        t ? { ...t, emergencia: snap } : t,
+      );
       return true;
     } catch (e) {
       toast.error((e as Error).message || "Não deu para buscar.");
@@ -46,7 +52,8 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
   const nav = useNavigate();
   const { buscar, buscando } = useBuscarEmergencia(trip.id);
   const e = trip.emergencia;
-  const base = "tap shadow-soft flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left";
+  const base =
+    "tap shadow-soft flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left";
 
   if (e && e.paises.length) {
     const p = e.paises[0]!;
@@ -59,7 +66,11 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
         </span>
         <span className="min-w-0 flex-1">
           <strong className="block text-lg">Emergência{n ? ` · ${n}` : ""}</strong>
-          <span className="block text-base text-muted-foreground">{cid.length ? `Consulados em ${cid.join(" e ")} · sem internet` : "Salvo · sem internet"}</span>
+          <span className="block text-base text-muted-foreground">
+            {cid.length
+              ? `Consulados em ${cid.join(" e ")} · sem internet`
+              : "Salvo · sem internet"}
+          </span>
         </span>
         <ChevronRight size={24} className="shrink-0 text-muted-foreground" />
       </Link>
@@ -70,15 +81,27 @@ export function CartaoEmergencia({ trip, editavel }: { trip: Trip; editavel: boo
     <button
       type="button"
       disabled={!on || buscando}
-      onClick={async () => { if (await buscar()) void nav({ to: "/trip/$id/emergencia", params: { id: trip.id } }); }}
+      onClick={async () => {
+        if (await buscar()) void nav({ to: "/trip/$id/emergencia", params: { id: trip.id } });
+      }}
       className={`${base} disabled:opacity-70`}
     >
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerg-soft text-emerg">
-        {buscando ? <Loader2 size={26} className="animate-spin" /> : <Phone size={26} strokeWidth={2.2} />}
+        {buscando ? (
+          <Loader2 size={26} className="animate-spin" />
+        ) : (
+          <Phone size={26} strokeWidth={2.2} />
+        )}
       </span>
       <span className="min-w-0 flex-1">
-        <strong className="block text-lg">{buscando ? "Buscando dados de emergência…" : "Dados de emergência · Buscar"}</strong>
-        {!on && <span className="block text-base text-muted-foreground">Precisa de internet para buscar</span>}
+        <strong className="block text-lg">
+          {buscando ? "Buscando dados de emergência…" : "Dados de emergência · Buscar"}
+        </strong>
+        {!on && (
+          <span className="block text-base text-muted-foreground">
+            Precisa de internet para buscar
+          </span>
+        )}
       </span>
     </button>
   );

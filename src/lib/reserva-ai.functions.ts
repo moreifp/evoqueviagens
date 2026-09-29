@@ -100,7 +100,7 @@ async function chamarIA(key: string, content: Record<string, unknown>[], nome: s
       body: JSON.stringify({
         model: "openai/gpt-6-astra", stream: true,
         input: [{ role: "user", content }],
-        reasoning: { effort: "low", summary: "auto" }, store: false, include: ["reasoning.encrypted_content"],
+        reasoning: { effort: "low" }, store: false,
         text: { format: { type: "json_schema", name: nome, strict: true, schema: sch } },
       }),
     });
