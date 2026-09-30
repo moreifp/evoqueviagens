@@ -67,6 +67,11 @@ function remember(accountId: string, key: CryptoKey) {
   notify();
 }
 
+/** Renova o prazo de 5 min enquanto o cofre está em uso (ex.: vários cartões seguidos). */
+export function renovarCofre(accountId: string) {
+  if (active && active.accountId === accountId && active.expiresAt > Date.now()) remember(accountId, active.key);
+}
+
 export function lockVault() {
   const was = !!active;
   active = null;

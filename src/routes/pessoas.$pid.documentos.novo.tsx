@@ -40,7 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
 import { DestravarCofre } from "@/components/Cofre";
-import { saveVaultDocument, segurarTravaAoSair, useVaultUnlocked } from "@/lib/vault";
+import { renovarCofre, saveVaultDocument, segurarTravaAoSair, useVaultUnlocked } from "@/lib/vault";
 import { Button } from "@/components/ui/button";
 
 const TIPOS = [
@@ -342,6 +342,7 @@ function NovoDocumento() {
             ? "Guardado no aparelho · sincroniza quando voltar a internet"
             : "Guardado no cofre",
         );
+        renovarCofre(data!.uid);
         if (maisUm.current) {
           maisUm.current = false;
           setFile(null);

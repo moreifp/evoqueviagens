@@ -275,6 +275,11 @@ function RootApp() {
 
 function Conteudo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  // Saiu da aba Eu (início ou fichas): tranca o cofre se ficou aberto.
+  const naAbaEu = path === "/" || path.startsWith("/pessoas/");
+  useEffect(() => {
+    if (!naAbaEu) void import("@/lib/vault").then((m) => m.lockVault());
+  }, [naAbaEu]);
   if (path.startsWith("/c/") || path.startsWith("/d/")) return <Outlet />;
   const mostraAbas =
     !path.startsWith("/.lovable/") &&
