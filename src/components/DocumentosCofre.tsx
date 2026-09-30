@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, FileLock2, FilePlus2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
+import { Check, ChevronRight, FileLock2, FilePlus2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
@@ -147,6 +147,12 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
     camposDe(selected.contents).some(
       (k) => (edit[k] ?? "") !== ((selected.contents.fields as Record<string, string | undefined>)[k] ?? ""),
     );
+  const [salvo, setSalvo] = useState(false);
+  useEffect(() => {
+    if (!salvo) return;
+    const t = setTimeout(() => setSalvo(false), 4000);
+    return () => clearTimeout(t);
+  }, [salvo]);
   async function salvar() {
     if (!selected || busy) return;
     setBusy(true);
@@ -156,6 +162,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
       setRows((old) => old.map((r) => (r.id === row.id ? row : r)));
       setTitulos((t) => ({ ...t, [row.id]: tituloDe(contents) }));
       setSelected({ row, contents });
+      setSalvo(true);
       toast.success("Guardado no cofre");
     } catch {
       toast.error("Não foi possível salvar.");
@@ -272,6 +279,11 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
                   <Button type="button" className="w-full" disabled={busy} onClick={() => void salvar()}>
                     <LockKeyhole size={22} /> Salvar no cofre
                   </Button>
+                )}
+                {salvo && !mudou && (
+                  <p className="flex items-center gap-2 text-base text-ok" role="status">
+                    <Check size={20} strokeWidth={2.5} /> Salvo no cofre
+                  </p>
                 )}
                 <div className="flex flex-wrap gap-2">
                   {selected.contents.file && (
