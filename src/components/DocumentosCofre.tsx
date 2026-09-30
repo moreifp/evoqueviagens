@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
 import { CampoPrivado } from "@/components/CampoPrivado";
-import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
+import { faceIdDisponivel, motivoFalhaBio, rotuloBio } from "@/components/TravaFaceId";
 import { ScanFace } from "lucide-react";
 import {
   deleteVaultDocument,

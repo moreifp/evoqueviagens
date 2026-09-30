@@ -35,6 +35,7 @@ import {
   desligarFaceId,
   faceIdDisponivel,
   ligarFaceId,
+  motivoFalhaBio,
   rotuloBio,
   useFaceIdLigado,
 } from "@/components/TravaFaceId";
