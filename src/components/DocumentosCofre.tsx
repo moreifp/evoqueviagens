@@ -12,6 +12,7 @@ import {
   useVaultUnlocked,
   type VaultDocument,
   type VaultDocumentContents,
+  updateVaultDocument,
 } from "@/lib/vault";
 
 const ROTULOS: Record<string, string> = {
@@ -27,6 +28,16 @@ const ROTULOS: Record<string, string> = {
   senha: "Senha",
   categoria: "Tipo",
 };
+const CAMPOS_CARTAO = ["nome_no_documento", "numero", "validade", "cvv", "senha"];
+/** Campos editáveis: cartão mostra sempre os 5; outros, os preenchidos + detalhes. */
+function camposDe(c: VaultDocumentContents) {
+  const f = c.fields as Record<string, string | undefined>;
+  const base =
+    f.categoria === "Cartão de crédito"
+      ? CAMPOS_CARTAO
+      : ["nome_no_documento", "numero", "detalhe", "detalhe2"];
+  return [...new Set([...base, ...Object.keys(f).filter((k) => f[k])])];
+}
 const tituloDe = (c: VaultDocumentContents) =>
   (c.fields.categoria === "Cartão de crédito" && c.fields.numero
     ? `Cartão •••• ${c.fields.numero.replace(/\D/g, "").slice(-4)}`
@@ -62,6 +73,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
     contents: VaultDocumentContents;
   } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [edit, setEdit] = useState<Record<string, string>>({});
   const [aberto, setAberto] = useState(false);
   const liberado = aberto && unlocked;
 
@@ -103,9 +115,32 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
   }
   async function open(row: VaultDocument) {
     try {
-      setSelected({ row, contents: await readVaultDocument(uid, row) });
+      const contents = await readVaultDocument(uid, row);
+      setSelected({ row, contents });
+      setEdit({ ...contents.fields } as Record<string, string>);
     } catch {
       toast.error("Não foi possível abrir o arquivo.");
+    }
+  }
+  const mudou =
+    !!selected &&
+    camposDe(selected.contents).some(
+      (k) => (edit[k] ?? "") !== ((selected.contents.fields as Record<string, string | undefined>)[k] ?? ""),
+    );
+  async function salvar() {
+    if (!selected || busy) return;
+    setBusy(true);
+    try {
+      const contents = { ...selected.contents, fields: { ...selected.contents.fields, ...edit } } as VaultDocumentContents;
+      const row = await updateVaultDocument(uid, selected.row, contents);
+      setRows((old) => old.map((r) => (r.id === row.id ? row : r)));
+      setTitulos((t) => ({ ...t, [row.id]: tituloDe(contents) }));
+      setSelected({ row, contents });
+      toast.success("Guardado no cofre");
+    } catch {
+      toast.error("Não foi possível salvar.");
+    } finally {
+      setBusy(false);
     }
   }
   async function remove() {
@@ -187,14 +222,24 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
           {selected && (
             <div className="space-y-3 rounded-lg border border-border bg-card p-4">
               <h3 className="text-xl font-bold">{tituloDe(selected.contents)}</h3>
-              {Object.entries(selected.contents.fields)
-                .filter(([, value]) => value)
-                .map(([key, value]) => (
-                  <p key={key} className="break-words text-lg">
-                    <span className="text-muted-foreground">{ROTULOS[key] ?? key}: </span>
-                    {value}
-                  </p>
-                ))}
+              {camposDe(selected.contents).map((key) => (
+                <label key={key} className="block">
+                  <span className="text-base text-muted-foreground">{ROTULOS[key] ?? key}</span>
+                  <input
+                    value={edit[key] ?? ""}
+                    onChange={(e) => setEdit((v) => ({ ...v, [key]: e.target.value }))}
+                    disabled={key === "categoria"}
+                    inputMode={key === "numero" || key === "cvv" ? "numeric" : undefined}
+                    autoComplete="off"
+                    className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg disabled:opacity-70"
+                  />
+                </label>
+              ))}
+              {mudou && (
+                <Button type="button" className="w-full" disabled={busy} onClick={() => void salvar()}>
+                  <LockKeyhole size={22} /> Salvar no cofre
+                </Button>
+              )}
               <div className="flex flex-wrap gap-2">
                 {selected.contents.file && (
                   <Button type="button" onClick={() => void abrirOriginal(selected.contents.file!)}>
