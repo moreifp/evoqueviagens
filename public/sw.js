@@ -124,16 +124,12 @@ async function daRede(request, ms) {
   } finally { clearTimeout(t); }
 }
 
-// Navegação: casca guardada primeiro (abre no avião), atualiza em segundo plano.
-async function navegar(request, event) {
-  const casca = await caches.match(SHELL);
-  if (casca) {
-    event.waitUntil(daRede(request, 15000));
-    return casca;
-  }
+// Navegação: com internet, busca a página nova (até 2,5 s) para o app instalado
+// sempre abrir na versão publicada; sem internet ou lento, usa a casca guardada.
+async function navegar(request) {
   const r = await daRede(request, 2500);
   if (r) return r;
-  return (await caches.match(request)) || (await caches.match(OFFLINE)) || Response.error();
+  return (await caches.match(SHELL)) || (await caches.match(request)) || (await caches.match(OFFLINE)) || Response.error();
 }
 
 async function arquivo(request) {
@@ -197,7 +193,7 @@ if (!HOST_SEM_APP) self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin || ignorar(url)) return;
   if (req.mode === "navigate") {
-    event.respondWith(navegar(req, event));
+    event.respondWith(navegar(req));
     return;
   }
   event.respondWith(arquivo(req));

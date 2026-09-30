@@ -1,4 +1,5 @@
 /** Único lugar que registra o service worker. Nunca em desenvolvimento, prévia ou iframe. */
+declare const __EVOQUE_BUILD__: string;
 function contextoRecusado() {
   if (!import.meta.env.PROD) return true;
   try {
@@ -17,7 +18,7 @@ export async function registrarServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (contextoRecusado()) {
     const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
-    await Promise.all(regs.filter((r) => r.active?.scriptURL.endsWith("/sw.js") || r.installing || r.waiting).map((r) => r.unregister()));
+    await Promise.all(regs.filter((r) => r.active?.scriptURL.includes("/sw.js") || r.installing || r.waiting).map((r) => r.unregister()));
     return;
   }
   try {
@@ -28,7 +29,10 @@ export async function registrarServiceWorker() {
       window.location.reload();
     });
 
-    const registro = await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+    // Endereço muda a cada publicação: o iPhone reconhece a versão nova mesmo
+    // quando o arquivo do worker em si não mudou.
+    const v = typeof __EVOQUE_BUILD__ !== "undefined" ? encodeURIComponent(__EVOQUE_BUILD__) : "";
+    const registro = await navigator.serviceWorker.register(v ? `/sw.js?v=${v}` : "/sw.js", { updateViaCache: "none" });
     // Safari/iOS pode manter o app instalado aberto por muitos dias. A busca
     // explícita evita depender apenas da verificação periódica do navegador.
     await registro.update().catch(() => {});
