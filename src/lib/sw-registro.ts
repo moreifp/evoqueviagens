@@ -18,7 +18,7 @@ export async function registrarServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (contextoRecusado()) {
     const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
-    await Promise.all(regs.filter((r) => r.active?.scriptURL.endsWith("/sw.js") || r.installing || r.waiting).map((r) => r.unregister()));
+    await Promise.all(regs.filter((r) => r.active?.scriptURL.includes("/sw.js") || r.installing || r.waiting).map((r) => r.unregister()));
     return;
   }
   try {
