@@ -182,6 +182,9 @@ function NovoDocumento() {
       // Sem data de emissão: fica vazia (nunca copiar a 1ª habilitação).
       if (!r.campos.emissao) lido.emissao = "";
     }
+    // "Outro" só tem 4 campos: a validade lida (ex.: cartão de crédito) vai para o Detalhe 2.
+    if (detected === "outro" && lido.validade && !lido.detalhe2)
+      lido.detalhe2 = `Validade ${lido.validade}`;
     setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
   }
 
