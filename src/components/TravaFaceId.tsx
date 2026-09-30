@@ -178,7 +178,7 @@ export function TravaFaceId({ children }: { children: React.ReactNode }) {
         disabled={tentando}
         className="gradient-hero shadow-medium tap flex w-full max-w-sm items-center justify-center gap-3 rounded-2xl text-xl font-bold disabled:opacity-60"
       >
-        <ScanFace size={28} strokeWidth={2.2} /> Abrir com Face ID
+        <ScanFace size={28} strokeWidth={2.2} /> Abrir com {rotuloBio()}
       </button>
       <button
         type="button"

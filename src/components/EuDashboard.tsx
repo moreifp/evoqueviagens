@@ -500,10 +500,11 @@ function EuDashboardConteudo({
   );
 }
 
-/** Chave "Face ID ao abrir": só neste aparelho. */
+/** Chave "Face ID/Touch ID ao abrir": só neste aparelho. */
 function ChaveFaceId() {
   const ligado = useFaceIdLigado();
   const [pode, setPode] = useState(false);
+  const bio = rotuloBio();
   useEffect(() => {
     void faceIdDisponivel().then(setPode);
   }, []);
@@ -511,20 +512,20 @@ function ChaveFaceId() {
   async function alternar() {
     if (ligado) {
       desligarFaceId();
-      toast.success("Face ID desligado neste aparelho");
+      toast.success(`${bio} desligado neste aparelho`);
       return;
     }
     try {
       const { data } = await supabase.auth.getUser();
       await ligarFaceId(data.user?.email ?? "");
-      toast.success("Pronto: o app vai pedir Face ID ao abrir");
+      toast.success(`Pronto: o app vai pedir ${bio} ao abrir`);
     } catch {
-      toast.error("Face ID não foi ativado.");
+      toast.error(`${bio} não foi ativado.`);
     }
   }
   return (
-    <section aria-label="Face ID" className="space-y-2">
-      <h2 className="text-2xl">Face ID ao abrir</h2>
+    <section aria-label={bio} className="space-y-2">
+      <h2 className="text-2xl">{bio} ao abrir</h2>
       <button
         type="button"
         role="switch"
