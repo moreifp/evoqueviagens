@@ -498,6 +498,8 @@ function EuDashboardConteudo({
       </main>
     </div>
   );
+}
+
 /** Chave "Face ID ao abrir": só neste aparelho. */
 function ChaveFaceId() {
   const ligado = useFaceIdLigado();
