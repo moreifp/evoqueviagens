@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   FileImage,
@@ -42,7 +42,6 @@ import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
 import { DestravarCofre } from "@/components/Cofre";
 import { saveVaultDocument, segurarTravaAoSair, useVaultUnlocked } from "@/lib/vault";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
 
 const TIPOS = [
   ["passaporte", "Passaporte"],
