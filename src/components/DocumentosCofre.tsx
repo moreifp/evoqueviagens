@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
 import { CampoPrivado } from "@/components/CampoPrivado";
-import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
+import { faceIdDisponivel, motivoFalhaBio, rotuloBio } from "@/components/TravaFaceId";
 import { ScanFace } from "lucide-react";
 import {
   deleteVaultDocument,
@@ -91,8 +91,9 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
       await ligarFaceIdCofre(uid);
       setBioLigado(true);
       toast.success(`${rotuloBio()} ligado para o cofre.`);
-    } catch {
-      toast.error(`Não foi possível ligar o ${rotuloBio()}. Tente de novo.`);
+    } catch (e) {
+      console.error("biometria cofre", e);
+      toast.error(motivoFalhaBio(e));
     }
   }
 

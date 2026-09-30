@@ -35,6 +35,7 @@ import {
   desligarFaceId,
   faceIdDisponivel,
   ligarFaceId,
+  motivoFalhaBio,
   rotuloBio,
   useFaceIdLigado,
 } from "@/components/TravaFaceId";
@@ -505,9 +506,12 @@ function EuDashboardConteudo({
 function ChaveFaceId() {
   const ligado = useFaceIdLigado();
   const [pode, setPode] = useState(false);
+  const [email, setEmail] = useState("");
   const bio = rotuloBio();
   useEffect(() => {
     void faceIdDisponivel().then(setPode);
+    // O e-mail é lido antes: pedir a digital precisa sair direto do toque, sem esperar a internet.
+    void supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? ""));
   }, []);
   if (!pode && !ligado) return null;
   async function alternar() {
@@ -517,11 +521,11 @@ function ChaveFaceId() {
       return;
     }
     try {
-      const { data } = await supabase.auth.getUser();
-      await ligarFaceId(data.user?.email ?? "");
+      await ligarFaceId(email);
       toast.success(`Pronto: o app vai pedir ${bio} ao abrir`);
-    } catch {
-      toast.error(`${bio} não foi ativado.`);
+    } catch (e) {
+      console.error("biometria", e);
+      toast.error(motivoFalhaBio(e));
     }
   }
   return (
