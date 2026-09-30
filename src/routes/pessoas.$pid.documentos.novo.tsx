@@ -190,7 +190,7 @@ function NovoDocumento() {
     // "Outro" só tem 4 campos: a validade lida (ex.: cartão de crédito) vai para o Detalhe 2.
     if (cartao) {
       const v = lido.validade?.match(/^(\d{4})-(\d{2})/);
-      if (v) lido.validade = `${v[2]}/${v[1].slice(2)}`;
+      if (v) lido.validade = `${v[2]}/${(v[1] ?? "").slice(2)}`;
       if (!lido.nome_no_documento && lido.detalhe) lido.nome_no_documento = lido.detalhe;
       delete lido.detalhe;
       delete lido.detalhe2;
