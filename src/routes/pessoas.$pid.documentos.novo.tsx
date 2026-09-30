@@ -97,6 +97,7 @@ function NovoDocumento() {
   const [previa, setPrevia] = useState<string | null>(null);
   const [guardarNoCofre, setGuardarNoCofre] = useState(search.cofre === "1");
   const [cartao, setCartao] = useState(false);
+  const [arrastando, setArrastando] = useState(false);
   const maisUm = useRef(false);
   const unlocked = useVaultUnlocked(data?.uid);
   const noCofre = cartao || guardarNoCofre;
@@ -492,13 +493,40 @@ function NovoDocumento() {
       : "";
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div
+      className="min-h-screen bg-background pb-20"
+      onDragOver={(e) => {
+        if (file || manual) return;
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          setArrastando(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setArrastando(false);
+      }}
+      onDrop={(e) => {
+        if (file || manual) return;
+        e.preventDefault();
+        setArrastando(false);
+        const f = e.dataTransfer.files?.[0];
+        if (f) void receive(f);
+      }}
+    >
       <Topo
         titulo={editDoc ? `Editar ${nomeDocumento(editDoc.tipo)}` : "Adicionar documento"}
         voltarPara="/pessoas/$pid"
         voltarParams={{ pid }}
       />
       <main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
+        {arrastando && !file && !manual && (
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-accent/20 p-6">
+            <p className="rounded-lg border-4 border-dashed border-accent bg-card p-8 text-2xl font-bold">
+              Solte a foto aqui
+            </p>
+          </div>
+        )}
         {!file && !manual && (
           <>
             {cartao && !editDoc && (
