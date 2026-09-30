@@ -74,7 +74,8 @@ export async function ligarFaceId(email: string) {
         residentKey: "discouraged",
       },
       timeout: 60000,
-    },
+      hints: ["client-device"],
+    } as PublicKeyCredentialCreationOptions,
   })) as PublicKeyCredential | null;
   if (!cred) throw new Error("cancelado");
   localStorage.setItem(CHAVE, b64(cred.rawId));
@@ -94,7 +95,8 @@ export async function criarCredencialFaceId(nome: string) {
       ],
       authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "discouraged" },
       timeout: 60000,
-    },
+      hints: ["client-device"],
+    } as PublicKeyCredentialCreationOptions,
   })) as PublicKeyCredential | null;
   if (!cred) throw new Error("cancelado");
   return b64(cred.rawId);
@@ -117,7 +119,8 @@ export async function conferir(id: string) {
       allowCredentials: [{ type: "public-key", id: deB64(id), transports: ["internal"] }],
       userVerification: "required",
       timeout: 60000,
-    },
+      hints: ["client-device"],
+    } as PublicKeyCredentialRequestOptions,
   });
   if (!r) throw new Error("cancelado");
 }
