@@ -137,17 +137,29 @@ export function TirarFoto({
     streamRef.current = null;
   }
 
+  // Liga a câmera ao vídeo só depois que ele existe na tela (antes ficava preto).
+  useEffect(() => {
+    const v = videoRef.current;
+    const s = streamRef.current;
+    if (!aberta || !v || !s) return;
+    v.srcObject = s;
+    v.muted = true;
+    v.setAttribute("playsinline", "");
+    const tocar = () => void v.play().catch(() => {});
+    v.addEventListener("loadedmetadata", tocar);
+    tocar();
+    return () => v.removeEventListener("loadedmetadata", tocar);
+  }, [aberta]);
+
   async function abrir() {
     setErro(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
       });
       streamRef.current = stream;
       setAberta(true);
-      requestAnimationFrame(() => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      });
     } catch {
       setErro(true);
       toast.error(
