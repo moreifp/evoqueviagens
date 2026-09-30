@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
 import { CampoPrivado } from "@/components/CampoPrivado";
+import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
+import { ScanFace } from "lucide-react";
 import {
   deleteVaultDocument,
   listVaultDocuments,
@@ -14,6 +16,8 @@ import {
   type VaultDocument,
   type VaultDocumentContents,
   updateVaultDocument,
+  cofreFaceIdLigado,
+  ligarFaceIdCofre,
 } from "@/lib/vault";
 
 const ROTULOS: Record<string, string> = {
@@ -77,6 +81,20 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
   const [edit, setEdit] = useState<Record<string, string>>({});
   const [aberto, setAberto] = useState(false);
   const liberado = aberto && unlocked;
+  const [bioLigado, setBioLigado] = useState(true);
+  useEffect(() => {
+    if (!liberado) return;
+    void Promise.all([faceIdDisponivel(), cofreFaceIdLigado(uid)]).then(([pode, lig]) => setBioLigado(!pode || lig));
+  }, [uid, liberado]);
+  async function ligarBio() {
+    try {
+      await ligarFaceIdCofre(uid);
+      setBioLigado(true);
+      toast.success(`${rotuloBio()} ligado para o cofre.`);
+    } catch {
+      toast.error(`Não foi possível ligar o ${rotuloBio()}. Tente de novo.`);
+    }
+  }
 
   useEffect(() => {
     if (!liberado) {
@@ -204,6 +222,11 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
         <DestravarCofre uid={uid} />
       ) : (
         <>
+          {!bioLigado && (
+            <Button type="button" variant="outline" className="w-full" onClick={() => void ligarBio()}>
+              <ScanFace size={22} /> Usar {rotuloBio()} para abrir o cofre
+            </Button>
+          )}
           {!rows.length && (
             <p className="text-base text-muted-foreground">
               Nenhum arquivo guardado no cofre nesta ficha.
