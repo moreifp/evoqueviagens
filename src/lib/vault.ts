@@ -2,6 +2,7 @@ import { del, get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
+import { conferir, criarCredencialFaceId } from "@/components/TravaFaceId";
 
 const ITERATIONS = 600_000;
 const VERIFIER = "evoque-vault-ok-v1";
@@ -124,6 +125,35 @@ export async function unlockVault(accountId: string, password: string) {
     throw new Error("Senha do cofre incorreta.");
   }
   remember(accountId, key);
+}
+
+/* Face ID no cofre: a chave (não exportável) fica guardada só neste aparelho e só é usada após o rosto. */
+const bioKey = (a: string) => `${CACHE_PREFIX}bio:${a}`;
+export async function cofreFaceIdLigado(accountId: string) {
+  return !!(await get(bioKey(accountId)));
+}
+export async function ligarFaceIdCofre(accountId: string) {
+  if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
+  const cred = await criarCredencialFaceId("Cofre Evoque");
+  await set(bioKey(accountId), { cred, key: active.key });
+}
+export async function desligarFaceIdCofre(accountId: string) {
+  await del(bioKey(accountId));
+}
+export async function unlockVaultFaceId(accountId: string) {
+  const bio = (await get(bioKey(accountId))) as { cred: string; key: CryptoKey } | undefined;
+  if (!bio) throw new Error("Face ID do cofre não está ligado.");
+  await conferir(bio.cred);
+  const meta = (await get(`${CACHE_PREFIX}meta:${accountId}`)) as VaultMeta | undefined;
+  if (meta) {
+    try {
+      if ((await decryptText(bio.key, meta.verifier_ciphertext, meta.verifier_iv)) !== VERIFIER) throw new Error();
+    } catch {
+      await del(bioKey(accountId));
+      throw new Error("Use a senha do cofre desta vez.");
+    }
+  }
+  remember(accountId, bio.key);
 }
 
 export async function saveVaultItem(accountId: string, loyaltyAccountId: string, login: string, password: string) {

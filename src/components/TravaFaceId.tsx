@@ -70,6 +70,25 @@ export async function ligarFaceId(email: string) {
   avisar();
 }
 
+/** Cria uma credencial de Face ID separada (ex.: para o cofre) e devolve o id. */
+export async function criarCredencialFaceId(nome: string) {
+  const cred = (await navigator.credentials.create({
+    publicKey: {
+      challenge: aleatorio(),
+      rp: { name: "Evoque", id: location.hostname },
+      user: { id: aleatorio(), name: nome, displayName: nome },
+      pubKeyCredParams: [
+        { type: "public-key", alg: -7 },
+        { type: "public-key", alg: -257 },
+      ],
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "discouraged" },
+      timeout: 60000,
+    },
+  })) as PublicKeyCredential | null;
+  if (!cred) throw new Error("cancelado");
+  return b64(cred.rawId);
+}
+
 export function desligarFaceId() {
   try {
     localStorage.removeItem(CHAVE);
@@ -79,7 +98,7 @@ export function desligarFaceId() {
   avisar();
 }
 
-async function conferir(id: string) {
+export async function conferir(id: string) {
   const r = await navigator.credentials.get({
     publicKey: {
       challenge: aleatorio(),
