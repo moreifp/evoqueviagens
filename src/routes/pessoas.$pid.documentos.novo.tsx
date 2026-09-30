@@ -723,7 +723,11 @@ function NovoDocumento() {
               <Campo key={key} rotulo={(ROTULOS[tipo] ?? {})[key] ?? label}>
                 <input
                   name={key}
-                  type={input}
+                  type={cartao && input === "password" ? "text" : input}
+                  style={cartao && input === "password" ? ({ WebkitTextSecurity: "disc" } as React.CSSProperties) : undefined}
+                  autoComplete={cartao ? "off" : undefined}
+                  data-lpignore={cartao ? "true" : undefined}
+                  data-1p-ignore={cartao ? "true" : undefined}
                   max={input === "date" ? "2099-12-31" : undefined}
                   inputMode={ehCnh && key === "numero" ? "numeric" : undefined}
                   maxLength={ehCnh && key === "numero" ? 11 : undefined}
