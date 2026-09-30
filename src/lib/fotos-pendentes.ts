@@ -35,26 +35,33 @@ export async function lerPendentes(tripId: string): Promise<Pendentes> {
   }
 }
 
-export async function gravarPendentes(tripId: string, p: Pendentes): Promise<void> {
+// Cada foto é copiada uma única vez; as gravações seguintes reaproveitam a cópia.
+const copias = new WeakMap<File, Promise<Salvo>>();
+function copiar(f: File) {
+  let c = copias.get(f);
+  if (!c) {
+    c = f.arrayBuffer().then((data) => ({ name: f.name, type: f.type, lastModified: f.lastModified, data }));
+    copias.set(f, c);
+  }
+  return c;
+}
+
+/** Devolve false se não deu para guardar no aparelho (ex.: sem espaço). */
+export async function gravarPendentes(tripId: string, p: Pendentes): Promise<boolean> {
   try {
-    const salvos: Salvo[] = await Promise.all(
-      p.files.map(async (f) => ({
-        name: f.name,
-        type: f.type,
-        lastModified: f.lastModified,
-        data: await f.arrayBuffer(),
-      })),
-    );
+    const salvos: Salvo[] = await Promise.all(p.files.map(copiar));
     const db = await abrir();
-    await new Promise<void>((res) => {
+    return await new Promise<boolean>((res) => {
       const tx = db.transaction(STORE, "readwrite");
       const s = tx.objectStore(STORE);
       if (salvos.length) s.put({ files: salvos, ids: p.ids }, tripId);
       else s.delete(tripId);
-      tx.oncomplete = () => res();
-      tx.onerror = () => res();
+      tx.oncomplete = () => res(true);
+      tx.onerror = () => res(false);
+      tx.onabort = () => res(false);
     });
   } catch (e) {
     console.error("fotos pendentes", e);
+    return false;
   }
 }
