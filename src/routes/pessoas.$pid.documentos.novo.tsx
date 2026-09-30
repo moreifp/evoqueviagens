@@ -38,7 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
 import { DestravarCofre } from "@/components/Cofre";
-import { saveVaultDocument, useVaultUnlocked } from "@/lib/vault";
+import { saveVaultDocument, segurarTravaAoSair, useVaultUnlocked } from "@/lib/vault";
 import { Button } from "@/components/ui/button";
 
 const TIPOS = [
@@ -55,9 +55,12 @@ const TIPOS = [
 const TODOS_TIPOS: [string, string][] = [...Object.entries(NOME_DOC), ["outro", "Outro"]];
 
 export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tipo: string; did: string; cofre?: string } => ({
     tipo: typeof search.tipo === "string" ? search.tipo : "",
     did: typeof search.did === "string" ? search.did : "",
+    cofre: search.cofre === "1" || search.cofre === 1 ? "1" : undefined,
   }),
   head: () => ({
     meta: [
@@ -90,8 +93,13 @@ function NovoDocumento() {
   const [motivo, setMotivo] = useState("");
   const [conferir, setConferir] = useState(false);
   const [previa, setPrevia] = useState<string | null>(null);
-  const [guardarNoCofre, setGuardarNoCofre] = useState(false);
+  const [guardarNoCofre, setGuardarNoCofre] = useState(search.cofre === "1");
   const unlocked = useVaultUnlocked(data?.uid);
+  // Abrir a câmera/galeria do iPhone "esconde" o app; sem isto o cofre trancava e o botão ficava apagado.
+  useEffect(() => {
+    if (!guardarNoCofre) return;
+    return segurarTravaAoSair();
+  }, [guardarNoCofre]);
   const editDoc = data?.documentos.find((doc) => doc.id === search.did);
   useEffect(() => {
     if (!editDoc) return;

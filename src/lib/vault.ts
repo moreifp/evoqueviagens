@@ -245,8 +245,17 @@ export async function deleteVaultDocument(accountId: string, row: VaultDocument)
   await mutar({ tipo: "update", tabela: "vault_document", id: row.id, valores: { deleted_at: new Date().toISOString() } });
 }
 
+/** Enquanto a tela de guardar no cofre está aberta, sair para a câmera/galeria não tranca (o limite de 5 min continua). */
+let segurando = 0;
+export function segurarTravaAoSair() {
+  segurando++;
+  return () => {
+    segurando = Math.max(0, segurando - 1);
+  };
+}
+
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) lockVault();
+    if (document.hidden && !segurando) lockVault();
   });
 }
