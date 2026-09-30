@@ -238,6 +238,21 @@ export async function readVaultDocument(accountId: string, row: VaultDocument): 
   return JSON.parse(await decryptText(active.key, row.encrypted_payload, row.iv)) as VaultDocumentContents;
 }
 
+/** Regrava o conteúdo cifrado de um documento do cofre (continua sempre no cofre). */
+export async function updateVaultDocument(accountId: string, row: VaultDocument, contents: VaultDocumentContents) {
+  if (!active || !vaultIsUnlocked(accountId) || row.account_id !== accountId) throw new Error("Destrave o cofre primeiro.");
+  const encrypted = await encryptText(active.key, JSON.stringify(contents));
+  const updated_at = new Date().toISOString();
+  const valores = { encrypted_payload: encrypted.ciphertext, iv: encrypted.iv, updated_at };
+  const cache = documentCache(accountId, row.person_id);
+  const previous = ((await get(cache)) as VaultDocument[] | undefined) ?? [];
+  await set(cache, previous.map((item) => (item.id === row.id ? { ...item, ...valores } : item)));
+  try { await mutar({ tipo: "update", tabela: "vault_document", id: row.id, valores }); }
+  catch (error) { await set(cache, previous); throw error; }
+  return { ...row, ...valores } as VaultDocument;
+}
+
+
 export async function deleteVaultDocument(accountId: string, row: VaultDocument) {
   if (!active || !vaultIsUnlocked(accountId) || row.account_id !== accountId) throw new Error("Destrave o cofre primeiro.");
   const cache = documentCache(accountId, row.person_id);
