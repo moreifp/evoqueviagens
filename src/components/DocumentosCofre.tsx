@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, FileLock2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight, FileLock2, FilePlus2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
@@ -141,9 +142,20 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
         <h2 className="flex items-center gap-2 text-2xl">
           <LockKeyhole size={26} /> Cofre · arquivos
         </h2>
-        <Button type="button" variant="outline" onClick={fecharSecao}>
-          Trancar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/pessoas/$pid/documentos/novo"
+            params={{ pid: personId }}
+            search={{ tipo: "outro", did: "" }}
+            aria-label="Adicionar documento no cofre"
+            className="tap flex size-10 shrink-0 items-center justify-center rounded-lg border border-border text-doc"
+          >
+            <FilePlus2 size={22} />
+          </Link>
+          <Button type="button" variant="outline" onClick={fecharSecao}>
+            Trancar
+          </Button>
+        </div>
       </div>
       {!unlocked ? (
         <DestravarCofre uid={uid} />
