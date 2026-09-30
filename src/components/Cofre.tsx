@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
 import { ScanFace } from "lucide-react";
 import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, ligarFaceIdCofre, unlockVaultFaceId } from "@/lib/vault";
-import { faceIdDisponivel } from "@/components/TravaFaceId";
+import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
 export function DestravarCofre({ uid }: { uid: string }) {
