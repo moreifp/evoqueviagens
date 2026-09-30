@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { Campo, inputCls } from "@/components/Form";
+import { CampoPrivado } from "@/components/CampoPrivado";
 import {
   ACEITA_QUALQUER,
   DicaArrastar,
@@ -750,6 +751,16 @@ function NovoDocumento() {
             )}
             {campos.map(([key, label, input]) => (
               <Campo key={key} rotulo={(ROTULOS[tipo] ?? {})[key] ?? label}>
+                {cartao && (key === "numero" || key === "cvv") ? (
+                  <CampoPrivado
+                    name={key}
+                    rotulo={label}
+                    numerico
+                    value={fields[key] ?? ""}
+                    onChange={(v) => setFields((old) => ({ ...old, [key]: v }))}
+                    className={inputCls + ambar(key)}
+                  />
+                ) : (
                 <input
                   name={key}
                   type={cartao && input === "password" ? "text" : input}
@@ -777,6 +788,8 @@ function NovoDocumento() {
                   }
                   className={inputCls + ambar(key)}
                 />
+                )}
+
                 {ehCnh && key === "numero" && fields.numero && (
                   <p
                     className={`mt-1 text-base font-bold ${numeroCnhInvalido ? "text-warn" : "text-ok"}`}

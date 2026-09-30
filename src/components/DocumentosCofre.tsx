@@ -4,6 +4,7 @@ import { ChevronRight, FileLock2, FilePlus2, LockKeyhole, Trash2, ExternalLink }
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DestravarCofre } from "@/components/Cofre";
+import { CampoPrivado } from "@/components/CampoPrivado";
 import {
   deleteVaultDocument,
   listVaultDocuments,
@@ -225,14 +226,23 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
               {camposDe(selected.contents).map((key) => (
                 <label key={key} className="block">
                   <span className="text-base text-muted-foreground">{ROTULOS[key] ?? key}</span>
+                  {key === "numero" || key === "cvv" ? (
+                    <CampoPrivado
+                      rotulo={ROTULOS[key] ?? key}
+                      numerico
+                      value={edit[key] ?? ""}
+                      onChange={(t) => setEdit((v) => ({ ...v, [key]: t }))}
+                      className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg"
+                    />
+                  ) : (
                   <input
                     value={edit[key] ?? ""}
                     onChange={(e) => setEdit((v) => ({ ...v, [key]: e.target.value }))}
                     disabled={key === "categoria"}
-                    inputMode={key === "numero" || key === "cvv" ? "numeric" : undefined}
                     autoComplete="off"
                     className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg disabled:opacity-70"
                   />
+                  )}
                 </label>
               ))}
               {mudou && (
