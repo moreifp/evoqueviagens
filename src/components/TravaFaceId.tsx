@@ -36,6 +36,24 @@ export function rotuloBio(): string {
   }
 }
 
+/** Explica em português por que a biometria não foi ligada/confirmada. */
+export function motivoFalhaBio(e: unknown): string {
+  const bio = rotuloBio();
+  try {
+    if (window.self !== window.top)
+      return `${bio} só funciona no app publicado (app.evoque.global), não na tela de edição.`;
+  } catch {
+    return `${bio} só funciona no app publicado (app.evoque.global).`;
+  }
+  const nome = (e as { name?: string })?.name ?? "";
+  if (nome === "NotAllowedError")
+    return `${bio} cancelado ou sem resposta. Toque de novo e encoste o dedo no sensor.`;
+  if (nome === "SecurityError") return `${bio} não aceito neste endereço. Abra por app.evoque.global.`;
+  if (nome === "InvalidStateError") return `${bio} já estava ligado. Desligue e ligue de novo.`;
+  if (nome === "NotSupportedError") return `Este navegador não oferece ${bio}. Use o Safari ou o Chrome.`;
+  return `${bio} não foi ativado${nome ? ` (${nome})` : ""}. Tente de novo.`;
+}
+
 export function useFaceIdLigado() {
   return useSyncExternalStore(
     (f) => {

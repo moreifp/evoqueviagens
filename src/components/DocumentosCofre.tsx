@@ -91,8 +91,9 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
       await ligarFaceIdCofre(uid);
       setBioLigado(true);
       toast.success(`${rotuloBio()} ligado para o cofre.`);
-    } catch {
-      toast.error(`Não foi possível ligar o ${rotuloBio()}. Tente de novo.`);
+    } catch (e) {
+      console.error("biometria cofre", e);
+      toast.error(motivoFalhaBio(e));
     }
   }
 
