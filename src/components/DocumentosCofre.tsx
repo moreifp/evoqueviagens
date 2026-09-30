@@ -44,10 +44,10 @@ function camposDe(c: VaultDocumentContents) {
   return [...new Set([...base, ...Object.keys(f).filter((k) => f[k])])];
 }
 const tituloDe = (c: VaultDocumentContents) =>
+  c.fields.nome_no_documento ||
   (c.fields.categoria === "Cartão de crédito" && c.fields.numero
     ? `Cartão •••• ${c.fields.numero.replace(/\D/g, "").slice(-4)}`
     : "") ||
-  c.fields.nome_no_documento ||
   c.fields.detalhe || c.file?.name || "Outro documento";
 
 /** Abre o arquivo em nova aba (a aba nasce no toque, para o iPhone não bloquear). */
