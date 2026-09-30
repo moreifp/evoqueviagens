@@ -146,7 +146,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
           <Link
             to="/pessoas/$pid/documentos/novo"
             params={{ pid: personId }}
-            search={{ tipo: "outro", did: "" }}
+            search={{ tipo: "outro", did: "", cofre: "1" }}
             aria-label="Adicionar documento no cofre"
             className="tap flex size-10 shrink-0 items-center justify-center rounded-lg border border-border text-doc"
           >
