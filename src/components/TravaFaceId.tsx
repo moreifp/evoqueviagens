@@ -25,6 +25,17 @@ const b64 = (b: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(b)));
 const deB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const aleatorio = () => crypto.getRandomValues(new Uint8Array(32));
 
+/** Rótulo da biometria conforme o aparelho: Touch ID no Mac, Face ID no resto. */
+export function rotuloBio(): string {
+  try {
+    const macSemToque =
+      /Mac/i.test(navigator.userAgent) && navigator.maxTouchPoints === 0;
+    return macSemToque ? "Touch ID" : "Face ID";
+  } catch {
+    return "Face ID";
+  }
+}
+
 export function useFaceIdLigado() {
   return useSyncExternalStore(
     (f) => {
