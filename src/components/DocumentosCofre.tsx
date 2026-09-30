@@ -234,66 +234,67 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
             </p>
           )}
           {rows.map((row) => (
-            <Button
-              key={row.id}
-              type="button"
-              variant="outline"
-              onClick={() => void open(row)}
-              className="w-full justify-start text-left"
-            >
-              <FileLock2 size={24} /> {titulos[row.id] ?? "Abrindo…"}
-            </Button>
-          ))}
-          {selected && (
-            <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-              <h3 className="text-xl font-bold">{tituloDe(selected.contents)}</h3>
-              {camposDe(selected.contents).map((key) => (
-                <label key={key} className="block">
-                  <span className="text-base text-muted-foreground">{ROTULOS[key] ?? key}</span>
-                  {key === "numero" || key === "cvv" ? (
-                    <CampoPrivado
-                      rotulo={ROTULOS[key] ?? key}
-                      numerico
+            <div key={row.id} className="space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => (selected?.row.id === row.id ? setSelected(null) : void open(row))}
+                className="w-full justify-start text-left"
+              >
+                <FileLock2 size={24} /> {titulos[row.id] ?? "Abrindo…"}
+              </Button>
+              {selected?.row.id === row.id && (
+              <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+                <h3 className="text-xl font-bold">{tituloDe(selected.contents)}</h3>
+                {camposDe(selected.contents).map((key) => (
+                  <label key={key} className="block">
+                    <span className="text-base text-muted-foreground">{ROTULOS[key] ?? key}</span>
+                    {key === "numero" || key === "cvv" ? (
+                      <CampoPrivado
+                        rotulo={ROTULOS[key] ?? key}
+                        numerico
+                        value={edit[key] ?? ""}
+                        onChange={(t) => setEdit((v) => ({ ...v, [key]: t }))}
+                        className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg"
+                      />
+                    ) : (
+                    <input
                       value={edit[key] ?? ""}
-                      onChange={(t) => setEdit((v) => ({ ...v, [key]: t }))}
-                      className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg"
+                      onChange={(e) => setEdit((v) => ({ ...v, [key]: e.target.value }))}
+                      disabled={key === "categoria"}
+                      autoComplete="off"
+                      className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg disabled:opacity-70"
                     />
-                  ) : (
-                  <input
-                    value={edit[key] ?? ""}
-                    onChange={(e) => setEdit((v) => ({ ...v, [key]: e.target.value }))}
-                    disabled={key === "categoria"}
-                    autoComplete="off"
-                    className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg disabled:opacity-70"
-                  />
-                  )}
-                </label>
-              ))}
-              {mudou && (
-                <Button type="button" className="w-full" disabled={busy} onClick={() => void salvar()}>
-                  <LockKeyhole size={22} /> Salvar no cofre
-                </Button>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {selected.contents.file && (
-                  <Button type="button" onClick={() => void abrirOriginal(selected.contents.file!)}>
-                    <ExternalLink size={22} /> Abrir arquivo original
+                    )}
+                  </label>
+                ))}
+                {mudou && (
+                  <Button type="button" className="w-full" disabled={busy} onClick={() => void salvar()}>
+                    <LockKeyhole size={22} /> Salvar no cofre
                   </Button>
                 )}
-                <Button type="button" variant="outline" onClick={() => setSelected(null)}>
-                  Fechar
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={busy}
-                  onClick={() => void remove()}
-                >
-                  <Trash2 size={22} /> Apagar
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {selected.contents.file && (
+                    <Button type="button" onClick={() => void abrirOriginal(selected.contents.file!)}>
+                      <ExternalLink size={22} /> Abrir arquivo original
+                    </Button>
+                  )}
+                  <Button type="button" variant="outline" onClick={() => setSelected(null)}>
+                    Fechar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={busy}
+                    onClick={() => void remove()}
+                  >
+                    <Trash2 size={22} /> Apagar
+                  </Button>
+                </div>
               </div>
+              )}
             </div>
-          )}
+          ))}
         </>
       )}
     </section>
