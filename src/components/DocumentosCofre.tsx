@@ -138,6 +138,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
       const contents = await readVaultDocument(uid, row);
       setSelected({ row, contents });
       setEdit({ ...contents.fields } as Record<string, string>);
+      setSalvo(false);
     } catch {
       toast.error("Não foi possível abrir o arquivo.");
     }
