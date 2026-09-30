@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
 import { ScanFace } from "lucide-react";
 import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, ligarFaceIdCofre, unlockVaultFaceId } from "@/lib/vault";
-import { faceIdDisponivel } from "@/components/TravaFaceId";
+import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
 export function DestravarCofre({ uid }: { uid: string }) {
@@ -49,7 +49,7 @@ export function DestravarCofre({ uid }: { uid: string }) {
       if (podeBio && !bio && usarBio) {
         try {
           await ligarFaceIdCofre(uid);
-          toast.success("Face ID ligado para o cofre.");
+          toast.success(`${rotuloBio()} ligado para o cofre.`);
         } catch {
           /* cancelou: segue com senha */
         }
@@ -84,7 +84,7 @@ export function DestravarCofre({ uid }: { uid: string }) {
           onClick={() => void comRosto()}
           className="tap flex w-full items-center justify-center gap-3 rounded-lg bg-primary text-lg font-bold text-primary-foreground"
         >
-          <ScanFace size={26} aria-hidden /> Abrir com Face ID
+          <ScanFace size={26} aria-hidden /> Abrir com {rotuloBio()}
         </button>
       )}
       <Campo rotulo={setup ? "Crie a senha do cofre" : "Senha do cofre"}>
@@ -121,7 +121,7 @@ export function DestravarCofre({ uid }: { uid: string }) {
       {podeBio && !bio && (
         <label className="flex min-h-14 items-center gap-3 text-lg">
           <input type="checkbox" checked={usarBio} onChange={(e) => setUsarBio(e.target.checked)} className="size-6" />
-          Usar Face ID nas próximas vezes
+          Usar {rotuloBio()} nas próximas vezes
         </label>
       )}
       <button
