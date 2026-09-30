@@ -97,6 +97,7 @@ function NovoDocumento() {
   const [previa, setPrevia] = useState<string | null>(null);
   const [guardarNoCofre, setGuardarNoCofre] = useState(search.cofre === "1");
   const [cartao, setCartao] = useState(false);
+  const [arrastando, setArrastando] = useState(false);
   const maisUm = useRef(false);
   const unlocked = useVaultUnlocked(data?.uid);
   const noCofre = cartao || guardarNoCofre;
