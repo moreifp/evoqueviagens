@@ -550,8 +550,7 @@ function LinhaDrive({ pastaViagem }: { pastaViagem: string | null }) {
             )}
           </p>
           <p>
-            As fotos vão como cópias pequenas para essa pasta no Drive; os originais ficam no
-            aparelho.
+            Os originais vão para essa pasta no Drive; as miniaturas ficam no app.
           </p>
         </div>
       )}
