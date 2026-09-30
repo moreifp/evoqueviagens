@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
 import { ScanFace } from "lucide-react";
-import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, ligarFaceIdCofre, unlockVaultFaceId } from "@/lib/vault";
+import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId } from "@/lib/vault";
 import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
@@ -14,7 +14,6 @@ export function DestravarCofre({ uid }: { uid: string }) {
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState(false);
   const [podeBio, setPodeBio] = useState(false);
-  const [usarBio, setUsarBio] = useState(true);
   useEffect(() => {
     void cofreFaceIdLigado(uid).then(setBio);
     void faceIdDisponivel().then(setPodeBio);
@@ -46,14 +45,6 @@ export function DestravarCofre({ uid }: { uid: string }) {
         await createVault(uid, pw);
         setExists(true);
       } else await unlockVault(uid, pw);
-      if (podeBio && !bio && usarBio) {
-        try {
-          await ligarFaceIdCofre(uid);
-          toast.success(`${rotuloBio()} ligado para o cofre.`);
-        } catch {
-          /* cancelou: segue com senha */
-        }
-      }
       setPw("");
       setConfirm("");
     } catch (e) {
@@ -117,12 +108,6 @@ export function DestravarCofre({ uid }: { uid: string }) {
             Se esquecer, as senhas guardadas não podem ser recuperadas.
           </p>
         </>
-      )}
-      {podeBio && !bio && (
-        <label className="flex min-h-14 items-center gap-3 text-lg">
-          <input type="checkbox" checked={usarBio} onChange={(e) => setUsarBio(e.target.checked)} className="size-6" />
-          Usar {rotuloBio()} nas próximas vezes
-        </label>
       )}
       <button
         type="button"
