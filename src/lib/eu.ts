@@ -236,7 +236,6 @@ export function progressoFicha(dados: EuDados) {
   const itens: ItemFicha[] = base.map((i) => ({ ...i, href: abrir(i),
     ...(REPETE.has(i.id) && i.done ? {
       docs: dados.documentos.filter((d) => d.tipo === i.id).map((d) => ({ id: d.id, label: `${i.id === "passaporte" ? "Passaporte" : i.id === "visto" ? "Visto" : i.label.split(" · ")[0]}${paisPt(d.pais_emissor) ? ` · ${paisPt(d.pais_emissor)}` : ""}`, href: `/pessoas/${p.id}/documentos/${d.id}` })),
-      novo: i.id === "passaporte" ? { label: "+ Novo passaporte", href: doc("passaporte") } : i.id === "visto" ? { label: "+ Novo visto", href: doc("visto") } : undefined,
     } : {}), obrigatorio: OBRIG.has(i.id), dispensado: !i.done && !OBRIG.has(i.id) && dispensas.has(i.id) }));
   const feitos = itens.filter((i) => i.done || i.dispensado).length;
   const total = itens.length;
