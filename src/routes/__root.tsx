@@ -40,6 +40,7 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error: e, reset }: { error: unknown; reset: () => void }) {
+  const error = (e instanceof Error ? e : new Error(String(e)));
   console.error(error);
   const router = useRouter();
   const [atualizando, setAtualizando] = useState(false);
