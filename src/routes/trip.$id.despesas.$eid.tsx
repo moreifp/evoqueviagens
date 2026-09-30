@@ -40,7 +40,7 @@ export const Route = createFileRoute("/trip/$id/despesas/$eid")({
   component: Detalhe,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-lg">
-      {error.message}
+      {(error as Error).message}
     </div>
   ),
   notFoundComponent: () => <div className="p-6 text-lg">Despesa não encontrada.</div>,

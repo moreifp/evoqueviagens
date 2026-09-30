@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   FileImage,
@@ -11,6 +11,8 @@ import {
   Loader2,
   RotateCw,
   LockKeyhole,
+  CreditCard,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
@@ -94,12 +96,15 @@ function NovoDocumento() {
   const [conferir, setConferir] = useState(false);
   const [previa, setPrevia] = useState<string | null>(null);
   const [guardarNoCofre, setGuardarNoCofre] = useState(search.cofre === "1");
+  const [cartao, setCartao] = useState(false);
+  const maisUm = useRef(false);
   const unlocked = useVaultUnlocked(data?.uid);
+  const noCofre = cartao || guardarNoCofre;
   // Abrir a câmera/galeria do iPhone "esconde" o app; sem isto o cofre trancava e o botão ficava apagado.
   useEffect(() => {
-    if (!guardarNoCofre) return;
+    if (!noCofre) return;
     return segurarTravaAoSair();
-  }, [guardarNoCofre]);
+  }, [noCofre]);
   const editDoc = data?.documentos.find((doc) => doc.id === search.did);
   useEffect(() => {
     if (!editDoc) return;
@@ -183,7 +188,13 @@ function NovoDocumento() {
       if (!r.campos.emissao) lido.emissao = "";
     }
     // "Outro" só tem 4 campos: a validade lida (ex.: cartão de crédito) vai para o Detalhe 2.
-    if (detected === "outro" && lido.validade && !lido.detalhe2)
+    if (cartao) {
+      const v = lido.validade?.match(/^(\d{4})-(\d{2})/);
+      if (v) lido.validade = `${v[2]}/${(v[1] ?? "").slice(2)}`;
+      if (!lido.nome_no_documento && lido.detalhe) lido.nome_no_documento = lido.detalhe;
+      delete lido.detalhe;
+      delete lido.detalhe2;
+    } else if (detected === "outro" && lido.validade && !lido.detalhe2)
       lido.detalhe2 = `Validade ${lido.validade}`;
     setFields((old) => ({ ...old, ...lido, nascimento: old.nascimento || data_nascimento || "" }));
   }
@@ -223,11 +234,6 @@ function NovoDocumento() {
     setPrevia(null);
     const alvo = forced || tipo;
     try {
-      // Tipo "Outro" é livre: nunca passa pela leitura automática. No cofre, o arquivo também permanece só no aparelho até ser cifrado.
-      if (alvo === "outro") {
-        setReadState("anexo");
-        return;
-      }
       // E-mail (.eml): lê o texto; o arquivo fica como anexo.
       if (/\.eml$/i.test(next.name) || next.type === "message/rfc822") {
         const tipoDoc = alvo && alvo !== "passaporte" ? alvo : "outro";
@@ -285,10 +291,12 @@ function NovoDocumento() {
     setSaving(true);
     let passo = "Não deu para salvar os dados do documento.";
     try {
-      if (tipo === "outro" && guardarNoCofre && !editDoc) {
+      if (tipo === "outro" && noCofre && !editDoc) {
         if (!unlocked) throw new Error("Destrave o cofre antes de guardar.");
-        const valores = Object.fromEntries(
+        const valores: Record<string, string> = Object.fromEntries(
           [
+            "cvv",
+            "senha",
             "nome_no_documento",
             "numero",
             "pais_emissor",
@@ -301,18 +309,29 @@ function NovoDocumento() {
             .map((key) => [key, String(form.get(key) || "")])
             .filter(([, value]) => value),
         );
+        if (cartao) valores.categoria = "Cartão de crédito";
         let original: { name: string; type: string; data: string } | undefined;
         if (file) {
           passo = "Não deu para cifrar o arquivo original.";
-          if (file.size > 15 * 1024 * 1024)
+          // Foto do celular (vários MB) fica leve antes de cifrar; senão o envio falhava.
+          let blob: Blob = file;
+          let nome = file.name;
+          let tipoArq = file.type;
+          if (file.type.startsWith("image/") || /\.(heic|heif)$/i.test(file.name)) {
+            const p = await prepararArquivo(file, 2200);
+            blob = p.blob;
+            tipoArq = p.contentType;
+            nome = (file.name || "foto").replace(/\.[^.]+$/, "") + "." + p.ext;
+          }
+          if (blob.size > 15 * 1024 * 1024)
             throw new Error("O cofre aceita arquivos de até 15 MB.");
-          const bytes = new Uint8Array(await file.arrayBuffer());
+          const bytes = new Uint8Array(await blob.arrayBuffer());
           let binary = "";
           for (let i = 0; i < bytes.length; i += 32768)
             binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
           original = {
-            name: file.name,
-            type: file.type || "application/octet-stream",
+            name: nome,
+            type: tipoArq || "application/octet-stream",
             data: btoa(binary),
           };
         }
@@ -323,6 +342,17 @@ function NovoDocumento() {
             ? "Guardado no aparelho · sincroniza quando voltar a internet"
             : "Guardado no cofre",
         );
+        if (maisUm.current) {
+          maisUm.current = false;
+          setFile(null);
+          setFields({});
+          setReadState("idle");
+          setPrevia(null);
+          setManual(false);
+          setSaving(false);
+          window.scrollTo(0, 0);
+          return;
+        }
         nav({ to: "/pessoas/$pid", params: { pid } });
         return;
       }
@@ -424,8 +454,15 @@ function NovoDocumento() {
   }
 
   // "Outro" é livre e local: nome, número e dois detalhes, sem datas/país/sexo e sem leitura automática.
-  const campos: [string, string, string][] =
-    tipo === "outro"
+  const campos: [string, string, string][] = cartao
+    ? [
+        ["nome_no_documento", "Nome no cartão", "text"],
+        ["numero", "Número do cartão", "text"],
+        ["validade", "Validade (MM/AA)", "text"],
+        ["cvv", "CVV", "text"],
+        ["senha", "Senha", "password"],
+      ]
+    : tipo === "outro"
       ? [
           ["nome_no_documento", "Nome do documento", "text"],
           ["numero", "Número", "text"],
@@ -463,7 +500,15 @@ function NovoDocumento() {
       <main className="mx-auto max-w-xl space-y-5 px-4 pt-5">
         {!file && !manual && (
           <>
-            {tipo === "outro" && !editDoc && (
+            {cartao && !editDoc && (
+              <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+                <p className="flex items-center gap-3 text-lg font-bold">
+                  <CreditCard size={26} /> Cartão de crédito · vai para o cofre
+                </p>
+                {!unlocked && <DestravarCofre uid={data.uid} />}
+              </div>
+            )}
+            {tipo === "outro" && !cartao && !editDoc && (
               <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                 <label className="flex min-h-14 items-center gap-3 text-lg font-bold">
                   <input
@@ -477,7 +522,7 @@ function NovoDocumento() {
                 {guardarNoCofre && (
                   <>
                     <p className="text-base text-muted-foreground">
-                      O arquivo não será enviado para leitura automática.
+                      A foto é lida para preencher os campos e depois fica cifrada.
                     </p>
                     {!unlocked && <DestravarCofre uid={data.uid} />}
                   </>
@@ -494,6 +539,32 @@ function NovoDocumento() {
               }
               className="gradient-hero shadow-medium min-h-24 w-full py-6 text-xl font-bold"
             />
+            {!editDoc && (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  aria-pressed={cartao}
+                  onClick={() => {
+                    setTipo("outro");
+                    setCartao(true);
+                  }}
+                  className={`tap flex flex-col items-center justify-center rounded-lg border-2 text-lg font-bold ${cartao ? "border-primary bg-primary/10" : "border-border"}`}
+                >
+                  <CreditCard size={28} /> Cartão de crédito
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={tipo === "outro" && !cartao}
+                  onClick={() => {
+                    setTipo("outro");
+                    setCartao(false);
+                  }}
+                  className={`tap flex flex-col items-center justify-center rounded-lg border-2 text-lg font-bold ${tipo === "outro" && !cartao ? "border-primary bg-primary/10" : "border-border"}`}
+                >
+                  <FileText size={28} /> Outros
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <ZonaArquivo
                 aceita="image/*,.heic,.heif"
@@ -613,7 +684,7 @@ function NovoDocumento() {
                 Usar foto em vez de digitar
               </button>
             )}
-            <Campo rotulo="Tipo">
+            {!cartao && <Campo rotulo="Tipo">
               <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={inputCls}>
                 {TODOS_TIPOS.map(([id, label]) => (
                   <option key={id} value={id}>
@@ -621,8 +692,9 @@ function NovoDocumento() {
                   </option>
                 ))}
               </select>
-            </Campo>
-            {tipo === "outro" && !editDoc && (
+            </Campo>}
+            {cartao && !unlocked && <DestravarCofre uid={data.uid} />}
+            {tipo === "outro" && !cartao && !editDoc && (
               <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                 <label className="flex min-h-14 items-center gap-3 text-lg font-bold">
                   <input
@@ -722,17 +794,28 @@ function NovoDocumento() {
               </p>
             )}
             <Button
-              disabled={
-                saving || reading || !owner || (tipo === "outro" && guardarNoCofre && !unlocked)
-              }
+              disabled={saving || reading || !owner || (tipo === "outro" && noCofre && !unlocked)}
+              onClick={() => (maisUm.current = false)}
               className="gradient-hero w-full text-xl font-bold"
             >
-              {tipo === "outro" && guardarNoCofre
+              {cartao
+                ? "Salvar cartão"
+                : tipo === "outro" && guardarNoCofre
                 ? "Guardar no cofre"
                 : readState === "ok"
                   ? "Confirmar"
                   : `Salvar ${nomeDocumento(tipo)}`}
             </Button>
+            {cartao && (
+              <Button
+                variant="outline"
+                disabled={saving || reading || !owner || !unlocked}
+                onClick={() => (maisUm.current = true)}
+                className="w-full text-xl font-bold"
+              >
+                Salvar e adicionar outro cartão
+              </Button>
+            )}
           </form>
         )}
       </main>
