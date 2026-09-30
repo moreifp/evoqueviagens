@@ -84,7 +84,13 @@ function FotosViagem() {
   }, [id]);
   useEffect(() => {
     if (!restaurado) return;
-    void gravarPendentes(id, { files: novas, ids: idsNovas.current });
+    // Espera o lote acalmar: uma gravação só, em vez de uma por foto enviada.
+    const t = setTimeout(() => {
+      void gravarPendentes(id, { files: novas, ids: idsNovas.current }).then((ok) => {
+        if (!ok) toast.error("Sem espaço para guardar os originais no aparelho · salve já no iPhone ou Drive");
+      });
+    }, 400);
+    return () => clearTimeout(t);
   }, [id, novas, enviando, restaurado]);
   useEffect(() => {
     if (!novas.length) return;
