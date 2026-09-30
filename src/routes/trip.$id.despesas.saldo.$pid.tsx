@@ -26,7 +26,7 @@ export const Route = createFileRoute("/trip/$id/despesas/saldo/$pid")({
   component: DeOndeVem,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-lg">
-      {error.message}
+      {(error as Error).message}
     </div>
   ),
 });
