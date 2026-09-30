@@ -188,3 +188,7 @@
 - [x] Forçar a troca segura da versão no app instalado ao abrir, voltar ao app ou recuperar a internet
 - [x] Face ID ao abrir o app (trava local, login por e-mail na 1ª vez)
 - [x] Fotos: orientação curta sobre 'Salvar N imagens' e iCloud Fotos
+
+## Biometria 30/09
+- [x] Touch ID ao abrir no Mac: pedir a digital direto do toque (sem esperar a internet) e avisar o motivo da falha
+- [x] Cofre sem digitar senha: ligar uma vez "Usar Touch ID para abrir o cofre" (depois aparece "Abrir com Touch ID") — só no app publicado
