@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   FilePlus2,
-  HardDrive,
   LogOut,
   Phone,
   Settings2,
@@ -15,8 +14,6 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { contaDrive } from "@/lib/drive.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
 import { euQuery, progressoFicha, type EuDados } from "@/lib/eu";
@@ -449,7 +446,6 @@ function EuDashboardConteudo({
                 <ChevronRight size={26} />
               </Link>
               {owner && <DocumentosCofre uid={data.uid} personId={p.id} />}
-              {self && <LinhaDrive pastaViagem={proxima?.nome ?? null} />}
               {self && (
                 <Link to="/compartilhamentos" className="tap flex items-center gap-3 py-3">
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pess-soft text-pess">
@@ -502,62 +498,6 @@ function EuDashboardConteudo({
       </main>
     </div>
   );
-}
-/** Linha "Google Drive": conta conectada e pasta de destino das fotos. */
-function LinhaDrive({ pastaViagem }: { pastaViagem: string | null }) {
-  const [aberta, setAberta] = useState(false);
-  const buscar = useServerFn(contaDrive);
-  const { data: c, isLoading } = useQuery({
-    queryKey: ["drive-conta"],
-    queryFn: buscar,
-    enabled: aberta,
-    staleTime: 60 * 60 * 1000,
-  });
-  return (
-    <div className="py-3">
-      <button
-        type="button"
-        onClick={() => setAberta((a) => !a)}
-        aria-expanded={aberta}
-        className="tap flex w-full items-center gap-3 text-left"
-      >
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-doc-soft text-doc">
-          <HardDrive size={24} strokeWidth={2.2} />
-        </span>
-        <span className="flex-1">
-          <strong className="block text-lg">Google Drive</strong>
-          <span className="text-base text-muted-foreground">
-            {aberta
-              ? (c?.email ?? (isLoading ? "Conferindo…" : "Não ligado"))
-              : "Conta e pasta de destino das fotos"}
-          </span>
-        </span>
-        <ChevronRight size={26} className={`transition-transform ${aberta ? "rotate-90" : ""}`} />
-      </button>
-      {aberta && (
-        <div className="mt-2 space-y-1 rounded-lg bg-muted/50 p-3 text-base text-muted-foreground">
-          <p>
-            <strong className="text-foreground">Conta conectada:</strong>{" "}
-            {c?.nome ? `${c.nome} · ` : ""}
-            {c?.email ?? "…"}
-          </p>
-          <p>
-            Pasta de destino:{" "}
-            {pastaViagem ? (
-              <span className="text-foreground">“{pastaViagem}”</span>
-            ) : (
-              "uma pasta com o nome da viagem"
-            )}
-          </p>
-          <p>
-            Os originais vão para essa pasta no Drive; as miniaturas ficam no app.
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /** Chave "Face ID ao abrir": só neste aparelho. */
 function ChaveFaceId() {
   const ligado = useFaceIdLigado();
