@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
-import { createVault, unlockVault, vaultExists } from "@/lib/vault";
+import { ScanFace } from "lucide-react";
+import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, ligarFaceIdCofre, unlockVaultFaceId } from "@/lib/vault";
+import { faceIdDisponivel } from "@/components/TravaFaceId";
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
 export function DestravarCofre({ uid }: { uid: string }) {
@@ -10,6 +12,25 @@ export function DestravarCofre({ uid }: { uid: string }) {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [bio, setBio] = useState(false);
+  const [podeBio, setPodeBio] = useState(false);
+  const [usarBio, setUsarBio] = useState(true);
+  useEffect(() => {
+    void cofreFaceIdLigado(uid).then(setBio);
+    void faceIdDisponivel().then(setPodeBio);
+  }, [uid]);
+  async function comRosto() {
+    setBusy(true);
+    try {
+      await unlockVaultFaceId(uid);
+    } catch (e) {
+      const m = (e as Error).message;
+      if (m.startsWith("Use")) setBio(false);
+      toast.error(m.startsWith("Use") ? m : "Não foi possível confirmar. Tente de novo ou use a senha.");
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     void vaultExists(uid)
       .then(setExists)
@@ -25,6 +46,14 @@ export function DestravarCofre({ uid }: { uid: string }) {
         await createVault(uid, pw);
         setExists(true);
       } else await unlockVault(uid, pw);
+      if (podeBio && !bio && usarBio) {
+        try {
+          await ligarFaceIdCofre(uid);
+          toast.success("Face ID ligado para o cofre.");
+        } catch {
+          /* cancelou: segue com senha */
+        }
+      }
       setPw("");
       setConfirm("");
     } catch (e) {
@@ -48,6 +77,16 @@ export function DestravarCofre({ uid }: { uid: string }) {
     );
   return (
     <div className="mt-4 space-y-3">
+      {bio && !setup && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void comRosto()}
+          className="tap flex w-full items-center justify-center gap-3 rounded-lg bg-primary text-lg font-bold text-primary-foreground"
+        >
+          <ScanFace size={26} aria-hidden /> Abrir com Face ID
+        </button>
+      )}
       <Campo rotulo={setup ? "Crie a senha do cofre" : "Senha do cofre"}>
         <input
           type="password"
@@ -78,6 +117,12 @@ export function DestravarCofre({ uid }: { uid: string }) {
             Se esquecer, as senhas guardadas não podem ser recuperadas.
           </p>
         </>
+      )}
+      {podeBio && !bio && (
+        <label className="flex min-h-14 items-center gap-3 text-lg">
+          <input type="checkbox" checked={usarBio} onChange={(e) => setUsarBio(e.target.checked)} className="size-6" />
+          Usar Face ID nas próximas vezes
+        </label>
       )}
       <button
         type="button"
