@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Topo } from "@/components/Chrome";
 import { FormBilhete } from "@/components/FormBilhete";
 import { MesmoVoo } from "@/components/MesmoVoo";
