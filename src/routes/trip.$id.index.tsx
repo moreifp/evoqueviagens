@@ -14,6 +14,7 @@ import {
   CircleAlert,
   Users,
   CalendarCheck,
+  MapPin,
   Pencil,
   Wallet,
   ChevronLeft,
@@ -45,7 +46,8 @@ import { Logo } from "@/components/Logo";
 import { logoCia } from "@/lib/logos";
 import { resumoSaldos } from "@/lib/saldos";
 import { fmtMoney } from "@/lib/format";
-import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
+import { chaveDia, dataBRCurta, diasAte, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
+import { AvatarGrupo } from "@/components/AvatarGrupo";
 
 export const Route = createFileRoute("/trip/$id/")({
   head: () => ({
@@ -191,13 +193,7 @@ function VisaoOrganizador({ id }: { id: string }) {
           <ChevronLeft size={28} strokeWidth={2.2} />
           <span className="text-xs font-semibold">Voltar</span>
         </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl">{trip.nome}</h1>
-          <p className="text-base text-muted-foreground">
-            {dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)} ·{" "}
-            {trip.moeda_base.toLowerCase()} · você organiza
-          </p>
-        </div>
+        <div className="flex-1" />
         <Link
           to="/nova-viagem"
           search={{ editar: trip.id }}
@@ -207,6 +203,25 @@ function VisaoOrganizador({ id }: { id: string }) {
           Editar
         </Link>
       </header>
+      <div className="px-4">
+        <div className="gradient-hero shadow-medium rounded-[18px] p-5">
+          <p className="text-base font-extrabold uppercase">
+            {diasAte(trip.data_inicio) > 0 ? `Em ${diasAte(trip.data_inicio)} dias` : "Em andamento"}
+          </p>
+          <h1 className="mt-3 text-3xl">{trip.nome}</h1>
+          <p className="mt-2 flex items-center gap-2 text-lg">
+            <MapPin size={23} />
+            {trip.cidades?.join(" · ") || trip.destino || "Cidades a definir"}
+          </p>
+          <p className="mt-1 text-lg">
+            {dataBRCurta(trip.data_inicio)} a {dataBRCurta(trip.data_fim)}
+          </p>
+          <p className="mt-3 text-lg font-bold">Você organiza</p>
+          <div className="mt-4">
+            <AvatarGrupo nomes={membros.map((m) => m.nome)} />
+          </div>
+        </div>
+      </div>
       <main className="space-y-4 px-4 pt-3">
         <SeloOffline tripId={id} />
         <ChipClaude tripId={id} />
