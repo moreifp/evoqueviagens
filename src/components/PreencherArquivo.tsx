@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Camera, FileText, Images, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { extrairReserva, type Leitura } from "@/lib/reserva-ai.functions";
+import { useNavigate } from "@tanstack/react-router";
+import { extrairReserva, lerEmailAgencia, type Leitura, type Trecho } from "@/lib/reserva-ai.functions";
 import type { Membro } from "@/lib/data";
 
 const ACEITOS = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
@@ -78,6 +79,16 @@ export function casarPessoa(nome: string, membros: Membro[], excluir?: Set<strin
   return melhor?.pid ?? null;
 }
 
+function trechoParaLeitura(t: Trecho): Leitura {
+  return {
+    tipo: t.tipo, titulo: null, companhia: t.companhia, numero: t.numero, localizador: t.localizador,
+    origem_iata: t.origem_iata, destino_iata: t.destino_iata, origem_cidade: t.origem_cidade,
+    destino_cidade: t.destino_cidade, inicio: t.inicio, fim: t.fim, local: null, cidade: null,
+    valor: null, moeda: null, cancelamento_gratis_ate: null, politica_cancelamento: null,
+    categoria: null, passageiros: t.passageiros, quartos: [], pessoas: [], bagagem: t.bagagem,
+  };
+}
+
 /**
  * Botão "Preencher com foto ou PDF" do topo dos formulários. Lê pela IA, entrega os campos ao formulário
  * e guarda o arquivo para ser anexado quando o item for salvo. Nunca salva sozinho.
@@ -95,6 +106,8 @@ export function PreencherArquivo({
   onArquivo?: (dataUrl: string, nome: string, mime: string) => void;
 }) {
   const extrair = useServerFn(extrairReserva);
+  const lerTrechos = useServerFn(lerEmailAgencia);
+  const navigate = useNavigate();
   const [lendo, setLendo] = useState(false);
   const [sobre, setSobre] = useState(false);
   const [lido, setLido] = useState<"ok" | "falhou" | null>(null);
@@ -131,6 +144,28 @@ export function PreencherArquivo({
           JSON.stringify({ nome, mime, data: dado }),
         );
       if (!navigator.onLine) throw new Error("Sem internet · não deu para ler agora.");
+      if (esperado === "voo") {
+        const entrada = ehEml
+          ? { texto: (await f.text()).slice(0, 100_000), arquivo: null, nome, mime: null }
+          : { texto: null, arquivo: dado, nome, mime: mime as Mime };
+        const { trechos } = await lerTrechos({ data: entrada });
+        if (!trechos.length) throw new Error("vazio");
+        if (trechos.length > 1) {
+          // Bilhete com vários voos: abre a conferência de todos os trechos de uma vez.
+          sessionStorage.removeItem(`evoque-anexo-${tripId}`);
+          sessionStorage.setItem(
+            `evoque-trechos-${tripId}`,
+            JSON.stringify({ trechos, original: { nome, mime, data: dado } }),
+          );
+          toast.success(`${trechos.length} voos lidos · confira todos`);
+          void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId } });
+          return;
+        }
+        onLido(trechoParaLeitura(trechos[0]));
+        setLido("ok");
+        toast.success("Lemos o documento · confira");
+        return;
+      }
       const r = ehEml
         ? await extrair({
             data: {
