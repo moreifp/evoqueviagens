@@ -392,6 +392,25 @@ export function FormBilhete({
         classe: p.classe?.trim() || null,
         ...(p.bag ?? bag),
       }));
+    // Aviso: já existe bilhete da mesma pessoa, companhia, voo e data.
+    const chaveNova = chaveVoo({ ...(inicial ?? {}), ...valores } as unknown as Ticket);
+    if (chaveNova) {
+      const repetidos = paxRows.filter((p) =>
+        todosBilhetes.some(
+          (b) =>
+            b.id !== id &&
+            chaveVoo(b) === chaveNova &&
+            (b.passageiros ?? []).some((x) => x.person_id === p.person_id),
+        ),
+      );
+      if (repetidos.length) {
+        const nomes = repetidos
+          .map((p) => membros.find((m) => m.person_id === p.person_id)?.apelido || nomeDoc(p.person_id))
+          .join(", ");
+        if (!window.confirm(`${nomes} já tem bilhete neste voo (${valores.companhia ?? ""} ${valores.numero ?? ""}, mesma data). Salvar mesmo assim?`))
+          return;
+      }
+    }
     const ops: Op[] = montarOpsVoo({
       tripId,
       id,
