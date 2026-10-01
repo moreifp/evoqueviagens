@@ -76,43 +76,13 @@ function TelaBilhete() {
         voltarPara="/trip/$id/bilhetes"
         voltarParams={{ id }}
       />
-      {modo === "pergunta" && (
-        <div className="space-y-4 px-4 pt-6">
-          <h2 className="text-[28px] font-bold leading-tight">Mesmo voo de {nomeDono}?</h2>
-          <button
-            onClick={() => setModo("mesmo")}
-            className="gradient-hero shadow-medium tap flex min-h-[72px] w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
-          >
-            <Users size={28} strokeWidth={2.2} /> Sim, mesmo voo
-          </button>
-          <button
-            onClick={() => setModo("outro")}
-            className="tap flex min-h-[72px] w-full items-center justify-center gap-3 rounded-2xl border-2 border-primary text-xl font-bold text-foreground"
-          >
-            <Plane size={28} strokeWidth={2.2} /> Não, outro voo
-          </button>
-        </div>
-      )}
-      {para && (modo === "mesmo" || casado) && (
-        <MesmoVoo
-          key={casado?.ids.join() ?? "sel"}
-          tripId={id}
-          pid={para}
-          iniciais={casado?.ids}
-          lido={casado?.lido}
-          onFeito={voltar}
-        />
-      )}
-      {modo === "outro" && !casado && (
-        <FormBilhete
-          key={editar ?? copiar ?? "novo"}
-          tripId={id}
-          inicial={inicial}
-          copiarDe={modelo}
-          para={para}
-          onMesmoVoo={para ? (tid, lido) => setCasado({ ids: [tid], lido }) : undefined}
-        />
-      )}
+      <FormBilhete
+        key={editar ?? copiar ?? "novo"}
+        tripId={id}
+        inicial={inicial}
+        copiarDe={modelo}
+        para={para}
+      />
     </>
   );
 }
