@@ -407,8 +407,10 @@ export function FormBilhete({
         const nomes = repetidos
           .map((p) => membros.find((m) => m.person_id === p.person_id)?.apelido || nomeDoc(p.person_id))
           .join(", ");
-        if (!window.confirm(`${nomes} já tem bilhete neste voo (${valores.companhia ?? ""} ${valores.numero ?? ""}, mesma data). Salvar mesmo assim?`))
+        if (!window.confirm(`${nomes} já tem bilhete neste voo (${valores.companhia ?? ""} ${valores.numero ?? ""}, mesma data). Salvar mesmo assim?`)) {
+          setSalvando(false);
           return;
+        }
       }
     }
     const ops: Op[] = montarOpsVoo({
