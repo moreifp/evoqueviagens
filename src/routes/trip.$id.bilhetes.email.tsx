@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, Trash2 } from "lucide-react";
 import { Topo } from "@/components/Chrome";
@@ -71,6 +71,15 @@ function TelaEmail() {
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [original, setOriginal] = useState<Original | null>(null);
   const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(`evoque-trechos-${id}`);
+    if (!raw) return;
+    sessionStorage.removeItem(`evoque-trechos-${id}`);
+    const v = JSON.parse(raw) as { trechos: Trecho[]; original: Original };
+    void lido(v.trechos, v.original);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   async function lido(trechos: Trecho[], o: Original) {
     const aero = await carregarAeroportos().catch(() => []);

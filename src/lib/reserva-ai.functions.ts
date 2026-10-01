@@ -165,7 +165,7 @@ export const lerEmailAgencia = createServerFn({ method: "POST" })
     if (!key) throw new Error("A leitura automática não está configurada.");
     if (!data.texto?.trim() && !data.arquivo) throw new Error("Cole o e-mail ou escolha um arquivo.");
     const instr = [
-      "Este é um e-mail/bilhete de agência de viagens. Liste TODOS os trechos (ida, volta e conexões), um item por voo/trem.",
+      "Este é um bilhete/e-mail/print de reserva de transporte. Liste TODOS os trechos (ida, volta e cada conexão), um item por voo/trem — leia o documento inteiro, inclusive todas as páginas. Para cada trecho preencha companhia, número do voo (ex.: LA 8084), aeroportos de origem e destino (código IATA de 3 letras; deduza pela cidade/aeroporto escrito se o código não aparecer), partida e chegada com data e hora. O mesmo localizador e os mesmos passageiros valem para todos os trechos da reserva.",
       "Extraia SOMENTE: companhia, número, localizador, aeroportos IATA, cidades, partida e chegada, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem.",
       "IGNORE totalmente preços, tarifas, taxas, impostos, comissão da agência, formas de pagamento, cartões e parcelas: não copie nada disso para nenhum campo.",
       "Datas: ISO local YYYY-MM-DDTHH:mm na hora do aeroporto. Não adivinhe: ausente = null. Nomes como 'Nome Sobrenome'.",
