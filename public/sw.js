@@ -124,10 +124,11 @@ async function daRede(request, ms) {
   } finally { clearTimeout(t); }
 }
 
-// Navegação: com internet, busca a página nova (até 2,5 s) para o app instalado
-// sempre abrir na versão publicada; sem internet ou lento, usa a casca guardada.
+// Navegação: com internet, busca a página nova (até 6 s — no celular a primeira
+// resposta pode passar de 2,5 s e a casca velha voltava) para o app instalado
+// sempre abrir na versão publicada; sem internet a falha é imediata e usa a casca guardada.
 async function navegar(request) {
-  const r = await daRede(request, 2500);
+  const r = await daRede(request, 6000);
   if (r) return r;
   return (await caches.match(SHELL)) || (await caches.match(request)) || (await caches.match(OFFLINE)) || Response.error();
 }
