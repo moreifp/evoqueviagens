@@ -63,7 +63,7 @@ const saida = z.object({
 export type Leitura = z.infer<typeof saida>;
 
 const FOCO: Record<string, string> = {
-  voo: "O usuário está cadastrando um voo/trem/ônibus: foque em companhia, número, IATA, horários, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem (mão: quantidade e kg; item pessoal; despachada: quantidade e kg por mala) se estiver escrita.",
+  voo: "O usuário está cadastrando um voo/trem/ônibus: foque em companhia, número, IATA, horários, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem (mão: quantidade e kg; item pessoal; despachada: quantidade e kg por mala) se estiver escrita. Localizador: use SEMPRE o código de reserva da companhia aérea (airline record locator / PNR da cia, ex.: DLPDCU); se houver também um código da agência (booking reference da agência), ignore-o.",
   hotel: "O usuário está cadastrando uma hospedagem: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out, quartos com hóspedes.",
   reserva: "O usuário está cadastrando uma reserva (carro, passeio, restaurante ou outro): titulo, local, início, fim e pessoas.",
   despesa: "O usuário está lançando uma despesa (recibo/nota): tipo = despesa, titulo = descrição curta, valor total, moeda, inicio = data, categoria.",
@@ -167,6 +167,7 @@ export const lerEmailAgencia = createServerFn({ method: "POST" })
     const instr = [
       "Este é um bilhete/e-mail/print de reserva de transporte. Liste TODOS os trechos (ida, volta e cada conexão), um item por voo/trem — leia o documento inteiro, inclusive todas as páginas. Para cada trecho preencha companhia, número do voo (ex.: LA 8084), aeroportos de origem e destino (código IATA de 3 letras; deduza pela cidade/aeroporto escrito se o código não aparecer), partida e chegada com data e hora. O mesmo localizador e os mesmos passageiros valem para todos os trechos da reserva.",
       "Extraia SOMENTE: companhia, número, localizador, aeroportos IATA, cidades, partida e chegada, passageiros (nome como no bilhete, assento, e-ticket) e franquia de bagagem.",
+      "Localizador: use SEMPRE o código de reserva da companhia aérea (airline record locator / PNR da cia, ex.: DLPDCU); se houver também um código da agência (booking reference da agência), ignore-o.",
       "IGNORE totalmente preços, tarifas, taxas, impostos, comissão da agência, formas de pagamento, cartões e parcelas: não copie nada disso para nenhum campo.",
       "Datas: ISO local YYYY-MM-DDTHH:mm na hora do aeroporto. Não adivinhe: ausente = null. Nomes como 'Nome Sobrenome'.",
     ].join(" ");
