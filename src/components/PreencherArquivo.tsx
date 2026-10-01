@@ -151,8 +151,16 @@ export function PreencherArquivo({
         const entrada = ehEml
           ? { texto: (await f.text()).slice(0, 100_000), arquivo: null, nome, mime: null }
           : { texto: null, arquivo: dado, nome, mime: mime as Mime };
-        const { trechos } = await lerTrechos({ data: entrada });
-        if (!trechos.length) throw new Error("vazio");
+        // Se a leitura de vários voos falhar ou voltar vazia, cai na leitura de um
+        // voo só (a que já funcionava antes) em vez de desistir.
+        let trechos: Awaited<ReturnType<typeof lerTrechos>>["trechos"] = [];
+        try {
+          trechos = (await lerTrechos({ data: entrada })).trechos.filter(
+            (t) => t.numero || t.origem_iata || t.inicio || t.localizador,
+          );
+        } catch (e) {
+          console.warn("[bilhete] leitura de vários voos falhou, tentando um voo só", e);
+        }
         if (trechos.length > 1) {
           // Bilhete com vários voos: abre a conferência de todos os trechos de uma vez.
           sessionStorage.removeItem(`evoque-anexo-${tripId}`);
@@ -164,10 +172,13 @@ export function PreencherArquivo({
           void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId }, search: para ? { para } : {} });
           return;
         }
-        onLido(trechoParaLeitura(trechos[0]!));
-        setLido("ok");
-        toast.success("Lemos o documento · confira");
-        return;
+        if (trechos.length === 1) {
+          onLido(trechoParaLeitura(trechos[0]!));
+          setLido("ok");
+          toast.success("Lemos o documento · confira");
+          return;
+        }
+        // Nenhum trecho: segue para a leitura de um voo só, abaixo.
       }
       const r = ehEml
         ? await extrair({

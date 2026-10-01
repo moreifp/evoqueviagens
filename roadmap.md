@@ -192,3 +192,8 @@
 ## Biometria 30/09
 - [x] Touch ID ao abrir no Mac: pedir a digital direto do toque (sem esperar a internet) e avisar o motivo da falha
 - [x] Cofre sem digitar senha: ligar uma vez "Usar Touch ID para abrir o cofre" (depois aparece "Abrir com Touch ID") — só no app publicado
+
+## Bilhetes por viajante (01/10)
+- [x] Leitura do bilhete em PDF voltar a funcionar como na versão anterior
+- [ ] Pergunta "Mesmo voo de Fausto?" não aparecer mais no celular (versão publicada já sem a pergunta; falta o iPhone atualizar)
+- [x] Botão "Ida e volta" aberto na foto da pessoa manter a pessoa como passageira

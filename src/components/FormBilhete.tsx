@@ -515,6 +515,7 @@ export function FormBilhete({
         <Link
           to="/trip/$id/bilhetes/email"
           params={{ id: tripId }}
+          search={para ? { para } : {}}
           className="tap flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-accent text-lg font-bold text-accent"
         >
           <Mail size={26} strokeWidth={2.2} /> Ida e volta · foto, PDF ou e-mail
