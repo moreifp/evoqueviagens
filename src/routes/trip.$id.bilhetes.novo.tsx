@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Plane, Users } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { FormBilhete, type PessoalLido } from "@/components/FormBilhete";
+import { FormBilhete } from "@/components/FormBilhete";
 import { MesmoVoo } from "@/components/MesmoVoo";
-import { membersQuery, ticketsQuery } from "@/lib/data";
+import { ticketsQuery } from "@/lib/data";
 
 type Busca = { editar?: string; copiar?: string; para?: string; pax?: string };
 const str = (s: Record<string, unknown>, k: string) =>
@@ -50,23 +48,12 @@ function TelaBilhete() {
   const { editar, copiar, para, pax } = Route.useSearch();
   const navigate = useNavigate();
   const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
-  const { data: membros } = useSuspenseQuery(membersQuery(id));
-  const dono = membros.find((m) => m.papel === "owner");
-  const donoTemVoo = Boolean(
-    dono && bilhetes.some((b) => b.passageiros.some((p) => p.person_id === dono.person_id)),
-  );
-  const perguntar = !editar && !copiar && Boolean(para) && para !== dono?.person_id && donoTemVoo;
-  const [modo, setModo] = useState<"pergunta" | "mesmo" | "outro">(
-    perguntar ? "pergunta" : "outro",
-  );
-  const [casado, setCasado] = useState<{ ids: string[]; lido?: PessoalLido } | null>(null);
   const voltar = () =>
     navigate({
       to: "/trip/$id/bilhetes",
       params: { id },
       search: para || pax ? { p: para ?? pax } : {},
     });
-  const nomeDono = dono?.apelido || dono?.nome.split(" ")[0] || "organizador";
 
   // Editar só os dados de uma pessoa neste voo.
   if (editar && pax)
@@ -87,43 +74,13 @@ function TelaBilhete() {
         voltarPara="/trip/$id/bilhetes"
         voltarParams={{ id }}
       />
-      {modo === "pergunta" && (
-        <div className="space-y-4 px-4 pt-6">
-          <h2 className="text-[28px] font-bold leading-tight">Mesmo voo de {nomeDono}?</h2>
-          <button
-            onClick={() => setModo("mesmo")}
-            className="gradient-hero shadow-medium tap flex min-h-[72px] w-full items-center justify-center gap-3 rounded-2xl text-xl font-bold"
-          >
-            <Users size={28} strokeWidth={2.2} /> Sim, mesmo voo
-          </button>
-          <button
-            onClick={() => setModo("outro")}
-            className="tap flex min-h-[72px] w-full items-center justify-center gap-3 rounded-2xl border-2 border-primary text-xl font-bold text-foreground"
-          >
-            <Plane size={28} strokeWidth={2.2} /> Não, outro voo
-          </button>
-        </div>
-      )}
-      {para && (modo === "mesmo" || casado) && (
-        <MesmoVoo
-          key={casado?.ids.join() ?? "sel"}
-          tripId={id}
-          pid={para}
-          iniciais={casado?.ids}
-          lido={casado?.lido}
-          onFeito={voltar}
-        />
-      )}
-      {modo === "outro" && !casado && (
-        <FormBilhete
-          key={editar ?? copiar ?? "novo"}
-          tripId={id}
-          inicial={inicial}
-          copiarDe={modelo}
-          para={para}
-          onMesmoVoo={para ? (tid, lido) => setCasado({ ids: [tid], lido }) : undefined}
-        />
-      )}
+      <FormBilhete
+        key={editar ?? copiar ?? "novo"}
+        tripId={id}
+        inicial={inicial}
+        copiarDe={modelo}
+        para={para}
+      />
     </>
   );
 }
