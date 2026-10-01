@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Topo } from "@/components/Chrome";
 import { FormBilhete } from "@/components/FormBilhete";
 import { MesmoVoo } from "@/components/MesmoVoo";
-import { membersQuery, ticketsQuery } from "@/lib/data";
+import { ticketsQuery } from "@/lib/data";
 
 type Busca = { editar?: string; copiar?: string; para?: string; pax?: string };
 const str = (s: Record<string, unknown>, k: string) =>
@@ -48,7 +48,6 @@ function TelaBilhete() {
   const { editar, copiar, para, pax } = Route.useSearch();
   const navigate = useNavigate();
   const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
-  useSuspenseQuery(membersQuery(id));
   const voltar = () =>
     navigate({
       to: "/trip/$id/bilhetes",
