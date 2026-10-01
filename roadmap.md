@@ -195,5 +195,5 @@
 
 ## Bilhetes por viajante (01/10)
 - [x] Leitura do bilhete em PDF voltar a funcionar como na versão anterior
-- [ ] Pergunta "Mesmo voo de Fausto?" não aparecer mais no celular (versão publicada já sem a pergunta; falta o iPhone atualizar)
+- [ ] Pergunta "Mesmo voo de Fausto?" — já removida no código e no app publicado; aguarda o Fausto recarregar a prévia ou usar app.evoque.global
 - [x] Botão "Ida e volta" aberto na foto da pessoa manter a pessoa como passageira
