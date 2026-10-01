@@ -262,13 +262,13 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
                         rotulo={ROTULOS[key] ?? key}
                         numerico
                         value={edit[key] ?? ""}
-                        onChange={(t) => setEdit((v) => ({ ...v, [key]: t }))}
+                        onChange={(t) => { renovarCofre(uid); setEdit((v) => ({ ...v, [key]: t })); }}
                         className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg"
                       />
                     ) : (
                     <input
                       value={edit[key] ?? ""}
-                      onChange={(e) => setEdit((v) => ({ ...v, [key]: e.target.value }))}
+                      onChange={(e) => { renovarCofre(uid); setEdit((v) => ({ ...v, [key]: e.target.value })); }}
                       disabled={key === "categoria"}
                       autoComplete="off"
                       className="mt-1 min-h-12 w-full rounded-lg border border-border bg-background px-3 text-lg disabled:opacity-70"
