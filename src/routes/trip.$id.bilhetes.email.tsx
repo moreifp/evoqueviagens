@@ -95,8 +95,10 @@ function TelaEmail() {
           b = di ? porIata(aero, di) : undefined;
         const pax: Linha["pax"] = [];
         const semPar: string[] = [];
+        // Aberto na aba de uma pessoa com um só passageiro lido: é ela, sem tentar casar nomes.
+        const soUm = !!para && t.passageiros.length === 1;
         for (const p of t.passageiros) {
-          const pid = casarPessoa(p.nome, membros, new Set(pax.map((x) => x.person_id)));
+          const pid = soUm ? para! : casarPessoa(p.nome, membros, new Set(pax.map((x) => x.person_id)));
           if (pid)
             pax.push({
               person_id: pid,
