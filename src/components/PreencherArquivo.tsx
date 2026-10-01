@@ -161,7 +161,7 @@ export function PreencherArquivo({
           void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId } });
           return;
         }
-        onLido(trechoParaLeitura(trechos[0]));
+        onLido(trechoParaLeitura(trechos[0]!));
         setLido("ok");
         toast.success("Lemos o documento · confira");
         return;
