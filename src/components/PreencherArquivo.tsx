@@ -156,7 +156,7 @@ export function PreencherArquivo({
         let trechos: Awaited<ReturnType<typeof lerTrechos>>["trechos"] = [];
         try {
           trechos = (await lerTrechos({ data: entrada })).trechos.filter(
-            (t) => t.numero || t.origem_iata || t.partida || t.localizador,
+            (t) => t.numero || t.origem_iata || t.inicio || t.localizador,
           );
         } catch (e) {
           console.warn("[bilhete] leitura de vários voos falhou, tentando um voo só", e);
