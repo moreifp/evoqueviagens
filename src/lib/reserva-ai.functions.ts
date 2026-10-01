@@ -198,6 +198,7 @@ export const lerTudo = createServerFn({ method: "POST" })
       "Este conteúdo pode ter VÁRIAS reservas de viagem. Liste TODOS os itens encontrados, um por elemento: cada trecho de voo/trem/ônibus separado (ida, volta e conexões), cada hotel, cada aluguel de carro, passeio, ingresso ou restaurante.",
       "Não adivinhe: campo ausente = null, lista ausente = []. Não liste despesas nem recibos. IGNORE cartões de crédito, parcelas e formas de pagamento.",
       "Datas: ISO local YYYY-MM-DDTHH:mm (hora do lugar), data simples YYYY-MM-DD. Moeda ISO 4217. IATA com 3 letras.",
+      "Localizador de voo: use SEMPRE o código de reserva da companhia aérea (airline record locator / PNR da cia); se houver também um código da agência, ignore-o.",
       "Hotel: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out. Nomes de pessoas como 'Nome Sobrenome'.",
     ].join(" ");
     const content: Record<string, unknown>[] = [{ type: "input_text", text: instr }];
