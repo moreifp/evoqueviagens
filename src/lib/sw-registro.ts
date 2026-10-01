@@ -14,6 +14,23 @@ function contextoRecusado() {
   return false;
 }
 
+/** Versão publicada agora no servidor (gerada a cada build em /sw-precache.js). */
+async function versaoPublicada(): Promise<string | null> {
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(`/sw-precache.js?t=${Date.now()}`, { cache: "no-store", signal: ctl.signal });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const m = /__EVOQUE_VERSAO="([^"]+)"/.exec(await r.text());
+    return m?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
+
 export async function registrarServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (contextoRecusado()) {
@@ -29,19 +46,39 @@ export async function registrarServiceWorker() {
       window.location.reload();
     });
 
-    // Endereço muda a cada publicação: o iPhone reconhece a versão nova mesmo
-    // quando o arquivo do worker em si não mudou.
-    const v = typeof __EVOQUE_BUILD__ !== "undefined" ? encodeURIComponent(__EVOQUE_BUILD__) : "";
-    const registro = await navigator.serviceWorker.register(v ? `/sw.js?v=${v}` : "/sw.js", { updateViaCache: "none" });
-    // Safari/iOS pode manter o app instalado aberto por muitos dias. A busca
-    // explícita evita depender apenas da verificação periódica do navegador.
+    // O endereço do worker leva a versão PUBLICADA (lida direto do servidor), não a
+    // da tela que está aberta: mesmo quando o aparelho abriu a casca antiga, ele
+    // instala a versão nova, apaga o cache velho e recarrega.
+    const build = typeof __EVOQUE_BUILD__ !== "undefined" ? __EVOQUE_BUILD__ : "";
+    const publicada = (await versaoPublicada()) ?? build;
+    let registro = await navigator.serviceWorker.register(
+      publicada ? `/sw.js?v=${encodeURIComponent(publicada)}` : "/sw.js",
+      { updateViaCache: "none" },
+    );
     await registro.update().catch(() => {});
 
-    const verificar = () => void registro.update().catch(() => {});
-    const aoVoltar = () => {
-      if (document.visibilityState === "visible") verificar();
+    let checando = false;
+    const verificar = async () => {
+      if (checando || !navigator.onLine) return;
+      checando = true;
+      try {
+        const v = await versaoPublicada();
+        const marca = v ? `v=${encodeURIComponent(v)}` : "";
+        const jaTem =
+          !marca ||
+          [registro.active, registro.waiting, registro.installing].some((w) => w?.scriptURL.includes(marca));
+        if (jaTem) await registro.update().catch(() => {});
+        else registro = await navigator.serviceWorker.register(`/sw.js?${marca}`, { updateViaCache: "none" });
+      } catch {
+        /* tenta de novo na próxima volta */
+      } finally {
+        checando = false;
+      }
     };
-    window.addEventListener("online", verificar);
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") void verificar();
+    };
+    window.addEventListener("online", () => void verificar());
     document.addEventListener("visibilitychange", aoVoltar);
   } catch {
     /* segue sem modo offline */
