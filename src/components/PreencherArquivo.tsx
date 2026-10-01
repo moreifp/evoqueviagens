@@ -172,10 +172,13 @@ export function PreencherArquivo({
           void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId }, search: para ? { para } : {} });
           return;
         }
-        onLido(trechoParaLeitura(trechos[0]!));
-        setLido("ok");
-        toast.success("Lemos o documento · confira");
-        return;
+        if (trechos.length === 1) {
+          onLido(trechoParaLeitura(trechos[0]!));
+          setLido("ok");
+          toast.success("Lemos o documento · confira");
+          return;
+        }
+        // Nenhum trecho: segue para a leitura de um voo só, abaixo.
       }
       const r = ehEml
         ? await extrair({
