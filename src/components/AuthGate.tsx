@@ -51,12 +51,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         return aplicar(data.session ?? (erroRede ? sessaoGuardada() : null));
       })
       .catch((e) => {
-        erroRede = deRede(e) || true;
+        erroRede = deRede(e);
         return aplicar(sessaoGuardada());
       });
     const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
       // Refresh que falhou por rede dispara SIGNED_OUT sem sessão: não derruba se houver sessão guardada.
       if (!s && e !== "SIGNED_OUT") erroRede = true;
+      // Sessão recusada pelo servidor (renovação inválida) com internet: pede login de novo.
+      if (e === "SIGNED_OUT" && navigator.onLine) erroRede = false;
       setTimeout(() => aplicar(s, e), 0);
     });
     // Internet voltou: renova a sessão (se não der, aí sim pede login).
