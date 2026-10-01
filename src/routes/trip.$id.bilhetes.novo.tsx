@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plane, Users } from "lucide-react";
 import { Topo } from "@/components/Chrome";
-import { FormBilhete, type PessoalLido } from "@/components/FormBilhete";
+import { FormBilhete } from "@/components/FormBilhete";
 import { MesmoVoo } from "@/components/MesmoVoo";
 import { membersQuery, ticketsQuery } from "@/lib/data";
 
@@ -50,23 +49,13 @@ function TelaBilhete() {
   const { editar, copiar, para, pax } = Route.useSearch();
   const navigate = useNavigate();
   const { data: bilhetes } = useSuspenseQuery(ticketsQuery(id));
-  const { data: membros } = useSuspenseQuery(membersQuery(id));
-  const dono = membros.find((m) => m.papel === "owner");
-  const donoTemVoo = Boolean(
-    dono && bilhetes.some((b) => b.passageiros.some((p) => p.person_id === dono.person_id)),
-  );
-  const perguntar = !editar && !copiar && Boolean(para) && para !== dono?.person_id && donoTemVoo;
-  const [modo, setModo] = useState<"pergunta" | "mesmo" | "outro">(
-    perguntar ? "pergunta" : "outro",
-  );
-  const [casado, setCasado] = useState<{ ids: string[]; lido?: PessoalLido } | null>(null);
+  useSuspenseQuery(membersQuery(id));
   const voltar = () =>
     navigate({
       to: "/trip/$id/bilhetes",
       params: { id },
       search: para || pax ? { p: para ?? pax } : {},
     });
-  const nomeDono = dono?.apelido || dono?.nome.split(" ")[0] || "organizador";
 
   // Editar só os dados de uma pessoa neste voo.
   if (editar && pax)
