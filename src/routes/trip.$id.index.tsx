@@ -14,6 +14,7 @@ import {
   CircleAlert,
   Users,
   CalendarCheck,
+  MapPin,
   Pencil,
   Wallet,
   ChevronLeft,
@@ -45,7 +46,8 @@ import { Logo } from "@/components/Logo";
 import { logoCia } from "@/lib/logos";
 import { resumoSaldos } from "@/lib/saldos";
 import { fmtMoney } from "@/lib/format";
-import { chaveDia, dataBRCurta, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
+import { chaveDia, dataBRCurta, diasAte, horaNoFuso, fusoLocal, nomeFusoCurto } from "@/lib/format";
+import { AvatarGrupo } from "@/components/AvatarGrupo";
 
 export const Route = createFileRoute("/trip/$id/")({
   head: () => ({
