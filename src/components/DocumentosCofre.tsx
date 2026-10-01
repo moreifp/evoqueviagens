@@ -19,6 +19,7 @@ import {
   cofreFaceIdLigado,
   ligarFaceIdCofre,
   renovarCofre,
+  vaultIsUnlocked,
 } from "@/lib/vault";
 
 const ROTULOS: Record<string, string> = {
@@ -167,7 +168,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
       setSalvo(true);
       toast.success("Guardado no cofre");
     } catch {
-      toast.error(useVaultLivre(uid) ? "Não foi possível salvar." : "O cofre trancou. Destrave e salve de novo.");
+      toast.error(vaultIsUnlocked(uid) ? "Não foi possível salvar." : "O cofre trancou. Destrave e salve de novo.");
     } finally {
       setBusy(false);
     }
