@@ -19,6 +19,8 @@ import type { Trecho } from "@/lib/reserva-ai.functions";
 import type { Op } from "@/lib/outbox";
 
 export const Route = createFileRoute("/trip/$id/bilhetes/email")({
+  validateSearch: (s: Record<string, unknown>): { para?: string } =>
+    typeof s.para === "string" ? { para: s.para } : {},
   head: () => ({
     meta: [
       { title: "E-mail da agência — Evoque Viagens" },
@@ -65,6 +67,7 @@ type Linha = {
 
 function TelaEmail() {
   const { id } = Route.useParams();
+  const { para } = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: membros } = useSuspenseQuery(membersQuery(id));
@@ -102,6 +105,11 @@ function TelaEmail() {
               eticket: p.eticket ?? "",
             });
           else semPar.push(p.nome);
+        }
+        // Aberto na aba de uma pessoa: o bilhete é dela mesmo se o nome lido não casar.
+        if (para && !pax.some((x) => x.person_id === para)) {
+          const lidoSo = semPar.length === 1 && !pax.length ? semPar.shift()! : "";
+          pax.push({ person_id: para, nome_no_bilhete: lidoSo.toUpperCase(), assento: t.passageiros[0]?.assento ?? "", eticket: t.passageiros[0]?.eticket ?? "" });
         }
         return {
           id: novoId(),
@@ -185,7 +193,7 @@ function TelaEmail() {
       );
       void qc.invalidateQueries({ queryKey: ["tickets", id] });
       void qc.invalidateQueries({ queryKey: ["roteiro", id] });
-      navigate({ to: "/trip/$id/bilhetes", params: { id } });
+      navigate({ to: "/trip/$id/bilhetes", params: { id }, search: para ? { p: para } : {} });
     } catch (e) {
       toast.error((e as Error).message || "Não deu para salvar.");
       setSalvando(false);

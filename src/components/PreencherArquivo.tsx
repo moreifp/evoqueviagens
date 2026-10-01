@@ -98,8 +98,11 @@ export function PreencherArquivo({
   esperado,
   onLido,
   onArquivo,
+  para,
 }: {
   tripId: string;
+  /** Pessoa dona do bilhete (aba da pessoa): entra como passageira se o nome não casar. */
+  para?: string;
   esperado: "voo" | "hotel" | "reserva" | "despesa";
   onLido: (r: Leitura) => void;
   /** Quando o formulário cuida do anexo (despesa), recebe o arquivo aqui em vez da fila de anexos. */
@@ -158,7 +161,7 @@ export function PreencherArquivo({
             JSON.stringify({ trechos, original: { nome, mime, data: dado } }),
           );
           toast.success(`${trechos.length} voos lidos · confira todos`);
-          void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId } });
+          void navigate({ to: "/trip/$id/bilhetes/email", params: { id: tripId }, search: para ? { para } : {} });
           return;
         }
         onLido(trechoParaLeitura(trechos[0]!));

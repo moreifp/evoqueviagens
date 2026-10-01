@@ -504,7 +504,7 @@ export function FormBilhete({
 
   return (
     <form onSubmit={salvar} className="space-y-4 px-4 pt-4">
-      {!inicial && <PreencherArquivo tripId={tripId} esperado="voo" onLido={aplicar} />}
+      {!inicial && <PreencherArquivo tripId={tripId} esperado="voo" onLido={aplicar} para={para} />}
       {!inicial && (
         <p className="text-base text-muted-foreground">
           A foto acima lê um voo só. Ida e volta ou vários voos? Use o botão abaixo: ele lê todos os
