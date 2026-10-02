@@ -218,13 +218,14 @@ function Voo({ tripId, itemId }: { tripId: string; itemId: string }) {
                   </span>
                 </div>
                 <p className="text-base text-muted-foreground">
-                  {p.nome_no_bilhete || "Nome não informado"} · •••{p.eticket?.slice(-4) || "—"}
+                  {p.nome_no_bilhete || "Nome não informado"}
                 </p>
-                {dif.includes(p) && (
-                  <p className="flex items-center gap-1 text-base text-muted-foreground">
-                    <Luggage size={18} aria-hidden /> {textoBagagem(p)}
-                  </p>
-                )}
+                <p className="mono-code text-base text-muted-foreground">
+                  LOC {p.localizador || item.localizador || "—"} · Bilhete {p.eticket || "—"}
+                </p>
+                <p className="flex items-center gap-1 text-base text-muted-foreground">
+                  <Luggage size={18} aria-hidden /> {textoBagagem(p) || padrao || "Bagagem não informada"}
+                </p>
               </div>
             );
           })}
