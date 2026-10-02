@@ -220,8 +220,9 @@ export function FormBilhete({
     const lidos = (x.passageiros ?? []).length
       ? x.passageiros
       : (x.pessoas ?? []).map((nome) => ({ nome, assento: null, eticket: null }));
+    // Aberto pela aba de uma pessoa com um só passageiro no bilhete: é dela, sem adivinhar pelo nome.
     const novos = lidos.flatMap((p) => {
-      const pid = casarPessoa(p.nome, membros);
+      const pid = para && lidos.length === 1 ? para : casarPessoa(p.nome, membros);
       return pid
         ? [
             {
@@ -230,6 +231,8 @@ export function FormBilhete({
               nome_no_bilhete: p.nome.toUpperCase(),
               assento: p.assento ?? "",
               eticket: p.eticket ?? "",
+              localizador: x.localizador ?? "",
+              classe: "",
             },
           ]
         : [];
