@@ -163,8 +163,13 @@ export const listarCompartilhamentos = createServerFn({ method: "GET" })
     const fichaDe = new Map<string, string>();
     if (donos.length) {
       const db = await adminClient();
-      const { data: ps } = await db.from("person").select("id,user_id").in("user_id", donos).is("deleted_at", null);
-      for (const p of ps ?? []) if (p.user_id && !fichaDe.has(p.user_id)) fichaDe.set(p.user_id, p.id);
+      const { data: eus } = await db.from("person").select("id,account_id").in("account_id", donos).eq("kind", "self").is("deleted_at", null);
+      for (const p of eus ?? []) if (p.account_id && !fichaDe.has(p.account_id)) fichaDe.set(p.account_id, p.id);
+      const faltam = donos.filter((d) => !fichaDe.has(d));
+      if (faltam.length) {
+        const { data: ps } = await db.from("person").select("id,user_id").in("user_id", faltam).is("deleted_at", null);
+        for (const p of ps ?? []) if (p.user_id && !fichaDe.has(p.user_id)) fichaDe.set(p.user_id, p.id);
+      }
     }
     const lista = (grants ?? []).map((g) => ({ ...g, owner_person_id: fichaDe.get(g.owner_id) ?? null }));
     return { grants: lista, trips, uid: context.userId };
