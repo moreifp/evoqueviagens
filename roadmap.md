@@ -3,7 +3,7 @@
 ## Saúde na área Eu (04/10)
 - [x] Remédios com nome, dose e foto; médicos e condições em abas próprias
 - [x] Dados privados por pessoa com exclusão recuperável e edição offline para texto
-- [ ] Conferir a tela no celular e confirmar leitura/gravação com conta de teste
+- [ ] Conferir a tela com uma conta autenticada (sessão de teste indisponível; aguarda acesso à prévia)
 
 ## Recibo em texto (despesas)
 - [x] Transcrever a foto da conta em texto legível na despesa (botão "Ler a conta", cache offline) — testado na tela com recibo espécime, estado restaurado

@@ -43,9 +43,11 @@ export function SaudePessoal({ personId, owner }: { personId: string; owner: boo
     if (!parsed.success) return toast.error(parsed.error.issues[0]?.message ?? "Confira os dados.");
     setBusy(true);
     try {
-      const status = await mutar({ tipo: "insert", tabela: "person_health_entry", valores: { id: crypto.randomUUID(), ...parsed.data } });
+      const id = crypto.randomUUID();
+      const status = await mutar({ tipo: "insert", tabela: "person_health_entry", valores: { id, ...parsed.data } });
+      if (status === "fila") qc.setQueryData< typeof entradas >(["saude", personId], (old) => [{ id, ...parsed.data, created_at: new Date().toISOString(), deleted_at: null }, ...(old ?? [])]);
       setNome(""); setDose(""); setFoto(null);
-      await qc.invalidateQueries({ queryKey: ["saude", personId] });
+      if (status === "salvo") await qc.invalidateQueries({ queryKey: ["saude", personId] });
       toast.success(status === "fila" ? "Sem internet · será salvo quando voltar" : "Salvo");
     } catch { toast.error("Não foi possível salvar."); }
     finally { setBusy(false); }
@@ -54,9 +56,14 @@ export function SaudePessoal({ personId, owner }: { personId: string; owner: boo
   async function remover(id: string) {
     if (!window.confirm("Apagar este registro de saúde?")) return;
     try {
+      const previous = entradas.find((item) => item.id === id);
       const status = await mutar({ tipo: "update", tabela: "person_health_entry", id, valores: { deleted_at: new Date().toISOString() } });
       qc.setQueryData< typeof entradas >(["saude", personId], (old) => old?.filter((item) => item.id !== id));
-      toast.success(status === "fila" ? "Exclusão pendente de conexão" : "Apagado");
+      toast.success(status === "fila" ? "Exclusão pendente de conexão" : "Apagado", { action: previous ? { label: "Desfazer", onClick: () => {
+        void mutar({ tipo: "update", tabela: "person_health_entry", id, valores: { deleted_at: null } })
+          .then(() => { qc.setQueryData< typeof entradas >(["saude", personId], (old) => [previous, ...(old ?? [])]); })
+          .catch(() => toast.error("Não foi possível desfazer."));
+      } } : undefined });
     } catch { toast.error("Não foi possível apagar."); }
   }
 
