@@ -1256,6 +1256,47 @@ export type Database = {
           },
         ]
       }
+      person_health_entry: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          dose: string | null
+          foto_data: string | null
+          id: string
+          nome: string
+          person_id: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          dose?: string | null
+          foto_data?: string | null
+          id?: string
+          nome: string
+          person_id: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          dose?: string | null
+          foto_data?: string | null
+          id?: string
+          nome?: string
+          person_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_health_entry_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_item_dispensa: {
         Row: {
           created_at: string
