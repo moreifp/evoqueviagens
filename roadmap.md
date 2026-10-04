@@ -2,7 +2,7 @@
 
 ## Saúde na área Eu (04/10)
 - [x] Remédios com nome, dose e foto; médicos e condições em abas próprias
-- [x] Dados privados por pessoa com exclusão recuperável e edição offline para texto
+- [x] Dados privados por pessoa com exclusão recuperável e inclusão offline
 - [ ] Conferir a tela com uma conta autenticada (sessão de teste indisponível; aguarda acesso à prévia)
 
 ## Recibo em texto (despesas)
