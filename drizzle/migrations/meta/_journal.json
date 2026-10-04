@@ -351,6 +351,13 @@
       "when": 1790649201410,
       "tag": "0049_rls_select_auth_uid",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791150468767,
+      "tag": "0050_saude_pessoal_privada",
+      "breakpoints": true
     }
   ]
 }

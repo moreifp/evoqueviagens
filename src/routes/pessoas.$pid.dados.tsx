@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Topo } from "@/components/Chrome";
 import { Campo, inputCls } from "@/components/Form";
+import { SaudePessoal } from "@/components/SaudePessoal";
 import { euQuery } from "@/lib/eu";
 import { mutar } from "@/lib/outbox";
 
@@ -14,9 +15,11 @@ export const Route = createFileRoute("/pessoas/$pid/dados")({
   head: () => ({
     meta: [
       { title: "Mais sobre você — Evoque Viagens" },
-      { name: "description", content: "Dados pessoais, preferências e contato de emergência." },
+      { name: "description", content: "Dados pessoais, saúde, preferências e contato de emergência." },
       { property: "og:title", content: "Mais sobre você — Evoque Viagens" },
       { property: "og:description", content: "Dados pessoais para suas viagens." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dados,
@@ -115,7 +118,9 @@ function Dados() {
     <div className="min-h-screen bg-background pb-24">
       <Topo
         titulo={
-          secao === "preferencias"
+          secao === "saude"
+            ? "Saúde"
+            : secao === "preferencias"
             ? "Preferências"
             : secao === "emergencia"
               ? "Contato de emergência"
@@ -130,7 +135,9 @@ function Dados() {
         {!owner && (
           <p className="mb-4 rounded-lg border border-border p-3 text-lg">Somente leitura</p>
         )}
-        {secao === "preferencias" ? (
+        {secao === "saude" ? (
+          <SaudePessoal personId={pid} owner={owner} />
+        ) : secao === "preferencias" ? (
           <form action={(fd) => void savePrefs(fd)} className="space-y-4">
             <Campo rotulo="Assento">
               <select

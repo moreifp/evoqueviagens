@@ -13,6 +13,7 @@ import {
   User,
   UserPlus,
   Users,
+  HeartPulse,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPessoa } from "./Pessoa";
@@ -382,6 +383,16 @@ function EuDashboardConteudo({
           </button>
           {maisAberta && (
             <div className="divide-y divide-border rounded-lg border border-border bg-card px-4">
+              {owner && <Link
+                to="/pessoas/$pid/dados"
+                params={{ pid: p.id }}
+                search={{ secao: "saude" }}
+                className="tap flex items-center gap-3 py-3"
+              >
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-emerg-soft text-emerg"><HeartPulse size={24} strokeWidth={2.2} /></span>
+                <span className="flex-1"><strong className="block text-lg">Saúde</strong><span className="text-base text-muted-foreground">Remédios, médicos e condições</span></span>
+                <ChevronRight size={26} />
+              </Link>}
               <Link
                 to="/pessoas/$pid/dados"
                 params={{ pid: p.id }}
