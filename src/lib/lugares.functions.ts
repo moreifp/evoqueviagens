@@ -6,7 +6,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 
 function cabecalhos(extra: Record<string, string> = {}) {
   const lk = process.env.LOVABLE_API_KEY;
-  // Chave própria (conexão "Diego's Google Maps Platform"): Places API (New) + Time Zone API.
+  // Chave própria (conexão "Fausto's Google Maps Platform"): Places API (New) + Time Zone API.
   const gk = process.env.GOOGLE_MAPS_API_KEY_2;
   if (!lk || !gk) throw new Error("Busca de lugares indisponível no momento.");
   return { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": gk, "Content-Type": "application/json", ...extra };
