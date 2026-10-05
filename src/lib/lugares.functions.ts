@@ -16,7 +16,13 @@ async function checar(r: Response, oque: string) {
   if (r.ok) return;
   const corpo = await r.text();
   console.error(`Google Maps ${oque} [${r.status}]: ${corpo}`);
-  if (r.status === 403) throw new Error("O Google Maps recusou a busca (403). Verifique a conexão do Google Maps.");
+  if (r.status === 403) {
+    if (corpo.includes("API_KEY_HTTP_REFERRER_BLOCKED"))
+      throw new Error('A chave do Google Maps está restrita a sites. No Google Cloud, mude a restrição do aplicativo para "Nenhuma" (as buscas saem do servidor, sem site de origem).');
+    if (corpo.includes("API_KEY_SERVICE_BLOCKED"))
+      throw new Error("A chave do Google Maps não permite esta API. No Google Cloud, libere a Places API (New) e a Time Zone API na chave.");
+    throw new Error("O Google Maps recusou a busca (403). Verifique a conexão do Google Maps.");
+  }
   throw new Error(`Busca de lugar falhou [${r.status}].`);
 }
 
