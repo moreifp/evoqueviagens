@@ -20,14 +20,21 @@ async function checar(r: Response, oque: string) {
   return r.json();
 }
 
+type Ctx = { supabase: any; userId: string };
+
+/** Confere que quem pede é o organizador e devolve o nome da pasta da viagem. */
+async function nomeDaViagem(context: Ctx, tripId: string) {
+  const { data: trip } = await context.supabase.from("trip").select("nome,owner_id").eq("id", tripId).maybeSingle();
+  if (!trip || trip.owner_id !== context.userId) throw new Error("Só o organizador envia ao Drive.");
+  return ((trip.nome as string) || "Viagem").replace(/[\\/:*?"<>|']/g, "-").trim() || "Viagem";
+}
+
 /** Acha (ou cria) a pasta com o nome da viagem no Google Drive. Só o organizador. */
 export const pastaDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ tripId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: trip } = await context.supabase.from("trip").select("nome,owner_id").eq("id", data.tripId).maybeSingle();
-    if (!trip || trip.owner_id !== context.userId) throw new Error("Só o organizador envia ao Drive.");
-    const nome = (trip.nome || "Viagem").replace(/[\\/:*?"<>|']/g, "-").trim() || "Viagem";
+    const nome = await nomeDaViagem(context, data.tripId);
     const q = `name='${nome}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     const achou = await checar(await fetch(`${GW}/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, { headers: headers() }), "busca");
     if (achou.files?.[0]?.id) return { id: achou.files[0].id as string, nome };
@@ -42,11 +49,15 @@ export const pastaDrive = createServerFn({ method: "POST" })
     return { id: nova.id as string, nome };
   });
 
-/** Envia uma foto (base64) para a pasta. */
+/** Envia uma foto (base64) para a pasta da viagem. Só o organizador, só na pasta dessa viagem. */
 export const fotoDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ pastaId: z.string().min(5).max(200), nome: z.string().min(1).max(200), base64: z.string().min(10).max(40_000_000) }).parse(d))
-  .handler(async ({ data }) => {
+  .inputValidator((d) => z.object({ tripId: z.string().uuid(), pastaId: z.string().regex(/^[\w-]{5,200}$/), nome: z.string().min(1).max(200), base64: z.string().min(10).max(40_000_000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const nomeViagem = await nomeDaViagem(context, data.tripId);
+    const pasta = await checar(await fetch(`${GW}/drive/v3/files/${data.pastaId}?fields=name,mimeType,trashed`, { headers: headers() }), "pasta");
+    if (pasta.mimeType !== "application/vnd.google-apps.folder" || pasta.trashed || pasta.name !== nomeViagem)
+      throw new Error("Pasta do Drive não é a desta viagem.");
     const b = "evoque" + crypto.randomUUID();
     const meta = JSON.stringify({ name: data.nome, parents: [data.pastaId] });
     const corpo = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: image/jpeg\r\nContent-Transfer-Encoding: base64\r\n\r\n${data.base64}\r\n--${b}--`;
