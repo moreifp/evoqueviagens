@@ -37,6 +37,7 @@ import { Route as EnPrivacyRouteImport } from './routes/en.privacy'
 import { Route as EnTermsRouteImport } from './routes/en.terms'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as ApiAdminExportStorageRouteImport } from './routes/api/admin/export-storage'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
 import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
@@ -213,6 +214,11 @@ const TripIdRoute = TripIdRouteImport.update({
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminExportStorageRoute = ApiAdminExportStorageRouteImport.update({
+  id: '/api/admin/export-storage',
+  path: '/api/admin/export-storage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PessoasPidIndexRoute = PessoasPidIndexRouteImport.update({
@@ -432,6 +438,7 @@ export interface FileRoutesByFullPath {
   '/trip/$id': typeof TripIdRouteWithChildren
   '/en/': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -496,6 +503,7 @@ export interface FileRoutesByTo {
   '/en/terms': typeof EnTermsRoute
   '/en': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -563,6 +571,7 @@ export interface FileRoutesById {
   '/trip/$id': typeof TripIdRouteWithChildren
   '/en/': typeof EnIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -631,6 +640,7 @@ export interface FileRouteTypes {
     | '/trip/$id'
     | '/en/'
     | '/.lovable/oauth/consent'
+    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -695,6 +705,7 @@ export interface FileRouteTypes {
     | '/en/terms'
     | '/en'
     | '/.lovable/oauth/consent'
+    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/trip/$id'
     | '/en/'
     | '/.lovable/oauth/consent'
+    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -823,6 +835,7 @@ export interface RootRouteChildren {
   DTokenRoute: typeof DTokenRoute
   TripIdRoute: typeof TripIdRouteWithChildren
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  ApiAdminExportStorageRoute: typeof ApiAdminExportStorageRoute
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
@@ -1035,6 +1048,13 @@ declare module '@tanstack/react-router' {
       path: '/.lovable/oauth/consent'
       fullPath: '/.lovable/oauth/consent'
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/export-storage': {
+      id: '/api/admin/export-storage'
+      path: '/api/admin/export-storage'
+      fullPath: '/api/admin/export-storage'
+      preLoaderRoute: typeof ApiAdminExportStorageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pessoas/$pid/': {
@@ -1388,6 +1408,7 @@ const rootRouteChildren: RootRouteChildren = {
   DTokenRoute: DTokenRoute,
   TripIdRoute: TripIdRouteWithChildren,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  ApiAdminExportStorageRoute: ApiAdminExportStorageRoute,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
