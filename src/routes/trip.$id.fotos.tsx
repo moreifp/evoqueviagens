@@ -164,6 +164,7 @@ function FotosViagem() {
         bin += String.fromCharCode(...buf.subarray(j, j + 0x8000));
       await mandarFoto({
         data: {
+          tripId: id,
           pastaId: pasta.id,
           nome: `${pasta.nome} ${carimbo} ${String(i + 1).padStart(3, "0")}.jpg`,
           base64: btoa(bin),
