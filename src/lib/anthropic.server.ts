@@ -10,6 +10,14 @@ export const MODELO_DOCUMENTOS = "claude-haiku-4-5-20251001";
 
 const API = "https://api.anthropic.com/v1/messages";
 
+/**
+ * Os modelos da geração 5 (Sonnet/Opus 5.x) não aceitam `temperature` nem
+ * `tool_choice` forçado. Neles a ferramenta vai em modo "auto" com instrução de sistema.
+ */
+function geracao5(modelo: string): boolean {
+  return /^claude-(sonnet|opus|fable)-5/.test(modelo);
+}
+
 export type Bloco =
   | { type: "text"; text: string }
   | { type: "image"; source: { type: "base64"; media_type: string; data: string } }
@@ -69,12 +77,17 @@ export async function lerEstruturado(opts: {
   schema: Record<string, unknown>;
   maxTokens?: number;
 }): Promise<unknown> {
+  const novo = geracao5(opts.modelo);
   const r = await enviar({
     model: opts.modelo,
     max_tokens: opts.maxTokens ?? 8000,
-    temperature: 0,
+    ...(novo
+      ? {
+          system: `Responda chamando a ferramenta ${opts.nome} exatamente uma vez, com todos os dados extraídos. Não escreva texto fora da ferramenta.`,
+          tool_choice: { type: "auto" },
+        }
+      : { temperature: 0, tool_choice: { type: "tool", name: opts.nome } }),
     tools: [{ name: opts.nome, description: "Devolve os dados extraídos no formato exato do esquema.", input_schema: semNullEmEnum(opts.schema) }],
-    tool_choice: { type: "tool", name: opts.nome },
     messages: [{ role: "user", content: opts.conteudo }],
   });
   const uso = r.content.find((c) => c.type === "tool_use" && c.name === opts.nome);
@@ -87,7 +100,7 @@ export async function lerTexto(opts: { modelo: string; conteudo: Bloco[]; maxTok
   const r = await enviar({
     model: opts.modelo,
     max_tokens: opts.maxTokens ?? 4000,
-    temperature: 0,
+    ...(geracao5(opts.modelo) ? {} : { temperature: 0 }),
     messages: [{ role: "user", content: opts.conteudo }],
   });
   const texto = r.content.filter((c) => c.type === "text").map((c) => c.text ?? "").join("").trim();

@@ -1,5 +1,5 @@
 /**
- * Avisos push no navegador. Só em app.evoque.global (e localhost em dev).
+ * Avisos push no navegador. Só em app.evoque.global, no endereço de testes do Cloudflare e em localhost.
  * O SDK do Firebase é carregado sob demanda, só quando a pessoa liga os avisos.
  */
 import { toast } from "sonner";
@@ -17,7 +17,8 @@ const CHAVE_TOKEN = "evoque-push-token";
 export function hostPermitePush(): boolean {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
-  return h === "app.evoque.global" || h === "localhost" || h === "127.0.0.1";
+  // Endereço de testes no Cloudflare (evoque-viagens.<conta>.workers.dev) também liga os avisos.
+  return h === "app.evoque.global" || h === "localhost" || h === "127.0.0.1" || /^evoque-viagens\.[a-z0-9-]+\.workers\.dev$/.test(h);
 }
 
 function ehIphoneSemInstalar(): boolean {
