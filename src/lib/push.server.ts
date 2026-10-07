@@ -126,7 +126,8 @@ export async function enviarAviso(p: PedidoAviso): Promise<{ status: string }> {
         const corpoRes = (await res.text()).slice(0, 300);
         console.error("fcm", res.status, corpoRes);
         ultimoErro = `FCM ${res.status}`;
-        if (corpoRes.includes("UNREGISTERED") || corpoRes.includes("NOT_FOUND") || corpoRes.includes("INVALID_ARGUMENT") || res.status === 404) {
+        // SENDER_ID_MISMATCH: token do Firebase antigo (beatitudelumnia); o aparelho registra um novo ao abrir o app.
+        if (corpoRes.includes("SENDER_ID_MISMATCH") || corpoRes.includes("UNREGISTERED") || corpoRes.includes("NOT_FOUND") || corpoRes.includes("INVALID_ARGUMENT") || res.status === 404) {
           await db.from("push_device").update({ ativo: false }).eq("id", ap.id);
         }
       }
