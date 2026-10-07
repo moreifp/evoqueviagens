@@ -8,8 +8,8 @@ Entram no código do navegador na hora do build. Não são segredo.
 | `VITE_SUPABASE_URL` | `https://tqtizejwulbwtgdisemd.supabase.co` |
 | `VITE_SUPABASE_PROJECT_ID` | `tqtizejwulbwtgdisemd` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | chave publishable do Supabase |
-| `VITE_FIREBASE_API_KEY` | `apiKey` do app Web do Firebase (evoquebyfausto) |
-| `VITE_FIREBASE_PROJECT_ID` | `evoquebyfausto` |
+| `VITE_FIREBASE_API_KEY` | `apiKey` do app Web do Firebase (evoque-viagens-web) |
+| `VITE_FIREBASE_PROJECT_ID` | `evoque-viagens-web` |
 | `VITE_FIREBASE_APP_ID` | `appId` do app Web |
 | `VITE_FIREBASE_VAPID_KEY` | chave do Web Push (Cloud Messaging) |
 | `VITE_LOGO_DEV_TOKEN` | publishable token do Logo.dev (`pk_...`) |
