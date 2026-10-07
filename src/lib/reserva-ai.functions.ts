@@ -96,6 +96,7 @@ function montar(instr: string, data: z.infer<typeof input>): Bloco[] {
 }
 
 async function chamarIA(conteudo: Bloco[], nome: string, sch: Record<string, unknown>): Promise<unknown> {
+  console.log(`[leitura] ${nome}: ${conteudo.map((b) => b.type).join("+")}`);
   return lerEstruturado({ modelo: MODELO_LEITURA, conteudo, nome, schema: sch, maxTokens: 12000 });
 }
 

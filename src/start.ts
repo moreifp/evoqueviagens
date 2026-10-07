@@ -31,6 +31,18 @@ const hostMiddleware = createMiddleware().server(async ({ next, request }) => {
   return next();
 });
 
+// Registra no log do Cloudflare o erro de qualquer função de servidor (sem dados do usuário).
+const logFuncoes = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  const ini = Date.now();
+  try {
+    return await next();
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[serverFn] falhou em ${Date.now() - ini} ms: ${msg.slice(0, 300)}`);
+    throw error;
+  }
+});
+
 // Start installs this automatically when src/start.ts is absent; defining the
 // file opts out, so re-add it explicitly to keep server functions protected
 // from cross-site requests.
@@ -39,6 +51,6 @@ const csrfMiddleware = createCsrfMiddleware({
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachSupabaseAuth],
+  functionMiddleware: [attachSupabaseAuth, logFuncoes],
   requestMiddleware: [hostMiddleware, errorMiddleware, csrfMiddleware],
 }));
