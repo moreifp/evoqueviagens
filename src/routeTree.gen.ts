@@ -35,9 +35,8 @@ import { Route as EnConnectAssistantRouteImport } from './routes/en.connect-assi
 import { Route as EnContactRouteImport } from './routes/en.contact'
 import { Route as EnPrivacyRouteImport } from './routes/en.privacy'
 import { Route as EnTermsRouteImport } from './routes/en.terms'
+import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as TripIdRouteImport } from './routes/trip.$id'
-import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as ApiAdminExportStorageRouteImport } from './routes/api/admin/export-storage'
 import { Route as PessoasPidIndexRouteImport } from './routes/pessoas.$pid.index'
 import { Route as PessoasPidConferirRouteImport } from './routes/pessoas.$pid.conferir'
 import { Route as PessoasPidDadosRouteImport } from './routes/pessoas.$pid.dados'
@@ -52,9 +51,6 @@ import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
 import { Route as ApiPublicHooksAvisosDiariosRouteImport } from './routes/api/public/hooks/avisos-diarios'
 import { Route as ApiPublicHooksPushEventoRouteImport } from './routes/api/public/hooks/push-evento'
 import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
 import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
 import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
@@ -206,19 +202,14 @@ const EnTermsRoute = EnTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => EnRoute,
 } as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TripIdRoute = TripIdRouteImport.update({
   id: '/trip/$id',
   path: '/trip/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminExportStorageRoute = ApiAdminExportStorageRouteImport.update({
-  id: '/api/admin/export-storage',
-  path: '/api/admin/export-storage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PessoasPidIndexRoute = PessoasPidIndexRouteImport.update({
@@ -292,22 +283,6 @@ const ApiPublicHooksStatusVoosRoute =
   ApiPublicHooksStatusVoosRouteImport.update({
     id: '/api/public/hooks/status-voos',
     path: '/api/public/hooks/status-voos',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
@@ -435,10 +410,9 @@ export interface FileRoutesByFullPath {
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/en/': typeof EnIndexRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -453,9 +427,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -501,9 +472,8 @@ export interface FileRoutesByTo {
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/en': typeof EnIndexRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -518,9 +488,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -568,10 +535,9 @@ export interface FileRoutesById {
   '/en/contact': typeof EnContactRoute
   '/en/privacy': typeof EnPrivacyRoute
   '/en/terms': typeof EnTermsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/trip/$id': typeof TripIdRouteWithChildren
   '/en/': typeof EnIndexRoute
-  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
-  '/api/admin/export-storage': typeof ApiAdminExportStorageRoute
   '/pessoas/$pid/conferir': typeof PessoasPidConferirRoute
   '/pessoas/$pid/dados': typeof PessoasPidDadosRoute
   '/trip/$id/adicionar': typeof TripIdAdicionarRoute
@@ -586,9 +552,6 @@ export interface FileRoutesById {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -637,10 +600,9 @@ export interface FileRouteTypes {
     | '/en/contact'
     | '/en/privacy'
     | '/en/terms'
+    | '/oauth/consent'
     | '/trip/$id'
     | '/en/'
-    | '/.lovable/oauth/consent'
-    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -655,9 +617,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -703,9 +662,8 @@ export interface FileRouteTypes {
     | '/en/contact'
     | '/en/privacy'
     | '/en/terms'
+    | '/oauth/consent'
     | '/en'
-    | '/.lovable/oauth/consent'
-    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -720,9 +678,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -769,10 +724,9 @@ export interface FileRouteTypes {
     | '/en/contact'
     | '/en/privacy'
     | '/en/terms'
+    | '/oauth/consent'
     | '/trip/$id'
     | '/en/'
-    | '/.lovable/oauth/consent'
-    | '/api/admin/export-storage'
     | '/pessoas/$pid/conferir'
     | '/pessoas/$pid/dados'
     | '/trip/$id/adicionar'
@@ -787,9 +741,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -833,18 +784,14 @@ export interface RootRouteChildren {
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   DTokenRoute: typeof DTokenRoute
+  OauthConsentRoute: typeof OauthConsentRoute
   TripIdRoute: typeof TripIdRouteWithChildren
-  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
-  ApiAdminExportStorageRoute: typeof ApiAdminExportStorageRoute
   PessoasPidConferirRoute: typeof PessoasPidConferirRoute
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
   ApiPublicHooksAvisosDiariosRoute: typeof ApiPublicHooksAvisosDiariosRoute
   ApiPublicHooksPushEventoRoute: typeof ApiPublicHooksPushEventoRoute
   ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
-  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
-  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
   PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
   PessoasPidFidelidadeFidRoute: typeof PessoasPidFidelidadeFidRoute
@@ -1036,25 +983,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EnTermsRouteImport
       parentRoute: typeof EnRoute
     }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trip/$id': {
       id: '/trip/$id'
       path: '/trip/$id'
       fullPath: '/trip/$id'
       preLoaderRoute: typeof TripIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/export-storage': {
-      id: '/api/admin/export-storage'
-      path: '/api/admin/export-storage'
-      fullPath: '/api/admin/export-storage'
-      preLoaderRoute: typeof ApiAdminExportStorageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pessoas/$pid/': {
@@ -1153,27 +1093,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/status-voos'
       fullPath: '/api/public/hooks/status-voos'
       preLoaderRoute: typeof ApiPublicHooksStatusVoosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pessoas/$pid/documentos/$did': {
@@ -1406,18 +1325,14 @@ const rootRouteChildren: RootRouteChildren = {
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   DTokenRoute: DTokenRoute,
+  OauthConsentRoute: OauthConsentRoute,
   TripIdRoute: TripIdRouteWithChildren,
-  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
-  ApiAdminExportStorageRoute: ApiAdminExportStorageRoute,
   PessoasPidConferirRoute: PessoasPidConferirRoute,
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
   ApiPublicHooksAvisosDiariosRoute: ApiPublicHooksAvisosDiariosRoute,
   ApiPublicHooksPushEventoRoute: ApiPublicHooksPushEventoRoute,
   ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
-  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
-  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
   PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
   PessoasPidFidelidadeFidRoute: PessoasPidFidelidadeFidRoute,

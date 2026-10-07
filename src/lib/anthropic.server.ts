@@ -19,7 +19,7 @@ export type Bloco =
 export function blocoArquivo(arquivo: string, mime: string | null | undefined): Bloco | null {
   const m = /^data:([^;,]+)?(?:;base64)?,(.*)$/s.exec(arquivo);
   const tipo = (m?.[1] || mime || "").toLowerCase();
-  const dados = (m ? m[2] : arquivo).replace(/\s/g, "");
+  const dados = (m ? (m[2] ?? "") : arquivo).replace(/\s/g, "");
   if (!dados) return null;
   if (tipo === "application/pdf") return { type: "document", source: { type: "base64", media_type: "application/pdf", data: dados } };
   if (/^image\/(jpeg|png|webp|gif)$/.test(tipo)) return { type: "image", source: { type: "base64", media_type: tipo, data: dados } };
