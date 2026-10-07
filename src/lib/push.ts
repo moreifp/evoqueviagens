@@ -5,7 +5,7 @@
 import { toast } from "sonner";
 
 export type EstadoPush =
-  | "fora_do_app" // host sem app (landing, lovable.app, preview)
+  | "fora_do_app" // host sem app (landing, prévia)
   | "sem_suporte"
   | "iphone_sem_instalar"
   | "bloqueado"
@@ -35,13 +35,13 @@ export function estadoPush(): EstadoPush {
 }
 
 function configFirebase() {
-  const appId = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_APP_ID as string | undefined;
+  const appId = import.meta.env.VITE_FIREBASE_APP_ID as string | undefined;
   return {
-    apiKey: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_WEB_API_KEY as string | undefined,
-    projectId: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_PROJECT_ID as string | undefined,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
     appId,
     messagingSenderId: appId?.split(":")[1] ?? "",
-    vapidKey: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_VAPID_KEY as string | undefined,
+    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined,
   };
 }
 

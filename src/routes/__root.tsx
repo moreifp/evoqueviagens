@@ -19,7 +19,6 @@ import { noHostLanding } from "@/lib/host";
 import { ehRotaMarketing } from "@/lib/marketing";
 import { HOSTS_LANDING, HOSTS_SO_REDIRECIONA } from "@/lib/site";
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -45,7 +44,6 @@ function ErrorComponent({ error: e, reset }: { error: unknown; reset: () => void
   const router = useRouter();
   const [atualizando, setAtualizando] = useState(false);
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
     // Registra a pilha completa no servidor para diagnóstico.
     void import("@/lib/cadastro.functions")
       .then(({ relatarErro }) =>
@@ -282,7 +280,7 @@ function Conteudo() {
   }, [naAbaEu]);
   if (path.startsWith("/c/") || path.startsWith("/d/")) return <Outlet />;
   const mostraAbas =
-    !path.startsWith("/.lovable/") &&
+    !path.startsWith("/oauth/") &&
     !path.startsWith("/trip/") &&
     !path.startsWith("/pessoas/") &&
     path !== "/nova-viagem";

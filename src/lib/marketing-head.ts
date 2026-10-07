@@ -1,5 +1,5 @@
 export const MARKETING_ORIGIN = "https://evoque.global";
-export const MARKETING_IMAGE = `${MARKETING_ORIGIN}/__l5e/assets-v1/f0e4caa1-a7ef-404f-b083-8ce710ac6644/coast-editorial.webp`;
+export const MARKETING_IMAGE = `${MARKETING_ORIGIN}/marketing/coast-editorial.webp`;
 
 type MarketingHeadOptions = {
   title: string;

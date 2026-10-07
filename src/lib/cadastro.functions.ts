@@ -3,6 +3,19 @@ import { z } from "zod";
 import { adminClient, contatoDoLink, validarToken, type Admin } from "./cadastro.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { extrairLinhas, lerMrz, type MrzResultado } from "./mrz";
+import { blocoArquivo, lerTexto, MODELO_DOCUMENTOS, type Bloco } from "./anthropic.server";
+
+/** Pergunta ao Claude (modelo de documentos) com texto e, se houver, a imagem/PDF. Devolve o texto da resposta. */
+async function perguntar(texto: string, arquivo?: string | null): Promise<string> {
+  const blocos: Bloco[] = [];
+  if (arquivo) {
+    const b = blocoArquivo(arquivo, null);
+    if (b) blocos.push(b);
+  }
+  blocos.push({ type: "text", text: texto });
+  return lerTexto({ modelo: MODELO_DOCUMENTOS, conteudo: blocos });
+}
+
 import type { CadastroDTO, Secao } from "./cadastro-tipos";
 
 const tokenSchema = z.string().min(20).max(100);
@@ -125,23 +138,10 @@ function dataEmissao(texto: string, nasc: string | null, validade: string | null
 }
 
 /** Sem MRZ legível: lê a zona visual do passaporte (nome, número, datas) para a pessoa conferir. */
-async function lerPassaporteVisual(imagem: string, key: string): Promise<MrzResultado | null> {
+async function lerPassaporteVisual(imagem: string): Promise<MrzResultado | null> {
   try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        response_format: { type: "json_object" },
-        messages: [{ role: "user", content: [
-          { type: "text", text: 'This is a passport data page. Read the VISUAL zone by printed labels. Return ONLY JSON with keys (null if not clearly legible, never guess): "sobrenome", "nomes", "numero", "pais" (issuing country ISO 3-letter), "nacionalidade" (ISO 3-letter), "nascimento" (YYYY-MM-DD), "validade" (YYYY-MM-DD), "sexo" ("M","F" or null).' },
-          { type: "image_url", image_url: { url: imagem } },
-        ] }],
-      }),
-    });
-    if (!r.ok) return null;
-    const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-    const m = /\{[\s\S]*\}/.exec(j.choices?.[0]?.message?.content ?? "");
+    const resp = await perguntar('This is a passport data page. Read the VISUAL zone by printed labels. Return ONLY JSON with keys (null if not clearly legible, never guess): "sobrenome", "nomes", "numero", "pais" (issuing country ISO 3-letter), "nacionalidade" (ISO 3-letter), "nascimento" (YYYY-MM-DD), "validade" (YYYY-MM-DD), "sexo" ("M","F" or null).', imagem);
+    const m = /\{[\s\S]*\}/.exec(resp);
     if (!m) return null;
     const o = JSON.parse(m[0]) as Record<string, unknown>;
     const t = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().toUpperCase().slice(0, 100) : "");
@@ -161,39 +161,20 @@ async function lerPassaporteVisual(imagem: string, key: string): Promise<MrzResu
 }
 
 async function lerMrzDaImagem(imagem: string) {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) return { ok: false as const, motivo: "A leitura automática está indisponível" };
+  if (!process.env["ANTHROPIC_API_KEY"]) return { ok: false as const, motivo: "A leitura automática está indisponível" };
   try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "This is a passport data page. 1) Transcribe the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<', one per line. If you cannot read them, output NONE instead. 2) Then add one last line 'ISSUE: YYYY-MM-DD' with the DATE OF ISSUE printed in the visual zone (labels such as 'Data de emissão', 'Date of issue', 'Data di rilascio', 'Date de délivrance', 'Fecha de expedición'). Only if it is clearly legible; never guess, never use the expiry or birth date. If not clearly legible, output 'ISSUE: NONE'. Output nothing else.",
-              },
-              { type: "image_url", image_url: { url: imagem } },
-            ],
-          },
-        ],
-      }),
-    });
-    if (!r.ok) {
-      console.error("LER_PASSAPORTE_IA", r.status);
-      return { ok: false as const, motivo: r.status === 429 ? "Muitas leituras agora · tente em 1 minuto" : "A leitura automática falhou" };
+    let texto: string;
+    try {
+      texto = await perguntar("This is a passport data page. 1) Transcribe the two machine-readable zone (MRZ) lines at the bottom, exactly as printed, each 44 characters using A-Z, 0-9 and '<', one per line. If you cannot read them, output NONE instead. 2) Then add one last line 'ISSUE: YYYY-MM-DD' with the DATE OF ISSUE printed in the visual zone (labels such as 'Data de emissão', 'Date of issue', 'Data di rilascio', 'Date de délivrance', 'Fecha de expedición'). Only if it is clearly legible; never guess, never use the expiry or birth date. If not clearly legible, output 'ISSUE: NONE'. Output nothing else.", imagem);
+    } catch (e) {
+      console.error("LER_PASSAPORTE_IA", e);
+      return { ok: false as const, motivo: String((e as Error)?.message ?? "").includes("ocupada") ? "Muitas leituras agora · tente em 1 minuto" : "A leitura automática falhou" };
     }
-    const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-    const texto = j.choices?.[0]?.message?.content ?? "";
     const linhas = extrairLinhas(texto);
     const res = linhas ? lerMrz(linhas[0], linhas[1]) : null;
     if (res) return { ok: true as const, mrz: res, conferir: !res.ok, emissao: dataEmissao(texto, res.nascimento, res.validade) };
     // MRZ não achada: ainda preenche o que a página mostra, com "confira".
-    const visual = await lerPassaporteVisual(imagem, key);
+    const visual = await lerPassaporteVisual(imagem);
     if (visual) return { ok: true as const, mrz: visual, conferir: true, emissao: dataEmissao(texto, visual.nascimento, visual.validade) };
     return { ok: false as const, motivo: "Não achamos as linhas de baixo do passaporte" };
   } catch (e) {
@@ -239,24 +220,10 @@ export const identificarDocumentoAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000) }).parse(d))
   .handler(async ({ data }) => {
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) return { ok: false as const };
+    if (!process.env["ANTHROPIC_API_KEY"]) return { ok: false as const };
     try {
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          response_format: { type: "json_object" },
-          messages: [{ role: "user", content: [
-            { type: "text", text: "Identify this travel document. Return ONLY JSON with key tipo, one of: passaporte, rg, cnh, pid, visto, esta, vacina, outra_vacina, seguro, global_entry, outro. Never infer a more specific type unless clearly visible." },
-            { type: "image_url", image_url: { url: data.imagem } },
-          ] }],
-        }),
-      });
-      if (!r.ok) return { ok: false as const };
-      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-      const match = /\{[\s\S]*\}/.exec(j.choices?.[0]?.message?.content ?? "");
+      const resp = await perguntar("Identify this travel document. Return ONLY JSON with key tipo, one of: passaporte, rg, cnh, pid, visto, esta, vacina, outra_vacina, seguro, global_entry, outro. Never infer a more specific type unless clearly visible.", data.imagem);
+      const match = /\{[\s\S]*\}/.exec(resp);
       const tipo = match ? String((JSON.parse(match[0]) as { tipo?: unknown }).tipo ?? "outro") : "outro";
       return { ok: true as const, tipo: tipo in NOMES_TIPO ? tipo : "outro" };
     } catch {
@@ -276,8 +243,7 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000), tipo: z.string().max(30), texto: z.string().max(60_000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     void context; // qualquer conta pode ler as próprias fotos
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) return { ok: false as const };
+    if (!process.env["ANTHROPIC_API_KEY"]) return { ok: false as const };
     const qual = NOMES_TIPO[data.tipo] ?? `travel document of type "${data.tipo}" (e.g. a visa)`;
     const cnh = data.tipo === "cnh";
     const prompt = cnh
@@ -286,28 +252,9 @@ export const lerDocumentoAdmin = createServerFn({ method: "POST" })
 All dates as DD/MM/YYYY. NEVER put 1ª HABILITAÇÃO or DATA NASCIMENTO into validade or emissao. NEVER use the CPF, the RG / DOC. IDENTIDADE, the vertical 10-digit number on the border, or the codes on the back as "registro". If only one expiry-like date exists, it is validade and emissao is null.`
       : `This image is a ${qual}. Return ONLY a JSON object with these keys, using null for anything not clearly legible (never guess): "nome" (full name as printed), "numero" (main document number: for RG the "Registro Geral"/RG number, for visas the visa/control number, for insurance the policy number), "pais" (issuing country, ISO 3-letter code if possible), "emissao" (date of issue / vaccination date, YYYY-MM-DD), "validade" (expiry date, YYYY-MM-DD), "nascimento" (date of birth, YYYY-MM-DD), "sexo" ("M","F" or null), "detalhe" (visa category like "B1/B2", vaccine name, insurer name; else null). Brazilian dates are DD/MM/YYYY — convert carefully.`;
     try {
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "user",
-              content: data.texto
-                ? [{ type: "text", text: `${prompt.replace("This image is", "The e-mail below is about")}\n\nIgnore prices and payment data.\n\n---\n${data.texto}` }]
-                : [
-                    { type: "text", text: prompt },
-                    { type: "image_url", image_url: { url: data.imagem } },
-                  ],
-            },
-          ],
-        }),
-      });
-      if (!r.ok) return { ok: false as const };
-      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-      const txt = j.choices?.[0]?.message?.content ?? "";
+      const txt = data.texto
+        ? await perguntar(`${prompt.replace("This image is", "The e-mail below is about")}\n\nIgnore prices and payment data.\n\n---\n${data.texto}`)
+        : await perguntar(prompt, data.imagem);
       const m = /\{[\s\S]*\}/.exec(txt);
       if (!m) return { ok: false as const };
       const o = JSON.parse(m[0]) as Record<string, unknown>;

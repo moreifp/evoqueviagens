@@ -2,14 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const PLACES = "https://places.googleapis.com/v1";
+const MAPS = "https://maps.googleapis.com/maps/api";
+
+function chaveMaps(): string {
+  // Chave de servidor do Google Maps: Places API (New), Time Zone API e Geocoding API.
+  const gk = process.env.GOOGLE_MAPS_SERVER_KEY;
+  if (!gk) throw new Error("Busca de lugares indisponível no momento.");
+  return gk;
+}
 
 function cabecalhos(extra: Record<string, string> = {}) {
-  const lk = process.env.LOVABLE_API_KEY;
-  // Chave própria (conexão "Fausto's Google Maps Platform"): Places API (New) + Time Zone API.
-  const gk = process.env.GOOGLE_MAPS_API_KEY_2;
-  if (!lk || !gk) throw new Error("Busca de lugares indisponível no momento.");
-  return { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": gk, "Content-Type": "application/json", ...extra };
+  return { "X-Goog-Api-Key": chaveMaps(), "Content-Type": "application/json", ...extra };
 }
 
 async function checar(r: Response, oque: string) {
@@ -20,8 +24,8 @@ async function checar(r: Response, oque: string) {
     if (corpo.includes("API_KEY_HTTP_REFERRER_BLOCKED"))
       throw new Error('A chave do Google Maps está restrita a sites. No Google Cloud, mude a restrição do aplicativo para "Nenhuma" (as buscas saem do servidor, sem site de origem).');
     if (corpo.includes("API_KEY_SERVICE_BLOCKED"))
-      throw new Error("A chave do Google Maps não permite esta API. No Google Cloud, libere a Places API (New) e a Time Zone API na chave.");
-    throw new Error("O Google Maps recusou a busca (403). Verifique a conexão do Google Maps.");
+      throw new Error("A chave do Google Maps não permite esta API. No Google Cloud, libere a Places API (New), a Time Zone API e a Geocoding API na chave.");
+    throw new Error("O Google Maps recusou a busca (403). Verifique a chave do Google Maps.");
   }
   throw new Error(`Busca de lugar falhou [${r.status}].`);
 }
@@ -43,7 +47,7 @@ export const autocompletarLugar = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<Sugestao[]> => {
     const cidade = data.tipo === "cidade";
     const input = !cidade && data.perto && !data.texto.toLowerCase().includes(data.perto.toLowerCase()) ? `${data.texto} ${data.perto}` : data.texto;
-    const r = await fetch(`${GATEWAY_URL}/places/v1/places:autocomplete`, {
+    const r = await fetch(`${PLACES}/places:autocomplete`, {
       method: "POST",
       headers: cabecalhos({ "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text" }),
       body: JSON.stringify({ input, sessionToken: data.sessao, languageCode: "pt-BR", ...(cidade ? { includedPrimaryTypes: ["(cities)"] } : {}) }),
@@ -59,7 +63,7 @@ export const detalhesLugar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ place_id: z.string().min(5).max(300).regex(/^[\w-]+$/), sessao: z.string().uuid(), comSite: z.boolean().optional() }).parse(d))
   .handler(async ({ data }): Promise<Lugar> => {
-    const r = await fetch(`${GATEWAY_URL}/places/v1/places/${data.place_id}?sessionToken=${data.sessao}&languageCode=pt-BR`, {
+    const r = await fetch(`${PLACES}/places/${data.place_id}?sessionToken=${data.sessao}&languageCode=pt-BR`, {
       headers: cabecalhos({ "X-Goog-FieldMask": "id,displayName,formattedAddress,addressComponents,location,timeZone" }),
     });
     await checar(r, "detalhes");
@@ -78,8 +82,7 @@ export const detalhesLugar = createServerFn({ method: "POST" })
     if (!tz) {
       try {
         const t = await fetch(
-          `${GATEWAY_URL}/maps/api/timezone/json?location=${p.location.latitude},${p.location.longitude}&timestamp=${Math.floor(Date.now() / 1000)}`,
-          { headers: cabecalhos() },
+          `${MAPS}/timezone/json?location=${p.location.latitude},${p.location.longitude}&timestamp=${Math.floor(Date.now() / 1000)}&key=${encodeURIComponent(chaveMaps())}`,
         );
         await checar(t, "fuso");
         const tj = (await t.json()) as { status: string; timeZoneId?: string };
@@ -92,7 +95,7 @@ export const detalhesLugar = createServerFn({ method: "POST" })
     let site: string | null = null;
     if (data.comSite) {
       try {
-        const w = await fetch(`${GATEWAY_URL}/places/v1/places/${data.place_id}`, { headers: cabecalhos({ "X-Goog-FieldMask": "websiteUri" }) });
+        const w = await fetch(`${PLACES}/places/${data.place_id}`, { headers: cabecalhos({ "X-Goog-FieldMask": "websiteUri" }) });
         if (w.ok) site = ((await w.json()) as { websiteUri?: string }).websiteUri ?? null;
       } catch (e) {
         console.error("site", e);

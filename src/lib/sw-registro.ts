@@ -9,7 +9,6 @@ function contextoRecusado() {
   }
   const h = location.hostname;
   if (h.startsWith("id-preview--") || h.startsWith("preview--")) return true;
-  if (/(^|\.)lovableproject(-dev)?\.com$/.test(h) || /(^|\.)beta\.lovable\.dev$/.test(h)) return true;
   if (new URLSearchParams(location.search).get("sw") === "off") return true;
   return false;
 }

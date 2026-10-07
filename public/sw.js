@@ -3,7 +3,7 @@
 // são geradas a cada build em /sw-precache.js.
 // Nos domínios da landing (o app mudou para app.evoque.global) este worker só se desfaz:
 // apaga os caches do app, sai do ar e recarrega as abas abertas.
-const HOST_SEM_APP = ["evoque.global", "www.evoque.global", "evoqueviagens.lovable.app"].includes(self.location.hostname);
+const HOST_SEM_APP = ["evoque.global", "www.evoque.global"].includes(self.location.hostname);
 if (HOST_SEM_APP) {
   self.addEventListener("install", () => self.skipWaiting());
   self.addEventListener("activate", (event) => {
@@ -40,7 +40,7 @@ async function limpar(r) {
 }
 
 function ignorar(url) {
-  return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
+  return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/oauth/") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
 }
 
 if (!HOST_SEM_APP) self.addEventListener("install", (event) => {

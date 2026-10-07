@@ -3,20 +3,19 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { ITAMARATY, type Emergencia, type PaisEmergencia, type PostoEmergencia } from "./emergencia";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const MAPS = "https://maps.googleapis.com/maps/api";
 
-function cabecalhos() {
-  const lk = process.env.LOVABLE_API_KEY;
-  const gk = process.env.GOOGLE_MAPS_API_KEY;
-  if (!lk || !gk) throw new Error("Busca indisponível no momento.");
-  return { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": gk };
+function chaveMaps(): string {
+  const gk = process.env.GOOGLE_MAPS_SERVER_KEY;
+  if (!gk) throw new Error("Busca indisponível no momento.");
+  return gk;
 }
 
 type Geo = { cidade: string; iso2: string; pais: string; lat: number; lng: number };
 
 async function geocodificar(cidade: string): Promise<Geo | null> {
   try {
-    const r = await fetch(`${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(cidade)}&language=pt-BR`, { headers: cabecalhos() });
+    const r = await fetch(`${MAPS}/geocode/json?address=${encodeURIComponent(cidade)}&language=pt-BR&key=${encodeURIComponent(chaveMaps())}`);
     if (!r.ok) {
       console.error(`geocode [${r.status}]: ${await r.text()}`);
       return null;

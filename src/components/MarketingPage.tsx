@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
-import coastAsset from "@/assets/marketing/coast-editorial.webp.asset.json";
-import trainAsset from "@/assets/marketing/train-editorial.webp.asset.json";
 import { HOSTS_LANDING } from "@/lib/site";
 import { marketingHtml, type MarketingPageKey } from "./marketing-content";
 import "./marketing.css";
@@ -25,8 +23,8 @@ function initialTheme(): "light" | "dark" {
 
 function prepareHtml(page: MarketingPageKey, preview: boolean) {
   let html = marketingHtml[page]
-    .replaceAll("__COAST__", coastAsset.url)
-    .replaceAll("__TRAIN__", trainAsset.url);
+    .replaceAll("__COAST__", "/marketing/coast-editorial.webp")
+    .replaceAll("__TRAIN__", "/marketing/train-editorial.webp");
 
   if (preview) {
     html = html

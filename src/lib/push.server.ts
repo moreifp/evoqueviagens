@@ -1,8 +1,10 @@
 /**
  * Envio de avisos push (servidor). Nunca chamar do cliente.
- * Usa o conector Firebase Cloud Messaging via gateway; em modo `simular`
+ * Usa o Firebase Cloud Messaging (HTTP v1) com a conta de serviço; em modo `simular`
  * só grava no push_log, sem mandar nada de verdade.
  */
+
+import { tokenFcm } from "./google-auth.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = any;
@@ -22,7 +24,6 @@ export type PedidoAviso = {
   simular?: boolean;
 };
 
-const GATEWAY = "https://connector-gateway.lovable.dev/firebase_messaging";
 const DEDUPE_HORAS: Partial<Record<TipoAviso, number>> = { documento: 24 * 7 };
 const DEDUPE_PADRAO_HORAS = 6;
 
@@ -94,10 +95,11 @@ export async function enviarAviso(p: PedidoAviso): Promise<{ status: string }> {
     return { status: "simulado" };
   }
 
-  const lovKey = process.env["LOVABLE_API_KEY"];
-  const fcmKey = process.env["FIREBASE_MESSAGING_API_KEY"];
-  if (!lovKey || !fcmKey) {
-    await registrarLog(db, p, "erro", "conector Firebase não configurado");
+  let fcm: { token: string; projeto: string };
+  try {
+    fcm = await tokenFcm();
+  } catch (e) {
+    await registrarLog(db, p, "erro", e instanceof Error ? e.message : "Firebase não configurado");
     return { status: "erro" };
   }
 
@@ -105,9 +107,9 @@ export async function enviarAviso(p: PedidoAviso): Promise<{ status: string }> {
   let ultimoErro: string | undefined;
   for (const ap of aparelhos as { id: string; token: string }[]) {
     try {
-      const res = await fetch(`${GATEWAY}/v1/projects/_/messages:send`, {
+      const res = await fetch(`https://fcm.googleapis.com/v1/projects/${fcm.projeto}/messages:send`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${lovKey}`, "X-Connection-Api-Key": fcmKey, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${fcm.token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: {
             token: ap.token,

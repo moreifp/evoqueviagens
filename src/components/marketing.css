@@ -3,77 +3,77 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/__l5e/assets-v1/cac53f4b-a358-4d8b-ab22-2e60bbf8de4c/font-0.woff2") format("woff2");
+  src: url("/marketing/font-0.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingInter";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/__l5e/assets-v1/0658baab-55b7-4183-ae53-3d076d9a8a47/font-1.woff2") format("woff2");
+  src: url("/marketing/font-1.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingInter";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/__l5e/assets-v1/456dcab7-32ab-495b-83a9-191d31b40f2c/font-2.woff2") format("woff2");
+  src: url("/marketing/font-2.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingInter";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/__l5e/assets-v1/436d8fc9-78ac-4c95-93c5-1b586b7d9b85/font-3.woff2") format("woff2");
+  src: url("/marketing/font-3.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingOutfit";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/__l5e/assets-v1/659e19fa-8219-4529-9915-6334456e16c4/font-4.woff2") format("woff2");
+  src: url("/marketing/font-4.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingOutfit";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/__l5e/assets-v1/47a60789-3416-49bf-9862-1e592f44f3ce/font-5.woff2") format("woff2");
+  src: url("/marketing/font-5.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingOutfit";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/__l5e/assets-v1/1912baa0-8fdb-4a1b-a2df-5e74a4591145/font-6.woff2") format("woff2");
+  src: url("/marketing/font-6.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingOutfit";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/__l5e/assets-v1/6d4a1e89-a3bc-4368-879e-8bc416166e93/font-7.woff2") format("woff2");
+  src: url("/marketing/font-7.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingPlayfair";
   font-style: italic;
   font-weight: 500;
   font-display: swap;
-  src: url("/__l5e/assets-v1/72c93016-e765-4bb3-aed5-ea44b501f6ee/font-8.woff2") format("woff2");
+  src: url("/marketing/font-8.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingPlayfair";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/__l5e/assets-v1/afd38715-250c-4940-aebf-e78b6322cded/font-9.woff2") format("woff2");
+  src: url("/marketing/font-9.woff2") format("woff2");
 }
 @font-face {
   font-family: "EvoqueMarketingPlayfair";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/__l5e/assets-v1/aa7c492a-dbff-4d1e-bbb7-83a8918ab8c9/font-10.woff2") format("woff2");
+  src: url("/marketing/font-10.woff2") format("woff2");
 }
 .marketing-site {
   --sand: #f6f3ee;

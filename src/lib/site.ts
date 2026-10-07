@@ -8,7 +8,7 @@ export const LANDING_URL = "https://evoque.global";
 /** Domínios onde "/" é a landing e as telas vão para o app. */
 export const HOSTS_LANDING = new Set(["evoque.global", "www.evoque.global"]);
 /** Domínios que só redirecionam as telas para o app (sem landing). */
-export const HOSTS_SO_REDIRECIONA = new Set(["evoqueviagens.lovable.app"]);
+export const HOSTS_SO_REDIRECIONA = new Set<string>([]);
 
 export function limparHost(h: string | null | undefined): string {
   return ((h ?? "").split(",")[0] ?? "").trim().toLowerCase().replace(/:\d+$/, "");
@@ -24,7 +24,7 @@ export function caminhoLivre(path: string) {
     path === "/mcp" ||
     path.startsWith("/mcp/") ||
     path.startsWith("/.well-known/") ||
-    path.startsWith("/.lovable/") ||
+    path.startsWith("/oauth/") ||
     path.startsWith("/api/") ||
     path.startsWith("/~") ||
     path.startsWith("/_serverFn") ||

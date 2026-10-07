@@ -2,8 +2,7 @@ import { TravaFaceId } from "@/components/TravaFaceId";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, LogIn, Chrome, Apple } from "lucide-react";
-import { lovable } from "@/integrations/lovable/index";
+import { Plane, LogIn, Chrome } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -110,11 +109,11 @@ function traduzErro(msg: string): { texto: string; espera?: number } {
   }
   if (m.includes("invalid login credentials")) return { texto: "E-mail ou senha incorretos." };
   if (m.includes("email not confirmed"))
-    return { texto: "Este e-mail ainda não foi liberado. Tente entrar de novo." };
+    return { texto: "Confirme seu e-mail: abra o link que mandamos para você e entre de novo." };
   if (m.includes("user already registered") || m.includes("already been registered"))
     return { texto: "Já existe uma conta com este e-mail. Toque em Entrar." };
   if (m.includes("password should be at least"))
-    return { texto: "A senha precisa ter pelo menos 6 caracteres." };
+    return { texto: "A senha precisa ter pelo menos 8 caracteres." };
   if (m.includes("invalid email") || m.includes("unable to validate email"))
     return { texto: "Digite um e-mail válido." };
   if (m.includes("network") || m.includes("failed to fetch"))
@@ -130,19 +129,19 @@ function Entrar() {
   const [espera, setEspera] = useState(0);
   const convite = typeof window !== "undefined" && window.location.pathname.startsWith("/convite/");
 
-  async function entrarSocial(provedor: "google" | "apple") {
+  async function entrarSocial(provedor: "google") {
     if (carregando) return;
     setCarregando(true);
     try {
-      const r = await lovable.auth.signInWithOAuth(provedor, {
-        redirect_uri: window.location.href,
+      // O Supabase leva para o Google e volta para esta mesma tela já logado.
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provedor,
+        options: { redirectTo: window.location.href },
       });
-      if (r.error || r.redirected) {
+      if (error) {
         setCarregando(false);
-        if (r.error) toast.error("Não deu certo agora. Tente de novo em instantes.");
-        return;
+        toast.error("Não deu certo agora. Tente de novo em instantes.");
       }
-      setCarregando(false);
     } catch {
       setCarregando(false);
       toast.error("Não deu certo agora. Tente de novo em instantes.");
@@ -173,7 +172,8 @@ function Entrar() {
         toast.error(texto);
         return;
       }
-      if (!data.session) toast.error("Não deu certo agora. Tente de novo em instantes.");
+      // Com a confirmação de e-mail ligada, a conta só abre depois do link.
+      if (!data.session) toast.success("Pronto. Enviamos um link para o seu e-mail: abra para confirmar e entrar.");
       return;
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
@@ -207,20 +207,10 @@ function Entrar() {
           type="button"
           onClick={() => entrarSocial("google")}
           disabled={carregando}
-          className="tap mb-3 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
+          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
         >
           <Chrome size={28} strokeWidth={2.2} />
           Entrar com Google
-        </button>
-
-        <button
-          type="button"
-          onClick={() => entrarSocial("apple")}
-          disabled={carregando}
-          className="tap mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-input bg-card text-xl font-bold text-foreground shadow-soft disabled:opacity-60"
-        >
-          <Apple size={28} strokeWidth={2.2} />
-          Entrar com Apple
         </button>
 
         <form onSubmit={enviar} className="space-y-4">
