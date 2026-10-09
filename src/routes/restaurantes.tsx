@@ -148,7 +148,7 @@ function Restaurantes() {
           src={src}
           title="Evoque Restaurants"
           className="h-full w-full border-0"
-          allow="geolocation; camera; clipboard-write"
+          allow="geolocation; camera; microphone; clipboard-write; web-share"
           referrerPolicy="strict-origin"
         />
       )}
