@@ -51,6 +51,7 @@ import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
 import { Route as ApiPublicHooksAvisosDiariosRouteImport } from './routes/api/public/hooks/avisos-diarios'
 import { Route as ApiPublicHooksPushEventoRouteImport } from './routes/api/public/hooks/push-evento'
 import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
+import { Route as ApiPublicHooksViagemDaFotoRouteImport } from './routes/api/public/hooks/viagem-da-foto'
 import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
 import { Route as PessoasPidDocumentosNovoRouteImport } from './routes/pessoas.$pid.documentos.novo'
 import { Route as PessoasPidFidelidadeIndexRouteImport } from './routes/pessoas.$pid.fidelidade.index'
@@ -285,6 +286,12 @@ const ApiPublicHooksStatusVoosRoute =
     path: '/api/public/hooks/status-voos',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksViagemDaFotoRoute =
+  ApiPublicHooksViagemDaFotoRouteImport.update({
+    id: '/api/public/hooks/viagem-da-foto',
+    path: '/api/public/hooks/viagem-da-foto',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PessoasPidDocumentosDidRoute = PessoasPidDocumentosDidRouteImport.update({
   id: '/pessoas/$pid/documentos/$did',
   path: '/pessoas/$pid/documentos/$did',
@@ -427,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -488,6 +496,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -552,6 +561,7 @@ export interface FileRoutesById {
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
   '/pessoas/$pid/documentos/novo': typeof PessoasPidDocumentosNovoRoute
   '/pessoas/$pid/fidelidade/$fid': typeof PessoasPidFidelidadeFidRoute
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/viagem-da-foto'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/viagem-da-foto'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -741,6 +753,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/avisos-diarios'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/viagem-da-foto'
     | '/pessoas/$pid/documentos/$did'
     | '/pessoas/$pid/documentos/novo'
     | '/pessoas/$pid/fidelidade/$fid'
@@ -792,6 +805,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAvisosDiariosRoute: typeof ApiPublicHooksAvisosDiariosRoute
   ApiPublicHooksPushEventoRoute: typeof ApiPublicHooksPushEventoRoute
   ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
+  ApiPublicHooksViagemDaFotoRoute: typeof ApiPublicHooksViagemDaFotoRoute
   PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
   PessoasPidDocumentosNovoRoute: typeof PessoasPidDocumentosNovoRoute
   PessoasPidFidelidadeFidRoute: typeof PessoasPidFidelidadeFidRoute
@@ -1095,6 +1109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksStatusVoosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/viagem-da-foto': {
+      id: '/api/public/hooks/viagem-da-foto'
+      path: '/api/public/hooks/viagem-da-foto'
+      fullPath: '/api/public/hooks/viagem-da-foto'
+      preLoaderRoute: typeof ApiPublicHooksViagemDaFotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pessoas/$pid/documentos/$did': {
       id: '/pessoas/$pid/documentos/$did'
       path: '/pessoas/$pid/documentos/$did'
@@ -1333,6 +1354,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAvisosDiariosRoute: ApiPublicHooksAvisosDiariosRoute,
   ApiPublicHooksPushEventoRoute: ApiPublicHooksPushEventoRoute,
   ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
+  ApiPublicHooksViagemDaFotoRoute: ApiPublicHooksViagemDaFotoRoute,
   PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
   PessoasPidDocumentosNovoRoute: PessoasPidDocumentosNovoRoute,
   PessoasPidFidelidadeFidRoute: PessoasPidFidelidadeFidRoute,
