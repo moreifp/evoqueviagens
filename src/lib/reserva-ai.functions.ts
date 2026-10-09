@@ -21,7 +21,9 @@ export const MODELO_LEITURA = MODELO_RESERVAS;
  * Texto (colado ou de .eml já limpo) e despesas vão no Haiku, bem mais barato; PDFs e fotos de
  * reservas ficam no Sonnet, que lê melhor documento visual. Se o Haiku falhar, tenta uma vez no Sonnet.
  */
-function escolherModelo(data: z.infer<typeof input>): { modelo: string; reserva: string | null } {
+function escolherModelo(data: z.infer<typeof input>, varias = false): { modelo: string; reserva: string | null } {
+  // Várias reservas num e-mail/arquivo: sempre Sonnet (leitura mais difícil).
+  if (varias) return { modelo: MODELO_LEITURA, reserva: null };
   if (data.rapido) return { modelo: MODELO_DOCUMENTOS, reserva: null };
   if (!data.arquivo || data.esperado === "despesa") return { modelo: MODELO_DOCUMENTOS, reserva: MODELO_LEITURA };
   return { modelo: MODELO_LEITURA, reserva: null };
@@ -162,7 +164,7 @@ export const lerEmailAgencia = createServerFn({ method: "POST" })
       "IGNORE totalmente preços, tarifas, taxas, impostos, comissão da agência, formas de pagamento, cartões e parcelas: não copie nada disso para nenhum campo.",
       "Datas: ISO local YYYY-MM-DDTHH:mm na hora do aeroporto. Não adivinhe: ausente = null. Nomes como 'Nome Sobrenome'.",
     ].join(" ");
-    const out = await chamarIA(montar(instr, data), "email_agencia", emailSchema, escolherModelo(data), (o) => z.object({ trechos: z.array(trechoZ) }).parse(o));
+    const out = await chamarIA(montar(instr, data), "email_agencia", emailSchema, escolherModelo(data, true), (o) => z.object({ trechos: z.array(trechoZ) }).parse(o));
     return {
       trechos: out.trechos.map((t) => ({
         ...t, companhia: limpar(t.companhia), origem_cidade: limpar(t.origem_cidade), destino_cidade: limpar(t.destino_cidade),
@@ -186,6 +188,6 @@ export const lerTudo = createServerFn({ method: "POST" })
       "Localizador de voo: use SEMPRE o código de reserva da companhia aérea (airline record locator / PNR da cia); se houver também um código da agência, ignore-o.",
       "Hotel: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out. Nomes de pessoas como 'Nome Sobrenome'.",
     ].join(" ");
-    const out = await chamarIA(montar(instr, data), "reservas_viagem", tudoSchema, escolherModelo(data), (o) => z.object({ itens: z.array(saida) }).parse(o));
+    const out = await chamarIA(montar(instr, data), "reservas_viagem", tudoSchema, escolherModelo(data, true), (o) => z.object({ itens: z.array(saida) }).parse(o));
     return { itens: out.itens.filter((i) => i.tipo !== "despesa") };
   });
