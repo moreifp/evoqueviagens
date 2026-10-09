@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TETO_JOB, UNIDADES_POR_CHAMADA, chaveVoo, ehAVez, mesAtual } from "@/lib/voo";
+import { APOS_POUSO_MS, DURACAO_MAX_MS, TETO_JOB, UNIDADES_POR_CHAMADA, cancelado, chaveVoo, ehAVez, mesAtual } from "@/lib/voo";
 import { consultarVoo, gravarStatus, type TicketVoo } from "@/lib/voo.server";
 
-type Ultimo = { ticket_id: string; consultado_em: string; chegada_real_utc: string | null; chegada_revista_utc: string | null } & Record<string, unknown>;
+type Ultimo = { ticket_id: string; consultado_em: string; status: string | null; partida_real_utc: string | null; partida_revista_utc: string | null; chegada_real_utc: string | null; chegada_revista_utc: string | null } & Record<string, unknown>;
 
 export const Route = createFileRoute("/api/public/hooks/status-voos")({
   server: {
@@ -14,15 +14,19 @@ export const Route = createFileRoute("/api/public/hooks/status-voos")({
         const { data: ok } = await db.rpc("verificar_cron_voos", { _t: token });
         if (!ok) return new Response("Unauthorized", { status: 401 });
         const agora = Date.now();
+        // Voo fica na consulta até 1 h depois do pouso. No banco filtra só pela partida (com folga do voo
+        // mais longo + atraso); o corte fino pela chegada é feito abaixo, já com a chegada revista.
         const { data: tickets } = await db
           .from("ticket")
           .select("id,trip_id,tipo,companhia,numero,origem_iata,destino_iata,partida_utc,partida_tz,chegada_utc,trip:trip_id!inner(deleted_at)")
           .eq("tipo", "voo")
           .is("deleted_at", null)
           .is("trip.deleted_at", null)
-          .gte("partida_utc", new Date(agora - 2 * 3600_000).toISOString())
+          .gte("partida_utc", new Date(agora - DURACAO_MAX_MS - 6 * 3600_000).toISOString())
           .lte("partida_utc", new Date(agora + 30 * 3600_000).toISOString());
-        const lista = (tickets ?? []) as TicketVoo[];
+        const chegadaDoBilhete = (t: TicketVoo) => (t.chegada_utc ? Date.parse(t.chegada_utc) : Date.parse(t.partida_utc) + DURACAO_MAX_MS);
+        // Corte grosso antes de ler status: chegada do bilhete + 1 h + até 6 h de atraso já pousou há tempo.
+        const lista = ((tickets ?? []) as TicketVoo[]).filter((t) => chegadaDoBilhete(t) + APOS_POUSO_MS + 6 * 3600_000 >= agora);
         // Nenhum voo na janela: sai sem ler mais nada.
         if (!lista.length) return Response.json({ ok: true, consultados: 0 });
 
@@ -50,8 +54,13 @@ export const Route = createFileRoute("/api/public/hooks/status-voos")({
           const t = grupo[0]!;
           // É a vez se qualquer bilhete do voo estiver na hora (usa a consulta mais recente do grupo).
           const recente = grupo.map((g) => ultimo.get(g.id)).filter((u): u is Ultimo => !!u).sort((a, b) => b.consultado_em.localeCompare(a.consultado_em))[0];
-          const chegada = Date.parse(recente?.chegada_real_utc ?? recente?.chegada_revista_utc ?? t.chegada_utc);
-          if (!ehAVez(Date.parse(t.partida_utc), chegada, recente ? Date.parse(recente.consultado_em) : null, agora)) continue;
+          // Cancelado: não gasta mais consultas com ele.
+          if (cancelado(recente)) continue;
+          const revista = recente?.chegada_real_utc ?? recente?.chegada_revista_utc;
+          const chegada = revista ? Date.parse(revista) : chegadaDoBilhete(t);
+          if (agora > chegada + APOS_POUSO_MS) continue; // já pousou há mais de 1 h
+          const partida = Date.parse(recente?.partida_real_utc ?? recente?.partida_revista_utc ?? t.partida_utc);
+          if (!ehAVez(partida, chegada, recente ? Date.parse(recente.consultado_em) : null, agora)) continue;
 
           if (uso === undefined) {
             const { data } = await db.from("api_usage").select("unidades,aviso_em").eq("mes", mes).maybeSingle();

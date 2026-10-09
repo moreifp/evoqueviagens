@@ -358,6 +358,20 @@
       "when": 1791150468767,
       "tag": "0050_saude_pessoal_privada",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1791517749748,
+      "tag": "0051_cron_status_voos",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1791517750544,
+      "tag": "0052_indices_person_ticket",
+      "breakpoints": true
     }
   ]
 }

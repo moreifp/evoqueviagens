@@ -31,7 +31,7 @@ import { mutar } from "@/lib/outbox";
 import { useServerFn } from "@tanstack/react-start";
 import { ScanLine, Loader2 } from "lucide-react";
 import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
-import { blobParaDataUrl, melhorarDocumentoParaOcr } from "@/lib/imagem";
+import { blobParaDataUrl, LADO_DOC_IA, melhorarDocumentoParaOcr } from "@/lib/imagem";
 import { pdfParaImagem } from "@/lib/pdf";
 import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
@@ -160,7 +160,7 @@ function Documento() {
       const r = await readPassport({
         data: {
           imagem: await blobParaDataUrl(
-            await melhorarDocumentoParaOcr(fonte, ehPdfArq ? 3000 : 2200),
+            await melhorarDocumentoParaOcr(fonte, LADO_DOC_IA),
           ),
         },
       });

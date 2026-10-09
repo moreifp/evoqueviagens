@@ -7,7 +7,7 @@ import { chaveVoo, type StatusVoo as StatusVooT } from "@/lib/voo";
 import { Plane, TrainFront, Bus, Car, Plus, Users, ArrowRight, ChevronRight } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import { Logo } from "@/components/Logo";
-import { logoCia } from "@/lib/logos";
+import { logoCia, temLogos } from "@/lib/logos";
 import {
   flightStatusQuery,
   membersQuery,
@@ -175,6 +175,13 @@ function Bilhetes() {
           <Plus size={28} strokeWidth={2.2} />
           {pessoa ? `Bilhete de ${pessoa.apelido || pessoa.nome.split(" ")[0]}` : "Novo bilhete"}
         </Link>
+        {bilhetes.length > 0 && temLogos() && (
+          <p className="pb-2 text-center text-xs text-muted-foreground">
+            <a href="https://logo.dev" target="_blank" rel="noopener noreferrer">
+              Logos por Logo.dev
+            </a>
+          </p>
+        )}
       </main>
     </>
   );

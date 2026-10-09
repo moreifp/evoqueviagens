@@ -50,7 +50,8 @@ async function preencherPacote(qc: QueryClient, tripId: string, bilhetes: string
   }
   for (const r of itens) {
     const a = data.autoria.find((x) => x.tipo === r.item_tipo && x.id === r.item_id);
-    qc.setQueryData(autoriaQuery(r.item_tipo, r.item_id).queryKey, a ? { autor: a.autor, sou_eu: a.sou_eu, editar: a.editar } : null);
+    const valor: Autoria | null = a ? { autor: a.autor, sou_eu: a.sou_eu, editar: a.editar } : null;
+    qc.setQueryData(autoriaQuery(r.item_tipo, r.item_id).queryKey, () => valor);
   }
 }
 

@@ -48,7 +48,7 @@ const TIPOS: {
     nome: "Documento vencendo",
     detalhe: "Passaporte ou visto antes de uma viagem",
   },
-  { chave: "checkin", nome: "Lembrete de check-in", detalhe: "24h antes do voo" },
+  { chave: "checkin", nome: "Lembrete de check-in", detalhe: "No dia anterior ao voo" },
 ];
 
 /** Seção "Avisos no celular" da tela Eu — recolhida por padrão, no fim da tela. */

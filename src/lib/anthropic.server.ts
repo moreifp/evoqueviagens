@@ -3,9 +3,9 @@
  * Substitui o gateway de IA do Lovable. A chave fica no segredo ANTHROPIC_API_KEY.
  */
 
-/** Leitura de reservas, bilhetes e e-mails de agência (mais precisão). */
+/** Leitura de reservas e bilhetes em PDF ou foto (mais precisão). */
 export const MODELO_RESERVAS = "claude-sonnet-5-5";
-/** Leitura de documentos (passaporte, CNH, RG, vistos) e recibos (rápido e barato). */
+/** Leitura de documentos (passaporte, CNH, RG, vistos), recibos, despesas e reservas em texto/e-mail (rápido e barato). */
 export const MODELO_DOCUMENTOS = "claude-haiku-4-5-20251001";
 
 const API = "https://api.anthropic.com/v1/messages";

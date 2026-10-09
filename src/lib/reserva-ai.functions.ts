@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { blocoArquivo, lerEstruturado, MODELO_RESERVAS, type Bloco } from "./anthropic.server";
+import { blocoArquivo, lerEstruturado, MODELO_DOCUMENTOS, MODELO_RESERVAS, type Bloco } from "./anthropic.server";
 
 const input = z.object({
   texto: z.string().max(100_000).nullable(),
@@ -10,10 +10,22 @@ const input = z.object({
   mime: z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf"]).nullable(),
   /** Tipo do formulário aberto; ajuda o modelo a focar nos campos certos. */
   esperado: z.enum(["voo", "hotel", "reserva", "despesa"]).optional(),
+  /** Segunda tentativa depois de uma falha: vai direto no modelo barato, sem repescagem. */
+  rapido: z.boolean().optional(),
 });
 
 /** Modelo da leitura de reservas (trocar em anthropic.server.ts). */
 export const MODELO_LEITURA = MODELO_RESERVAS;
+
+/**
+ * Texto (colado ou de .eml já limpo) e despesas vão no Haiku, bem mais barato; PDFs e fotos de
+ * reservas ficam no Sonnet, que lê melhor documento visual. Se o Haiku falhar, tenta uma vez no Sonnet.
+ */
+function escolherModelo(data: z.infer<typeof input>): { modelo: string; reserva: string | null } {
+  if (data.rapido) return { modelo: MODELO_DOCUMENTOS, reserva: null };
+  if (!data.arquivo || data.esperado === "despesa") return { modelo: MODELO_DOCUMENTOS, reserva: MODELO_LEITURA };
+  return { modelo: MODELO_LEITURA, reserva: null };
+}
 
 const TIPOS = ["voo", "trem", "onibus", "hotel", "carro", "passeio", "restaurante", "outro", "despesa"] as const;
 const s = { type: ["string", "null"] };
@@ -80,8 +92,7 @@ export const extrairReserva = createServerFn({ method: "POST" })
       "Nomes de pessoas: escreva como 'Nome Sobrenome' (converta SOBRENOME/NOME MR para Nome Sobrenome, sem títulos).",
       data.esperado ? FOCO[data.esperado] : "",
     ].join(" ");
-    const output = await chamarIA(montar(instr, data), "reserva_viagem", schema);
-    return saida.parse(output);
+    return chamarIA(montar(instr, data), "reserva_viagem", schema, escolherModelo(data), (o) => saida.parse(o));
   });
 
 /** Monta o pedido para o Claude: instruções, texto colado e arquivo (imagem ou PDF). */
@@ -95,9 +106,21 @@ function montar(instr: string, data: z.infer<typeof input>): Bloco[] {
   return blocos;
 }
 
-async function chamarIA(conteudo: Bloco[], nome: string, sch: Record<string, unknown>): Promise<unknown> {
-  console.log(`[leitura] ${nome}: ${conteudo.map((b) => b.type).join("+")}`);
-  return lerEstruturado({ modelo: MODELO_LEITURA, conteudo, nome, schema: sch, maxTokens: 12000 });
+async function chamarIA<T>(
+  conteudo: Bloco[],
+  nome: string,
+  sch: Record<string, unknown>,
+  m: { modelo: string; reserva: string | null },
+  validar: (o: unknown) => T,
+): Promise<T> {
+  console.log(`[leitura] ${nome}: ${conteudo.map((b) => b.type).join("+")} · ${m.modelo}`);
+  try {
+    return validar(await lerEstruturado({ modelo: m.modelo, conteudo, nome, schema: sch, maxTokens: 12000 }));
+  } catch (e) {
+    if (!m.reserva) throw e;
+    console.warn(`[leitura] ${nome}: ${m.modelo} falhou, tentando ${m.reserva}`, (e as Error).message);
+    return validar(await lerEstruturado({ modelo: m.reserva, conteudo, nome, schema: sch, maxTokens: 12000 }));
+  }
 }
 
 // ---------- E-mail da agência: só o que o app precisa, nunca preços/pagamento ----------
@@ -139,7 +162,7 @@ export const lerEmailAgencia = createServerFn({ method: "POST" })
       "IGNORE totalmente preços, tarifas, taxas, impostos, comissão da agência, formas de pagamento, cartões e parcelas: não copie nada disso para nenhum campo.",
       "Datas: ISO local YYYY-MM-DDTHH:mm na hora do aeroporto. Não adivinhe: ausente = null. Nomes como 'Nome Sobrenome'.",
     ].join(" ");
-    const out = z.object({ trechos: z.array(trechoZ) }).parse(await chamarIA(montar(instr, data), "email_agencia", emailSchema));
+    const out = await chamarIA(montar(instr, data), "email_agencia", emailSchema, escolherModelo(data), (o) => z.object({ trechos: z.array(trechoZ) }).parse(o));
     return {
       trechos: out.trechos.map((t) => ({
         ...t, companhia: limpar(t.companhia), origem_cidade: limpar(t.origem_cidade), destino_cidade: limpar(t.destino_cidade),
@@ -163,6 +186,6 @@ export const lerTudo = createServerFn({ method: "POST" })
       "Localizador de voo: use SEMPRE o código de reserva da companhia aérea (airline record locator / PNR da cia); se houver também um código da agência, ignore-o.",
       "Hotel: titulo = nome do hotel, local = endereço, inicio = check-in, fim = check-out. Nomes de pessoas como 'Nome Sobrenome'.",
     ].join(" ");
-    const out = z.object({ itens: z.array(saida) }).parse(await chamarIA(montar(instr, data), "reservas_viagem", tudoSchema));
+    const out = await chamarIA(montar(instr, data), "reservas_viagem", tudoSchema, escolherModelo(data), (o) => z.object({ itens: z.array(saida) }).parse(o));
     return { itens: out.itens.filter((i) => i.tipo !== "despesa") };
   });

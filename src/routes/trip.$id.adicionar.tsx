@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { lerTudo, type Leitura } from "@/lib/reserva-ai.functions";
 import { textoDoEml } from "@/lib/emailAgencia";
+import { dataUrlParaIA } from "@/lib/imagem";
 import { membersQuery } from "@/lib/data";
 import { casarPessoa } from "@/components/PreencherArquivo";
 import { aviso, enviar, montarOpsHotel, montarOpsReserva, montarOpsVoo, novoId } from "@/lib/itens";
@@ -150,6 +151,9 @@ function Adicionar() {
           dado = await lerDataUrl(arq);
           mime = arq.type as Mime;
           o = { nome: arq.name, mime: arq.type, data: dado };
+          // Foto vai reduzida para a leitura (≤ 1568 px); o original fica como anexo.
+          const menor = mime !== "application/pdf" ? await dataUrlParaIA(arq) : null;
+          if (menor) [dado, mime] = [menor, "image/jpeg"];
         } else if (arq.type.startsWith("text/")) {
           t = await arq.text();
         } else throw new Error("Use uma foto, um PDF ou um e-mail (.eml).");

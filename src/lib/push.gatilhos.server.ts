@@ -152,12 +152,16 @@ export async function gatilhoDocumentos(simular = false) {
   return { avisos };
 }
 
-/** (f) Lembrete de check-in 24h antes — desligado por padrão (push_pref.checkin). */
+/**
+ * (f) Lembrete de check-in — desligado por padrão (push_pref.checkin).
+ * O job (avisos-diarios) roda UMA vez por dia, então a janela cobre todos os voos que saem nas
+ * próximas 24h (o check-in já abriu). O dedupe por refId impede repetir o aviso do mesmo bilhete.
+ */
 export async function gatilhoCheckin(simular = false) {
   const db = await admin();
+  const agora = new Date().toISOString();
   const em24h = new Date(Date.now() + 24 * 3600_000).toISOString();
-  const em23h = new Date(Date.now() + 23 * 3600_000).toISOString();
-  const { data: tickets } = await db.from("ticket").select("id,trip_id,companhia,numero,partida_tz").eq("tipo", "voo").is("deleted_at", null).gte("partida_utc", em23h).lte("partida_utc", em24h);
+  const { data: tickets } = await db.from("ticket").select("id,trip_id,companhia,numero,partida_tz").eq("tipo", "voo").is("deleted_at", null).gt("partida_utc", agora).lte("partida_utc", em24h);
   let avisos = 0;
   for (const t of (tickets ?? []) as { id: string; trip_id: string; companhia: string | null; numero: string | null; partida_tz: string }[]) {
     const { data: passageiros } = await db.from("ticket_passenger").select("person_id").eq("ticket_id", t.id).is("deleted_at", null);
@@ -166,7 +170,7 @@ export async function gatilhoCheckin(simular = false) {
     for (const accountId of contas) {
       const r = await enviarAviso({
         accountId, tipo: "checkin",
-        titulo: "Check-in amanhã",
+        titulo: "Hora do check-in",
         corpo: `${nomeVoo} sai em menos de 24h. Já fez o check-in?`,
         url: `/trip/${t.trip_id}`,
         refId: t.id,

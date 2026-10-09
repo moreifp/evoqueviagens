@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { lerEmailAgencia, type Trecho } from "@/lib/reserva-ai.functions";
 import { textoDoEml, textoParaOriginal, type Original } from "@/lib/emailAgencia";
 import { useConexao } from "@/lib/outbox";
+import { dataUrlParaIA } from "@/lib/imagem";
 
 const MIDIA = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
 type Mime = (typeof MIDIA)[number];
@@ -54,6 +55,9 @@ export function ColarEmailAgencia({
           mime = arq.type as Mime;
           t = null;
           original = { nome: arq.name, mime: arq.type, data: dado };
+          // Foto vai reduzida para a leitura (≤ 1568 px); o original fica como anexo.
+          const menor = mime !== "application/pdf" ? await dataUrlParaIA(arq) : null;
+          if (menor) [dado, mime] = [menor, "image/jpeg"];
         } else if (arq.type.startsWith("text/")) {
           t = await arq.text();
           original = { nome: arq.name, mime: arq.type, data: await lerDataUrl(arq) };

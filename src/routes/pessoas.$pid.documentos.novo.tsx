@@ -27,7 +27,7 @@ import {
   previaDe,
 } from "@/components/ArquivoFoto";
 import { euQuery, nomeDocumento } from "@/lib/eu";
-import { blobParaDataUrl, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
+import { blobParaDataUrl, LADO_DOC_IA, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
 import { ErroLeitura, pdfPagina } from "@/lib/pdf";
 import { textoDoEml } from "@/lib/emailAgencia";
 import { NOME_DOC } from "@/lib/cadastro-tipos";
@@ -204,7 +204,7 @@ function NovoDocumento() {
   async function lerImagem(origem: Blob, forced: string | undefined, pdf: boolean) {
     let image: string;
     try {
-      image = await blobParaDataUrl(await melhorarDocumentoParaOcr(origem, pdf ? 3000 : 2200));
+      image = await blobParaDataUrl(await melhorarDocumentoParaOcr(origem, LADO_DOC_IA));
     } catch (e) {
       throw new ErroLeitura("melhorar imagem", "Não deu para preparar a imagem", e);
     }
