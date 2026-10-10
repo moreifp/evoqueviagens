@@ -1,28 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { UtensilsCrossed } from "lucide-react";
 import { Topo } from "@/components/Chrome";
+import { RestaurantsEmbed } from "@/components/RestaurantsEmbed";
 
 export const Route = createFileRoute("/trip/$id/restaurantes")({
   head: () => ({
     meta: [
       { title: "Restaurantes — Evoque Viagens" },
-      { name: "description", content: "Lugares para comer na viagem, em breve." },
+      { name: "description", content: "Restaurantes da viagem no Evoque Restaurants." },
       { property: "og:title", content: "Restaurantes" },
-      { property: "og:description", content: "Lugares para comer na viagem, em breve." },
+      { property: "og:description", content: "Restaurantes da viagem no Evoque Restaurants." },
     ],
   }),
   component: Restaurantes,
 });
 
+/**
+ * O Evoque Restaurants embutido, dentro da viagem. As fotos salvas por aqui vão para a pasta
+ * da viagem no Drive (<Viagem>/Restaurants/<restaurante>) quando a data cai nesta viagem.
+ */
 function Restaurantes() {
   const { id } = Route.useParams();
   return (
-    <>
+    <div className="fixed inset-x-0 top-0 bottom-[calc(72px+env(safe-area-inset-bottom))] flex flex-col bg-background">
       <Topo titulo="Restaurantes" voltarPara="/trip/$id" voltarParams={{ id }} />
-      <main className="flex flex-col items-center justify-center gap-4 px-8 pt-24 text-center">
-        <UtensilsCrossed size={56} strokeWidth={2.2} className="text-accent" />
-        <p className="text-2xl text-foreground">Chega na Entrega 4</p>
-      </main>
-    </>
+      <RestaurantsEmbed className="relative min-h-0 flex-1" comTitulo={false} />
+    </div>
   );
 }
