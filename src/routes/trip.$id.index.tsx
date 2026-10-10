@@ -246,6 +246,7 @@ function VisaoOrganizador({ id }: { id: string }) {
             para={{ id, tipo: "ticket", itemId: proximoBilhete.id }}
             tonalidade="voos"
             Icone={ICONE[proximoBilhete.tipo] ?? Plane}
+            logo={proximoBilhete.tipo === "voo" ? logoCia(proximoBilhete.companhia, proximoBilhete.numero) : null}
             titulo={`${proximoBilhete.origem_iata ?? proximoBilhete.origem_cidade ?? "?"} → ${proximoBilhete.destino_iata ?? proximoBilhete.destino_cidade ?? "?"}`}
             hora={horaNoFuso(proximoBilhete.partida_utc, proximoBilhete.partida_tz)}
             dia={dataBRCurta(chaveDia(proximoBilhete.partida_utc, proximoBilhete.partida_tz))}
@@ -457,7 +458,10 @@ function CardProximo({
   local,
   tz,
   iso,
+  logo = null,
 }: {
+  /** Logo da companhia (voo); sem logo ou se falhar, fica o ícone. */
+  logo?: string | null;
   para: { id: string; tipo: string; itemId: string };
   rotulo?: string;
   tonalidade?: "voos" | "hosp" | "hero";
@@ -484,7 +488,7 @@ function CardProximo({
       className={`${fundo} shadow-medium block rounded-3xl p-6`}
     >
       <div className="flex items-center gap-3">
-        <Icone size={40} strokeWidth={2.2} />
+        <Logo url={logo} Icone={Icone} nome={local || titulo} tamanho={40} className="shrink-0" />
         <div>
           <p className="text-sm font-bold uppercase tracking-wide opacity-90">{rotulo}</p>
           <h2 className="text-xl leading-tight">{titulo}</h2>
