@@ -2,7 +2,7 @@ import { TravaFaceId } from "@/components/TravaFaceId";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Plane, LogIn, Chrome } from "lucide-react";
+import { LogIn, Chrome } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -191,11 +191,8 @@ function Entrar() {
     <div className="min-h-screen bg-background px-5 pt-16 pb-10">
       <div className="mx-auto w-full max-w-md">
         <div className="gradient-hero shadow-medium mb-8 flex h-32 items-center gap-4 rounded-2xl px-6">
-          <Plane size={40} strokeWidth={2.2} />
-          <div>
-            <h1 className="text-3xl leading-tight">Viagens Organizadas</h1>
-            <p className="text-base opacity-90">Viagens</p>
-          </div>
+          <img src="/icon-192.png" alt="" width={72} height={72} className="h-[72px] w-[72px] shrink-0 rounded-full" />
+          <h1 className="text-3xl leading-tight">Viagens Organizadas</h1>
         </div>
         <p className="mb-6 text-lg text-foreground">
           {convite
