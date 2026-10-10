@@ -16,7 +16,7 @@ export const Route = createFileRoute("/manifest.webmanifest")({
         const manifest = {
           id: base,
           name: "Viagens Organizadas",
-          short_name: "Viagens Organizadas",
+          short_name: "Viagens",
           description:
             "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência de datas.",
           start_url: base,
