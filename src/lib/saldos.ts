@@ -37,7 +37,7 @@ export function fraseSaldo(pid: string, saldoC: number, dividas: { de: string; p
   return `${quem} ${voce ? "recebe" : "recebe"} ${$}${de.length ? ` de ${juntar(de)}` : ""}`;
 }
 
-export const textoCompartilhar = (viagem: string, frase: string) => `${viagem} · ${frase}. Detalhes no Evoque: ${origemApp()}`;
+export const textoCompartilhar = (viagem: string, frase: string) => `${viagem} · ${frase}. Detalhes no Viagens Organizadas: ${origemApp()}`;
 
 /** Registrar e desfazer acertos (fila offline; Desfazer 10 s). */
 export function useAcertos(tripId: string) {

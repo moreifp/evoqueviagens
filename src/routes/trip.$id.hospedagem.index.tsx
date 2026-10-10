@@ -9,7 +9,7 @@ import { chaveDia, dataBRCurta } from "@/lib/format";
 export const Route = createFileRoute("/trip/$id/hospedagem/")({
   head: () => ({
     meta: [
-      { title: "Hospedagem — Evoque Viagens" },
+      { title: "Hospedagem — Viagens Organizadas" },
       { name: "description", content: "Estadias da viagem com entrada, saída e localizador." },
       { property: "og:title", content: "Hospedagem" },
       {

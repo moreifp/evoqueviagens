@@ -9,9 +9,9 @@ import { euQuery } from "@/lib/eu";
 export const Route = createFileRoute("/pessoas/$pid/fidelidade/")({
   head: () => ({
     meta: [
-      { title: "Fidelidade — Evoque Viagens" },
+      { title: "Fidelidade — Viagens Organizadas" },
       { name: "description", content: "Seus programas de fidelidade e categorias." },
-      { property: "og:title", content: "Fidelidade — Evoque Viagens" },
+      { property: "og:title", content: "Fidelidade — Viagens Organizadas" },
       { property: "og:description", content: "Programas de viagem organizados em um só lugar." },
     ],
   }),

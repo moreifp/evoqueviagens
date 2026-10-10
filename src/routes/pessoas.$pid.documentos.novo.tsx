@@ -67,9 +67,9 @@ export const Route = createFileRoute("/pessoas/$pid/documentos/novo")({
   }),
   head: () => ({
     meta: [
-      { title: "Adicionar documento — Evoque Viagens" },
+      { title: "Adicionar documento — Viagens Organizadas" },
       { name: "description", content: "Fotografe, confira e salve seu documento de viagem." },
-      { property: "og:title", content: "Adicionar documento — Evoque Viagens" },
+      { property: "og:title", content: "Adicionar documento — Viagens Organizadas" },
       { property: "og:description", content: "Leitura assistida e conferência de documentos." },
     ],
   }),

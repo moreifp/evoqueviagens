@@ -27,7 +27,7 @@ export const Route = createFileRoute("/trip/$id/bilhetes/")({
     typeof s.p === "string" ? { p: s.p } : {},
   head: () => ({
     meta: [
-      { title: "Transporte — Evoque Viagens" },
+      { title: "Transporte — Viagens Organizadas" },
       { name: "description", content: "Cartões de embarque da viagem, agrupados por dia." },
       { property: "og:title", content: "Transporte" },
       { property: "og:description", content: "Cartões de embarque da viagem, agrupados por dia." },

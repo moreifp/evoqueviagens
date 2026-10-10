@@ -13,7 +13,7 @@ import { origemApp } from "@/lib/site";
 export const Route = createFileRoute("/trip/$id/pedir/$pid")({
   head: () => ({
     meta: [
-      { title: "Pedir dados — Evoque Viagens" },
+      { title: "Pedir dados — Viagens Organizadas" },
       {
         name: "description",
         content: "Peça ao participante para liberar os dados que a viagem precisa.",
@@ -73,7 +73,7 @@ function Pedir() {
       if (whats)
         abrirWhatsApp(
           pessoa?.convite_telefone ?? null,
-          `Oi, ${nome}! Para ${trip.nome} preciso conferir seus dados de viagem. Abra o Evoque e toque em "Escolher e aceitar": ${origemApp()}/viagens`,
+          `Oi, ${nome}! Para ${trip.nome} preciso conferir seus dados de viagem. Abra o Viagens Organizadas e toque em "Escolher e aceitar": ${origemApp()}/viagens`,
         );
       toast.success(
         r === "fila" ? "Guardado. Envia quando a internet voltar." : `Pedido enviado para ${nome}.`,

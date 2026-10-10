@@ -35,7 +35,7 @@ import { mutar, type Op } from "@/lib/outbox";
 export const Route = createFileRoute("/trip/$id/adicionar")({
   head: () => ({
     meta: [
-      { title: "Adicionar — Evoque Viagens" },
+      { title: "Adicionar — Viagens Organizadas" },
       {
         name: "description",
         content: "Cole ou fotografe a reserva: lemos voos, hotel, trem e carro de uma vez.",

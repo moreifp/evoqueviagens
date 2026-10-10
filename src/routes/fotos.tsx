@@ -11,9 +11,9 @@ export const Route = createFileRoute("/fotos")({
   }),
   head: () => ({
     meta: [
-      { title: "Fotos — Evoque Viagens" },
+      { title: "Fotos — Viagens Organizadas" },
       { name: "description", content: "Escolha a viagem para ver as fotos." },
-      { property: "og:title", content: "Fotos — Evoque Viagens" },
+      { property: "og:title", content: "Fotos — Viagens Organizadas" },
       { property: "og:description", content: "Escolha a viagem para ver as fotos." },
     ],
   }),

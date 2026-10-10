@@ -5,9 +5,9 @@ import { marketingHead } from "@/lib/marketing-head";
 export const Route = createFileRoute("/privacidade")({
   head: () =>
     marketingHead({
-      title: "Política de privacidade | Evoque Viagens",
+      title: "Política de privacidade | Viagens Organizadas",
       description:
-        "Conheça como o Evoque Viagens trata seus dados e suas escolhas de compartilhamento.",
+        "Conheça como o Viagens Organizadas trata seus dados e suas escolhas de compartilhamento.",
       path: "/privacidade",
       alternatePath: "/en/privacy",
       locale: "pt_BR",

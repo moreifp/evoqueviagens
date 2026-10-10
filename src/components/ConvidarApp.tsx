@@ -35,7 +35,7 @@ export function ConvidarApp() {
       <Drawer open={aberto} onOpenChange={setAberto}>
         <DrawerContent className="bg-background">
           <DrawerHeader className="flex-row items-center justify-between gap-3 px-4 pt-4">
-            <DrawerTitle className="text-2xl">Convidar para o Evoque</DrawerTitle>
+            <DrawerTitle className="text-2xl">Convidar para o Viagens Organizadas</DrawerTitle>
             <button
               type="button"
               onClick={() => setAberto(false)}

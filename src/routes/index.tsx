@@ -29,12 +29,12 @@ export const Route = createFileRoute("/")({
         })
       : {
           meta: [
-            { title: "Eu — Evoque Viagens" },
+            { title: "Eu — Viagens Organizadas" },
             {
               name: "description",
               content: "Seus documentos, fidelidade, preferências e compartilhamentos de viagem.",
             },
-            { property: "og:title", content: "Eu — Evoque Viagens" },
+            { property: "og:title", content: "Eu — Viagens Organizadas" },
             {
               property: "og:description",
               content: "Seus dados pessoais de viagem, seguros e disponíveis offline.",

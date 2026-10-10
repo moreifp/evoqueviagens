@@ -5,7 +5,7 @@ import { RestaurantsEmbed } from "@/components/RestaurantsEmbed";
 export const Route = createFileRoute("/trip/$id/restaurantes")({
   head: () => ({
     meta: [
-      { title: "Restaurantes — Evoque Viagens" },
+      { title: "Restaurantes — Viagens Organizadas" },
       { name: "description", content: "Restaurantes da viagem no Evoque Restaurants." },
       { property: "og:title", content: "Restaurantes" },
       { property: "og:description", content: "Restaurantes da viagem no Evoque Restaurants." },

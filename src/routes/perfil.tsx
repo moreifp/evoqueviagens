@@ -6,9 +6,9 @@ export const Route = createFileRoute("/perfil")({
   },
   head: () => ({
     meta: [
-      { title: "Minha conta — Evoque Viagens" },
+      { title: "Minha conta — Viagens Organizadas" },
       { name: "description", content: "Acesse seus dados pessoais de viagem." },
-      { property: "og:title", content: "Minha conta — Evoque Viagens" },
+      { property: "og:title", content: "Minha conta — Viagens Organizadas" },
       { property: "og:description", content: "Acesse seus dados pessoais de viagem." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

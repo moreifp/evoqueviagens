@@ -17,9 +17,9 @@ export const Route = createFileRoute("/oauth/consent")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Autorizar acesso — Evoque Viagens" },
+      { title: "Autorizar acesso — Viagens Organizadas" },
       { name: "description", content: "Autorize um assistente a propor itens nas suas viagens." },
-      { property: "og:title", content: "Autorizar acesso — Evoque Viagens" },
+      { property: "og:title", content: "Autorizar acesso — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Autorize um assistente a propor itens nas suas viagens.",
@@ -79,7 +79,7 @@ function Consent() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 p-6">
       <h1 className="font-display text-3xl font-semibold text-foreground">
-        Conectar {nome} ao Evoque Viagens
+        Conectar {nome} ao Viagens Organizadas
       </h1>
       <p className="text-lg text-foreground">
         {nome} vai poder ver suas viagens e participantes e propor voos, hotéis e reservas. Nada

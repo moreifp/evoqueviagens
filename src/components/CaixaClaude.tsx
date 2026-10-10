@@ -194,7 +194,7 @@ export function CaixaClaude({ tripId }: { tripId?: string }) {
       )}
       <p className="rounded-[18px] bg-muted p-4 text-lg">
         <strong>Como mandar:</strong> no Claude, peça “procura no meu e-mail as reservas de Portugal
-        e joga no Evoque Viagens”. Ou mande o print do WhatsApp.
+        e joga no Viagens Organizadas”. Ou mande o print do WhatsApp.
       </p>
     </main>
   );

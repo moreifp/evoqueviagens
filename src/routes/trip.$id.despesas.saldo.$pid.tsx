@@ -14,9 +14,9 @@ import { AvatarPessoa } from "@/components/Pessoa";
 export const Route = createFileRoute("/trip/$id/despesas/saldo/$pid")({
   head: () => ({
     meta: [
-      { title: "De onde vem o saldo — Evoque Viagens" },
+      { title: "De onde vem o saldo — Viagens Organizadas" },
       { name: "description", content: "O que a pessoa pagou, a parte dela e os acertos feitos." },
-      { property: "og:title", content: "De onde vem o saldo — Evoque Viagens" },
+      { property: "og:title", content: "De onde vem o saldo — Viagens Organizadas" },
       {
         property: "og:description",
         content: "O que a pessoa pagou, a parte dela e os acertos feitos.",

@@ -25,9 +25,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/pessoas/$pid/fidelidade/$fid")({
   head: () => ({
     meta: [
-      { title: "Programa de fidelidade — Evoque Viagens" },
+      { title: "Programa de fidelidade — Viagens Organizadas" },
       { name: "description", content: "Cartão, categoria e acesso guardado no cofre." },
-      { property: "og:title", content: "Programa de fidelidade — Evoque Viagens" },
+      { property: "og:title", content: "Programa de fidelidade — Viagens Organizadas" },
       { property: "og:description", content: "Seu programa e seu cofre pessoal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -432,7 +432,7 @@ function Programa() {
               </form>
             )}
             <p className="mt-4 text-base text-muted-foreground">
-              A senha é cifrada no seu aparelho com a sua senha do cofre. Nem o Evoque consegue ler.
+              A senha é cifrada no seu aparelho com a sua senha do cofre. Nem o Viagens Organizadas consegue ler.
               Ela nunca entra em compartilhamento.
             </p>
           </section>

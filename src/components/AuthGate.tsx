@@ -193,7 +193,7 @@ function Entrar() {
         <div className="gradient-hero shadow-medium mb-8 flex h-32 items-center gap-4 rounded-2xl px-6">
           <Plane size={40} strokeWidth={2.2} />
           <div>
-            <h1 className="text-3xl leading-tight">Evoque</h1>
+            <h1 className="text-3xl leading-tight">Viagens Organizadas</h1>
             <p className="text-base opacity-90">Viagens</p>
           </div>
         </div>

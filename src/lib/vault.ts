@@ -139,7 +139,7 @@ export async function cofreFaceIdLigado(accountId: string) {
 }
 export async function ligarFaceIdCofre(accountId: string) {
   if (!active || !vaultIsUnlocked(accountId)) throw new Error("Destrave o cofre primeiro.");
-  const cred = await criarCredencialFaceId("Cofre Evoque");
+  const cred = await criarCredencialFaceId("Cofre Viagens Organizadas");
   await set(bioKey(accountId), { cred, key: active.key });
 }
 export async function desligarFaceIdCofre(accountId: string) {

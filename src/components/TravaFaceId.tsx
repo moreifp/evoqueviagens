@@ -80,8 +80,8 @@ export async function ligarFaceId(email: string) {
   const cred = (await navigator.credentials.create({
     publicKey: {
       challenge: aleatorio(),
-      rp: { name: "Evoque", id: location.hostname },
-      user: { id: aleatorio(), name: email || "Evoque", displayName: "Evoque" },
+      rp: { name: "Viagens Organizadas", id: location.hostname },
+      user: { id: aleatorio(), name: email || "Viagens Organizadas", displayName: "Viagens Organizadas" },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },
         { type: "public-key", alg: -257 },
@@ -105,7 +105,7 @@ export async function criarCredencialFaceId(nome: string) {
   const cred = (await navigator.credentials.create({
     publicKey: {
       challenge: aleatorio(),
-      rp: { name: "Evoque", id: location.hostname },
+      rp: { name: "Viagens Organizadas", id: location.hostname },
       user: { id: aleatorio(), name: nome, displayName: nome },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },
@@ -192,7 +192,7 @@ export function TravaFaceId({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center">
       <ScanFace size={72} strokeWidth={1.8} className="text-primary" aria-hidden />
-      <h1 className="text-2xl text-foreground">Evoque travado</h1>
+      <h1 className="text-2xl text-foreground">Viagens Organizadas travado</h1>
       <button
         type="button"
         onClick={destravar}

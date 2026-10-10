@@ -38,7 +38,7 @@ import { chaveDia, dataBRCurta, fusoLocal, horaNoFuso } from "@/lib/format";
 export const Route = createFileRoute("/trip/$id/item/$tipo/$itemId")({
   head: () => ({
     meta: [
-      { title: "Detalhes da viagem — Evoque Viagens" },
+      { title: "Detalhes da viagem — Viagens Organizadas" },
       { name: "description", content: "Detalhes, pessoas e anexos do item." },
       { property: "og:title", content: "Detalhes da viagem" },
       { property: "og:description", content: "Detalhes, pessoas e anexos do item." },

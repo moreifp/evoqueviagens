@@ -50,7 +50,7 @@ export function ConviteInstalar() {
       aria-label="Adicionar à tela de início"
       className="fixed inset-x-3 bottom-24 z-40 rounded-2xl border border-border bg-card p-4 shadow-medium"
     >
-      <p className="text-lg font-bold text-foreground">Use o Evoque sem internet</p>
+      <p className="text-lg font-bold text-foreground">Use o Viagens Organizadas sem internet</p>
       <p className="mt-1 text-base text-muted-foreground">
         {modo === "ios"
           ? "No iPhone: toque em Compartilhar → Adicionar à Tela de Início."

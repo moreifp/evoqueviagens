@@ -15,8 +15,8 @@ export const Route = createFileRoute("/manifest.webmanifest")({
         const base = host === APP_HOST ? `https://${APP_HOST}/` : "/";
         const manifest = {
           id: base,
-          name: "Evoque Viagens",
-          short_name: "Evoque",
+          name: "Viagens Organizadas",
+          short_name: "Viagens Organizadas",
           description:
             "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência de datas.",
           start_url: base,

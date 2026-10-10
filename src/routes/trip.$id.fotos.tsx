@@ -14,9 +14,9 @@ import { gravarPendentes, lerPendentes } from "@/lib/fotos-pendentes";
 export const Route = createFileRoute("/trip/$id/fotos")({
   head: () => ({
     meta: [
-      { title: "Fotos da viagem — Evoque Viagens" },
+      { title: "Fotos da viagem — Viagens Organizadas" },
       { name: "description", content: "Fotos da viagem para todos os participantes verem." },
-      { property: "og:title", content: "Fotos da viagem — Evoque Viagens" },
+      { property: "og:title", content: "Fotos da viagem — Viagens Organizadas" },
       { property: "og:description", content: "Fotos da viagem para todos os participantes verem." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

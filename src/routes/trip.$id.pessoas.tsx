@@ -22,9 +22,9 @@ import { origemApp } from "@/lib/site";
 export const Route = createFileRoute("/trip/$id/pessoas")({
   head: () => ({
     meta: [
-      { title: "Pessoas da viagem — Evoque Viagens" },
+      { title: "Pessoas da viagem — Viagens Organizadas" },
       { name: "description", content: "Quem viaja com você nesta viagem e quem já aceitou." },
-      { property: "og:title", content: "Pessoas da viagem — Evoque Viagens" },
+      { property: "og:title", content: "Pessoas da viagem — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Quem viaja com você nesta viagem e quem já aceitou.",
@@ -68,8 +68,8 @@ export function textoConvite(
   link: string,
 ) {
   return idioma === "en"
-    ? `Hi! ${organizador} added you to the trip "${viagem}" (${datas}) on Evoque Viagens. Create your account with this email to see your flights and hotels: ${link}`
-    : `Olá! ${organizador} adicionou você à viagem "${viagem}" (${datas}) no Evoque Viagens. Crie sua conta com este e-mail para ver seus voos e hotéis: ${link}`;
+    ? `Hi! ${organizador} added you to the trip "${viagem}" (${datas}) on Viagens Organizadas. Create your account with this email to see your flights and hotels: ${link}`
+    : `Olá! ${organizador} adicionou você à viagem "${viagem}" (${datas}) no Viagens Organizadas. Crie sua conta com este e-mail para ver seus voos e hotéis: ${link}`;
 }
 
 function Pessoas() {
@@ -417,7 +417,7 @@ function Convidar({
           "noopener",
         );
       else
-        window.location.href = `mailto:${email.trim()}?subject=${encodeURIComponent("Evoque Viagens")}&body=${encodeURIComponent(txt)}`;
+        window.location.href = `mailto:${email.trim()}?subject=${encodeURIComponent("Viagens Organizadas")}&body=${encodeURIComponent(txt)}`;
       toast.success(aviso(r, "Convite registrado"));
       void qc.invalidateQueries({ queryKey: convitesMembrosQuery(tripId).queryKey });
       onFim();

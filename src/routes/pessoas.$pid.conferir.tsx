@@ -23,9 +23,9 @@ import { abrirWhatsApp } from "@/lib/links";
 export const Route = createFileRoute("/pessoas/$pid/conferir")({
   head: () => ({
     meta: [
-      { title: "Conferir ficha — Evoque Viagens" },
+      { title: "Conferir ficha — Viagens Organizadas" },
       { name: "description", content: "Aprovar cada parte do cadastro ou pedir correção." },
-      { property: "og:title", content: "Conferir ficha — Evoque Viagens" },
+      { property: "og:title", content: "Conferir ficha — Viagens Organizadas" },
       { property: "og:description", content: "Aprovar cada parte do cadastro ou pedir correção." },
     ],
   }),

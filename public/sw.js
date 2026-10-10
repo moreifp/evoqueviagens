@@ -147,7 +147,7 @@ if (!HOST_SEM_APP) self.addEventListener("push", (event) => {
   let dados = {};
   try { dados = event.data ? event.data.json() : {}; } catch (e) { dados = {}; }
   const notif = dados.notification || {};
-  const titulo = notif.title || "Evoque Viagens";
+  const titulo = notif.title || "Viagens Organizadas";
   const url = typeof dados.data?.url === "string" && dados.data.url.startsWith("/") ? dados.data.url : "/";
   event.waitUntil(
     self.registration.showNotification(titulo, {

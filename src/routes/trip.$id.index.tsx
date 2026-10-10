@@ -52,7 +52,7 @@ import { AvatarGrupo } from "@/components/AvatarGrupo";
 export const Route = createFileRoute("/trip/$id/")({
   head: () => ({
     meta: [
-      { title: "Visão geral da viagem — Evoque Viagens" },
+      { title: "Visão geral da viagem — Viagens Organizadas" },
       { name: "description", content: "Próximo compromisso, hora e local da sua viagem." },
       { property: "og:title", content: "Visão geral da viagem" },
       { property: "og:description", content: "Próximo compromisso, hora e local da sua viagem." },

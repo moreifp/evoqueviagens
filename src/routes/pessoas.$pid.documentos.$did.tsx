@@ -41,9 +41,9 @@ type Proposta = { chave: string; rotulo: string; valor: string; mostrar: string 
 export const Route = createFileRoute("/pessoas/$pid/documentos/$did")({
   head: () => ({
     meta: [
-      { title: "Documento — Evoque Viagens" },
+      { title: "Documento — Viagens Organizadas" },
       { name: "description", content: "Dados e anexos do seu documento." },
-      { property: "og:title", content: "Documento — Evoque Viagens" },
+      { property: "og:title", content: "Documento — Viagens Organizadas" },
       { property: "og:description", content: "Documento pessoal guardado com segurança." },
     ],
   }),
