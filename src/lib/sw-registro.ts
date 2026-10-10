@@ -30,6 +30,25 @@ async function versaoPublicada(): Promise<string | null> {
 
 
 
+const FLAG = "evoque_atualizou";
+function recarregar() {
+  try {
+    sessionStorage.setItem(FLAG, "1");
+  } catch {
+    /* sem sessionStorage */
+  }
+  window.location.reload();
+}
+function avisarSeAtualizou() {
+  try {
+    if (sessionStorage.getItem(FLAG) !== "1") return;
+    sessionStorage.removeItem(FLAG);
+  } catch {
+    return;
+  }
+  void import("sonner").then(({ toast }) => toast("App atualizado", { description: "Você está na versão mais nova." }));
+}
+
 export async function registrarServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (contextoRecusado()) {
@@ -38,11 +57,22 @@ export async function registrarServiceWorker() {
     return;
   }
   try {
+    avisarSeAtualizou();
+    const tinhaControle = !!navigator.serviceWorker.controller;
     let trocouControle = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (trocouControle) return;
+      if (trocouControle || !tinhaControle) return; // primeira instalação: nada a avisar
       trocouControle = true;
-      window.location.reload();
+      // App fora da tela: atualiza sem perguntar. Na tela: aviso com o botão Atualizar.
+      if (document.visibilityState === "hidden") return recarregar();
+      void import("sonner").then(({ toast }) =>
+        toast("Nova versão disponível", {
+          id: "evoque-update",
+          description: "Toque em Atualizar para usar a versão mais nova.",
+          action: { label: "Atualizar", onClick: recarregar },
+          duration: Infinity,
+        }),
+      );
     });
 
     // O endereço do worker leva a versão PUBLICADA (lida direto do servidor), não a
@@ -78,6 +108,7 @@ export async function registrarServiceWorker() {
       if (document.visibilityState === "visible") void verificar();
     };
     window.addEventListener("online", () => void verificar());
+    window.setInterval(() => document.visibilityState === "visible" && void verificar(), 30 * 60 * 1000);
     document.addEventListener("visibilitychange", aoVoltar);
   } catch {
     /* segue sem modo offline */
