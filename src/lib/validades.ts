@@ -1,5 +1,5 @@
 import { TIPOS_VISTO } from "./cadastro-tipos";
-import { nomeDocumento, type EuDocumento } from "./eu";
+import { nomeDoc, type EuDocumento } from "./eu";
 
 export type TomValidade = "danger" | "warn" | "ok" | "muted";
 export type ItemValidade = {
@@ -54,7 +54,7 @@ function prazoHumano(dias: number, tipo: string) {
 function nomeDoDoc(doc: EuDocumento) {
   if (doc.tipo === "visto" && doc.detalhe?.trim()) return `Visto EUA · ${doc.detalhe.trim()}`;
   if (doc.tipo === "vacina") return "Febre amarela";
-  return nomeDocumento(doc.tipo);
+  return nomeDoc(doc);
 }
 
 function ePassaporteAntigo(doc: EuDocumento) {

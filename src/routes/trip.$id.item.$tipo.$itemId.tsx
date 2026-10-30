@@ -20,7 +20,9 @@ import { logoCia, logoSite } from "@/lib/logos";
 import { toast } from "sonner";
 import { AcoesItem } from "@/components/AcoesItem";
 import { Topo } from "@/components/Chrome";
-import { autoriaQuery, type Passageiro } from "@/lib/data";
+import { autoriaQuery, tripQuery, type Passageiro } from "@/lib/data";
+import { usuarioLocal } from "@/lib/sessao";
+import { useEffect, useState } from "react";
 import { Autoria } from "@/components/Autoria";
 import { AnexosItem } from "@/components/AnexosItem";
 import { StatusVoo } from "@/components/StatusVoo";
@@ -241,7 +243,7 @@ function Voo({ tripId, itemId }: { tripId: string; itemId: string }) {
           >
             <ArrowRightLeft size={22} /> Copiar p/ volta
           </Link>
-          <SoQuemEdita tipo="ticket" id={itemId}>
+          <SoQuemEdita tipo="ticket" id={itemId} tripId={tripId}>
             <VirarDespesa
               className="tap flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card text-base font-bold text-foreground"
               tripId={tripId}
@@ -526,8 +528,8 @@ function AcoesTopo({
   editarPara: "/trip/$id/bilhetes/novo" | "/trip/$id/hospedagem/nova" | "/trip/$id/reservas/nova";
   queryKey: readonly unknown[];
 }) {
-  const { data } = useQuery(autoriaQuery(tipo, itemId));
-  if (!data?.editar) return null;
+  const podeEditar = usePodeEditar(tipo, itemId, tripId);
+  if (!podeEditar) return null;
   return (
     <AcoesItem
       tripId={tripId}
@@ -540,15 +542,33 @@ function AcoesTopo({
   );
 }
 
+/**
+ * Quem pode editar: o servidor responde (autoria_item). Sem internet, ou enquanto
+ * a resposta não vem, o dono da viagem sempre pode — a viagem já está no aparelho
+ * e o dono nunca perde esse direito. Assim Editar | Apagar aparece no avião.
+ */
+function usePodeEditar(tipo: string, itemId: string, tripId: string) {
+  const { data: autoria } = useQuery({ ...autoriaQuery(tipo, itemId), retry: 0 });
+  const { data: trip } = useQuery(tripQuery(tripId));
+  const [meuId, setMeuId] = useState<string | null>(null);
+  useEffect(() => {
+    void usuarioLocal().then(({ data }) => setMeuId(data.user?.id ?? null));
+  }, []);
+  const souDono = Boolean(trip && meuId && trip.owner_id === meuId);
+  if (autoria) return autoria.editar || souDono;
+  return souDono;
+}
+
 function SoQuemEdita({
   tipo,
   id,
+  tripId,
   children,
 }: {
   tipo: string;
   id: string;
+  tripId: string;
   children: React.ReactNode;
 }) {
-  const { data } = useQuery(autoriaQuery(tipo, id));
-  return data?.editar ? <>{children}</> : null;
+  return usePodeEditar(tipo, id, tripId) ? <>{children}</> : null;
 }

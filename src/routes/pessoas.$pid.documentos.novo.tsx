@@ -26,7 +26,7 @@ import {
   ZonaArquivo,
   previaDe,
 } from "@/components/ArquivoFoto";
-import { euQuery, nomeDocumento } from "@/lib/eu";
+import { euQuery, nomeDoc } from "@/lib/eu";
 import { blobParaDataUrl, LADO_DOC_IA, melhorarDocumentoParaOcr, prepararArquivo } from "@/lib/imagem";
 import { ErroLeitura, pdfPagina } from "@/lib/pdf";
 import { textoDoEml } from "@/lib/emailAgencia";
@@ -113,6 +113,7 @@ function NovoDocumento() {
     setTipo(editDoc.tipo);
     setFields((old) => ({
       ...old,
+      rotulo: editDoc.rotulo ?? "",
       nome_no_documento: editDoc.nome_no_documento ?? "",
       numero: editDoc.numero ?? "",
       pais_emissor: editDoc.pais_emissor ?? "",
@@ -363,6 +364,7 @@ function NovoDocumento() {
       const values = {
         person_id: pid,
         tipo,
+        rotulo: tipo === "outro" ? String(form.get("rotulo") || "").trim() || null : (editDoc?.rotulo ?? null),
         numero: String(form.get("numero") || "") || null,
         nome_no_documento: String(form.get("nome_no_documento") || "") || null,
         pais_emissor: String(form.get("pais_emissor") || "") || null,
@@ -441,7 +443,7 @@ function NovoDocumento() {
       }
       await qc.invalidateQueries({ queryKey: ["eu", pid] });
       await qc.invalidateQueries({ queryKey: ["documento", pid, id] });
-      toast.success(`${nomeDocumento(tipo)} salvo`);
+      toast.success(`${nomeDoc({ tipo, rotulo: values.rotulo })} salvo`);
       nav({ to: "/pessoas/$pid/documentos/$did", params: { pid, did: id } });
     } catch (error) {
       toast.error(
@@ -467,10 +469,14 @@ function NovoDocumento() {
       ]
     : tipo === "outro"
       ? [
-          ["nome_no_documento", "Nome do documento", "text"],
+          ["rotulo", "Qual documento? (ex.: RG Panamá, Passaporte Italiano)", "text"],
+          ["nome_no_documento", "Nome no documento", "text"],
           ["numero", "Número", "text"],
+          ["pais_emissor", "País emissor", "text"],
           ["detalhe", "Detalhe 1", "text"],
           ["detalhe2", "Detalhe 2", "text"],
+          ["emissao", "Emissão", "date"],
+          ["validade", "Validade", "date"],
         ]
       : [
           ["nome_no_documento", "Nome no documento", "text"],
@@ -516,7 +522,7 @@ function NovoDocumento() {
       }}
     >
       <Topo
-        titulo={editDoc ? `Editar ${nomeDocumento(editDoc.tipo)}` : "Adicionar documento"}
+        titulo={editDoc ? `Editar ${nomeDoc(editDoc)}` : "Adicionar documento"}
         voltarPara="/pessoas/$pid"
         voltarParams={{ pid }}
       />
@@ -850,7 +856,7 @@ function NovoDocumento() {
                 ? "Guardar no cofre"
                 : readState === "ok"
                   ? "Confirmar"
-                  : `Salvar ${nomeDocumento(tipo)}`}
+                  : `Salvar ${nomeDoc({ tipo, rotulo: fields.rotulo })}`}
             </Button>
             {cartao && (
               <Button
