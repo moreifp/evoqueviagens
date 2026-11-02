@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { apagarCopiaSessao } from "@/lib/sessao";
 import { ScanFace, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -185,6 +186,7 @@ export function TravaFaceId({ children }: { children: React.ReactNode }) {
 
   async function entrarComSenha() {
     desligarFaceId();
+    apagarCopiaSessao();
     await supabase.auth.signOut();
   }
 

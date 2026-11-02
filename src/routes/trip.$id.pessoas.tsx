@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Mail, MessageCircle, Plus, Send, UserMinus, X } from "lucide-react";
+import { FileText, Mail, MessageCircle, Plus, Send, UserMinus, UserPlus, X } from "lucide-react";
 import { Topo } from "@/components/Chrome";
 import {
   convitesMembrosQuery,
@@ -53,7 +53,10 @@ const iniciais = (n: string) =>
 function estado(m: Membro): { txt: string; cls: string } {
   if (m.papel === "owner")
     return { txt: "Organiza", cls: "bg-secondary text-secondary-foreground" };
-  if (m.kind === "precadastro") return { txt: "Sem conta", cls: "bg-warn text-warn-foreground" };
+  if (m.kind === "precadastro")
+    return m.status === "aceito"
+      ? { txt: "Só nesta viagem", cls: "bg-secondary text-secondary-foreground" }
+      : { txt: "Sem conta", cls: "bg-warn text-warn-foreground" };
   if (m.status === "aceito") return { txt: "Aceitou", cls: "bg-ok text-ok-foreground" };
   if (m.status === "recusado") return { txt: "Recusou", cls: "bg-danger text-danger-foreground" };
   if (m.status === "saiu") return { txt: "Saiu", cls: "bg-muted text-muted-foreground" };
@@ -230,7 +233,11 @@ function Pessoas() {
 
         {membros.map((m) => {
           const e = estado(m);
-          const semConta = m.kind === "precadastro";
+          const c = convites.find((x) => x.id === m.id);
+          // Convidado por e-mail/WhatsApp (há o que lembrar). Quem entrou só pelo nome não tem convite.
+          const semConta = m.kind === "precadastro" && !!(c?.convite_email || c?.convite_telefone);
+          // Documentos ficam na pessoa; quem organiza guarda os de quem é seu (eu, família, só nesta viagem).
+          const comDocumentos = souDono && m.meu;
           return (
             <article
               key={m.id}
@@ -252,6 +259,15 @@ function Pessoas() {
                   </span>
                 </div>
               </div>
+              {comDocumentos && (
+                <Link
+                  to="/pessoas/$pid"
+                  params={{ pid: m.person_id }}
+                  className="tap flex w-full items-center justify-center gap-2 border-t border-border text-lg font-bold text-accent"
+                >
+                  <FileText size={24} strokeWidth={2.2} /> Documentos
+                </Link>
+              )}
               {souDono && semConta && (
                 <div className="grid grid-cols-2 border-t border-border">
                   <button
@@ -340,7 +356,7 @@ function Pessoas() {
               onClick={() => setAberto("convidar")}
               className="gradient-hero tap flex w-full items-center justify-center gap-3 rounded-[18px] text-xl font-bold"
             >
-              <Send size={26} strokeWidth={2.2} /> Convidar quem não tem conta
+              <Send size={26} strokeWidth={2.2} /> Quem não tem conta
             </button>
           </section>
         )}
@@ -375,11 +391,13 @@ function Convidar({
   const [idioma, setIdioma] = useState("pt");
   const [enviando, setEnviando] = useState(false);
 
-  async function convidar(via: "whatsapp" | "email") {
-    if (!nome.trim() || (via === "email" ? !email.trim() : !tel.trim())) {
-      toast.error(via === "email" ? "Informe nome e e-mail." : "Informe nome e WhatsApp.");
+  async function convidar(via: "whatsapp" | "email" | "nome") {
+    if (!nome.trim()) {
+      toast.error("Informe o nome.");
       return;
     }
+    if (via === "email" && !email.trim()) return void toast.error("Informe o e-mail.");
+    if (via === "whatsapp" && !tel.trim()) return void toast.error("Informe o WhatsApp.");
     setEnviando(true);
     const member = novoId(),
       person = novoId();
@@ -387,7 +405,8 @@ function Convidar({
       id: member,
       person_id: person,
       papel: "membro",
-      status: "convidado",
+      // Só pelo nome: não há convite a aceitar, já entra na viagem.
+      status: via === "nome" ? "aceito" : "convidado",
       nome: nome.trim(),
       apelido: null,
       nome_como_no_documento: null,
@@ -404,12 +423,18 @@ function Convidar({
           _member: member,
           _person: person,
           _nome: nome,
-          _email: email,
-          _telefone: tel,
+          _email: via === "nome" ? "" : email,
+          _telefone: via === "nome" ? "" : tel,
           _idioma: idioma,
         },
       });
       const txt = texto(idioma);
+      if (via === "nome") {
+        toast.success(aviso(r, "Adicionado à viagem"));
+        void qc.invalidateQueries({ queryKey: membersQuery(tripId).queryKey });
+        onFim();
+        return;
+      }
       if (via === "whatsapp")
         window.open(
           `https://api.whatsapp.com/send?phone=${tel.replace(/\D/g, "")}&text=${encodeURIComponent(txt)}`,
@@ -486,6 +511,17 @@ function Convidar({
           <Mail size={24} /> E-mail
         </button>
       </div>
+      <button
+        disabled={enviando}
+        onClick={() => void convidar("nome")}
+        className="tap flex w-full items-center justify-center gap-2 rounded-[18px] border-2 border-border text-lg font-bold text-foreground"
+      >
+        <UserPlus size={24} strokeWidth={2.2} /> Só nesta viagem, sem convite
+      </button>
+      <p className="text-base text-muted-foreground">
+        Sem convite, a pessoa entra só pelo nome e você guarda os documentos dela em
+        Pessoas → Documentos.
+      </p>
     </section>
   );
 }

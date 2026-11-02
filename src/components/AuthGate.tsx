@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { garantirMinhaFicha } from "@/lib/compartilhar.functions";
+import { guardarCopiaSessao, realmenteOnline, sessaoGuardada } from "@/lib/sessao";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -20,8 +21,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     let garantido = false;
     let erroRede = false;
     async function aplicar(s: Session | null, evento?: string) {
+      if (s) guardarCopiaSessao(s);
       // Sem internet, nunca derruba para a tela de login: usa a sessão guardada no aparelho.
-      if (!s && (!navigator.onLine || erroRede)) s = sessaoGuardada();
+      // "Sem internet" aqui é testado de verdade (no iPhone, navigator.onLine engana):
+      // só mostra o login quando o servidor do app responde e, mesmo assim, não há sessão.
+      if (!s) {
+        const guardada = sessaoGuardada();
+        if (guardada && (!navigator.onLine || erroRede || !(await realmenteOnline()))) s = guardada;
+      }
       if (!s && evento && evento !== "SIGNED_OUT" && !navigator.onLine) return;
       if (s && !garantido && navigator.onLine) {
         garantido = true;
@@ -78,26 +85,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
   if (!session) return <Entrar />;
   return <TravaFaceId>{children}</TravaFaceId>;
-}
-
-/** Sessão salva pelo login no aparelho (mesmo vencida), para o modo leitura sem internet. */
-function sessaoGuardada(): Session | null {
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i) ?? "";
-      if (!/^sb-.+-auth-token$/.test(k)) continue;
-      const v = JSON.parse(localStorage.getItem(k) ?? "null") as
-        Session | { currentSession?: Session } | null;
-      const s =
-        (v && "access_token" in v
-          ? v
-          : (v as { currentSession?: Session } | null)?.currentSession) ?? null;
-      if (s?.user) return s as Session;
-    }
-  } catch {
-    /* sem storage */
-  }
-  return null;
 }
 
 function traduzErro(msg: string): { texto: string; espera?: number } {
