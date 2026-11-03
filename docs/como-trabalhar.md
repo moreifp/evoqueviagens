@@ -4,7 +4,7 @@ O app saiu do Lovable em 07/10/2026. Agora:
 
 | Peça | Onde fica |
 |---|---|
-| Código | GitHub **moreifp/evoqueviagens** (branch atual: `saida-lovable`) |
+| Código | GitHub **moreifp/evoqueviagens** (branch atual: `main`) |
 | Banco, login e arquivos | Supabase, projeto `evoque-viagens` (São Paulo) |
 | Site no ar | Cloudflare Workers, worker `evoque-viagens` → app.evoque.global |
 | IA | API da Anthropic |
