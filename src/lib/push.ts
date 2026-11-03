@@ -1,11 +1,11 @@
 /**
- * Avisos push no navegador. Só em app.evoque.global (e localhost em dev).
+ * Avisos push no navegador. Só em app.evoque.global, no endereço de testes do Cloudflare e em localhost.
  * O SDK do Firebase é carregado sob demanda, só quando a pessoa liga os avisos.
  */
 import { toast } from "sonner";
 
 export type EstadoPush =
-  | "fora_do_app" // host sem app (landing, lovable.app, preview)
+  | "fora_do_app" // host sem app (landing, prévia)
   | "sem_suporte"
   | "iphone_sem_instalar"
   | "bloqueado"
@@ -17,7 +17,8 @@ const CHAVE_TOKEN = "evoque-push-token";
 export function hostPermitePush(): boolean {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
-  return h === "app.evoque.global" || h === "localhost" || h === "127.0.0.1";
+  // Endereço de testes no Cloudflare (evoque-viagens.<conta>.workers.dev) também liga os avisos.
+  return h === "app.evoque.global" || h === "localhost" || h === "127.0.0.1" || /^evoque-viagens\.[a-z0-9-]+\.workers\.dev$/.test(h);
 }
 
 function ehIphoneSemInstalar(): boolean {
@@ -35,13 +36,13 @@ export function estadoPush(): EstadoPush {
 }
 
 function configFirebase() {
-  const appId = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_APP_ID as string | undefined;
+  const appId = import.meta.env.VITE_FIREBASE_APP_ID as string | undefined;
   return {
-    apiKey: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_WEB_API_KEY as string | undefined,
-    projectId: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_PROJECT_ID as string | undefined,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
     appId,
     messagingSenderId: appId?.split(":")[1] ?? "",
-    vapidKey: import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_VAPID_KEY as string | undefined,
+    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined,
   };
 }
 

@@ -69,12 +69,12 @@ export const Route = createFileRoute("/trip/$id/despesas/nova")({
   }),
   head: () => ({
     meta: [
-      { title: "Lançar despesa — Evoque Viagens" },
+      { title: "Lançar despesa — Viagens Organizadas" },
       {
         name: "description",
         content: "Valor, categoria e salvar. A despesa já nasce dividida igual.",
       },
-      { property: "og:title", content: "Lançar despesa — Evoque Viagens" },
+      { property: "og:title", content: "Lançar despesa — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Valor, categoria e salvar. A despesa já nasce dividida igual.",

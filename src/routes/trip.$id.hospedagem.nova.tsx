@@ -9,12 +9,12 @@ export const Route = createFileRoute("/trip/$id/hospedagem/nova")({
     typeof s.editar === "string" ? { editar: s.editar } : {},
   head: () => ({
     meta: [
-      { title: "Hospedagem — Evoque Viagens" },
+      { title: "Hospedagem — Viagens Organizadas" },
       {
         name: "description",
         content: "Cadastre ou edite hotel com quartos, hóspedes, entrada e saída.",
       },
-      { property: "og:title", content: "Hospedagem — Evoque Viagens" },
+      { property: "og:title", content: "Hospedagem — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Cadastre ou edite hotel com quartos, hóspedes, entrada e saída.",

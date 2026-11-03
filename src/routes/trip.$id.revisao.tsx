@@ -40,7 +40,7 @@ import { origemApp } from "@/lib/site";
 export const Route = createFileRoute("/trip/$id/revisao")({
   head: () => ({
     meta: [
-      { title: "Está tudo certo? — Evoque Viagens" },
+      { title: "Está tudo certo? — Viagens Organizadas" },
       {
         name: "description",
         content: "Conferência por pessoa: passaporte, nomes, vistos, vacina e seguro.",

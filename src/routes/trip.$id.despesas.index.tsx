@@ -26,12 +26,12 @@ import { LinkDespesas } from "@/components/LinkDespesas";
 export const Route = createFileRoute("/trip/$id/despesas/")({
   head: () => ({
     meta: [
-      { title: "Despesas da viagem — Evoque Viagens" },
+      { title: "Despesas da viagem — Viagens Organizadas" },
       {
         name: "description",
         content: "Gastos da viagem divididos entre os participantes, na moeda da viagem.",
       },
-      { property: "og:title", content: "Despesas da viagem — Evoque Viagens" },
+      { property: "og:title", content: "Despesas da viagem — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Gastos da viagem divididos entre os participantes, na moeda da viagem.",

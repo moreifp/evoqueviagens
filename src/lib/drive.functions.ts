@@ -1,14 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { tokenDrive } from "./google-auth.server";
 
-const GW = "https://connector-gateway.lovable.dev/google_drive";
+const GW = "https://www.googleapis.com";
 
-function headers() {
-  const a = process.env.LOVABLE_API_KEY;
-  const b = process.env.GOOGLE_DRIVE_API_KEY;
-  if (!a || !b) throw new Error("Google Drive não está ligado.");
-  return { Authorization: `Bearer ${a}`, "X-Connection-Api-Key": b };
+async function headers() {
+  return { Authorization: `Bearer ${await tokenDrive()}` };
 }
 
 async function checar(r: Response, oque: string) {
@@ -36,12 +34,12 @@ export const pastaDrive = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const nome = await nomeDaViagem(context, data.tripId);
     const q = `name='${nome}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-    const achou = await checar(await fetch(`${GW}/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, { headers: headers() }), "busca");
+    const achou = await checar(await fetch(`${GW}/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, { headers: await headers() }), "busca");
     if (achou.files?.[0]?.id) return { id: achou.files[0].id as string, nome };
     const nova = await checar(
       await fetch(`${GW}/drive/v3/files?fields=id`, {
         method: "POST",
-        headers: { ...headers(), "Content-Type": "application/json" },
+        headers: { ...(await headers()), "Content-Type": "application/json" },
         body: JSON.stringify({ name: nome, mimeType: "application/vnd.google-apps.folder" }),
       }),
       "pasta",
@@ -55,7 +53,7 @@ export const fotoDrive = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ tripId: z.string().uuid(), pastaId: z.string().regex(/^[\w-]{5,200}$/), nome: z.string().min(1).max(200), base64: z.string().min(10).max(40_000_000) }).parse(d))
   .handler(async ({ data, context }) => {
     const nomeViagem = await nomeDaViagem(context, data.tripId);
-    const pasta = await checar(await fetch(`${GW}/drive/v3/files/${data.pastaId}?fields=name,mimeType,trashed`, { headers: headers() }), "pasta");
+    const pasta = await checar(await fetch(`${GW}/drive/v3/files/${data.pastaId}?fields=name,mimeType,trashed`, { headers: await headers() }), "pasta");
     if (pasta.mimeType !== "application/vnd.google-apps.folder" || pasta.trashed || pasta.name !== nomeViagem)
       throw new Error("Pasta do Drive não é a desta viagem.");
     const b = "evoque" + crypto.randomUUID();
@@ -64,7 +62,7 @@ export const fotoDrive = createServerFn({ method: "POST" })
     await checar(
       await fetch(`${GW}/upload/drive/v3/files?uploadType=multipart&fields=id`, {
         method: "POST",
-        headers: { ...headers(), "Content-Type": `multipart/related; boundary=${b}` },
+        headers: { ...(await headers()), "Content-Type": `multipart/related; boundary=${b}` },
         body: corpo,
       }),
       "foto",
@@ -76,7 +74,7 @@ export const fotoDrive = createServerFn({ method: "POST" })
 export const contaDrive = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const r = await checar(await fetch(`${GW}/drive/v3/about?fields=user`, { headers: headers() }), "conta");
+    const r = await checar(await fetch(`${GW}/drive/v3/about?fields=user`, { headers: await headers() }), "conta");
     return { email: (r.user?.emailAddress as string) ?? "", nome: (r.user?.displayName as string) ?? "" };
   });
 

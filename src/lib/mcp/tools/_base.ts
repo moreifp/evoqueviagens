@@ -8,7 +8,7 @@ const ORIGEM = APP_URL;
 
 export function ctxAgente(ctx: ToolContext): Ctx {
   const userId = ctx.getUserId();
-  if (!ctx.isAuthenticated() || !userId) throw new ToolError("Entre com sua conta do Evoque Viagens.");
+  if (!ctx.isAuthenticated() || !userId) throw new ToolError("Entre com sua conta do Viagens Organizadas.");
   return { supabase: supabaseForUser(ctx), userId, origemUrl: ORIGEM };
 }
 

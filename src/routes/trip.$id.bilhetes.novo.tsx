@@ -18,13 +18,13 @@ export const Route = createFileRoute("/trip/$id/bilhetes/novo")({
   }),
   head: () => ({
     meta: [
-      { title: "Bilhete — Evoque Viagens" },
+      { title: "Bilhete — Viagens Organizadas" },
       {
         name: "description",
         content:
           "Cadastre ou edite voo, trem, ônibus ou transfer com passageiros e fuso automático.",
       },
-      { property: "og:title", content: "Bilhete — Evoque Viagens" },
+      { property: "og:title", content: "Bilhete — Viagens Organizadas" },
       {
         property: "og:description",
         content:

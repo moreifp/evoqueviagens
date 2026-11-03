@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { blocoArquivo, lerTexto, MODELO_DOCUMENTOS, type Bloco } from "./anthropic.server";
 
 /**
  * Transcreve a foto de um recibo em texto organizado e legível.
@@ -11,8 +12,7 @@ export const transcreverRecibo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ imagem: z.string().max(8_000_000) }).parse(d))
   .handler(async ({ data }) => {
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) return { ok: false as const, erro: "config" };
+    if (!process.env["ANTHROPIC_API_KEY"]) return { ok: false as const, erro: "config" };
     const prompt = `Transcreva esta foto de recibo, conta ou nota fiscal. Escreva em português um texto organizado e legível, assim:
 1. Estabelecimento (nome; endereço e CNPJ só se estiverem visíveis)
 2. Data e hora
@@ -23,25 +23,12 @@ export const transcreverRecibo = createServerFn({ method: "POST" })
 
 Regras: transcreva apenas o que estiver visível, nunca invente valores ou itens. Se uma linha estiver ilegível, escreva (ilegível). Se não for um recibo, responda "Esta foto não parece uma conta ou recibo.". Devolva apenas o texto, sem comentários.`;
     try {
-      // Mesmo modelo da leitura de documentos: muito mais barato que o modelo
-      // de raciocínio e suficiente para transcrever uma conta.
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [{ role: "user", content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: data.imagem } },
-          ] }],
-        }),
-      });
-      if (!r.ok) {
-        const msg = await r.text().catch(() => "");
-        return { ok: false as const, erro: msg.slice(0, 300) || `erro ${r.status}` };
-      }
-      const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-      const texto = (j.choices?.[0]?.message?.content ?? "").trim();
+      // Mesmo modelo da leitura de documentos: rápido e barato, suficiente para transcrever uma conta.
+      const blocos: Bloco[] = [];
+      const b = blocoArquivo(data.imagem, null);
+      if (b) blocos.push(b);
+      blocos.push({ type: "text", text: prompt });
+      const texto = await lerTexto({ modelo: MODELO_DOCUMENTOS, conteudo: blocos });
       if (!texto) return { ok: false as const, erro: "vazio" };
       return { ok: true as const, texto: texto.slice(0, 20_000) };
     } catch (e) {

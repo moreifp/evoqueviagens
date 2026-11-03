@@ -12,9 +12,9 @@ import { AvisosMeus, PedidosRecebidos } from "@/components/AvisosPedidos";
 export const Route = createFileRoute("/viagens")({
   head: () => ({
     meta: [
-      { title: "Viagens — Evoque Viagens" },
+      { title: "Viagens — Viagens Organizadas" },
       { name: "description", content: "Suas viagens atuais, próximas e passadas." },
-      { property: "og:title", content: "Viagens — Evoque Viagens" },
+      { property: "og:title", content: "Viagens — Viagens Organizadas" },
       { property: "og:description", content: "Suas viagens atuais, próximas e passadas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

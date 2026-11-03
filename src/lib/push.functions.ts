@@ -46,7 +46,7 @@ export const avisoTeste = createServerFn({ method: "POST" })
     const { enviarAviso } = await import("./push.server");
     return enviarAviso({
       accountId: context.userId, tipo: "teste",
-      titulo: "Evoque Viagens", corpo: "Avisos ligados neste aparelho. Tudo certo!",
+      titulo: "Viagens Organizadas", corpo: "Avisos ligados neste aparelho. Tudo certo!",
       url: "/", furarSilencio: true,
     });
   });

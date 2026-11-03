@@ -40,12 +40,12 @@ export function mensagemConviteApp(idioma: "pt" | "en") {
   const link = origemApp();
   return idioma === "en"
     ? {
-        assunto: "Let's organize our trip on Evoque",
-        texto: `Hi! To organize our trip better, open the Evoque Viagens app and fill in your details. That way we make sure the whole trip is organized. Just open: ${link}`,
+        assunto: "Let's organize our trip on Viagens Organizadas",
+        texto: `Hi! To organize our trip better, open the Viagens Organizadas app and fill in your details. That way we make sure the whole trip is organized. Just open: ${link}`,
       }
     : {
-        assunto: "Vamos organizar nossa viagem no Evoque",
-        texto: `Olá! Para organizarmos melhor a nossa viagem, entre no aplicativo Evoque Viagens e cadastre seus dados. Assim garantimos que toda a viagem fique organizada. É só abrir: ${link}`,
+        assunto: "Vamos organizar nossa viagem no Viagens Organizadas",
+        texto: `Olá! Para organizarmos melhor a nossa viagem, entre no aplicativo Viagens Organizadas e cadastre seus dados. Assim garantimos que toda a viagem fique organizada. É só abrir: ${link}`,
       };
 }
 

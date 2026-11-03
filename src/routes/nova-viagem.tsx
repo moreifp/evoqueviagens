@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/nova-viagem")({
   head: () => ({
     meta: [
-      { title: "Nova viagem — Evoque Viagens" },
+      { title: "Nova viagem — Viagens Organizadas" },
       { name: "description", content: "Cadastre uma viagem com datas e moeda de referência." },
       { property: "og:title", content: "Nova viagem" },
       {

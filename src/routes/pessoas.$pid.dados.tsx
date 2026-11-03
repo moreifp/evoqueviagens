@@ -14,9 +14,9 @@ export const Route = createFileRoute("/pessoas/$pid/dados")({
   }),
   head: () => ({
     meta: [
-      { title: "Mais sobre você — Evoque Viagens" },
+      { title: "Mais sobre você — Viagens Organizadas" },
       { name: "description", content: "Dados pessoais, saúde, preferências e contato de emergência." },
-      { property: "og:title", content: "Mais sobre você — Evoque Viagens" },
+      { property: "og:title", content: "Mais sobre você — Viagens Organizadas" },
       { property: "og:description", content: "Dados pessoais para suas viagens." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

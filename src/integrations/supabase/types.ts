@@ -2061,6 +2061,7 @@ export type Database = {
           deleted_at: string | null
           detalhe: string | null
           detalhe2: string | null
+          rotulo: string | null
           emissao: string | null
           id: string
           local_expedicao: string | null
@@ -2082,6 +2083,7 @@ export type Database = {
           deleted_at?: string | null
           detalhe?: string | null
           detalhe2?: string | null
+          rotulo?: string | null
           emissao?: string | null
           id?: string
           local_expedicao?: string | null
@@ -2103,6 +2105,7 @@ export type Database = {
           deleted_at?: string | null
           detalhe?: string | null
           detalhe2?: string | null
+          rotulo?: string | null
           emissao?: string | null
           id?: string
           local_expedicao?: string | null

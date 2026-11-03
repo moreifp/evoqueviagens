@@ -66,9 +66,9 @@ export const Route = createFileRoute("/c/$token")({
   }),
   head: () => ({
     meta: [
-      { title: "Cadastro de viagem — Evoque" },
+      { title: "Cadastro de viagem — Viagens Organizadas" },
       { name: "description", content: "Seu cadastro de viagem. Você faz uma vez só." },
-      { property: "og:title", content: "Cadastro de viagem — Evoque" },
+      { property: "og:title", content: "Cadastro de viagem — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Seu cadastro de viagem. Leva 5 minutos, é uma vez só.",
@@ -84,7 +84,7 @@ function LinkAntigo() {
   return (
     <div className="min-h-screen bg-background px-5 pt-16">
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-3xl">O Evoque mudou</h1>
+        <h1 className="text-3xl">O Viagens Organizadas mudou</h1>
         <p className="text-lg text-foreground">
           Agora cada pessoa tem a própria conta e é dona dos seus dados. Crie sua conta para
           continuar e peça um convite novo a quem te enviou este link.

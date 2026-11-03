@@ -4,8 +4,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { destinoRedirecionamento } from "./lib/site";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
-  if (new URL(request.url).pathname.startsWith("/lovable/")) return next();
+const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
   } catch (error) {
@@ -20,17 +19,28 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   }
 });
 
-// evoque.global / www / evoqueviagens.lovable.app: as telas moram em app.evoque.global.
-// MCP, .well-known, API, OAuth, e-mails (/lovable/) e arquivos seguem onde estão.
+// evoque.global / www: as telas moram em app.evoque.global.
+// MCP, .well-known, API, OAuth e arquivos seguem onde estão.
 const hostMiddleware = createMiddleware().server(async ({ next, request }) => {
   const url = new URL(request.url);
-  if (url.pathname.startsWith("/lovable/")) return next();
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
+  const host = request.headers.get("host") ?? url.host;
   const destino = destinoRedirecionamento(host, url.pathname, url.search);
   if (destino && (request.method === "GET" || request.method === "HEAD")) {
     return new Response(null, { status: 301, headers: { location: destino, "cache-control": "public, max-age=3600" } });
   }
   return next();
+});
+
+// Registra no log do Cloudflare o erro de qualquer função de servidor (sem dados do usuário).
+const logFuncoes = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  const ini = Date.now();
+  try {
+    return await next();
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[serverFn] falhou em ${Date.now() - ini} ms: ${msg.slice(0, 300)}`);
+    throw error;
+  }
 });
 
 // Start installs this automatically when src/start.ts is absent; defining the
@@ -41,6 +51,6 @@ const csrfMiddleware = createCsrfMiddleware({
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachSupabaseAuth],
+  functionMiddleware: [attachSupabaseAuth, logFuncoes],
   requestMiddleware: [hostMiddleware, errorMiddleware, csrfMiddleware],
 }));

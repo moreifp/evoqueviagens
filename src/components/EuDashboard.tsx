@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { apagarCopiaSessao } from "@/lib/sessao";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -198,6 +199,7 @@ function EuDashboardConteudo({
     } catch {
       /* segue com a saída mesmo assim */
     }
+    apagarCopiaSessao();
     await supabase.auth.signOut();
     qc.clear();
     navigate({ to: "/" });

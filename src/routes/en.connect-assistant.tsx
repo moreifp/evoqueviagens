@@ -5,9 +5,9 @@ import { marketingHead } from "@/lib/marketing-head";
 export const Route = createFileRoute("/en/connect-assistant")({
   head: () =>
     marketingHead({
-      title: "Your trip, in the conversation. | Evoque Travels",
+      title: "Your trip, in the conversation. | Viagens Organizadas",
       description:
-        "Connect Claude or ChatGPT to Evoque to propose bookings and review trip details.",
+        "Connect Claude or ChatGPT to Viagens Organizadas to propose bookings and review trip details.",
       path: "/en/connect-assistant",
       alternatePath: "/conectar-assistente",
       locale: "en_US",

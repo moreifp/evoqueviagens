@@ -1,7 +1,3 @@
-# Evoque Viagens — regras para agentes
-
-O projeto saiu do Lovable em out/2026 e é mantido só com o Claude. Os planos de funcionalidade escritos na época estão em `docs/planos/`.
-
 Dependentes em `person` pertencem à pessoa indicada por `parent_person_id` (não à lista inteira da conta); a conta continua controlando o acesso por `account_id`, preservando a separação entre fichas.
 
 Arquivos “Outro” escolhidos para o Cofre ficam cifrados integralmente no aparelho e em `vault_document`, separados de `traveler_document` e dos anexos compartilháveis, para que somente a conta proprietária possa abri-los.

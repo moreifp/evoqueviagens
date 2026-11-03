@@ -15,9 +15,9 @@ import { resumoSaldos } from "@/lib/saldos";
 export const Route = createFileRoute("/d/$token")({
   head: () => ({
     meta: [
-      { title: "Despesas da viagem — Evoque" },
+      { title: "Despesas da viagem — Viagens Organizadas" },
       { name: "description", content: "Despesas, divisão e saldos da viagem, só para ver." },
-      { property: "og:title", content: "Despesas da viagem — Evoque" },
+      { property: "og:title", content: "Despesas da viagem — Viagens Organizadas" },
       { property: "og:description", content: "Despesas, divisão e saldos da viagem, só para ver." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

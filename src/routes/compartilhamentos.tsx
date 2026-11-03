@@ -21,9 +21,9 @@ import { origemApp } from "@/lib/site";
 export const Route = createFileRoute("/compartilhamentos")({
   head: () => ({
     meta: [
-      { title: "Quem vê seus dados — Evoque Viagens" },
+      { title: "Quem vê seus dados — Viagens Organizadas" },
       { name: "description", content: "Controle quem vê seus dados e viagens." },
-      { property: "og:title", content: "Quem vê seus dados — Evoque Viagens" },
+      { property: "og:title", content: "Quem vê seus dados — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Compartilhamento privado, revogável e somente leitura.",
@@ -315,7 +315,7 @@ function Compartilhamentos() {
                 onClick={() =>
                   abrirWhatsApp(
                     null,
-                    `${mode === "oferta" ? "Compartilhei meus dados de viagem com você" : "Compartilha seus dados de viagem comigo"} no Evoque: ${url}`,
+                    `${mode === "oferta" ? "Compartilhei meus dados de viagem com você" : "Compartilha seus dados de viagem comigo"} no Viagens Organizadas: ${url}`,
                   )
                 }
                 className="tap flex items-center justify-center gap-2 rounded-lg bg-primary text-lg font-bold text-primary-foreground"

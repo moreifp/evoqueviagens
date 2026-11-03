@@ -8,14 +8,43 @@ async function decodificar(arquivo: Blob): Promise<CanvasImageSource & { width: 
       i.src = url;
     });
   } catch {
-    return await createImageBitmap(arquivo);
+    try {
+      return await createImageBitmap(arquivo);
+    } catch (e) {
+      // HEIC (foto do iPhone) no Chrome/Firefox: o navegador não abre; converte no aparelho.
+      const jpeg = await heicParaJpeg(arquivo);
+      if (!jpeg) throw e;
+      return await createImageBitmap(jpeg);
+    }
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
 
-/** Reduz a foto no aparelho antes de enviar (JPEG, lado maior ≤ max). Aceita HEIC quando o navegador sabe abrir. */
-export async function comprimir(arquivo: File, max = 1600, qualidade = 0.85): Promise<Blob> {
+/**
+ * Converte HEIC/HEIF em JPEG com um conversor carregado só nessa hora (~3 MB, uma vez;
+ * o service worker guarda). Devolve null se o arquivo não for HEIC.
+ */
+async function heicParaJpeg(arquivo: Blob): Promise<Blob | null> {
+  const nome = (arquivo as File).name ?? "";
+  const pareceHeic = /heic|heif/i.test(arquivo.type) || /\.(heic|heif)$/i.test(nome) || (await tipoPelosBytes(arquivo)) === "heic";
+  if (!pareceHeic) return null;
+  const { heicTo } = await import("heic-to");
+  return await heicTo({ blob: arquivo, type: "image/jpeg", quality: 0.9 });
+}
+
+/**
+ * Lado maior das imagens que vão para a leitura por IA. A Anthropic reduz tudo acima de ~1568 px
+ * (e recusa imagem acima de 5 MB), então mandar maior só gasta rede e arrisca recusa.
+ */
+export const LADO_IA = 1568;
+/** Documentos (passaporte/MRZ): um pouco mais de folga para as linhas de baixo continuarem nítidas. */
+export const LADO_DOC_IA = 2000;
+/** Teto de tamanho do JPEG enviado à IA (bem abaixo dos 5 MB da Anthropic). */
+const MAX_BYTES_IA = 3_500_000;
+
+/** Reduz a foto no aparelho antes de enviar (JPEG, lado maior ≤ max, nunca amplia). Aceita HEIC quando o navegador sabe abrir. */
+export async function comprimir(arquivo: Blob, max = 1600, qualidade = 0.85): Promise<Blob> {
   const img = await decodificar(arquivo);
   const esc = Math.min(1, max / Math.max(img.width, img.height));
   const c = document.createElement("canvas");
@@ -25,10 +54,16 @@ export async function comprimir(arquivo: File, max = 1600, qualidade = 0.85): Pr
   return await new Promise<Blob>((ok, erro) => c.toBlob((b) => (b ? ok(b) : erro(new Error("toBlob"))), "image/jpeg", qualidade));
 }
 
-/** Melhora contraste e nitidez de documentos fotografados antes da leitura OCR. */
-export async function melhorarDocumentoParaOcr(arquivo: Blob, maxLado = 2200): Promise<Blob> {
+/** Foto pronta para a leitura por IA: JPEG ~0,85, lado maior ≤ 1568 px, nunca ampliada. */
+export async function imagemParaIA(arquivo: Blob, max = LADO_IA): Promise<Blob> {
+  const b = await comprimir(arquivo, max, 0.85);
+  return b.size > MAX_BYTES_IA ? comprimir(arquivo, Math.round(max * 0.75), 0.75) : b;
+}
+
+/** Melhora contraste e nitidez de documentos fotografados antes da leitura OCR (nunca amplia). */
+export async function melhorarDocumentoParaOcr(arquivo: Blob, maxLado = LADO_DOC_IA): Promise<Blob> {
   const img = await decodificar(arquivo);
-  const escala = Math.min(1.6, maxLado / Math.max(img.width, img.height));
+  const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
   const c = document.createElement("canvas");
   c.width = Math.max(1, Math.round(img.width * escala));
   c.height = Math.max(1, Math.round(img.height * escala));
@@ -67,7 +102,9 @@ export async function melhorarDocumentoParaOcr(arquivo: Blob, maxLado = 2200): P
     }
   }
   ctx.putImageData(pixels, 0, 0);
-  return await new Promise<Blob>((ok) => c.toBlob((b) => ok(b ?? arquivo), "image/jpeg", 0.92));
+  const jpeg = (q: number) => new Promise<Blob | null>((ok) => c.toBlob((b) => ok(b), "image/jpeg", q));
+  const b = (await jpeg(0.85)) ?? arquivo;
+  return b.size > MAX_BYTES_IA ? ((await jpeg(0.7)) ?? b) : b;
 }
 
 export type Ext = string;
@@ -88,13 +125,39 @@ function extensaoDe(nome: string): string {
 /** Foto → JPEG comprimido; PDF e qualquer outro arquivo (eml, doc, xls…) vão como estão. */
 export async function prepararArquivo(f: File, max = 1600): Promise<{ blob: Blob; ext: Ext; contentType: string }> {
   if (ehPdf(f)) return { blob: f, ext: "pdf", contentType: "application/pdf" };
-  if (!ehImagem(f)) return { blob: f, ext: extensaoDe(f.name), contentType: f.type || "application/octet-stream" };
+  // Foto sem tipo nem extensão (Arquivos, AirDrop, "Passaporte Blenda"): reconhece pelos primeiros bytes.
+  const pelosBytes = !ehImagem(f) ? await tipoPelosBytes(f) : null;
+  if (pelosBytes === "pdf") return { blob: f, ext: "pdf", contentType: "application/pdf" };
+  if (!ehImagem(f) && !pelosBytes) {
+    // Último recurso: se o navegador conseguir abrir como imagem, é foto.
+    try {
+      return { blob: await comprimir(f, max), ext: "jpg", contentType: "image/jpeg" };
+    } catch {
+      return { blob: f, ext: extensaoDe(f.name), contentType: f.type || "application/octet-stream" };
+    }
+  }
   try {
     return { blob: await comprimir(f, max), ext: "jpg", contentType: "image/jpeg" };
   } catch {
-    if (/heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name)) return { blob: f, ext: "heic", contentType: "image/heic" };
+    if (/heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name) || pelosBytes === "heic") return { blob: f, ext: "heic", contentType: "image/heic" };
     throw new Error("Não deu para abrir essa imagem.");
   }
+}
+
+/** Lê a assinatura do arquivo: jpg, png, webp, heic, pdf ou null. */
+async function tipoPelosBytes(f: Blob): Promise<"jpg" | "png" | "webp" | "heic" | "pdf" | null> {
+  try {
+    const b = new Uint8Array(await f.slice(0, 16).arrayBuffer());
+    const asc = (i: number, n: number) => String.fromCharCode(...b.slice(i, i + n));
+    if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "jpg";
+    if (b[0] === 0x89 && asc(1, 3) === "PNG") return "png";
+    if (asc(0, 4) === "RIFF" && asc(8, 4) === "WEBP") return "webp";
+    if (asc(0, 4) === "%PDF") return "pdf";
+    if (asc(4, 4) === "ftyp" && /^(heic|heix|hevc|hevx|mif1|msf1|heif)/.test(asc(8, 4))) return "heic";
+  } catch {
+    /* sem leitura */
+  }
+  return null;
 }
 
 export function blobParaDataUrl(b: Blob): Promise<string> {
@@ -104,4 +167,13 @@ export function blobParaDataUrl(b: Blob): Promise<string> {
     r.onerror = erro;
     r.readAsDataURL(b);
   });
+}
+
+/** Data URL da foto reduzida para a leitura por IA, ou null se o navegador não conseguiu abrir. */
+export async function dataUrlParaIA(f: Blob): Promise<string | null> {
+  try {
+    return await blobParaDataUrl(await imagemParaIA(f));
+  } catch {
+    return null;
+  }
 }

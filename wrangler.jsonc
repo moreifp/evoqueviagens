@@ -1,0 +1,9 @@
+// Configuração do Worker no Cloudflare. O nitro completa o resto no build
+// (gera .output/server/wrangler.json e .wrangler/deploy/config.json).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "evoque-viagens",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true }
+}

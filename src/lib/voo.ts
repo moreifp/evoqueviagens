@@ -94,15 +94,23 @@ export function horariosEfetivos(s: StatusVoo | undefined) {
   };
 }
 
+/** Sem horário de chegada no bilhete: considera o voo no ar por até 18 h (voo mais longo do mundo ~19 h). */
+export const DURACAO_MAX_MS = 18 * 3_600_000;
+/** O job continua olhando o voo até 1 h depois do pouso (para a consulta "após o pouso"). */
+export const APOS_POUSO_MS = 3_600_000;
+
 /**
- * Decide se é a vez de consultar um voo:
- * 24h antes · 6h antes · a cada 30 min nas 3h antes · a cada 60 min em voo · uma vez após o pouso.
+ * Decide se é a vez de consultar um voo (partida/chegada já revistas, quando houver):
+ * 24h antes · 6h antes · a cada 30 min nas 3h antes · uma vez na decolagem · uma vez 1h antes
+ * do pouso · uma vez após o pouso. Em voo nada muda a cada hora, então são no máximo ~3 chamadas
+ * em voo mesmo num voo de 12 h (~11 por voo no total).
  */
 export function ehAVez(partidaMs: number, chegadaMs: number, ultimaMs: number | null, agora = Date.now()) {
   const desde = (ms: number) => ultimaMs === null || ultimaMs < ms;
   const H = 3_600_000;
   if (agora >= chegadaMs) return desde(chegadaMs); // uma vez após o pouso
-  if (agora >= partidaMs) return ultimaMs === null || agora - ultimaMs >= 60 * 60_000 - 60_000;
+  if (agora >= partidaMs && agora >= chegadaMs - H) return desde(Math.max(partidaMs, chegadaMs - H)); // perto do pouso
+  if (agora >= partidaMs) return desde(partidaMs); // uma vez na decolagem
   if (agora >= partidaMs - 3 * H) return ultimaMs === null || agora - ultimaMs >= 30 * 60_000 - 60_000;
   if (agora >= partidaMs - 6 * H) return desde(partidaMs - 6 * H);
   if (agora >= partidaMs - 24 * H) return desde(partidaMs - 24 * H);

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { extrairReserva, lerEmailAgencia, type Leitura, type Trecho } from "@/lib/reserva-ai.functions";
 import type { Membro } from "@/lib/data";
+import { textoDoEml } from "@/lib/emailAgencia";
+import { dataUrlParaIA } from "@/lib/imagem";
 
 const ACEITOS = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
 type Mime = (typeof ACEITOS)[number];
@@ -147,18 +149,33 @@ export function PreencherArquivo({
           JSON.stringify({ nome, mime, data: dado }),
         );
       if (!navigator.onLine) throw new Error("Sem internet · não deu para ler agora.");
+      // Para a IA: e-mail vira só o texto legível (sem cabeçalhos MIME, HTML e base64) e
+      // foto vai reduzida (≤ 1568 px). O anexo guardado acima continua o arquivo original.
+      const textoEml = ehEml ? textoDoEml(await f.text()).slice(0, 100_000) : null;
+      if (ehEml && !textoEml) throw new Error("vazio");
+      let dadoIA = dado,
+        mimeIA = mime as Mime;
+      if (!ehEml && mime.startsWith("image/")) {
+        const menor = await dataUrlParaIA(f);
+        if (menor) {
+          dadoIA = menor;
+          mimeIA = "image/jpeg";
+        }
+      }
+      const entrada = ehEml
+        ? { texto: textoEml, arquivo: null, nome, mime: null }
+        : { texto: null, arquivo: dadoIA, nome, mime: mimeIA };
+      // Repescagem (no modelo barato) só quando a leitura de vários voos FALHOU. Se ela leu e
+      // não achou voo, a leitura de um voo só olharia o mesmo arquivo com os mesmos campos.
+      let falhouTrechos = false;
       if (esperado === "voo") {
-        const entrada = ehEml
-          ? { texto: (await f.text()).slice(0, 100_000), arquivo: null, nome, mime: null }
-          : { texto: null, arquivo: dado, nome, mime: mime as Mime };
-        // Se a leitura de vários voos falhar ou voltar vazia, cai na leitura de um
-        // voo só (a que já funcionava antes) em vez de desistir.
         let trechos: Awaited<ReturnType<typeof lerTrechos>>["trechos"] = [];
         try {
           trechos = (await lerTrechos({ data: entrada })).trechos.filter(
             (t) => t.numero || t.origem_iata || t.inicio || t.localizador,
           );
         } catch (e) {
+          falhouTrechos = true;
           console.warn("[bilhete] leitura de vários voos falhou, tentando um voo só", e);
         }
         if (trechos.length > 1) {
@@ -178,21 +195,10 @@ export function PreencherArquivo({
           toast.success("Lemos o documento · confira");
           return;
         }
-        // Nenhum trecho: segue para a leitura de um voo só, abaixo.
+        if (!falhouTrechos) throw new Error("vazio");
+        // A leitura de vários voos falhou: tenta a de um voo só, abaixo, no modelo rápido.
       }
-      const r = ehEml
-        ? await extrair({
-            data: {
-              texto: (await f.text()).slice(0, 100_000),
-              arquivo: null,
-              nome,
-              mime: null,
-              esperado,
-            },
-          })
-        : await extrair({
-            data: { texto: null, arquivo: dado, nome, mime: mime as Mime, esperado },
-          });
+      const r = await extrair({ data: { ...entrada, esperado, rapido: falhouTrechos || undefined } });
       if (!r.titulo && !r.numero && !r.inicio && !r.localizador && !r.valor && !r.origem_iata)
         throw new Error("vazio");
       onLido(r);

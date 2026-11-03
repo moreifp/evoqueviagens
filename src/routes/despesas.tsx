@@ -11,9 +11,9 @@ export const Route = createFileRoute("/despesas")({
   }),
   head: () => ({
     meta: [
-      { title: "Despesas — Evoque Viagens" },
+      { title: "Despesas — Viagens Organizadas" },
       { name: "description", content: "Escolha a viagem para ver e lançar despesas." },
-      { property: "og:title", content: "Despesas — Evoque Viagens" },
+      { property: "og:title", content: "Despesas — Viagens Organizadas" },
       { property: "og:description", content: "Escolha a viagem para ver e lançar despesas." },
     ],
   }),

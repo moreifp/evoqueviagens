@@ -164,7 +164,7 @@ export function situacao(p: PessoaRow, docs: DocRow[], mudancas: MudancaRow[], l
   for (const d of meus) {
     const a = alertaDoc(d);
     if (!a) continue;
-    const texto = `${NOME_DOC[d.tipo] ?? d.tipo} ${a.texto === "Vencido" ? "vencido" : a.texto.charAt(0).toLowerCase() + a.texto.slice(1)}`;
+    const texto = `${(d as { rotulo?: string | null }).rotulo?.trim() || NOME_DOC[d.tipo] || d.tipo} ${a.texto === "Vencido" ? "vencido" : a.texto.charAt(0).toLowerCase() + a.texto.slice(1)}`;
     if (!pior || (a.nivel === "danger" && pior.nivel !== "danger")) pior = { nivel: a.nivel, texto };
   }
   if (pior) return { ...pior, aprovar: false, aviso: true, lembrar: false };

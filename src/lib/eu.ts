@@ -44,6 +44,8 @@ export type EuDocumento = {
   sexo: string | null;
   detalhe: string | null;
   detalhe2?: string | null;
+  /** Nome livre escolhido pela pessoa (tipo "outro"): "RG Panamá", "Passaporte Italiano". */
+  rotulo?: string | null;
   arquivo_path: string | null;
   primeira_habilitacao?: string | null;
   local_expedicao?: string | null;
@@ -165,6 +167,11 @@ export const documentoQuery = (personId: string, documentId: string) =>
 
 export function nomeDocumento(tipo: string) {
   return NOME_DOC[tipo] ?? (tipo === "outro" ? "Outro documento" : tipo);
+}
+
+/** Nome do documento para mostrar: o nome livre que a pessoa deu, senão o do tipo. */
+export function nomeDoc(doc: { tipo: string; rotulo?: string | null }) {
+  return doc.rotulo?.trim() || nomeDocumento(doc.tipo);
 }
 
 export function statusDocumento(doc: EuDocumento) {

@@ -12,12 +12,12 @@ import { AvatarPessoa } from "@/components/Pessoa";
 export const Route = createFileRoute("/trip/$id/despesas/acertar")({
   head: () => ({
     meta: [
-      { title: "Acertar contas — Evoque Viagens" },
+      { title: "Acertar contas — Viagens Organizadas" },
       {
         name: "description",
         content: "Os pagamentos que zeram as contas da viagem e o histórico de acertos.",
       },
-      { property: "og:title", content: "Acertar contas — Evoque Viagens" },
+      { property: "og:title", content: "Acertar contas — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Os pagamentos que zeram as contas da viagem e o histórico de acertos.",

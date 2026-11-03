@@ -10,9 +10,9 @@ import { TODOS_BLOCOS, nomeBloco, type Bloco } from "@/lib/blocos";
 export const Route = createFileRoute("/convite/$token")({
   head: () => ({
     meta: [
-      { title: "Convite — Evoque Viagens" },
+      { title: "Convite — Viagens Organizadas" },
       { name: "description", content: "Aceite o convite e escolha o que compartilhar." },
-      { property: "og:title", content: "Convite — Evoque Viagens" },
+      { property: "og:title", content: "Convite — Viagens Organizadas" },
       { property: "og:description", content: "Aceite o convite e escolha o que compartilhar." },
     ],
   }),

@@ -15,8 +15,8 @@ export const Route = createFileRoute("/manifest.webmanifest")({
         const base = host === APP_HOST ? `https://${APP_HOST}/` : "/";
         const manifest = {
           id: base,
-          name: "Evoque Viagens",
-          short_name: "Evoque",
+          name: "Viagens Organizadas",
+          short_name: "Viagens",
           description:
             "A viagem inteira em um lugar só: bilhetes, hotel, gastos e conferência de datas.",
           start_url: base,
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/manifest.webmanifest")({
           icons: [
             { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
             { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-            { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+            { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
           ],
         };
         return new Response(JSON.stringify(manifest), {

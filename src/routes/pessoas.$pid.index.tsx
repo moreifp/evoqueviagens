@@ -4,12 +4,12 @@ import { EuDashboard } from "@/components/EuDashboard";
 export const Route = createFileRoute("/pessoas/$pid/")({
   head: () => ({
     meta: [
-      { title: "Dados pessoais — Evoque Viagens" },
+      { title: "Dados pessoais — Viagens Organizadas" },
       {
         name: "description",
         content: "Documentos e dados pessoais compartilhados para organizar viagens.",
       },
-      { property: "og:title", content: "Dados pessoais — Evoque Viagens" },
+      { property: "og:title", content: "Dados pessoais — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Dados pessoais compartilhados com segurança e somente leitura.",

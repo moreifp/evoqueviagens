@@ -31,8 +31,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# variáveis de ambiente — nunca no git (copie .env.example para .env)
+# Segredos locais (nunca no git)
 .env
 .env.*
 !.env.example
-.lovable/
+chaves*.txt
+*service-account*.json

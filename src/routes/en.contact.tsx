@@ -5,8 +5,8 @@ import { marketingHead } from "@/lib/marketing-head";
 export const Route = createFileRoute("/en/contact")({
   head: () =>
     marketingHead({
-      title: "Let’s talk. | Evoque Travels",
-      description: "Contact Evoque Travels by email at contato@evoque.global.",
+      title: "Let’s talk. | Viagens Organizadas",
+      description: "Contact Viagens Organizadas by email at contato@evoque.global.",
       path: "/en/contact",
       alternatePath: "/contato",
       locale: "en_US",

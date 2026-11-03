@@ -5,8 +5,8 @@ import { marketingHead } from "@/lib/marketing-head";
 export const Route = createFileRoute("/termos")({
   head: () =>
     marketingHead({
-      title: "Termos de uso | Evoque Viagens",
-      description: "Condições de uso do Evoque Viagens, seu organizador de viagens.",
+      title: "Termos de uso | Viagens Organizadas",
+      description: "Condições de uso do Viagens Organizadas, seu organizador de viagens.",
       path: "/termos",
       alternatePath: "/en/terms",
       locale: "pt_BR",

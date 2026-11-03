@@ -5,7 +5,7 @@ import { CaixaClaude } from "@/components/CaixaClaude";
 export const Route = createFileRoute("/trip/$id/claude")({
   head: () => ({
     meta: [
-      { title: "Chegou pelo Claude — Evoque Viagens" },
+      { title: "Chegou pelo Claude — Viagens Organizadas" },
       {
         name: "description",
         content: "Confirme com um toque os voos, hotéis e reservas que o Claude trouxe.",

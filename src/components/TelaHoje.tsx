@@ -1,3 +1,5 @@
+import { Logo } from "@/components/Logo";
+import { logoCia } from "@/lib/logos";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -168,7 +170,7 @@ export function TelaHoje({ trip }: { trip: Trip }) {
             className="cartao-voo gradient-voos shadow-medium block rounded-3xl p-5 text-white"
           >
             <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide">
-              <Plane size={20} strokeWidth={2.2} /> Voo de hoje
+              <Logo url={logoCia(voo.companhia, voo.numero)} Icone={Plane} nome={voo.companhia ?? "companhia"} tamanho={28} /> Voo de hoje
               {voo.companhia || voo.numero
                 ? ` · ${[voo.companhia, voo.numero].filter(Boolean).join(" ")}`
                 : ""}

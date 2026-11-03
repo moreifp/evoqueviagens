@@ -3,7 +3,7 @@
 // são geradas a cada build em /sw-precache.js.
 // Nos domínios da landing (o app mudou para app.evoque.global) este worker só se desfaz:
 // apaga os caches do app, sai do ar e recarrega as abas abertas.
-const HOST_SEM_APP = ["evoque.global", "www.evoque.global", "evoqueviagens.lovable.app"].includes(self.location.hostname);
+const HOST_SEM_APP = ["evoque.global", "www.evoque.global"].includes(self.location.hostname);
 if (HOST_SEM_APP) {
   self.addEventListener("install", () => self.skipWaiting());
   self.addEventListener("activate", (event) => {
@@ -40,7 +40,7 @@ async function limpar(r) {
 }
 
 function ignorar(url) {
-  return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
+  return url.pathname.startsWith("/~oauth") || url.pathname.startsWith("/oauth/") || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn") || url.pathname === "/sw.js" || url.pathname === "/sw-precache.js";
 }
 
 if (!HOST_SEM_APP) self.addEventListener("install", (event) => {
@@ -81,11 +81,8 @@ if (!HOST_SEM_APP) self.addEventListener("activate", (event) => {
       const nomes = await caches.keys();
       await Promise.all(nomes.filter((n) => n.startsWith("evoque-") && n !== CACHE && n !== ANEXOS && n !== LOGOS).map((n) => caches.delete(n)));
       await self.clients.claim();
-      // Uma versão nova pode assumir enquanto o app instalado ainda exibe a
-      // casca anterior. Reabre cada tela controlada uma vez para ela carregar
-      // os arquivos que acabaram de ser instalados.
-      const abas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      await Promise.allSettled(abas.map((c) => c.navigate(c.url)));
+      // Não recarrega as telas abertas: o app mostra "Nova versão disponível · Atualizar"
+      // (src/lib/sw-registro.ts) e recarrega sozinho só se estiver em segundo plano.
     })(),
   );
 });
@@ -150,7 +147,7 @@ if (!HOST_SEM_APP) self.addEventListener("push", (event) => {
   let dados = {};
   try { dados = event.data ? event.data.json() : {}; } catch (e) { dados = {}; }
   const notif = dados.notification || {};
-  const titulo = notif.title || "Evoque Viagens";
+  const titulo = notif.title || "Viagens Organizadas";
   const url = typeof dados.data?.url === "string" && dados.data.url.startsWith("/") ? dados.data.url : "/";
   event.waitUntil(
     self.registration.showNotification(titulo, {

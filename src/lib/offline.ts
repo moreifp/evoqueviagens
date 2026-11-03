@@ -50,8 +50,17 @@ async function preencherPacote(qc: QueryClient, tripId: string, bilhetes: string
   }
   for (const r of itens) {
     const a = data.autoria.find((x) => x.tipo === r.item_tipo && x.id === r.item_id);
-    qc.setQueryData(autoriaQuery(r.item_tipo, r.item_id).queryKey, a ? { autor: a.autor, sou_eu: a.sou_eu, editar: a.editar } : null);
+    const valor: Autoria | null = a ? { autor: a.autor, sou_eu: a.sou_eu, editar: a.editar } : null;
+    qc.setQueryData(autoriaQuery(r.item_tipo, r.item_id).queryKey, () => valor);
   }
+}
+
+/** Guarda no cache os documentos da ficha no formato que documentoQuery devolve e marca os arquivos a manter. */
+function guardarFicha(qc: QueryClient, f: EuDados, manter: Set<string>) {
+  const refs = [f.pessoa.foto_url, ...f.documentos.map((d) => d.arquivo_path), ...f.anexos.map((a) => a.storage_path), ...f.fidelidades.map((l) => l.cartao_path)];
+  for (const r of refs) if (r) manter.add(r);
+  // Mesmo formato que documentoQuery devolve, sem reler a ficha para cada documento.
+  for (const d of f.documentos) qc.setQueryData(documentoQuery(f.pessoa.id, d.id).queryKey, { ...f, documento: d, anexos: f.anexos.filter((a) => a.document_id === d.id) });
 }
 
 let rodando = false;
@@ -87,12 +96,7 @@ export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: stri
            fichas.push(await qc.fetchQuery({ ...euQuery(d.id), staleTime: 0 }));
          }
        }
-      for (const f of fichas) {
-        const refs = [f.pessoa.foto_url, ...f.documentos.map((d) => d.arquivo_path), ...f.anexos.map((a) => a.storage_path), ...f.fidelidades.map((l) => l.cartao_path)];
-        for (const r of refs) if (r) manter.add(r);
-        // Mesmo formato que documentoQuery devolve, sem reler a ficha para cada documento.
-        for (const d of f.documentos) qc.setQueryData(documentoQuery(f.pessoa.id, d.id).queryKey, { ...f, documento: d, anexos: f.anexos.filter((a) => a.document_id === d.id) });
-      }
+      for (const f of fichas) guardarFicha(qc, f, manter);
       await Promise.all([...manter].map((r) => guardarAnexo(r)));
     } catch (e) {
       console.warn("Ficha não baixada", e);
@@ -121,6 +125,17 @@ export async function baixarTudo(qc: QueryClient, forcar = false, incluir?: stri
           qc.fetchQuery({ ...reservasQuery(t.id), staleTime: 0 }),
           qc.fetchQuery({ ...pontosQuery(t.id), staleTime: 0 }).catch(() => []),
         ]);
+        // Fichas de quem entrou só nesta viagem (sem conta, mas é minha): documentos no aparelho também.
+        const membros = qc.getQueryData(membersQuery(t.id).queryKey) ?? [];
+        for (const m of membros.filter((x) => x.meu && x.kind === "precadastro")) {
+          try {
+            const f = await qc.fetchQuery({ ...euQuery(m.person_id), staleTime: 0 });
+            guardarFicha(qc, f, manter);
+            await Promise.all([f.pessoa.foto_url, ...f.documentos.map((d) => d.arquivo_path), ...f.anexos.map((a) => a.storage_path)].filter((r): r is string => !!r).map((r) => guardarAnexo(r)));
+          } catch (e) {
+            console.warn("Ficha do participante não baixada", m.person_id, e);
+          }
+        }
         // Anexos dos itens que a pessoa pode ver (o banco já filtra).
         const anexos = await qc.fetchQuery({ ...anexosQuery(t.id), staleTime: 0 });
         anexos.forEach((a) => manter.add(a.storage_path));

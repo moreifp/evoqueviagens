@@ -23,12 +23,12 @@ export const Route = createFileRoute("/trip/$id/bilhetes/email")({
     typeof s.para === "string" ? { para: s.para } : {},
   head: () => ({
     meta: [
-      { title: "E-mail da agência — Evoque Viagens" },
+      { title: "E-mail da agência — Viagens Organizadas" },
       {
         name: "description",
         content: "Cole o e-mail da agência e confira todos os voos antes de salvar.",
       },
-      { property: "og:title", content: "E-mail da agência — Evoque Viagens" },
+      { property: "og:title", content: "E-mail da agência — Viagens Organizadas" },
       {
         property: "og:description",
         content: "Voos, passageiros e bagagem lidos do e-mail da agência.",

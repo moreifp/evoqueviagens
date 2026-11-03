@@ -20,7 +20,7 @@ import { ACEITA_QUALQUER, DicaArrastar, TirarFoto, ZonaArquivo } from "@/compone
 import {
   documentoQuery,
   mascararFinal,
-  nomeDocumento,
+  nomeDoc,
   statusDocumento,
   type AnexoDocumento,
 } from "@/lib/eu";
@@ -31,7 +31,7 @@ import { mutar } from "@/lib/outbox";
 import { useServerFn } from "@tanstack/react-start";
 import { ScanLine, Loader2 } from "lucide-react";
 import { lerPassaporteAdmin } from "@/lib/cadastro.functions";
-import { blobParaDataUrl, melhorarDocumentoParaOcr } from "@/lib/imagem";
+import { blobParaDataUrl, LADO_DOC_IA, melhorarDocumentoParaOcr } from "@/lib/imagem";
 import { pdfParaImagem } from "@/lib/pdf";
 import { nomePais3 } from "@/lib/paises3";
 import { salvarDadosPessoaPassaporte } from "@/lib/passaportePessoa";
@@ -41,9 +41,9 @@ type Proposta = { chave: string; rotulo: string; valor: string; mostrar: string 
 export const Route = createFileRoute("/pessoas/$pid/documentos/$did")({
   head: () => ({
     meta: [
-      { title: "Documento — Evoque Viagens" },
+      { title: "Documento — Viagens Organizadas" },
       { name: "description", content: "Dados e anexos do seu documento." },
-      { property: "og:title", content: "Documento — Evoque Viagens" },
+      { property: "og:title", content: "Documento — Viagens Organizadas" },
       { property: "og:description", content: "Documento pessoal guardado com segurança." },
     ],
   }),
@@ -125,7 +125,7 @@ function Documento() {
       valores: { deleted_at: now },
     });
     await qc.invalidateQueries({ queryKey: ["eu", pid] });
-    toast(`${nomeDocumento(doc.tipo)} apagado`, {
+    toast(`${nomeDoc(doc)} apagado`, {
       duration: 10000,
       action: {
         label: "Desfazer",
@@ -160,7 +160,7 @@ function Documento() {
       const r = await readPassport({
         data: {
           imagem: await blobParaDataUrl(
-            await melhorarDocumentoParaOcr(fonte, ehPdfArq ? 3000 : 2200),
+            await melhorarDocumentoParaOcr(fonte, LADO_DOC_IA),
           ),
         },
       });
@@ -280,7 +280,7 @@ function Documento() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Topo titulo={nomeDocumento(doc.tipo)} voltarPara="/pessoas/$pid" voltarParams={{ pid }} />
+      <Topo titulo={nomeDoc(doc)} voltarPara="/pessoas/$pid" voltarParams={{ pid }} />
       <main className="mx-auto max-w-2xl space-y-5 px-4 pt-5">
         <span
           className={`inline-flex rounded-full px-3 py-2 text-base font-bold ${st.tone === "ok" ? "bg-ok text-ok-foreground" : st.tone === "warn" ? "bg-warn text-warn-foreground" : st.tone === "danger" ? "bg-danger text-danger-foreground" : "bg-muted text-muted-foreground"}`}
@@ -296,7 +296,7 @@ function Documento() {
             >
               <img
                 src={urls[primary.storage_path]}
-                alt={`Foto de ${nomeDocumento(doc.tipo)}`}
+                alt={`Foto de ${nomeDoc(doc)}`}
                 className="max-h-[55vh] w-full rounded-lg object-contain"
               />
             </button>

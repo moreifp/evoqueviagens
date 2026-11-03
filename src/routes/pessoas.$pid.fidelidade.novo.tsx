@@ -18,9 +18,9 @@ export const Route = createFileRoute("/pessoas/$pid/fidelidade/novo")({
   }),
   head: () => ({
     meta: [
-      { title: "Programa de fidelidade — Evoque Viagens" },
+      { title: "Programa de fidelidade — Viagens Organizadas" },
       { name: "description", content: "Adicione ou edite um programa de fidelidade." },
-      { property: "og:title", content: "Programa de fidelidade — Evoque Viagens" },
+      { property: "og:title", content: "Programa de fidelidade — Viagens Organizadas" },
       { property: "og:description", content: "Cadastre seu programa de fidelidade." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

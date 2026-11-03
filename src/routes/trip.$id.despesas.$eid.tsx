@@ -31,9 +31,9 @@ import { ehReciboStorage, reciboUrlQuery, subirRecibo, temRecibo } from "@/lib/r
 export const Route = createFileRoute("/trip/$id/despesas/$eid")({
   head: () => ({
     meta: [
-      { title: "Despesa — Evoque Viagens" },
+      { title: "Despesa — Viagens Organizadas" },
       { name: "description", content: "Quem pagou, a parte de cada um e o comprovante." },
-      { property: "og:title", content: "Despesa — Evoque Viagens" },
+      { property: "og:title", content: "Despesa — Viagens Organizadas" },
       { property: "og:description", content: "Quem pagou, a parte de cada um e o comprovante." },
     ],
   }),

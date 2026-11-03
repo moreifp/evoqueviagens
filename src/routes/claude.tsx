@@ -5,7 +5,7 @@ import { CaixaClaude } from "@/components/CaixaClaude";
 export const Route = createFileRoute("/claude")({
   head: () => ({
     meta: [
-      { title: "Chegou pelo Claude — Evoque Viagens" },
+      { title: "Chegou pelo Claude — Viagens Organizadas" },
       { name: "description", content: "Itens que o Claude trouxe, esperando sua confirmação." },
       { property: "og:title", content: "Chegou pelo Claude" },
       { property: "og:description", content: "Confirme com um toque o que chegou pelo Claude." },

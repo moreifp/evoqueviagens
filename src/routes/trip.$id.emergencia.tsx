@@ -30,7 +30,7 @@ import {
 export const Route = createFileRoute("/trip/$id/emergencia")({
   head: () => ({
     meta: [
-      { title: "Emergência na viagem — Evoque Viagens" },
+      { title: "Emergência na viagem — Viagens Organizadas" },
       {
         name: "description",
         content: "Números de emergência e consulados do Brasil, salvos para abrir sem internet.",
