@@ -106,13 +106,39 @@ function extensaoDe(nome: string): string {
 /** Foto → JPEG comprimido; PDF e qualquer outro arquivo (eml, doc, xls…) vão como estão. */
 export async function prepararArquivo(f: File, max = 1600): Promise<{ blob: Blob; ext: Ext; contentType: string }> {
   if (ehPdf(f)) return { blob: f, ext: "pdf", contentType: "application/pdf" };
-  if (!ehImagem(f)) return { blob: f, ext: extensaoDe(f.name), contentType: f.type || "application/octet-stream" };
+  // Foto sem tipo nem extensão (Arquivos, AirDrop, "Passaporte Blenda"): reconhece pelos primeiros bytes.
+  const pelosBytes = !ehImagem(f) ? await tipoPelosBytes(f) : null;
+  if (pelosBytes === "pdf") return { blob: f, ext: "pdf", contentType: "application/pdf" };
+  if (!ehImagem(f) && !pelosBytes) {
+    // Último recurso: se o navegador conseguir abrir como imagem, é foto.
+    try {
+      return { blob: await comprimir(f, max), ext: "jpg", contentType: "image/jpeg" };
+    } catch {
+      return { blob: f, ext: extensaoDe(f.name), contentType: f.type || "application/octet-stream" };
+    }
+  }
   try {
     return { blob: await comprimir(f, max), ext: "jpg", contentType: "image/jpeg" };
   } catch {
-    if (/heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name)) return { blob: f, ext: "heic", contentType: "image/heic" };
+    if (/heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name) || pelosBytes === "heic") return { blob: f, ext: "heic", contentType: "image/heic" };
     throw new Error("Não deu para abrir essa imagem.");
   }
+}
+
+/** Lê a assinatura do arquivo: jpg, png, webp, heic, pdf ou null. */
+async function tipoPelosBytes(f: Blob): Promise<"jpg" | "png" | "webp" | "heic" | "pdf" | null> {
+  try {
+    const b = new Uint8Array(await f.slice(0, 16).arrayBuffer());
+    const asc = (i: number, n: number) => String.fromCharCode(...b.slice(i, i + n));
+    if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "jpg";
+    if (b[0] === 0x89 && asc(1, 3) === "PNG") return "png";
+    if (asc(0, 4) === "RIFF" && asc(8, 4) === "WEBP") return "webp";
+    if (asc(0, 4) === "%PDF") return "pdf";
+    if (asc(4, 4) === "ftyp" && /^(heic|heix|hevc|hevx|mif1|msf1|heif)/.test(asc(8, 4))) return "heic";
+  } catch {
+    /* sem leitura */
+  }
+  return null;
 }
 
 export function blobParaDataUrl(b: Blob): Promise<string> {
