@@ -8,10 +8,29 @@ async function decodificar(arquivo: Blob): Promise<CanvasImageSource & { width: 
       i.src = url;
     });
   } catch {
-    return await createImageBitmap(arquivo);
+    try {
+      return await createImageBitmap(arquivo);
+    } catch (e) {
+      // HEIC (foto do iPhone) no Chrome/Firefox: o navegador não abre; converte no aparelho.
+      const jpeg = await heicParaJpeg(arquivo);
+      if (!jpeg) throw e;
+      return await createImageBitmap(jpeg);
+    }
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+}
+
+/**
+ * Converte HEIC/HEIF em JPEG com um conversor carregado só nessa hora (~3 MB, uma vez;
+ * o service worker guarda). Devolve null se o arquivo não for HEIC.
+ */
+async function heicParaJpeg(arquivo: Blob): Promise<Blob | null> {
+  const nome = (arquivo as File).name ?? "";
+  const pareceHeic = /heic|heif/i.test(arquivo.type) || /\.(heic|heif)$/i.test(nome) || (await tipoPelosBytes(arquivo)) === "heic";
+  if (!pareceHeic) return null;
+  const { heicTo } = await import("heic-to");
+  return await heicTo({ blob: arquivo, type: "image/jpeg", quality: 0.9 });
 }
 
 /**

@@ -57,6 +57,7 @@
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
     "firebase": "^12.19.0",
+    "heic-to": "^1.6.7",
     "idb-keyval": "^6.3.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
