@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
-import { ScanFace } from "lucide-react";
-import { createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId } from "@/lib/vault";
+import { KeyRound, ScanFace } from "lucide-react";
+import { changeVaultPassword, createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId, SENHA_COFRE_MINIMO } from "@/lib/vault";
 import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
@@ -37,7 +37,9 @@ export function DestravarCofre({ uid }: { uid: string }) {
   }, [uid]);
 
   async function go() {
-    if (pw.length < 8) return toast.error("A senha do cofre precisa ter pelo menos 8 caracteres.");
+    if (setup && pw.length < SENHA_COFRE_MINIMO)
+      return toast.error(`A senha do cofre precisa ter pelo menos ${SENHA_COFRE_MINIMO} caracteres.`);
+    if (!pw) return;
     setBusy(true);
     try {
       if (setup) {
@@ -116,6 +118,82 @@ export function DestravarCofre({ uid }: { uid: string }) {
         className="tap w-full rounded-lg bg-primary text-lg font-bold text-primary-foreground"
       >
         {busy ? "Abrindo…" : setup ? "Criar e destravar" : "Destravar cofre"}
+      </button>
+    </div>
+  );
+}
+
+
+/** Trocar a senha do cofre: um botão; ao tocar, abre os três campos. Recifra tudo no aparelho. */
+export function TrocarSenhaCofre({ uid }: { uid: string }) {
+  const [aberto, setAberto] = useState(false);
+  const [atual, setAtual] = useState("");
+  const [nova, setNova] = useState("");
+  const [confirma, setConfirma] = useState("");
+  const [busy, setBusy] = useState(false);
+  function fechar() {
+    setAberto(false);
+    setAtual("");
+    setNova("");
+    setConfirma("");
+  }
+  async function trocar() {
+    if (nova !== confirma) return toast.error("As senhas novas não coincidem.");
+    setBusy(true);
+    try {
+      await changeVaultPassword(uid, atual, nova);
+      toast.success("Senha do cofre trocada");
+      fechar();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!aberto)
+    return (
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="tap flex w-full items-center justify-center gap-3 rounded-lg border-2 border-border text-lg font-bold"
+      >
+        <KeyRound size={24} aria-hidden /> Trocar senha do cofre
+      </button>
+    );
+  return (
+    <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+      <Campo rotulo="Senha atual">
+        <input type="password" value={atual} onChange={(e) => setAtual(e.target.value)} autoComplete="current-password" className={inputCls} />
+      </Campo>
+      <Campo rotulo={`Senha nova (mín. ${SENHA_COFRE_MINIMO})`}>
+        <input type="password" value={nova} onChange={(e) => setNova(e.target.value)} autoComplete="new-password" className={inputCls} />
+      </Campo>
+      <Campo rotulo="Repita a senha nova">
+        <input
+          type="password"
+          value={confirma}
+          onChange={(e) => setConfirma(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void trocar();
+            }
+          }}
+          autoComplete="new-password"
+          className={inputCls}
+        />
+      </Campo>
+      <p className="text-base font-bold text-warn">Guarde a senha nova: se esquecer, o cofre não pode ser recuperado.</p>
+      <button
+        type="button"
+        disabled={busy || !atual || !nova || !confirma}
+        onClick={() => void trocar()}
+        className="tap w-full rounded-lg bg-primary text-lg font-bold text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "Trocando…" : "Trocar senha"}
+      </button>
+      <button type="button" disabled={busy} onClick={fechar} className="tap w-full rounded-lg border-2 border-border text-lg font-bold">
+        Cancelar
       </button>
     </div>
   );
