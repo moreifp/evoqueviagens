@@ -63,6 +63,11 @@ export async function mutar(op: Op): Promise<"salvo" | "fila"> {
   return "fila";
 }
 
+/** Há edições do cofre ainda esperando internet? (a troca de senha precisa delas já no servidor) */
+export async function temPendenteCofre() {
+  return (await ler()).some((op) => "tabela" in op && op.tabela.startsWith("vault_"));
+}
+
 /** Coloca direto na fila (usado para manter a ordem quando uma operação anterior ficou na fila). */
 export async function enfileirar(op: Op) {
   await gravar([...(await ler()), op]);

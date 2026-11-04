@@ -236,6 +236,13 @@ function NovoDocumento() {
     setConferir(false);
     setPrevia(null);
     const alvo = forced || tipo;
+    // Cartão e tudo que vai para o cofre: a foto nunca sai do aparelho sem cifrar,
+    // então não passa pela leitura automática (servidor + IA). Os dados são digitados.
+    if (noCofre) {
+      setReadState("anexo");
+      setReading(false);
+      return;
+    }
     try {
       // E-mail (.eml): lê o texto; o arquivo fica como anexo.
       if (/\.eml$/i.test(next.name) || next.type === "message/rfc822") {
@@ -558,7 +565,7 @@ function NovoDocumento() {
                 {guardarNoCofre && (
                   <>
                     <p className="text-base text-muted-foreground">
-                      A foto é lida para preencher os campos e depois fica cifrada.
+                      A foto fica só cifrada, sem leitura automática. Digite os dados.
                     </p>
                     {!unlocked && <DestravarCofre uid={data.uid} />}
                   </>

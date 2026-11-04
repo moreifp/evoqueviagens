@@ -132,6 +132,77 @@ export async function unlockVault(accountId: string, password: string) {
   remember(accountId, key);
 }
 
+export const SENHA_COFRE_MINIMO = 12;
+
+/**
+ * Troca a senha do cofre. Tudo acontece no aparelho: decifra cada item com a senha
+ * antiga e cifra de novo com a nova. O servidor só recebe o resultado cifrado e grava
+ * tudo de uma vez (função trocar_senha_cofre) — ou nada, se algo falhar.
+ */
+export async function changeVaultPassword(accountId: string, senhaAtual: string, senhaNova: string) {
+  if (!navigator.onLine) throw new Error("Trocar a senha precisa de internet.");
+  if (senhaNova.length < SENHA_COFRE_MINIMO) throw new Error(`A senha nova precisa ter pelo menos ${SENHA_COFRE_MINIMO} caracteres.`);
+  if (senhaNova === senhaAtual) throw new Error("A senha nova é igual à atual.");
+  const { sincronizar, temPendenteCofre } = await import("@/lib/outbox");
+  await sincronizar();
+  if (await temPendenteCofre()) throw new Error("Ainda há itens do cofre esperando enviar. Tente de novo em instantes.");
+
+  const meta = await metaFor(accountId);
+  if (!meta) throw new Error("Cofre ainda não criado.");
+  const antiga = await derive(senhaAtual, base64ToBytes(meta.kdf_salt), meta.kdf_iterations);
+  try {
+    if ((await decryptText(antiga, meta.verifier_ciphertext, meta.verifier_iv)) !== VERIFIER) throw new Error();
+  } catch {
+    throw new Error("A senha atual do cofre está incorreta.");
+  }
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const nova = await derive(senhaNova, salt);
+  const recifrar = async (rows: { id: string; encrypted_payload: string; iv: string }[]) =>
+    Promise.all(
+      rows.map(async (r) => {
+        const c = await encryptText(nova, await decryptText(antiga, r.encrypted_payload, r.iv));
+        return { id: r.id, encrypted_payload: c.ciphertext, iv: c.iv };
+      }),
+    );
+  const itens = await vaultDb.from("vault_item").select("id, encrypted_payload, iv").eq("account_id", accountId);
+  if (itens.error) throw new Error(itens.error.message);
+  const docs = await vaultDb.from("vault_document").select("id, encrypted_payload, iv").eq("account_id", accountId);
+  if (docs.error) throw new Error(docs.error.message);
+  let novosItens, novosDocs;
+  try {
+    novosItens = await recifrar(itens.data);
+    novosDocs = await recifrar(docs.data);
+  } catch {
+    throw new Error("Um item do cofre não abriu com a senha atual. Nada foi alterado.");
+  }
+  const verificador = await encryptText(nova, VERIFIER);
+  const novaMeta: VaultMeta = {
+    account_id: accountId,
+    kdf_salt: bytesToBase64(salt),
+    kdf_iterations: ITERATIONS,
+    verifier_ciphertext: verificador.ciphertext,
+    verifier_iv: verificador.iv,
+  };
+  const r = await (supabase as unknown as { rpc: (f: string, a: unknown) => Promise<{ error: { message: string } | null }> }).rpc(
+    "trocar_senha_cofre",
+    { _verificador_antigo: meta.verifier_ciphertext, _meta: novaMeta, _itens: novosItens, _docs: novosDocs },
+  );
+  if (r.error) throw new Error(r.error.message);
+
+  // Atualiza as cópias do aparelho: a meta nova e o Face ID passam a usar a chave nova.
+  await set(`${CACHE_PREFIX}meta:${accountId}`, novaMeta);
+  const bio = (await get(`${CACHE_PREFIX}bio:${accountId}`)) as { cred: string; key: CryptoKey } | undefined;
+  if (bio) await set(`${CACHE_PREFIX}bio:${accountId}`, { cred: bio.cred, key: nova });
+  // Os caches cifrados com a chave antiga são descartados; voltam do servidor na próxima abertura.
+  const { keys } = await import("idb-keyval");
+  for (const k of await keys()) {
+    const s = String(k);
+    if (s.startsWith(`${CACHE_PREFIX}item:${accountId}:`) || s.startsWith(`${CACHE_PREFIX}docs:${accountId}:`)) await del(k);
+  }
+  remember(accountId, nova);
+}
+
 /* Face ID no cofre: a chave (não exportável) fica guardada só neste aparelho e só é usada após o rosto. */
 const bioKey = (a: string) => `${CACHE_PREFIX}bio:${a}`;
 export async function cofreFaceIdLigado(accountId: string) {
@@ -149,7 +220,18 @@ export async function unlockVaultFaceId(accountId: string) {
   const bio = (await get(bioKey(accountId))) as { cred: string; key: CryptoKey } | undefined;
   if (!bio) throw new Error("Face ID do cofre não está ligado.");
   await conferir(bio.cred);
-  const meta = (await get(`${CACHE_PREFIX}meta:${accountId}`)) as VaultMeta | undefined;
+  // Com internet, confere contra a senha atual do servidor: se ela foi trocada em
+  // outro aparelho, a chave guardada aqui deixa de valer e pede a senha nova.
+  let meta = (await get(`${CACHE_PREFIX}meta:${accountId}`)) as VaultMeta | undefined;
+  if (navigator.onLine) {
+    try {
+      const remoto = await metaFor(accountId);
+      if (remoto) {
+        meta = remoto;
+        await set(`${CACHE_PREFIX}meta:${accountId}`, remoto);
+      }
+    } catch { /* sem resposta: segue com a cópia do aparelho */ }
+  }
   if (meta) {
     try {
       if ((await decryptText(bio.key, meta.verifier_ciphertext, meta.verifier_iv)) !== VERIFIER) throw new Error();

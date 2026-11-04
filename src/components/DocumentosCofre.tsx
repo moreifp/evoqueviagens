@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check, ChevronRight, FileLock2, FilePlus2, LockKeyhole, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DestravarCofre } from "@/components/Cofre";
+import { DestravarCofre, TrocarSenhaCofre } from "@/components/Cofre";
 import { CampoPrivado } from "@/components/CampoPrivado";
 import { faceIdDisponivel, motivoFalhaBio, rotuloBio } from "@/components/TravaFaceId";
 import { ScanFace } from "lucide-react";
@@ -310,6 +310,7 @@ export function DocumentosCofre({ uid, personId }: { uid: string; personId: stri
               )}
             </div>
           ))}
+          {!selected && <TrocarSenhaCofre uid={uid} />}
         </>
       )}
     </section>
