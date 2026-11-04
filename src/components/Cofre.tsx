@@ -1,9 +1,27 @@
+import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
 import { KeyRound, ScanFace } from "lucide-react";
 import { changeVaultPassword, createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId, SENHA_COFRE_MINIMO } from "@/lib/vault";
 import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
+
+/**
+ * Campo de senha do cofre que o Apple Senhas/iCloud e outros gerenciadores não
+ * preenchem nem guardam: tipo texto com os caracteres escondidos. Assim quem
+ * pega o celular destravado não abre o cofre com um toque.
+ */
+const semAutofill = {
+  type: "text",
+  autoComplete: "off",
+  autoCapitalize: "off",
+  autoCorrect: "off",
+  spellCheck: false,
+  "data-1p-ignore": "true",
+  "data-lpignore": "true",
+  "data-form-type": "other",
+  style: { WebkitTextSecurity: "disc" } as React.CSSProperties,
+} as const;
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
 export function DestravarCofre({ uid }: { uid: string }) {
@@ -82,8 +100,7 @@ export function DestravarCofre({ uid }: { uid: string }) {
       )}
       <Campo rotulo={setup ? "Crie a senha do cofre" : "Senha do cofre"}>
         <input
-          type="password"
-          value={pw}
+          {...semAutofill} value={pw}
           onChange={(e) => setPw(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -91,7 +108,6 @@ export function DestravarCofre({ uid }: { uid: string }) {
               void go();
             }
           }}
-          autoComplete={setup ? "new-password" : "current-password"}
           className={inputCls}
         />
       </Campo>
@@ -99,10 +115,8 @@ export function DestravarCofre({ uid }: { uid: string }) {
         <>
           <Campo rotulo="Confirme a senha">
             <input
-              type="password"
-              value={confirm}
+              {...semAutofill} value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              autoComplete="new-password"
               className={inputCls}
             />
           </Campo>
@@ -163,15 +177,14 @@ export function TrocarSenhaCofre({ uid }: { uid: string }) {
   return (
     <div className="space-y-3 rounded-lg border border-border bg-card p-4">
       <Campo rotulo="Senha atual">
-        <input type="password" value={atual} onChange={(e) => setAtual(e.target.value)} autoComplete="current-password" className={inputCls} />
+        <input {...semAutofill} value={atual} onChange={(e) => setAtual(e.target.value)} className={inputCls} />
       </Campo>
       <Campo rotulo={`Senha nova (mín. ${SENHA_COFRE_MINIMO})`}>
-        <input type="password" value={nova} onChange={(e) => setNova(e.target.value)} autoComplete="new-password" className={inputCls} />
+        <input {...semAutofill} value={nova} onChange={(e) => setNova(e.target.value)} className={inputCls} />
       </Campo>
       <Campo rotulo="Repita a senha nova">
         <input
-          type="password"
-          value={confirma}
+          {...semAutofill} value={confirma}
           onChange={(e) => setConfirma(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -179,7 +192,6 @@ export function TrocarSenhaCofre({ uid }: { uid: string }) {
               void trocar();
             }
           }}
-          autoComplete="new-password"
           className={inputCls}
         />
       </Campo>
