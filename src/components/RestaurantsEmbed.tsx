@@ -30,9 +30,22 @@ export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[ca
       setErro("Sem internet · Restaurantes precisa de conexão.");
       return;
     }
+    /** Pedido do login com prazo: sem resposta em 15 s, tenta de novo uma vez antes de avisar. */
+    async function pedirComPrazo(tentativas = 2): Promise<Awaited<ReturnType<typeof pedir>>> {
+      for (let i = 1; ; i++) {
+        try {
+          return await Promise.race([
+            pedir(),
+            new Promise<never>((_, nao) => setTimeout(() => nao(new Error("demorou")), 15_000)),
+          ]);
+        } catch (e) {
+          if (i >= tentativas || !vivo) throw e;
+        }
+      }
+    }
     async function buscar(inicial: boolean, repetindo = false) {
       try {
-        const r = await pedir();
+        const r = await pedirComPrazo(inicial ? 2 : 1);
         if (!vivo) return;
         if ("erro" in r) {
           setErro(
