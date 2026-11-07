@@ -116,6 +116,8 @@ export function PreencherArquivo({
   const [lendo, setLendo] = useState(false);
   const [sobre, setSobre] = useState(false);
   const [lido, setLido] = useState<"ok" | "falhou" | null>(null);
+  /** Arquivo lido, mostrado no formulário para a pessoa ver o que vai anexado. */
+  const [anexo, setAnexo] = useState<{ nome: string; foto: string | null } | null>(null);
   const foto = useRef<HTMLInputElement>(null),
     galeria = useRef<HTMLInputElement>(null),
     arquivo = useRef<HTMLInputElement>(null);
@@ -141,6 +143,7 @@ export function PreencherArquivo({
       } else if (ACEITOS.includes(f.type as Mime)) dado = await lerDataUrl(f);
       else throw new Error("Use foto (JPG, PNG, WebP), PDF ou e-mail (.eml).");
       if (dado.length > 14_000_000) throw new Error("Arquivo grande demais (máx. 10 MB).");
+      setAnexo({ nome, foto: mime.startsWith("image/") ? dado : null });
       // Anexa mesmo se a leitura falhar.
       if (onArquivo) onArquivo(dado, nome, mime);
       else
@@ -265,6 +268,16 @@ export function PreencherArquivo({
         <p className="mt-1 text-lg font-bold text-ok">
           Lemos o documento · confira os campos e salve.
         </p>
+      )}
+      {anexo && (
+        <div className="mt-2 flex items-center gap-3 rounded-xl border-2 border-border bg-card p-2">
+          {anexo.foto ? (
+            <img src={anexo.foto} alt="" className="h-16 w-16 rounded-lg object-cover" />
+          ) : (
+            <FileText size={40} className="shrink-0 text-accent" />
+          )}
+          <p className="min-w-0 truncate text-base font-bold">📎 {anexo.nome}</p>
+        </div>
       )}
       {lido === "falhou" && (
         <p className="mt-1 text-lg font-bold text-warn-foreground">
