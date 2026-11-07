@@ -21,6 +21,7 @@ import { AbrirMapa } from "@/components/AbrirMapa";
 import { useBuscarEmergencia, useOnline } from "@/components/CartaoEmergencia";
 import {
   dataBRLonga,
+  ITAMARATY,
   tel,
   type Emergencia,
   type PaisEmergencia,
@@ -107,7 +108,17 @@ function TelaEmergencia() {
       <main className="space-y-4 px-4 pb-28 pt-2">
         {!e ? (
           <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-            <p className="text-lg">Ainda não há dados de emergência nesta viagem.</p>
+            <a
+              href={tel(ITAMARATY)}
+              className="tap flex items-center justify-center gap-3 rounded-2xl bg-emerg py-4 text-2xl font-extrabold text-white"
+            >
+              <Phone size={28} strokeWidth={2.2} /> {ITAMARATY}
+            </a>
+            <p className="text-base text-muted-foreground">
+              Plantão do Itamaraty em Brasília (WhatsApp), só para risco à vida, prisão, internação
+              ou desaparecimento. Os telefones do país e o consulado mais perto entram sozinhos na
+              primeira vez que a viagem abrir com internet.
+            </p>
             {dono && (
               <button
                 disabled={!on || buscando}
