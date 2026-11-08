@@ -39,6 +39,7 @@ import {
 import { useAuditoria } from "@/lib/auditoria";
 import { SeloOffline } from "@/components/SeloOffline";
 import { CartaoEmergencia } from "@/components/CartaoEmergencia";
+import { sincronizarViagemNoDrive } from "@/lib/drive-sync";
 import { pontosQuery } from "@/lib/data";
 import { carregarAeroportos, porIata, type Aeroporto } from "@/lib/aeroportos";
 import { rotaDoDia, type Ponto } from "@/lib/mapas";
@@ -94,6 +95,14 @@ function VisaoOrganizador({ id }: { id: string }) {
   const { trip, visiveis } = useAuditoria(id);
   const { data: roteiro } = useSuspenseQuery(roteiroQuery(id));
   const { data: tripCompleta } = useSuspenseQuery(tripQuery(id));
+  // Organizador com internet: manda ao Google Drive o que a viagem tem e ainda não foi
+  // (Viagens/<viagem>/…). Sem botão; no máximo uma vez a cada 10 minutos por viagem.
+  useEffect(() => {
+    void sincronizarViagemNoDrive(id, { ownerId: tripCompleta.owner_id, minIntervaloMs: 10 * 60_000 });
+    const aoVoltar = () => void sincronizarViagemNoDrive(id, { ownerId: tripCompleta.owner_id, minIntervaloMs: 10 * 60_000 });
+    window.addEventListener("online", aoVoltar);
+    return () => window.removeEventListener("online", aoVoltar);
+  }, [id, tripCompleta.owner_id]);
   // Roteiro: todos os itens da viagem, inclusive os que a pessoa só vê em resumo.
   const bilhetes = roteiro
     .filter((r) => r.item_tipo === "ticket")

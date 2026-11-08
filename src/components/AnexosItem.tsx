@@ -7,6 +7,7 @@ import { anexosQuery, type Anexo } from "@/lib/data";
 import { abrirAnexo, guardarAnexo } from "@/lib/anexosOffline";
 import { mutar } from "@/lib/outbox";
 import { aviso, naTela, novoId } from "@/lib/itens";
+import { pedirSincroniaDrive } from "@/lib/drive-sync";
 
 /** Vários anexos por item (voucher, e-ticket, PDF). Abre a cópia do aparelho quando não há internet. */
 export function AnexosItem({
@@ -58,6 +59,7 @@ export function AnexosItem({
       }
       naTela<Anexo>(qc, key, (l) => [...l, row]);
       void guardarAnexo(path);
+      pedirSincroniaDrive(tripId);
       toast.success("Anexo guardado");
     } catch (e) {
       toast.error((e as Error).message || "Não deu para anexar.");

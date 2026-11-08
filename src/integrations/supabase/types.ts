@@ -824,6 +824,47 @@ export type Database = {
           },
         ]
       }
+      drive_backup: {
+        Row: {
+          bucket: string
+          created_at: string
+          drive_file_id: string
+          id: string
+          origem: string
+          pasta: string
+          storage_path: string
+          trip_id: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          drive_file_id: string
+          id?: string
+          origem?: string
+          pasta: string
+          storage_path: string
+          trip_id: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          drive_file_id?: string
+          id?: string
+          origem?: string
+          pasta?: string
+          storage_path?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_backup_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_attachment: {
         Row: {
           content_type: string

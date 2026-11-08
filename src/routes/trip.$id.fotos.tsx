@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { tripQuery } from "@/lib/data";
 import { comprimir } from "@/lib/imagem";
 import { useServerFn } from "@tanstack/react-start";
-import { fotoDrive, pastaDrive } from "@/lib/drive.functions";
+import { fotoDrive } from "@/lib/drive.functions";
 import { gravarPendentes, lerPendentes } from "@/lib/fotos-pendentes";
 
 export const Route = createFileRoute("/trip/$id/fotos")({
@@ -143,42 +143,55 @@ function FotosViagem() {
   }
 
   const nomePasta = (trip?.nome ?? "Viagem").replace(/[\\/:*?"<>|]/g, "-").trim() || "Viagem";
-  const criarPasta = useServerFn(pastaDrive);
   const mandarFoto = useServerFn(fotoDrive);
   const [progresso, setProgresso] = useState("");
 
-  // Manda direto para a pasta com o nome da viagem no Google Drive, uma foto por vez.
-  async function baixarPasta(files: Blob[]) {
+  // Manda os originais para Viagens/<viagem>/Fotos no Google Drive, uma foto por vez.
+  async function baixarPasta(files: File[]) {
     if (!files.length) return;
     if (!navigator.onLine)
       throw new Error(
-        "Sem internet · os originais só vão ao Drive com conexão. As cópias pequenas ficam na nuvem do app.",
+        "Sem internet · os originais vão ao Drive assim que houver conexão. As cópias pequenas ficam na nuvem do app.",
       );
-    const pasta = await criarPasta({ data: { tripId: id } });
     const carimbo = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    let pasta = nomePasta;
     for (let i = 0; i < files.length; i++) {
       setProgresso(`${i + 1} de ${files.length}`);
       const buf = new Uint8Array(await files[i]!.arrayBuffer());
+      if (!buf.length) continue; // original que o iPhone apagou: não manda vazio
       let bin = "";
       for (let j = 0; j < buf.length; j += 0x8000)
         bin += String.fromCharCode(...buf.subarray(j, j + 0x8000));
-      await mandarFoto({
-        data: {
-          tripId: id,
-          pastaId: pasta.id,
-          nome: `${pasta.nome} ${carimbo} ${String(i + 1).padStart(3, "0")}.jpg`,
-          base64: btoa(bin),
-        },
+      const quando = files[i]!.lastModified
+        ? new Date(files[i]!.lastModified).toISOString().slice(0, 19).replace(/[:T]/g, "-")
+        : carimbo;
+      const r = await mandarFoto({
+        data: { tripId: id, nome: `${nomePasta} ${quando} ${String(i + 1).padStart(3, "0")}.jpg`, base64: btoa(bin) },
       });
+      if (r.pasta) pasta = r.pasta;
     }
     setProgresso("");
     toast.success(
-      `${files.length} ${files.length === 1 ? "foto enviada" : "fotos enviadas"} para a pasta "${pasta.nome}" no Google Drive`,
+      `${files.length} ${files.length === 1 ? "foto enviada" : "fotos enviadas"} para Viagens/${pasta}/Fotos no Google Drive`,
     );
   }
 
   const [salvandoNovas, setSalvandoNovas] = useState(false);
-  async function salvarNoFotos() {
+  // Organizador com internet: os originais vão ao Drive sozinhos, sem apertar nada.
+  const [falhouAuto, setFalhouAuto] = useState(false);
+  useEffect(() => {
+    if (!souDono || !restaurado || !novas.length || enviando > 0 || salvandoNovas || falhouAuto) return;
+    if (!navigator.onLine) return;
+    const t = setTimeout(() => void salvarNoFotos(true), 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [souDono, restaurado, novas.length, enviando, salvandoNovas, falhouAuto]);
+  useEffect(() => {
+    const aoVoltar = () => setFalhouAuto(false);
+    window.addEventListener("online", aoVoltar);
+    return () => window.removeEventListener("online", aoVoltar);
+  }, []);
+  async function salvarNoFotos(automatico = false) {
     setSalvandoNovas(true);
     try {
       // Espera as cópias pequenas terminarem de subir antes de marcar como enviadas.
@@ -191,6 +204,8 @@ function FotosViagem() {
       }
       setNovas([]);
     } catch (e) {
+      // No automático, não insiste em loop: tenta de novo quando a internet voltar ou no botão.
+      if (automatico) setFalhouAuto(true);
       toast.error(e instanceof Error ? e.message : "Não consegui enviar ao Google Drive.");
     } finally {
       setSalvandoNovas(false);
@@ -388,12 +403,12 @@ function FotosViagem() {
             </p>
             <button
               type="button"
-              onClick={salvarNoFotos}
+              onClick={() => void salvarNoFotos()}
               disabled={salvandoNovas}
               className="tap flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent text-lg font-bold text-accent-foreground"
             >
               <Download size={24} strokeWidth={2.2} />{" "}
-              {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive "${nomePasta}"`}
+              {salvandoNovas ? `Enviando ${progresso}…` : `Originais para o Drive · Viagens/${nomePasta}`}
             </button>
           </div>
         )}

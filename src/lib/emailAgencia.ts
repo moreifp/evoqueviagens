@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { mutar } from "@/lib/outbox";
 import { novoId } from "@/lib/itens";
+import { pedirSincroniaDrive } from "@/lib/drive-sync";
 
 export type Original = { nome: string; mime: string; data: string };
 
@@ -45,6 +46,7 @@ export async function anexarPrivado(tripId: string, ticketIds: string[], o: Orig
   for (const itemId of ticketIds) {
     await mutar({ tipo: "insert", tabela: "item_attachment", valores: { id: novoId(), item_tipo: "ticket", item_id: itemId, storage_path: path, nome: `🔒 E-mail da agência (só organizador) · ${o.nome}`, content_type: o.mime || blob.type, size_bytes: blob.size, privado: true } });
   }
+  pedirSincroniaDrive(tripId);
 }
 
 export function textoParaOriginal(texto: string): Original {

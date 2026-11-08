@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { novoId } from "./itens";
+import { pedirSincroniaDrive } from "./drive-sync";
 
 /** Recibo novo mora no storage (bucket privado "documentos"); o antigo, em data URL na própria despesa. */
 export const ehReciboStorage = (p: string | null | undefined): p is string => !!p && p.startsWith("trip/");
@@ -17,6 +18,8 @@ export async function subirRecibo(tripId: string, expenseId: string, arquivo: Bl
     console.warn("recibo upload", error.message);
     return null;
   }
+  // A despesa ainda vai ser gravada; a sincronia espera uns segundos e pega o recibo.
+  setTimeout(() => pedirSincroniaDrive(tripId), 4000);
   return caminho;
 }
 
