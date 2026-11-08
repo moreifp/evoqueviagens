@@ -15,7 +15,12 @@ function expDe(token: string): number | null {
 }
 
 /** Evoque Restaurants embutido (login automático por token SSO de 5 min, renovado sem recarregar). */
-export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[calc(72px+env(safe-area-inset-bottom))]", comTitulo = true }: { className?: string; comTitulo?: boolean }) {
+/**
+ * `tripId`: viagem em que o Restaurants está sendo aberto. Vai na URL do embed e o
+ * Restaurants guarda nas fotos (upload_origin "viagens:<id>"), para o original ir à pasta
+ * dessa viagem no Drive — e não à viagem "de hoje" pela data.
+ */
+export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[calc(72px+env(safe-area-inset-bottom))]", comTitulo = true, tripId }: { className?: string; comTitulo?: boolean; tripId?: string | null }) {
   const pedir = useServerFn(tokenRestaurants);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const alvo = useRef<{ url: string; clientId: string } | null>(null);
@@ -45,7 +50,8 @@ export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[ca
         alvo.current = { url: r.url, clientId: r.clientId };
         if (inicial) {
           setSrc(
-            `${r.url}/embed?token=${encodeURIComponent(r.token)}&client_id=${encodeURIComponent(r.clientId)}`,
+            `${r.url}/embed?token=${encodeURIComponent(r.token)}&client_id=${encodeURIComponent(r.clientId)}` +
+              (tripId ? `&trip=${encodeURIComponent(tripId)}` : ""),
           );
         } else {
           // Renovação sem recarregar: manda o token novo para o app aberto.

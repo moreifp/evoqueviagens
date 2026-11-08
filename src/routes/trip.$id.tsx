@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { lembrarViagemAberta } from "@/lib/viagem-aberta";
 import { BarraInferior, BotaoFlutuante } from "@/components/Chrome";
 
 export const Route = createFileRoute("/trip/$id")({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/trip/$id")({
 function TripLayout() {
   const { id } = Route.useParams();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => lembrarViagemAberta(id), [id]);
   const escondeFab =
     path.includes("/despesas") ||
     path.endsWith("/fotos") ||

@@ -3,8 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 /**
  * Usado pelo Evoque Restaurants (backup-original) para saber em que pasta do Drive guardar o original
  * de uma foto tirada com o Restaurants aberto DENTRO do Viagens.
- * Entrada: { email, data: "AAAA-MM-DD" }. Autorização: header x-evoque-secret = RESTAURANTS_SSO_SECRET.
- * Saída: { pasta: "<nome da pasta da viagem no Drive>" } se a pessoa ORGANIZA uma viagem que inclui a data;
+ * Entrada: { email, data: "AAAA-MM-DD", trip_id? }. Autorização: header x-evoque-secret = RESTAURANTS_SSO_SECRET.
+ * Saída: { pasta: "<nome da pasta da viagem no Drive>" } — a viagem trip_id (se a pessoa a organiza; é a
+ * viagem em que o Restaurants estava aberto) ou, sem trip_id, a viagem da pessoa que inclui a data;
  * senão { pasta: null }. Não devolve nenhum outro dado da viagem.
  */
 function igual(a: string, b: string) {
@@ -25,15 +26,23 @@ export const Route = createFileRoute("/api/public/hooks/viagem-da-foto")({
       POST: async ({ request }) => {
         const segredo = process.env["RESTAURANTS_SSO_SECRET"] ?? "";
         if (!segredo || !igual(request.headers.get("x-evoque-secret") ?? "", segredo)) return new Response("Unauthorized", { status: 401 });
-        const corpo = (await request.json().catch(() => ({}))) as { email?: unknown; data?: unknown };
+        const corpo = (await request.json().catch(() => ({}))) as { email?: unknown; data?: unknown; trip_id?: unknown };
         const email = typeof corpo.email === "string" ? corpo.email.trim().toLowerCase() : "";
         const data = typeof corpo.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(corpo.data) ? corpo.data : "";
-        if (!email || !data) return Response.json({ erro: "dados" }, { status: 400 });
+        const tripId = typeof corpo.trip_id === "string" && /^[0-9a-f-]{36}$/i.test(corpo.trip_id) ? corpo.trip_id : "";
+        if (!email || (!data && !tripId)) return Response.json({ erro: "dados" }, { status: 400 });
 
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { data: lista } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
         const user = lista?.users.find((u) => (u.email ?? "").toLowerCase() === email);
         if (!user) return Response.json({ pasta: null });
+
+        // Viagem em que o Restaurants estava aberto dentro do Viagens: vale ela, seja qual for a data.
+        if (tripId) {
+          const { data: v } = await db.from("trip").select("nome").eq("id", tripId).eq("owner_id", user.id).is("deleted_at", null).maybeSingle();
+          if (v) return Response.json({ pasta: nomePastaViagem(v.nome as string) });
+          if (!data) return Response.json({ pasta: null });
+        }
 
         const { data: viagens } = await db
           .from("trip")

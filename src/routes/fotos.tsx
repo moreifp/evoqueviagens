@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ChevronRight, Images } from "lucide-react";
 import { tripsQuery } from "@/lib/data";
+import { viagemAberta } from "@/lib/viagem-aberta";
 import { dataBRCurta } from "@/lib/format";
 
 export const Route = createFileRoute("/fotos")({
@@ -35,7 +36,9 @@ function Fotos() {
   const { escolher } = Route.useSearch();
   const { data: viagens = [], isLoading } = useQuery(tripsQuery());
   const ativas = viagens.filter((t) => !t.arquivada_em);
-  const padrao = escolher ? undefined : viagemPadrao(ativas);
+  // A viagem em que a pessoa está no app vem antes da viagem de hoje.
+  const aberta = ativas.find((t) => t.id === viagemAberta());
+  const padrao = escolher ? undefined : (aberta ?? viagemPadrao(ativas));
 
   useEffect(() => {
     if (padrao) navigate({ to: "/trip/$id/fotos", params: { id: padrao.id }, replace: true });

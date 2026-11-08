@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RestaurantsEmbed } from "@/components/RestaurantsEmbed";
+import { viagemAberta } from "@/lib/viagem-aberta";
 
 export const Route = createFileRoute("/restaurantes")({
   head: () => ({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/restaurantes")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <RestaurantsEmbed />,
+  // Aberto pela aba de baixo: segue a viagem em que a pessoa está; sem viagem, vale a data.
+  component: () => <RestaurantsEmbed tripId={viagemAberta()} />,
 });
 
