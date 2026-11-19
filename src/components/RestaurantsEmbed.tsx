@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Utensils, WifiOff, RotateCw } from "lucide-react";
-import { tokenRestaurants } from "@/lib/restaurants.functions";
+import { FalhaToken, pedirTokenRestaurants, registrarFalha } from "@/lib/token-restaurants";
 
 function expDe(token: string): number | null {
   try {
@@ -20,13 +19,21 @@ function expDe(token: string): number | null {
  * Restaurants guarda nas fotos (upload_origin "viagens:<id>"), para o original ir à pasta
  * dessa viagem no Drive — e não à viagem "de hoje" pela data.
  */
-export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[calc(72px+env(safe-area-inset-bottom))]", comTitulo = true, tripId }: { className?: string; comTitulo?: boolean; tripId?: string | null }) {
-  const pedir = useServerFn(tokenRestaurants);
+export function RestaurantsEmbed({
+  className = "fixed inset-x-0 top-0 bottom-[calc(72px+env(safe-area-inset-bottom))]",
+  comTitulo = true,
+  tripId,
+}: {
+  className?: string;
+  comTitulo?: boolean;
+  tripId?: string | null;
+}) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const alvo = useRef<{ url: string; clientId: string } | null>(null);
   const timer = useRef<number | null>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [detalhe, setDetalhe] = useState<string | null>(null);
   const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
@@ -37,13 +44,16 @@ export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[ca
     }
     async function buscar(inicial: boolean, repetindo = false) {
       try {
-        const r = await pedir();
+        const r = await pedirTokenRestaurants();
         if (!vivo) return;
         if ("erro" in r) {
+          if (inicial) registrarFalha("restaurantes", r.erro);
           setErro(
             r.erro === "email_nao_confirmado"
               ? "Seu e-mail ainda não foi confirmado. Confirme para abrir Restaurantes."
-              : "Restaurantes ainda está sendo ligado. Volte em breve.",
+              : r.erro === "sessao_vencida" || r.erro === "sem_login"
+                ? "Seu login venceu. Toque em Eu → Sair e entre de novo."
+                : "Restaurantes ainda está sendo ligado. Volte em breve.",
           );
           return;
         }
@@ -68,8 +78,13 @@ export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[ca
       } catch (e) {
         console.error(e);
         if (!vivo) return;
-        if (inicial) setErro("Não deu para abrir Restaurantes agora.");
-        else if (!repetindo) timer.current = window.setTimeout(() => buscar(false, true), 30_000);
+        if (inicial) {
+          const etapa = e instanceof FalhaToken ? e.etapa : "app";
+          const msg = e instanceof Error ? e.message : String(e);
+          registrarFalha("restaurantes", `${etapa}: ${msg}`);
+          setDetalhe(`${etapa} · ${msg}`);
+          setErro("Não deu para abrir Restaurantes agora.");
+        } else if (!repetindo) timer.current = window.setTimeout(() => buscar(false, true), 30_000);
       }
     }
     void buscar(true);
@@ -110,9 +125,11 @@ export function RestaurantsEmbed({ className = "fixed inset-x-0 top-0 bottom-[ca
             <WifiOff size={48} strokeWidth={2.2} className="text-accent" />
           )}
           <p className="text-xl font-bold text-foreground">{erro}</p>
+          {detalhe && <p className="text-xs text-muted-foreground">{detalhe}</p>}
           <button
             onClick={() => {
               setErro(null);
+              setDetalhe(null);
               setSrc(null);
               setTentativa((n) => n + 1);
             }}
