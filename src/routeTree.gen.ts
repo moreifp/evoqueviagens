@@ -49,8 +49,10 @@ import { Route as TripIdPessoasRouteImport } from './routes/trip.$id.pessoas'
 import { Route as TripIdRestaurantesRouteImport } from './routes/trip.$id.restaurantes'
 import { Route as TripIdRevisaoRouteImport } from './routes/trip.$id.revisao'
 import { Route as ApiPublicHooksAvisosDiariosRouteImport } from './routes/api/public/hooks/avisos-diarios'
+import { Route as ApiPublicHooksLogClienteRouteImport } from './routes/api/public/hooks/log-cliente'
 import { Route as ApiPublicHooksPushEventoRouteImport } from './routes/api/public/hooks/push-evento'
 import { Route as ApiPublicHooksStatusVoosRouteImport } from './routes/api/public/hooks/status-voos'
+import { Route as ApiPublicHooksTokenRestaurantsRouteImport } from './routes/api/public/hooks/token-restaurants'
 import { Route as ApiPublicHooksViagemDaFotoRouteImport } from './routes/api/public/hooks/viagem-da-foto'
 import { Route as ApiPublicHooksViagensDoUsuarioRouteImport } from './routes/api/public/hooks/viagens-do-usuario'
 import { Route as PessoasPidDocumentosDidRouteImport } from './routes/pessoas.$pid.documentos.$did'
@@ -275,6 +277,12 @@ const ApiPublicHooksAvisosDiariosRoute =
     path: '/api/public/hooks/avisos-diarios',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLogClienteRoute =
+  ApiPublicHooksLogClienteRouteImport.update({
+    id: '/api/public/hooks/log-cliente',
+    path: '/api/public/hooks/log-cliente',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPushEventoRoute =
   ApiPublicHooksPushEventoRouteImport.update({
     id: '/api/public/hooks/push-evento',
@@ -285,6 +293,12 @@ const ApiPublicHooksStatusVoosRoute =
   ApiPublicHooksStatusVoosRouteImport.update({
     id: '/api/public/hooks/status-voos',
     path: '/api/public/hooks/status-voos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksTokenRestaurantsRoute =
+  ApiPublicHooksTokenRestaurantsRouteImport.update({
+    id: '/api/public/hooks/token-restaurants',
+    path: '/api/public/hooks/token-restaurants',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksViagemDaFotoRoute =
@@ -439,8 +453,10 @@ export interface FileRoutesByFullPath {
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/log-cliente': typeof ApiPublicHooksLogClienteRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/token-restaurants': typeof ApiPublicHooksTokenRestaurantsRoute
   '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/api/public/hooks/viagens-do-usuario': typeof ApiPublicHooksViagensDoUsuarioRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
@@ -502,8 +518,10 @@ export interface FileRoutesByTo {
   '/pessoas/$pid': typeof PessoasPidIndexRoute
   '/trip/$id': typeof TripIdIndexRoute
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/log-cliente': typeof ApiPublicHooksLogClienteRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/token-restaurants': typeof ApiPublicHooksTokenRestaurantsRoute
   '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/api/public/hooks/viagens-do-usuario': typeof ApiPublicHooksViagensDoUsuarioRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
@@ -568,8 +586,10 @@ export interface FileRoutesById {
   '/pessoas/$pid/': typeof PessoasPidIndexRoute
   '/trip/$id/': typeof TripIdIndexRoute
   '/api/public/hooks/avisos-diarios': typeof ApiPublicHooksAvisosDiariosRoute
+  '/api/public/hooks/log-cliente': typeof ApiPublicHooksLogClienteRoute
   '/api/public/hooks/push-evento': typeof ApiPublicHooksPushEventoRoute
   '/api/public/hooks/status-voos': typeof ApiPublicHooksStatusVoosRoute
+  '/api/public/hooks/token-restaurants': typeof ApiPublicHooksTokenRestaurantsRoute
   '/api/public/hooks/viagem-da-foto': typeof ApiPublicHooksViagemDaFotoRoute
   '/api/public/hooks/viagens-do-usuario': typeof ApiPublicHooksViagensDoUsuarioRoute
   '/pessoas/$pid/documentos/$did': typeof PessoasPidDocumentosDidRoute
@@ -635,8 +655,10 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/log-cliente'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/token-restaurants'
     | '/api/public/hooks/viagem-da-foto'
     | '/api/public/hooks/viagens-do-usuario'
     | '/pessoas/$pid/documentos/$did'
@@ -698,8 +720,10 @@ export interface FileRouteTypes {
     | '/pessoas/$pid'
     | '/trip/$id'
     | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/log-cliente'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/token-restaurants'
     | '/api/public/hooks/viagem-da-foto'
     | '/api/public/hooks/viagens-do-usuario'
     | '/pessoas/$pid/documentos/$did'
@@ -763,8 +787,10 @@ export interface FileRouteTypes {
     | '/pessoas/$pid/'
     | '/trip/$id/'
     | '/api/public/hooks/avisos-diarios'
+    | '/api/public/hooks/log-cliente'
     | '/api/public/hooks/push-evento'
     | '/api/public/hooks/status-voos'
+    | '/api/public/hooks/token-restaurants'
     | '/api/public/hooks/viagem-da-foto'
     | '/api/public/hooks/viagens-do-usuario'
     | '/pessoas/$pid/documentos/$did'
@@ -816,8 +842,10 @@ export interface RootRouteChildren {
   PessoasPidDadosRoute: typeof PessoasPidDadosRoute
   PessoasPidIndexRoute: typeof PessoasPidIndexRoute
   ApiPublicHooksAvisosDiariosRoute: typeof ApiPublicHooksAvisosDiariosRoute
+  ApiPublicHooksLogClienteRoute: typeof ApiPublicHooksLogClienteRoute
   ApiPublicHooksPushEventoRoute: typeof ApiPublicHooksPushEventoRoute
   ApiPublicHooksStatusVoosRoute: typeof ApiPublicHooksStatusVoosRoute
+  ApiPublicHooksTokenRestaurantsRoute: typeof ApiPublicHooksTokenRestaurantsRoute
   ApiPublicHooksViagemDaFotoRoute: typeof ApiPublicHooksViagemDaFotoRoute
   ApiPublicHooksViagensDoUsuarioRoute: typeof ApiPublicHooksViagensDoUsuarioRoute
   PessoasPidDocumentosDidRoute: typeof PessoasPidDocumentosDidRoute
@@ -1109,6 +1137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAvisosDiariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/log-cliente': {
+      id: '/api/public/hooks/log-cliente'
+      path: '/api/public/hooks/log-cliente'
+      fullPath: '/api/public/hooks/log-cliente'
+      preLoaderRoute: typeof ApiPublicHooksLogClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/push-evento': {
       id: '/api/public/hooks/push-evento'
       path: '/api/public/hooks/push-evento'
@@ -1121,6 +1156,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/status-voos'
       fullPath: '/api/public/hooks/status-voos'
       preLoaderRoute: typeof ApiPublicHooksStatusVoosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/token-restaurants': {
+      id: '/api/public/hooks/token-restaurants'
+      path: '/api/public/hooks/token-restaurants'
+      fullPath: '/api/public/hooks/token-restaurants'
+      preLoaderRoute: typeof ApiPublicHooksTokenRestaurantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/viagem-da-foto': {
@@ -1373,8 +1415,10 @@ const rootRouteChildren: RootRouteChildren = {
   PessoasPidDadosRoute: PessoasPidDadosRoute,
   PessoasPidIndexRoute: PessoasPidIndexRoute,
   ApiPublicHooksAvisosDiariosRoute: ApiPublicHooksAvisosDiariosRoute,
+  ApiPublicHooksLogClienteRoute: ApiPublicHooksLogClienteRoute,
   ApiPublicHooksPushEventoRoute: ApiPublicHooksPushEventoRoute,
   ApiPublicHooksStatusVoosRoute: ApiPublicHooksStatusVoosRoute,
+  ApiPublicHooksTokenRestaurantsRoute: ApiPublicHooksTokenRestaurantsRoute,
   ApiPublicHooksViagemDaFotoRoute: ApiPublicHooksViagemDaFotoRoute,
   ApiPublicHooksViagensDoUsuarioRoute: ApiPublicHooksViagensDoUsuarioRoute,
   PessoasPidDocumentosDidRoute: PessoasPidDocumentosDidRoute,
