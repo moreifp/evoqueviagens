@@ -1,27 +1,19 @@
-import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Campo, inputCls } from "@/components/Form";
+import { CampoPrivado } from "@/components/CampoPrivado";
 import { KeyRound, ScanFace } from "lucide-react";
-import { changeVaultPassword, createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId, SENHA_COFRE_MINIMO } from "@/lib/vault";
+import { changeVaultPassword, createVault, unlockVault, vaultExists, cofreFaceIdLigado, unlockVaultFaceId, ligarFaceIdCofre, SENHA_COFRE_MINIMO } from "@/lib/vault";
 import { faceIdDisponivel, rotuloBio } from "@/components/TravaFaceId";
 
 /**
- * Campo de senha do cofre que o Apple Senhas/iCloud e outros gerenciadores não
- * preenchem nem guardam: tipo texto com os caracteres escondidos. Assim quem
- * pega o celular destravado não abre o cofre com um toque.
+ * Campo de senha do cofre que o Apple Senhas, o Google Senhas e outros gerenciadores
+ * não preenchem nem guardam: não é um <input> (o iPhone oferecia a senha do site
+ * guardada no Google, que nada tem a ver com o cofre). Letras viram bolinhas.
  */
-const semAutofill = {
-  type: "text",
-  autoComplete: "off",
-  autoCapitalize: "off",
-  autoCorrect: "off",
-  spellCheck: false,
-  "data-1p-ignore": "true",
-  "data-lpignore": "true",
-  "data-form-type": "other",
-  style: { WebkitTextSecurity: "disc" } as React.CSSProperties,
-} as const;
+function SenhaCofre({ rotulo, value, onChange, onEnter }: { rotulo: string; value: string; onChange: (v: string) => void; onEnter?: () => void }) {
+  return <CampoPrivado rotulo={rotulo} oculto value={value} onChange={onChange} onEnter={onEnter} className={inputCls} />;
+}
 
 /** Formulário para criar ou destravar o cofre. Usa div (não form) para poder ficar dentro de outros formulários. */
 export function DestravarCofre({ uid }: { uid: string }) {
@@ -65,6 +57,9 @@ export function DestravarCofre({ uid }: { uid: string }) {
         await createVault(uid, pw);
         setExists(true);
       } else await unlockVault(uid, pw);
+      // Face ID do cofre é por aparelho e só liga com o cofre aberto: tenta ligar já,
+      // para a próxima vez abrir com o rosto (se o iPhone recusar, o botão aparece no cofre).
+      if (podeBio && !bio) void ligarFaceIdCofre(uid).catch(() => undefined);
       setPw("");
       setConfirm("");
     } catch (e) {
@@ -98,27 +93,18 @@ export function DestravarCofre({ uid }: { uid: string }) {
           <ScanFace size={26} aria-hidden /> Abrir com {rotuloBio()}
         </button>
       )}
+      {!bio && podeBio && !setup && (
+        <p className="flex items-center gap-2 text-base text-muted-foreground">
+          <ScanFace size={22} aria-hidden /> Abra uma vez com a senha para ligar o {rotuloBio()} neste aparelho.
+        </p>
+      )}
       <Campo rotulo={setup ? "Crie a senha do cofre" : "Senha do cofre"}>
-        <input
-          {...semAutofill} value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              void go();
-            }
-          }}
-          className={inputCls}
-        />
+        <SenhaCofre rotulo={setup ? "Crie a senha do cofre" : "Senha do cofre"} value={pw} onChange={setPw} onEnter={() => void go()} />
       </Campo>
       {setup && (
         <>
           <Campo rotulo="Confirme a senha">
-            <input
-              {...semAutofill} value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className={inputCls}
-            />
+            <SenhaCofre rotulo="Confirme a senha" value={confirm} onChange={setConfirm} onEnter={() => void go()} />
           </Campo>
           <p className="text-base font-bold text-warn">
             Se esquecer, as senhas guardadas não podem ser recuperadas.
@@ -141,13 +127,11 @@ export function DestravarCofre({ uid }: { uid: string }) {
 /** Trocar a senha do cofre: um botão; ao tocar, abre os três campos. Recifra tudo no aparelho. */
 export function TrocarSenhaCofre({ uid }: { uid: string }) {
   const [aberto, setAberto] = useState(false);
-  const [atual, setAtual] = useState("");
   const [nova, setNova] = useState("");
   const [confirma, setConfirma] = useState("");
   const [busy, setBusy] = useState(false);
   function fechar() {
     setAberto(false);
-    setAtual("");
     setNova("");
     setConfirma("");
   }
@@ -155,7 +139,7 @@ export function TrocarSenhaCofre({ uid }: { uid: string }) {
     if (nova !== confirma) return toast.error("As senhas novas não coincidem.");
     setBusy(true);
     try {
-      await changeVaultPassword(uid, atual, nova);
+      await changeVaultPassword(uid, nova);
       toast.success("Senha do cofre trocada");
       fechar();
     } catch (e) {
@@ -176,29 +160,16 @@ export function TrocarSenhaCofre({ uid }: { uid: string }) {
     );
   return (
     <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-      <Campo rotulo="Senha atual">
-        <input {...semAutofill} value={atual} onChange={(e) => setAtual(e.target.value)} className={inputCls} />
-      </Campo>
       <Campo rotulo={`Senha nova (mín. ${SENHA_COFRE_MINIMO})`}>
-        <input {...semAutofill} value={nova} onChange={(e) => setNova(e.target.value)} className={inputCls} />
+        <SenhaCofre rotulo="Senha nova" value={nova} onChange={setNova} />
       </Campo>
       <Campo rotulo="Repita a senha nova">
-        <input
-          {...semAutofill} value={confirma}
-          onChange={(e) => setConfirma(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              void trocar();
-            }
-          }}
-          className={inputCls}
-        />
+        <SenhaCofre rotulo="Repita a senha nova" value={confirma} onChange={setConfirma} onEnter={() => void trocar()} />
       </Campo>
       <p className="text-base font-bold text-warn">Guarde a senha nova: se esquecer, o cofre não pode ser recuperado.</p>
       <button
         type="button"
-        disabled={busy || !atual || !nova || !confirma}
+        disabled={busy || !nova || !confirma}
         onClick={() => void trocar()}
         className="tap w-full rounded-lg bg-primary text-lg font-bold text-primary-foreground disabled:opacity-60"
       >

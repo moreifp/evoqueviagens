@@ -135,25 +135,26 @@ export async function unlockVault(accountId: string, password: string) {
 export const SENHA_COFRE_MINIMO = 12;
 
 /**
- * Troca a senha do cofre. Tudo acontece no aparelho: decifra cada item com a senha
- * antiga e cifra de novo com a nova. O servidor só recebe o resultado cifrado e grava
+ * Troca a senha do cofre. Só com o cofre aberto (senha ou Face ID): a chave aberta
+ * prova que é o dono, então não pede a senha atual. Tudo acontece no aparelho:
+ * decifra cada item com a chave atual e cifra de novo com a nova. O servidor só recebe o resultado cifrado e grava
  * tudo de uma vez (função trocar_senha_cofre) — ou nada, se algo falhar.
  */
-export async function changeVaultPassword(accountId: string, senhaAtual: string, senhaNova: string) {
+export async function changeVaultPassword(accountId: string, senhaNova: string) {
   if (!navigator.onLine) throw new Error("Trocar a senha precisa de internet.");
   if (senhaNova.length < SENHA_COFRE_MINIMO) throw new Error(`A senha nova precisa ter pelo menos ${SENHA_COFRE_MINIMO} caracteres.`);
-  if (senhaNova === senhaAtual) throw new Error("A senha nova é igual à atual.");
+  if (!active || !vaultIsUnlocked(accountId)) throw new Error("Abra o cofre primeiro (senha ou Face ID).");
+  const antiga = active.key;
   const { sincronizar, temPendenteCofre } = await import("@/lib/outbox");
   await sincronizar();
   if (await temPendenteCofre()) throw new Error("Ainda há itens do cofre esperando enviar. Tente de novo em instantes.");
 
   const meta = await metaFor(accountId);
   if (!meta) throw new Error("Cofre ainda não criado.");
-  const antiga = await derive(senhaAtual, base64ToBytes(meta.kdf_salt), meta.kdf_iterations);
   try {
     if ((await decryptText(antiga, meta.verifier_ciphertext, meta.verifier_iv)) !== VERIFIER) throw new Error();
   } catch {
-    throw new Error("A senha atual do cofre está incorreta.");
+    throw new Error("A senha do cofre foi trocada em outro aparelho. Abra o cofre de novo.");
   }
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -174,7 +175,7 @@ export async function changeVaultPassword(accountId: string, senhaAtual: string,
     novosItens = await recifrar(itens.data);
     novosDocs = await recifrar(docs.data);
   } catch {
-    throw new Error("Um item do cofre não abriu com a senha atual. Nada foi alterado.");
+    throw new Error("Um item do cofre não abriu com a chave atual. Nada foi alterado.");
   }
   const verificador = await encryptText(nova, VERIFIER);
   const novaMeta: VaultMeta = {
